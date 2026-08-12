@@ -105,8 +105,12 @@ export function buildWells(def: LevelDef, takeId: () => number): GravityWell[] {
  * change, it would change in every seeded measurement, replay and test in the
  * repo. One hero in play has exactly one answer, so it is returned without
  * asking.
+ *
+ * Exported for `martyrs.ts`, which mints its arrivals against the same focus
+ * for the same reason: a beat staged around seat 0 in a party is a beat three
+ * players never see.
  */
-function hazardFocus(state: GameState): Vec2 {
+export function hazardFocus(state: GameState): Vec2 {
   const live = livingHeroes(state);
   const only = live[0];
   if (!only) return partyCentroid(state);
@@ -134,8 +138,12 @@ function lootPullAt(well: GravityWell, d: number): number {
  * of its own) and wears a point, the rest bites into HP — but there is no
  * crit, no dodge and no last-stand math; a hazard is impartial. Used by the
  * asteroid strike (the well core is instant death, not a scaled bite).
+ *
+ * Exported for `martyrs.ts`, which is a hazard in every way that matters here:
+ * a blast with no level of its own, impartial about who it catches. One bite
+ * path means one armor rule, so the two can never drift apart.
  */
-function hurtPlayer(
+export function hurtPlayerByHazard(
   state: GameState,
   player: Player,
   damage: number,
@@ -365,7 +373,7 @@ function explodeAsteroid(
                   falloff,
               ),
             );
-      hurtPlayer(
+      hurtPlayerByHazard(
         state,
         player,
         damage,
@@ -528,8 +536,10 @@ export function stepCraters(state: GameState, dtMs: number): void {
  * `state.thoughtsSeen`, the same ledger as the kill/sight pins). Silent for a
  * level with no such thought, once it has already played, or while a scene is
  * up.
+ *
+ * Exported for `martyrs.ts`, whose first sighting is pinned the same way.
  */
-function maybeHazardThought(
+export function maybeHazardThought(
   state: GameState,
   thought: string | undefined,
 ): void {
@@ -741,7 +751,7 @@ export function stepSandstorms(
       storm.struck = true;
       storm.fadeMs = SANDSTORMS.fadeMs;
       const frac = difficultyDef(state.difficulty).sandstormDamageFrac;
-      hurtPlayer(
+      hurtPlayerByHazard(
         state,
         player,
         Math.max(1, Math.round(player.maxHp * frac)),
@@ -855,8 +865,11 @@ const STAMPEDE_RUMBLE_FLOOR = 0.05;
  * left, boss on the right), so it is a stable "how far into the level am I"
  * gauge that a weaving up-and-down path can't fool. Falls back to the level
  * width when there is no boss to aim at.
+ *
+ * Exported for `martyrs.ts` — the `afterProgress` gate is one rule, and two
+ * copies of "how far into the level am I" is two answers.
  */
-function heroRunProgress(state: GameState): number {
+export function heroRunProgress(state: GameState): number {
   const def = runLevelDef(state);
   const boss = def.spawns.find(
     (s) => "at" in s && enemyDef(s.enemy).role === "boss",
@@ -978,7 +991,7 @@ export function stepStampedes(
       }
       herd.struck = true;
       const frac = difficultyDef(state.difficulty).stampedeDamageFrac;
-      hurtPlayer(
+      hurtPlayerByHazard(
         state,
         player,
         Math.max(1, Math.round(player.maxHp * frac)),
@@ -1261,7 +1274,7 @@ export function stepBaits(state: GameState, dtMs: number): void {
       const d = distance(player.pos, bait.pos);
       if (d > reach) continue;
       const falloff = Math.max(0, 1 - d / reach);
-      hurtPlayer(
+      hurtPlayerByHazard(
         state,
         player,
         Math.max(1, Math.round(bait.damage * falloff)),

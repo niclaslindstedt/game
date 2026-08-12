@@ -4973,6 +4973,32 @@
     "speed": 19,
     "sprite": "voidling"
   },
+  "volunteer": {
+    "ai": {
+      "aggroRadius": 900
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 12,
+    "critChance": 0.05,
+    "hp": 110,
+    "id": "volunteer",
+    "lore": "He built engines on this floor until a machine was sat at his bench and he was handed a box for his mug. Half his street got the same box. He is the one who did not take it lying down, and what he is wearing under the jacket is a shift's worth of shaped charge and a switch he will not let go of.",
+    "martyr": {
+      "bark": ["FOR HUMANITY"],
+      "blastRadius": 130,
+      "damageFrac": 0.3,
+      "dropsAbility": "screen_nuke",
+      "fuseMs": 2200,
+      "fuseSpeedMult": 1.7,
+      "killFraction": 0.7,
+      "triggerRadius": 110
+    },
+    "name": "THE VOLUNTEER",
+    "radius": 9,
+    "role": "minion",
+    "speed": 40,
+    "sprite": "volunteer"
+  },
   "wandering_tourist": {
     "ai": {
       "aggroRadius": 400,

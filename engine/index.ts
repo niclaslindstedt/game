@@ -156,6 +156,12 @@ export { debugDetonateNuke } from "./game/step/player.ts";
 /** Developer hook: call a boss-style herd in right now (the EFFECTS GALLERY's
  * CALL OF INCELS exhibit stages the real hazard rather than faking one). */
 export { spawnCalledHerd as debugCallHorde } from "./game/hazards.ts";
+// THE MARTYRS (game/martyrs.ts). Only the PREDICATE is public: a martyr's own
+// clock starts long and is cut when he closes, so "is this one about to go off"
+// cannot be read off the number without the def — and the renderer's flashing
+// tell, the autopilot's run for cover and the suites all have to agree on the
+// answer. The step itself is the pipeline's.
+export { martyrLit } from "./game/martyrs.ts";
 
 // MERCY DROP queries — exposed so the app can surface "the swarm is about to
 // cough up a bomb" / "a drink is coming" and tests can assert the ramps.
@@ -1409,6 +1415,7 @@ export {
   LOOT,
   MAGIC_CRIT,
   MAP,
+  MARTYRS,
   MEDKIT,
   MELEE,
   MENACE,

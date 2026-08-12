@@ -326,6 +326,8 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "level",
       "levelUpFxMs",
       "mapMarkers",
+      "martyrTimerMs",
+      "martyrsArmed",
       "menace",
       "menaceExemptDamage",
       "menaceExemptKills",

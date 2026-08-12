@@ -1075,6 +1075,38 @@ export type LevelDef = {
     afterProgress?: number;
   };
   /**
+   * MARTYRS: presence walks a WALKING BOMB onto this floor on a cadence
+   * (config MARTYRS; the bomb's own numbers are `EnemyDef.martyr`, and
+   * engine/game/martyrs.ts is the whole beat). Every `everyMs` one of `defId`
+   * is minted out past the edge of what the hero can see, at a dead run for
+   * him. He shouts when he gets close, and a few seconds later the floor goes
+   * up: whatever was standing near him is gone, and a hero who did not clear
+   * the blast wears a bite of it.
+   *
+   * It is a HAZARD spec rather than a spawn list because it behaves like one —
+   * the thing arrives on the map's clock, not out of a pack or a wave budget —
+   * but what arrives is an ordinary monster the whole game already knows how
+   * to shoot, which is the entire point. The fuse is a window, and the window
+   * is the mechanic: kill him inside it and his bomb is yours.
+   *
+   * `afterProgress` (0..1) holds the beat back until the hero has crossed that
+   * fraction of the spawn→boss run, exactly as `stampedes` does and for the
+   * same reason: a venue that opens gently should stay gentle while the player
+   * is still learning to steer. The countdown is FROZEN below the gate, so the
+   * first one arrives a full interval after the crossing rather than the
+   * instant it is reached. Omitted/0 = on from the first second.
+   *
+   * `thought` (a THOUGHT_DEFS id) fires a one-time inner monologue the first
+   * time the hero LAYS EYES on one this run — the "what is he carrying" read,
+   * tracked in the same `thoughtsSeen` ledger as every other pin.
+   */
+  martyrs?: {
+    defId: string;
+    everyMs: [number, number];
+    afterProgress?: number;
+    thought?: string;
+  };
+  /**
    * Locked doors: built exactly like walls (chains of solid `door_locked`
    * circles) but tracked in `state.doors` — carrying the story-item key
    * whose `unlocks` names the door's `id` up to it slides it open. Pair

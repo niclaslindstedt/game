@@ -111,6 +111,12 @@ export function lead(enemy) {
     );
   }
 
+  if (enemy.traits.martyr) {
+    sentences.push(
+      "It is not carrying a weapon, it IS one: it runs you down, shouts, and a couple of seconds later it goes off.",
+    );
+  }
+
   if (enemy.guardedBy.length > 0) {
     sentences.push(
       `Blows bounce off it while ${list(enemy.guardedBy.map((g) => g.name))} still ${enemy.guardedBy.length === 1 ? "stands" : "stand"}.`,
@@ -196,6 +202,11 @@ export function sightingProse(enemy, sighting) {
   if (has("unique")) {
     lines.push(
       `It is a candidate for ${sighting.venue.name}'s once-a-run unique roll, so most runs never see it.`,
+    );
+  }
+  if (has("martyr")) {
+    lines.push(
+      `Nothing on ${sighting.venue.name} places it: it comes in off the dark on the venue's own clock, every half minute or so, once you are well into the run.`,
     );
   }
   if (has("vanguard")) {
@@ -537,6 +548,22 @@ export function traitNotes(enemy) {
         ? `Bolts at ${percent(t.flees.belowHpFrac)} health rather than dying, tearing a way out a few strides off and running for it.`
         : "Beaten to nothing it escapes rather than dying, tearing a way out a few strides off and running for it.",
     ]);
+  // A WALKING BOMB. Every number in this note is one the reader is meant to
+  // decide against — how long the window is, how far the blast reaches, what
+  // it takes off them — so it prints them rather than describing them.
+  if (t.martyr) {
+    const m = t.martyr;
+    notes.push([
+      "WALKING BOMB",
+      `Closes to ${m.triggerRadius}, shouts, and detonates ${(m.fuseMs / 1000).toFixed(1)}s later — ` +
+        `a ${m.blastRadius}-wide blast that clears the minions around it outright and takes ` +
+        `${percent(m.damageFrac)} of your health at the centre, falling to nothing at the rim. ` +
+        `A jump clears it.` +
+        (m.dropsAbility
+          ? ` Put it down inside the fuse and the charge it was carrying always drops.`
+          : ""),
+    ]);
+  }
   // HOW IT ENDS — the scripted send-off (engine/game/death-rites/). Bosses only:
   // everything else is on the ordinary gore ladder, which the WHEN STRUCK note
   // above already covers.

@@ -1,0 +1,42 @@
+name: volunteer_1
+family: goodco
+size: [16, 16]
+description: >
+  THE VOLUNTEER mid-sprint — the same worn brown work jacket, raised switch and
+  chest harness of red charges, legs split the other way. Run-cycle frame 1
+  (front leg leading right).
+subject:
+  kind: minion
+  name: THE VOLUNTEER
+  build: a wiry middle-aged man leaning into a full-tilt run, both arms flung up
+  attire: a worn brown canvas work jacket over dark trousers, nothing branded
+  features: grey hair, a webbing harness of red charge blocks across the chest
+  accent: the amber lamp of a dead-man switch held up in one fist
+  pose: sprinting, arms raised, the trailing leg swung through to the front
+  flavor: not staff — he used to work here, and he came back with the vest on
+palette:
+  K: "#3b332a" # dark work trousers
+  O: "#1a1c2c" # outline
+  h: "#6b6672" # grey hair
+  k: "#6b5a3e" # worn brown canvas jacket
+  p: "#deaa86" # skin
+  r: "#c8402f" # charge blocks
+  v: "#2a2520" # webbing harness
+  y: "#ffb02e" # dead-man switch lamp
+grid: |
+  ................
+  .....OhhhhO.....
+  ....OhhhhhhhO...
+  ....OppppppO....
+  .Oy.OpOppOpO.pO.
+  .OppOkkkkkkOppO.
+  ...OkkvvvvkkO...
+  ...OkrrvvrrkO...
+  ...OkrrvvrrkO...
+  ...OkkkkkkkkO...
+  ...OKKKKKKKKO...
+  ....OKKO..OKKO..
+  ...OKKO....OKKO.
+  ...OO........OO.
+  ................
+  ................

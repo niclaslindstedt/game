@@ -33,6 +33,9 @@ animations:
   head_scientist_walk:
     { frames: [head_scientist_0, head_scientist_1], delayMs: 300 }
   janitor_walk: { frames: [janitor_0, janitor_1], delayMs: 340 }
+  # He is not strolling a floor, he is running at somebody — the fastest cadence
+  # on the GOODCO shelf outside the stampede itself.
+  volunteer_walk: { frames: [volunteer_0, volunteer_1], delayMs: 130 }
   architect_walk: { frames: [architect_0, architect_1], delayMs: 300 }
   stampede_a_run: { frames: [stampede_a_0, stampede_a_1], delayMs: 110 }
   stampede_b_run: { frames: [stampede_b_0, stampede_b_1], delayMs: 110 }

@@ -81,6 +81,7 @@ export const ENEMY_FIELDS = {
   death: "the HOW IT ENDS note — the scripted send-off this boss gets",
   deathBark: "the HOW IT ENDS note — what the hero says as the rite lands",
   ranged: "the opening line and the shot section",
+  martyr: "the opening line and the WALKING BOMB note",
   shieldedBy: "the opening line",
   spareable: "the SPAREABLE note and the story section",
   xp: "the FLAT REWARD note",
@@ -206,10 +207,16 @@ export function venues() {
 // ---- where a monster is met -------------------------------------------------
 
 /**
- * Every way a level can put a monster on the board, gathered per enemy id. The
- * five sources are the level def's own: hand-placed `spawns`, the `spawners`
+ * Every way a level can put a monster on the board, gathered per enemy id.
+ * Every source is the level def's own: hand-placed `spawns`, the `spawners`
  * that arm on approach, dormant `packs`, the ambient `waves` budget, the
- * once-a-run `rareSpawns` roll, and the scripted `openingStrike` vanguard.
+ * once-a-run `rareSpawns` roll, the scripted `openingStrike` vanguard, and the
+ * `martyrs` cadence that walks a walking bomb in from off the map.
+ *
+ * A source missing from this list is a monster the bestiary files under
+ * "somewhere off the campaign path" while the game spawns it every thirty
+ * seconds — which is why a new way of putting a body on the board owes this
+ * function an entry as surely as it owes `LEVEL_FIELDS` one.
  */
 function placementsByEnemy() {
   const found = new Map();
@@ -269,6 +276,13 @@ function placementsByEnemy() {
     }
     if (level.openingStrike) {
       add(level.openingStrike.enemy, { ...base, kind: "vanguard", count: 1 });
+    }
+    if (level.martyrs) {
+      add(level.martyrs.defId, {
+        ...base,
+        kind: "martyr",
+        everyMs: level.martyrs.everyMs,
+      });
     }
   }
   return found;
@@ -526,6 +540,10 @@ function enemyModel(def, placementIndex, summonedBy, venueById) {
           }
         : null,
       ranged: def.ranged ?? null,
+      // A WALKING BOMB (`EnemyDef.martyr`). Read whole: the note prints the
+      // fuse, the reach and the bite, because every one of those is a number
+      // the reader is being asked to make a decision against.
+      martyr: def.martyr ?? null,
       pack: def.pack ?? null,
     },
     mechanics: def.mechanics ?? null,

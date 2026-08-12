@@ -3843,6 +3843,17 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
+    "goodco_volunteer": {
+      "id": "goodco_volunteer",
+      "pages": [
+        [
+          "THAT ONE'S NOT STAFF. THAT'S A WORK JACKET, AND THAT'S A VEST UNDER IT."
+        ],
+        ["HE GOT THE SAME BOX I DID. HE JUST DIDN'T DRIVE HOME WITH IT."]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "hellborn_ancestor": {
       "id": "hellborn_ancestor",
       "pages": [

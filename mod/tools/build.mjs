@@ -492,6 +492,14 @@ export function buildMod(modDir, catalog) {
       ...Object.entries(catalog.enemyRoles),
       ...Object.entries(modEnemies).map(([id, d]) => [id, d.role]),
     ]),
+    // The WALKING BOMBS a `martyrs:` cadence may name — the shipped ones plus
+    // this mod's own, on the same terms as every other cross-reference here.
+    martyrEnemies: union(
+      catalog.martyrEnemies ?? [],
+      Object.entries(modEnemies)
+        .filter(([, d]) => d.martyr !== undefined)
+        .map(([id]) => id),
+    ),
     events: new Set(catalog.events ?? []),
     cues: new Set(catalog.cues ?? []),
     weapons: union(catalog.weapons, modWeaponIds),

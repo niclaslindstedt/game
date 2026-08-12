@@ -852,6 +852,24 @@ escort.ts` walks the people an escort errand puts on the field, and
   back on the page — and the character — it was holding. The crawl itself is
   held while any screen covers it (`useTypewriter`'s `paused`), so no line is
   printed to a stage nobody can see.
+- **`engine/game/martyrs.ts`** — THE MARTYRS: a body that is itself the weapon.
+  A level with `LevelDef.martyrs` mints one of the named breed out past the edge
+  of what the hero can see every so often, at a dead run for him; it SHOUTS the
+  moment it is inside its `triggerRadius` and detonates a couple of seconds
+  later, burning the minions in its core off the board (`martyrKill` — an
+  environmental kill with no XP, loot or menace, exactly as a meteor's core is),
+  flinging what it does not burn, and biting every grounded hero by how near the
+  centre he stood. **It sits beside the hazards because it ARRIVES like one and
+  is deliberately not one**: what turns up is an ordinary monster, so every verb
+  the player already owns works on it, and the fuse is a window in which using
+  them pays — a martyr put down inside it always sheds the charge it was
+  carrying (`EnemyDef.martyr.dropsAbility`, GOODCO's is a NUKE). The whole bomb
+  is authored on the mob and the whole cadence on the map, because how big the
+  bang is is a fact about the man and how often is a fact about the floor. One
+  countdown does both halves of his life (`Enemy.fuseMs` starts at the walk he
+  is willing to make and is CUT by closing), so `martyrLit` — the one exported
+  predicate — is what the renderer's flashing tell and the autopilot's
+  `dodgeMartyr` both ask. Nothing here draws on `state.rng` for presentation.
 - **`engine/game/arrivals.ts`** — THE STAFF LOT, and the way into GOODCO. A level
   with `LevelDef.arrivals` on it rolls a car onto its arrival district
   (`MapArea.arrivals`) every so often; the car parks and becomes furniture,

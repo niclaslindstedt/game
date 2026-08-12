@@ -94,6 +94,7 @@ export const LEVEL_FIELDS = {
   asteroids: "the hazards section",
   sandstorms: "the hazards section",
   stampedes: "the hazards section",
+  martyrs: "the hazards section",
   hayBalls: "the hazards section",
   firstKillThoughts: "the story section, behind the reveal",
   firstSightThoughts: "the story section, behind the reveal",
@@ -297,6 +298,7 @@ function hazards(level) {
   if (level.sandstorms)
     out.push({ kind: "sandstorms", spec: level.sandstorms });
   if (level.stampedes) out.push({ kind: "stampedes", spec: level.stampedes });
+  if (level.martyrs) out.push({ kind: "martyrs", spec: level.martyrs });
   if (level.hayBalls) out.push({ kind: "hayBalls", spec: level.hayBalls });
   if (level.wells?.length)
     out.push({ kind: "wells", count: level.wells.length });

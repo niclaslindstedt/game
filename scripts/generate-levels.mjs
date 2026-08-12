@@ -61,6 +61,16 @@ const refs = {
   enemyRoles: new Map(
     Object.entries(ENEMY_DEFS).map(([id, d]) => [id, d.role]),
   ),
+  // WHICH MONSTERS ARE WALKING BOMBS (`EnemyDef.martyr`), so a `martyrs:`
+  // cadence naming an ordinary mob is caught here. Without it the beat would
+  // compile, spawn, and walk a body onto the floor that simply never goes off
+  // — the level's whole second-half rhythm quietly missing, with every check
+  // green.
+  martyrEnemies: new Set(
+    Object.entries(ENEMY_DEFS)
+      .filter(([, d]) => d.martyr !== undefined)
+      .map(([id]) => id),
+  ),
   weapons: new Set(Object.keys(WEAPON_DEFS)),
   gear: new Set(Object.keys(GEAR_DEFS)),
   abilities: new Set(Object.keys(ABILITY_DEFS)),

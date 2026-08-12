@@ -318,6 +318,12 @@ const catalog = {
   enemyRoles: Object.fromEntries(
     sorted(Object.keys(ENEMY_DEFS)).map((id) => [id, ENEMY_DEFS[id].role]),
   ),
+  // WHICH SHIPPED MONSTERS ARE WALKING BOMBS (`EnemyDef.martyr`), so a mod's
+  // `martyrs:` cadence pointed at an ordinary mob is refused at compile time
+  // rather than walking a body onto the floor that never goes off.
+  martyrEnemies: sorted(
+    Object.keys(ENEMY_DEFS).filter((id) => ENEMY_DEFS[id].martyr !== undefined),
+  ),
   weapons: sorted(Object.keys(WEAPON_DEFS)),
   gear: sorted(Object.keys(GEAR_DEFS)),
   abilities: sorted(Object.keys(ABILITY_DEFS)),

@@ -843,6 +843,49 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       radius: event.radius,
     });
   }
+  // A MARTYR WENT OFF. The same three beats a meteor's detonation is drawn
+  // with — flash core, shockwave, settling cloud — but sized to a blast twice
+  // a meteor's across, with the screen-nuke's ember scatter thrown over it and
+  // a camera kick between the two. That ladder is the whole read: bigger than
+  // anything the map does by itself, smaller than the bomb the player keeps.
+  if (event.type === "martyrBlast") {
+    effects.push({
+      kind: "asteroidImpact",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 780,
+      durationMs: 780,
+      radius: event.radius,
+    });
+    effects.push({
+      kind: "nuke",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 640,
+      durationMs: 640,
+      seed: Math.floor(Math.random() * 997),
+    });
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 3.0, 320);
+  }
+  // A BODY CAUGHT IN THE FIREBALL. Not a kill — the engine took it off the
+  // board without one (no XP, no loot) — so nothing above this runs for it and
+  // the send-off is drawn here: the same INCINERATE the screen-nuke's victims
+  // get, down to the charred remains its own kind of body leaves behind.
+  if (event.type === "martyrKill") {
+    const def = enemyDef(event.defId);
+    const seed = Math.floor(Math.random() * 997);
+    effects.push({
+      kind: "incinerate",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 1600,
+      durationMs: 1600,
+      sprite: def.sprite,
+      remains: charredRemains(
+        goreFamily(def.gore).id,
+        def.anatomy ?? "humanoid",
+        seed,
+      ),
+      seed,
+    });
+  }
   // A NOVA burst: the expanding ring sized to the engine's damage
   // radius — icy blue for a companion's FROST nova, violet otherwise.
   if (event.type === "nova") {

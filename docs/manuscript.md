@@ -546,6 +546,12 @@ _First SUCCESSOR sighted._
 - A SUCCESSOR. I HELPED BUILD THE FIRST ONE OF THOSE. THEN THEY REDREW IT WITHOUT US.
 - AND THAT LINE EMPTIED THE WHOLE FLOOR. WELL. I STILL KNOW WHERE ITS BOLTS ARE.
 
+_First VOLUNTEER sighted — a man off the same street the hero came from, running
+in with a vest on. He does not approve and he does not condemn; he recognises._
+
+- THAT ONE'S NOT STAFF. THAT'S A WORK JACKET, AND THAT'S A VEST UNDER IT.
+- HE GOT THE SAME BOX I DID. HE JUST DIDN'T DRIVE HOME WITH IT.
+
 _PAYLOAD-1 down — the last beat of the level, and the only one that is an
 instruction. Nothing congratulates him and there is no button: the way off this
 floor is the way he came in, so he says where he is going and goes._
@@ -584,6 +590,16 @@ himself. Only the third blow arms him._
 **ME:** I'M SORRY. I TRIED TO ASK. SHE'S IN THIS BUILDING AND YOU'RE IN MY WAY.
 
 **ME:** I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES.
+
+### THE VOLUNTEER — the only line the rank and file get
+
+_He has no scene and no last words: he is not a set piece, he arrives every
+half minute or so and he is gone in seconds. He gets ONE line, and it is the
+only thing anybody on this floor shouts. Barked over his own head while he
+sprints — the run does not stop for it, because the two seconds it buys are
+the whole of what the player is being given._
+
+**Bark (the switch closing):** FOR HUMANITY
 
 ### Elites
 

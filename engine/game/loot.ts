@@ -209,6 +209,31 @@ function dropScreenNuke(state: GameState, at: Vec2): void {
 }
 
 /**
+ * A MARTYR's charge, shed by the body that was wearing it (`EnemyDef.martyr`
+ * → `dropsAbility`). Guaranteed, every time, on every rung — the whole reason
+ * a player takes the fuse window rather than running from it.
+ *
+ * A NUKE-shaped power goes through `dropScreenNuke` so the field can never end
+ * up holding two (it sweeps any bomb that has drifted off screen first); every
+ * other power is an ordinary drop. Note what is deliberately NOT here: the
+ * `canDropNuke` gate. That one exists to stop the RAIN from raining bombs, and
+ * a bomb the player earned by shooting the man carrying it is not the rain.
+ */
+function dropMartyrCharge(state: GameState, def: EnemyDef, at: Vec2): void {
+  const defId = def.martyr?.dropsAbility;
+  if (!defId) return;
+  if (abilityDef(defId).nuke !== undefined) {
+    dropScreenNuke(state, at);
+    return;
+  }
+  dropItem(
+    state,
+    { id: state.nextId++, kind: "ability", pos: { ...at }, defId },
+    at,
+  );
+}
+
+/**
  * Fly the freshest drop in on an ANGEL: mark it airborne (uncollectable, and
  * magnet-proof) for `MERCY.angelDeliverMs` so the guardian can swoop it down to
  * `at` before releasing it, and emit the one-shot `mercyDrop` cue the app plays
@@ -1126,6 +1151,14 @@ export function killEnemy(
       efficiency,
     );
   }
+
+  // THE BOMB HE DID NOT GET TO SPEND (`EnemyDef.martyr.dropsAbility`, see
+  // martyrs.ts). A martyr's fuse is a WINDOW, and a window that pays out only
+  // sometimes is a window nobody takes — so this one is not a roll and it does
+  // not touch `state.rng`, which also keeps a seeded run's loot stream exactly
+  // where it was. It is deliberately outside the ladder above: the ladder is
+  // what a body was carrying by chance, and this is the thing the body WAS.
+  dropMartyrCharge(state, def, enemy.pos);
 
   // Boss unique drops: the difficulty's authored uniques for this boss, each
   // rolled by how close the boss's mlvl runs to its ilvl (see the function).

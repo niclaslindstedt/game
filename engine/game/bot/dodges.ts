@@ -2,17 +2,25 @@
 // The autopilot's REFLEX DODGES: reading the field's telegraphed set-piece
 // dangers — a boss's slam/charge windup, a rolling hay ball, a sand storm's
 // drift, an employee stampede, a falling meteor's impact mark — and stepping
-// (or hopping) clear before they land. Each returns a GameInput override, or
+// (or hopping) clear before they land, and a lit MARTYR's blast radius. Each
+// returns a GameInput override, or
 // null when nothing threatens; `decideAct` (index.ts) runs them ahead of every
 // strategy branch so a reflex always preempts the plan. Pure reads of the
 // GameState — no bot memory, so determinism holds.
 
-import { clamp01, direction, distance, normalize } from "@game/lib/vec.ts";
+import {
+  clamp01,
+  direction,
+  distance,
+  normalize,
+  type Vec2,
+} from "@game/lib/vec.ts";
 import { steer, wellDangerRadius } from "./nav.ts";
 import type { BotTuning } from "./tuning.ts";
 import { PLAYER, STAMPEDES } from "../config/index.ts";
 import { insideObstacle } from "../obstacles.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
+import { martyrLit } from "../martyrs.ts";
 import { activeMechanics } from "../mechanics/index.ts";
 import type { Asteroid, GameInput, GameState, Player } from "../types/index.ts";
 
@@ -510,5 +518,64 @@ export function dodgeAsteroid(
   return steer(state, hero, {
     x: threat.target.x + away.x * (clear + 40),
     y: threat.target.y + away.y * (clear + 40),
+  });
+}
+
+/** Extra clearance the bot puts between itself and a martyr's blast edge
+ * (world px). Wider than the meteor's margin because the bomb is WALKING: the
+ * mark it will go off on is wherever the man gets to, not where he is now. */
+const MARTYR_DODGE_MARGIN = 40;
+
+/**
+ * A run clear of a LIT MARTYR (`Enemy.fuseMs`, engine/game/martyrs.ts) — else
+ * null. The human read is not subtle: something has just shouted, it is
+ * flashing, it is sprinting at you, and the only wrong answer is to keep
+ * standing where you were.
+ *
+ * Two things make it a different problem from a meteor's mark. The blast has
+ * no fixed centre — it goes off wherever the body reaches, so the bot flees
+ * the BODY rather than a spot on the floor — and the body is chasing, so the
+ * escape has to clear the blast radius PLUS the ground he covers in what is
+ * left of the fuse. Both are folded into the one target below.
+ *
+ * The bot does NOT try to shoot the fuse out. That is a genuinely hard read a
+ * human makes on feel — is my damage enough, is he far enough — and a bot that
+ * gambled on it wrong would post a balance measurement of a hero standing in
+ * an explosion on purpose. It keeps shooting him on the way out, because the
+ * ordinary fight strategy is already pointed at whatever is nearest.
+ */
+export function dodgeMartyr(state: GameState, hero: Player): GameInput | null {
+  let threat: { pos: Vec2; clear: number } | null = null;
+  let nearest = Infinity;
+  for (const e of state.enemies) {
+    const fuse = e.fuseMs;
+    // A martyr still WALKING is an ordinary monster to be shot at; only a lit
+    // fuse is a reason to break off whatever the strategy was doing.
+    if (fuse === undefined || fuse <= 0 || !martyrLit(e)) continue;
+    const spec = enemyDef(e.defId).martyr;
+    if (!spec) continue;
+    // How far he can still travel before it goes off, so the bot clears where
+    // the blast will BE rather than where it would have been.
+    const closing = e.speed * (fuse / 1000);
+    const clear = spec.blastRadius + PLAYER.radius + MARTYR_DODGE_MARGIN;
+    const d = distance(e.pos, hero.pos);
+    if (d > clear + closing) continue;
+    if (d < nearest) {
+      nearest = d;
+      threat = { pos: e.pos, clear: clear + closing };
+    }
+  }
+  if (!threat) return null;
+  let away = direction(threat.pos, hero.pos);
+  if (away.x === 0 && away.y === 0) {
+    away = direction(threat.pos, {
+      x: state.level.width / 2,
+      y: state.level.height / 2,
+    });
+    if (away.x === 0 && away.y === 0) away = { x: 1, y: 0 };
+  }
+  return steer(state, hero, {
+    x: threat.pos.x + away.x * threat.clear,
+    y: threat.pos.y + away.y * threat.clear,
   });
 }

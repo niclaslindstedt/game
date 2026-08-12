@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: martyr_kill
+description: >-
+  A body caught inside the fireball. The blast's own low crump with a short
+  scorched hiss folded into it — distinct from an ordinary takedown, because
+  nobody swung and the player should be able to hear that the kill was not
+  theirs.
+on:
+  type: martyrKill
+spatial: true
+voices:
+  - call: noise
+    durationMs: 200
+    volume: 0.045
+    filter:
+      type: lowpass
+      frequency: 360
+  - call: noise
+    durationMs: 260
+    volume: 0.03
+    delayMs: 40
+    filter:
+      type: bandpass
+      frequency: 1900

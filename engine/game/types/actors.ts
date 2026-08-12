@@ -732,6 +732,20 @@ export type Enemy = {
   knockMs?: number;
   knockVel?: Vec2;
   /**
+   * A MARTYR's own clock (`EnemyDef.martyr`, engine/game/martyrs.ts): ms until
+   * he detonates. Stamped at `martyr.lifeMs` the first tick he is stepped and
+   * from there it only ever counts DOWN — closing on a hero does not START it,
+   * it CUTS it to `martyr.fuseMs`. One number rather than two, because that is
+   * what he actually is: a man who was always going to do this, whose walk is
+   * merely the part before he does.
+   *
+   * `martyrLit` is therefore the question everything else asks — the renderer
+   * for the flashing tell, the autopilot for whether to run — because a body
+   * with four seconds left and one with twenty are not the same body, and the
+   * raw number cannot tell them apart without the def.
+   */
+  fuseMs?: number;
+  /**
    * WHICH HERO THIS MOB IS AFTER — a seat into `state.players`.
    *
    * It lives on the MOB rather than being recomputed from the party each time

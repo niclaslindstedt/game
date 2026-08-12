@@ -48,6 +48,7 @@ import {
   dodgeAsteroid,
   dodgeBait,
   dodgeHayBall,
+  dodgeMartyr,
   dodgeScorch,
   dodgeSandstorm,
   dodgeStampede,
@@ -384,6 +385,16 @@ function preemptInput(
   if (wellBolt) {
     think(bot, "WELL");
     return sprint(wellBolt);
+  }
+  // Get out from under a LIT MARTYR (`Enemy.fuseMs`). Directly under the well
+  // because it is the biggest single hit anything on a floor can land — a
+  // third of the hero's health in one beat, over a blast most of the screen
+  // across — and unlike every other dodge here the danger is CHASING, so a
+  // beat spent finishing something else is a beat of the escape gone.
+  const blast = dodgeMartyr(state, hero);
+  if (blast) {
+    think(bot, "BOMBER");
+    return sprint(blast);
   }
   // Dodge a telegraphed set-piece move (a rushing charge, a ground slam) the
   // instant one threatens — stepping off the line beats whatever the strategy

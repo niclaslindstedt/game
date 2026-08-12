@@ -32,9 +32,11 @@
       },
       "heroSuited": false,
       "foes": "STAFF",
-      "stampedes": {
+      "martyrs": {
+        "defId": "volunteer",
         "everyMs": [20000, 36667],
-        "afterProgress": 0.5
+        "afterProgress": 0.5,
+        "thought": "goodco_volunteer"
       },
       "arrivals": {
         "staff": ["arriving_scientist", "arriving_engineer", "arriving_intern"],

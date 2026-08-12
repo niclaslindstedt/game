@@ -11,6 +11,7 @@ import {
   LAST_STAND,
   lineOfSight,
   MAP,
+  martyrLit,
   WOUNDS,
   type GameState,
 } from "@game/core";
@@ -407,6 +408,32 @@ export function drawEnemies(
       ctx.fillStyle = "#ff3020";
       ctx.beginPath();
       ctx.arc(cx, cy, def.radius + 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    // A LIT FUSE (`Enemy.fuseMs`, engine/game/martyrs.ts). The whole beat is a
+    // shot clock, so the clock has to be VISIBLE on the body itself — the shout
+    // floats over his head and is gone in a beat, and a player who was reading
+    // the floor rather than the text needs to be able to tell, at a glance,
+    // which of the bodies running at them is the one about to go off.
+    //
+    // A red halo that beats FASTER the less time is left, so "how long have I
+    // got" is answered by the rate rather than by a number: a lazy throb when
+    // the fuse takes, a strobe by the end. Drawn under the sprite like the
+    // enrage aura, whose colour it deliberately does not share — that one is a
+    // standing state, and this one runs out.
+    const fuseMs = enemy.fuseMs;
+    if (fuseMs !== undefined && fuseMs > 0 && martyrLit(enemy)) {
+      const cx = seatX(enemy.pos.x, camera.x);
+      const cy = seatY(enemy.pos.y, camera.y) + Math.round(lift);
+      // 90 ms a beat at the end, 320 at the start — the ends of the ramp, not
+      // a curve worth a constant each.
+      const rate = 90 + 230 * clamp01(fuseMs / 2000);
+      const pulse = 0.5 + 0.5 * Math.sin((timeMs / rate) * Math.PI * 2);
+      ctx.globalAlpha = 0.2 + 0.4 * pulse;
+      ctx.fillStyle = "#ff5a2a";
+      ctx.beginPath();
+      ctx.arc(cx, cy, def.radius + 4 + 3 * pulse, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
     }
