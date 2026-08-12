@@ -317,6 +317,15 @@ function thoughtsOn(level) {
           },
         ]
       : []),
+    // …the two the STAFF LOT raises (`LevelDef.arrivals`), which are the whole
+    // instruction the campaign's first venue gives: somebody is arriving, and —
+    // if he watches one go through without him — wait for the next. Fired by the
+    // arrivals beat rather than by a mob, a door or an ending, so like every
+    // trigger above they need naming here or they are authored, shipped,
+    // playable and on no page at all.
+    ...[level.arrivals?.thought, level.arrivals?.missedThought]
+      .filter((thought) => thought !== undefined)
+      .map((thought, i) => ({ thought, when: "gate", missed: i === 1 })),
     // …and the PLACE-pinned beats, which have no speaker and no door either:
     // they fire on the hero BEING somewhere (`placeThoughts`), so `where` is
     // what the others carry in `enemy`. Same reason the door beats are here —
@@ -341,6 +350,9 @@ function thoughtsOn(level) {
       door: trigger.door ?? null,
       // …and the PLACE a "place" beat answers, in the same slot.
       where: trigger.where ?? null,
+      // …and which of the GATE's two beats this is: somebody arriving, or
+      // somebody going through without him.
+      missed: trigger.missed ?? false,
       enemy: enemy
         ? {
             id: enemy.id,

@@ -180,6 +180,12 @@ export function planArrivals(
     return {
       door: vec(door.center.x, door.center.y),
       apron,
+      // …and the reader starts AT the apron. Only `openArrivals` knows which
+      // side of the doorway the carve left room for the kiosk on, so it moves
+      // this to the window once the box is standing (`placeGatehouse`); a lot
+      // with no gatehouse keeps the threshold, which is where the card used to
+      // come out on every venue.
+      reader: { ...apron },
       inside,
       walkY: Math.round(walkY),
       laneY: lane.y,

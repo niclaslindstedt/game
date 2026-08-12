@@ -160,8 +160,11 @@ it replaces.
 ## Level 1 — GOODCO HQ
 
 He parks on the STAFF LOT and gets out with a wall in front of him and no key:
-his badge was taken off him years ago. So he waits for the night shift to clock
-on and walks in on somebody else's second and a half. Inside it is past midnight with
+his badge was taken off him years ago. The way through is a GATE with a lit
+guard box beside it — the night shift stop at the glass, badge in, and the gate
+takes them and shuts. So he waits and walks in on somebody else's second and a
+half; if he watches one go through without him he says so, and waits for the
+next car. Inside it is past midnight with
 every desk manned, and the floor is building spaceships in the dark. A **LAB
 SCIENTIST** he ate lunch with for six years breaks from the crowd and hits him.
 He does not hit back. He is hit again, and again, and only then does he answer —

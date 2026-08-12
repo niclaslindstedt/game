@@ -50,7 +50,8 @@
         "firstMs": 5000,
         "everyMs": [18000, 26000],
         "maxCars": 3,
-        "thought": "goodco_follow_in"
+        "thought": "goodco_follow_in",
+        "missedThought": "goodco_missed_gate"
       },
       "merchant": {
         "sprite": "merchant_vendor",

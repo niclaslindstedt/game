@@ -539,6 +539,61 @@ function buildHellgates(
  */
 const ENTRANCE_INSIDE = 210;
 
+/** The blueprint's `at: entrance` door, on a map that actually has a lot to
+ * hang it off. Undefined everywhere but GOODCO. */
+function entranceObject(
+  bp: MapBlueprint,
+  arrivalCells: Set<number>,
+): MapObject | undefined {
+  return arrivalCells.size > 0
+    ? bp.objects.find((o) => o.type === "door" && o.at === "entrance")
+    : undefined;
+}
+
+/** Is this border the wall between the staff lot and the building? */
+function crossesTheLot(
+  border: { a: number; b: number },
+  arrivalCells: Set<number>,
+): boolean {
+  return arrivalCells.has(border.a) !== arrivalCells.has(border.b);
+}
+
+/**
+ * GIVE EVERY DOOR THAT SIZES ITS OWN HOLE (`MapObject.opening`) the hole it
+ * asked for — on the BORDER, before a single wall stone is placed.
+ *
+ * A doorway's width is otherwise a fact about the DISTRICT that owns the wall
+ * (`MapArea.doorWidth`), which is the right owner for nearly every door in the
+ * game: a cupboard door and a hangar door are what the rooms either side of
+ * them are for. It is the wrong owner for a door that is one specific OBJECT —
+ * GOODCO's front gate, which is punched through whichever wall the carve put
+ * the staff lot against and so came out 220 px wide, a hangar opening, on every
+ * seed that landed the lot beside an assembly bay.
+ *
+ * The precedence is `hangDoor`'s, because it has to be: the ENTRANCE claims a
+ * border before the district's own door gets a look at it, so a border that is
+ * both is sized by the entrance. Nothing here decides WHICH doorways exist —
+ * that was the carve's call and is already made — so this can only ever change
+ * how wide a hole already punched is cut.
+ */
+function sizeOpenings(
+  bp: MapBlueprint,
+  grid: ChamberGrid,
+  arrivalCells: Set<number>,
+): void {
+  const entrance = entranceObject(bp, arrivalCells);
+  const doorOf = (id: string | undefined): MapObject | undefined =>
+    id ? bp.objects.find((o) => o.id === id && o.type === "door") : undefined;
+  for (const border of grid.borders) {
+    if (border.link !== "door") continue;
+    const obj =
+      entrance && crossesTheLot(border, arrivalCells)
+        ? entrance
+        : doorOf(areaById(bp.areas, border.owner).doors);
+    if (obj?.opening !== undefined) border.door = obj.opening;
+  }
+}
+
 /** How far a doorway's mid-point is from the middle of the staff lot — the one
  * ordering `planArrivals` and the carve both read "the entrance" off. */
 function gapNearness(
@@ -840,6 +895,26 @@ export function generateLevel(
         promised,
         bp.prefabs ?? [],
       );
+  // THE LAST WORD ON HOW WIDE THE DOORWAYS ARE, spent HERE, on the grid, the
+  // moment the carve hands it over: a door that sizes its own hole
+  // (`MapObject.opening`) gets it, and the walls are built round the answer.
+  //
+  // AFTER the carve and not inside it, which is the whole trick. How wide a
+  // district's doorway is (`MapArea.doorWidth`) is an input the carve reasons
+  // WITH — which borders are long enough to take a door at all, how small a
+  // room may be cut before it seals itself — so narrowing it there does not
+  // narrow the doorways, it redraws the building. (Measured: taking GOODCO's
+  // ladder down to a person door moved every wall, gave the staff lot four ways
+  // into the building instead of one, and staged the arrivals beat off the
+  // hero's screen on a seed that had been fine for a year.) Applied to the HOLE
+  // instead, the floor plan is the one that ships and only the opening in it
+  // changes.
+  const lotCells = new Set(
+    grid.chambers
+      .filter((c) => areaOf(bp.areas, c).arrivals === true)
+      .map((c) => c.id),
+  );
+  sizeOpenings(bp, grid, lotCells);
 
   // --- Where the search ends, and where it starts ----------------------------
   // The boss first: everything else is positioned relative to him, including the

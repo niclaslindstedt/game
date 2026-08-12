@@ -74,7 +74,8 @@ export const LEVEL_FIELDS = {
   buildings: "the map render",
   doors: "the map render, and the LOCKED note",
   arrivals:
-    "the WAY IN note — that the entrance opens for somebody else's badge",
+    "the WAY IN note — that the entrance opens for somebody else's badge — " +
+    "and the two beats the gate raises, in what stops him mid-run",
   arrivalLot:
     "not reader-facing: which stretch of tarmac the arrivals happen on is rolled per run",
   gates: "the secret-gate note",

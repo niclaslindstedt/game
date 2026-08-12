@@ -299,6 +299,22 @@ thoughts:
     pages:
       - - THAT'S THE NIGHT SHIFT CLOCKING ON. NOBODY'S TOLD THEM THE BUILDING IS SHUT TONIGHT.
       - - I HAD A BADGE FOR THAT GATE ONCE. NOT ANYMORE. SO I'LL WALK IN BEHIND SOMEBODY WHO STILL DOES.
+  # …AND MISSING IT (the same level's `arrivals.missedThought`). The gate takes
+  # the staffer who opened it and shuts behind them a second and a half later, so
+  # a player who has not yet understood that the way in is a MOMENT watches it
+  # open, close, and go back to being a wall. Nothing out there tells them which
+  # of the two things just happened — "wait for the next one" or "that was never
+  # the way in" — and the lot is deliberately quiet, so there is nothing else to
+  # read either.
+  #
+  # So he says it, once, at the only moment it is true: he has watched somebody
+  # go through and he is still on the tarmac. A player who took the moment is
+  # inside the building and never hears it.
+  goodco_missed_gate:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THAT ONE'S IN AND I'M STILL OUT HERE. FINE — I'LL WAIT FOR THE NEXT AND WALK IN BEHIND THEM.
   # Sighting the first INTERN at GOODCO HQ: it's past midnight and the
   # building is packed like a product launch. He worked here — nights were
   # never staffed like this. Fires on view, before any blow (a sight pin),

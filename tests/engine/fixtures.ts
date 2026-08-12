@@ -2028,6 +2028,41 @@ export const FIX_ARRIVALS_FAR_LEVEL: LevelDef = hazardLevel(
   },
 );
 
+// THE SAME LOT AS A CONTROLLED GATE — a kiosk beside the doorway, a door with
+// an OPEN frame to draw, and the read for watching somebody go through without
+// you. Its own fixture rather than a flag on the two above, because all three
+// of those change what the beat DOES and the suites next door are pinning what
+// it does without them: where the card is presented (the window, not the
+// threshold), what is drawn while the gate stands open (its leaves, then
+// nothing again), and what he says when he misses it.
+//
+// The hero lands at the FAR end, which is the case the read needs — a beat
+// already under his nose cannot tell you whether the line waited to be seen.
+export const FIX_GATEHOUSE_LEVEL: LevelDef = hazardLevel(
+  "test_gatehouse_level",
+  {
+    ...FIX_ARRIVALS_LEVEL,
+    id: "test_gatehouse_level",
+    playerSpawn: { x: 150, y: 950 },
+    doors: [
+      {
+        id: "entrance",
+        from: { x: 700, y: 740 },
+        to: { x: 700, y: 860 },
+        radius: 10,
+        sprite: "test_gate",
+        openSprite: "test_gate_open",
+      },
+    ],
+    arrivals: {
+      ...LOT_ARRIVALS,
+      gatehouse: { sprite: "test_booth" },
+      thought: "test_night_shift",
+      missedThought: "test_missed_gate",
+    },
+  },
+);
+
 // A level with a dialogue-only apparition parked ahead of the spawn.
 export const FIX_APPARITION_LEVEL: LevelDef = hazardLevel(
   "test_apparition_level",
@@ -2558,6 +2593,7 @@ export function installFixtures(force = false): void {
       test_alarm_level: FIX_ALARM_LEVEL,
       test_arrivals_level: FIX_ARRIVALS_LEVEL,
       test_arrivals_far_level: FIX_ARRIVALS_FAR_LEVEL,
+      test_gatehouse_level: FIX_GATEHOUSE_LEVEL,
       test_car_exit_level: FIX_CAR_EXIT_LEVEL,
     },
     uniques: FIX_UNIQUES,

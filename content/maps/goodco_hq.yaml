@@ -21,11 +21,16 @@ description: |-
   lands beside, and the JANITOR'S CUPBOARD somewhere in the offices — lockers, a
   mop bucket, and the same mop bucket every single run. They are the only things
   on the floor a returning player can measure the rest of it against.
-  DOORS GET BIGGER AS THE BUILDING GETS SERIOUS: 56px on the cleaning cupboard,
-  64 on an office, 88 into a cleanroom, 130 onto the production floor and the
-  full 220 between two assembly bays — a hangar door, because that is what a
-  rocket leaves through. An opening is the SMALLER room's, so the door from the
-  hangar into the cupboard is still a cupboard door.
+  EVERY DOOR IN THE BUILDING IS THE SAME DOOR AND IT IS A PERSON'S: two slabs
+  wide, 32px of opening, into a cupboard and into an assembly bay alike
+  (`opening` on the door objects). The doorways used to be as wide as the rooms
+  they served — up to a 220px hangar door between two bays — and read from the
+  floor rather than from the blueprint that top rung was not architecture, it
+  was a wall with a piece missing: THIRTEEN slabs of door, which is not a thing
+  anybody has ever stood in front of. What the room widths still decide is the
+  BUILDING — which walls are long enough to carry a door at all, how small a
+  room may be cut — so the floor plan is the one it always was and only the
+  holes in it are a person's size now.
   FEEL: the onboarding mission, so it stays legible — straight walls, and the
   same escalating staff (interns and smokers out in the lot,
   then scientists, engineers, guards, assemblers, hazmat, and SUCCESSOR units
@@ -194,6 +199,17 @@ size:
 # The blueprint-wide `doorWidth` is the HANGAR DOOR — it is what an area that
 # names none of its own falls back to, which here is the ASSEMBLY BAY and the
 # keycard stores. Every other district asks for something a person walks through.
+#
+# AND NONE OF THESE NUMBERS IS THE HOLE ANY MORE. Every door hung on this floor
+# sizes its own (`opening: 48` on the two door objects below), so what the ladder
+# still decides is the BUILDING: a doorway is only punched through a border long
+# enough to take one of these, and a room is only cut if it can spare two of
+# them — which is why a bay's 220 gives it a handful of wide-open halls and the
+# office wing's 64 gives it thirty rooms off a corridor. Take the ladder itself
+# down to a person door and the floor plan is not a floor plan with narrower
+# doors in it, it is a different building: measured, the staff lot came out with
+# four ways into the block instead of one and the arrivals beat staged itself off
+# the hero's screen. Size the DOOR, not the district.
 layout:
   minRoom: 520
   doorWidth: 220
@@ -272,10 +288,25 @@ objects:
   # to it, then slides aside with a clack and stays open, its leaves left
   # standing in the jambs (`openSprite`). It is what turns a floor plan into a
   # building — a doorway is a gap, a DOOR is a thing that was shut.
+  #
+  # AND IT IS ONE DOOR, THE SAME ONE, EVERYWHERE (`opening`). 48px of wall, less
+  # the half stone each flanking run puts back into it, is 32px of opening — TWO
+  # of the 16px slabs the chain is tiled from, which is what a door looks like
+  # from in front of it. Sized off the DISTRICT instead, as it was, the same
+  # sprite was tiled thirteen times across an assembly bay's border and drew a
+  # wall with a piece missing.
+  #
+  # THE PRICE IS PAID BY THE BIG BODIES AND IT IS THE RIGHT WAY ROUND. A 32px
+  # opening takes anything under 16px of radius, which is the whole staff and all
+  # of the horde but three: the TUNGUSKA WALKER (15) is through with a pixel to
+  # spare, and the FIRST INVESTOR (16) and PAYLOAD-1 (18) cannot follow the hero
+  # out of the room they are in. A rocket that stays in its bay and a corridor
+  # the horde has to come down one at a time is what a door is FOR.
   - id: door_office
     type: door
     sprite: door_office
     openSprite: door_office_open
+    opening: 48
     radius: 8
 
   # THE FRONT ENTRANCE — `at: entrance`, which is not a spot but a RULE: hang
@@ -290,11 +321,21 @@ objects:
   # and following one through is how the campaign's first venue is entered. The
   # doorway that stood here before opened for the hero on approach, which meant
   # the whole of "get inside GOODCO" was walking at a wall until it moved.
+  #
+  # AND IT SIZES ITS OWN HOLE (`opening`) — for the same reason the office door
+  # does, and one more of its own. A doorway's width is otherwise a fact about
+  # the DISTRICT that owns the wall, and the wall this one is punched through is
+  # whichever the carve happened to put the staff lot against: on every seed that
+  # landed the lot beside an ASSEMBLY BAY the front of GOODCO was a 220px hangar
+  # opening with a badge reader beside it. A CONTROLLED way in is one specific
+  # object and has to be that object wherever the floor plan puts it — 32px of
+  # gate, TWO slabs, one person at a time, past the glass.
   - id: entrance
     type: door
     at: entrance
     sprite: door_entrance
     openSprite: door_entrance_open
+    opening: 48
     radius: 8
 
   # ── THE STAFF LOT ────────────────────────────────────────────────────────

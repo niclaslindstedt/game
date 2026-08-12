@@ -101,7 +101,7 @@ const ALLOWED_FIELDS = {
   // `MapArea.doors` — and optionally the PAIR OF LAMPS bolted either side of
   // the opening, hung with it because only the carve knows where the opening
   // ended up.
-  door: ["radius", "at", "openSprite", "rollUp", "lamps"],
+  door: ["radius", "at", "openSprite", "rollUp", "lamps", "opening"],
   // A LAMP: a pool of light pinned to a carved anchor, a nudge off it, burning
   // only once the venue's sky has gone dark — plus, unless the fitting is
   // genuinely overhead, the FIXTURE throwing it.
@@ -489,15 +489,24 @@ export function validateMap(bp, refs, description = "") {
           `layout.doorWidth ${layout.doorWidth} is too wide for minRoom ` +
             `${layout.minRoom} — a doorway plus its end margins must fit a chamber border`,
         );
-      // Narrow doorways plug: the scatter pass keeps furniture clear of walls
-      // but not of openings, so a rock can land in a thin gap. A PINNED
-      // blueprint (`carveSeed` — the static hub) is exempt: its one carve was
-      // authored and eyeballed, so "a random scatter MIGHT plug it" cannot
-      // happen to a layout that never re-rolls.
-      if (layout.doorWidth < 160 && bp.carveSeed === undefined)
-        warnings.push(
-          `${tag}: layout.doorWidth ${layout.doorWidth} is narrow — scattered ` +
-            `obstacles may plug it`,
+      // …AND WIDE ENOUGH FOR A BODY once the flanking walls have taken their
+      // half stone each out of it, which is the only way a doorway is ever too
+      // tight. The SCATTER cannot narrow one: every scattered piece keeps
+      // `OBSTACLES.spacing` (28 px) of air from every wall stone and from the
+      // door slats already standing in the opening, and that is more than a
+      // hero is wide — so a lane through a doorway is guaranteed at any width
+      // the author picks. (This check used to warn below 160 px on the opposite
+      // theory, that "a rock may land in a thin gap". It cannot, and the number
+      // said so about the WIDE doorways too — a 220 px hangar opening has room
+      // for a radius-70 rock in the middle of it and still keeps its lane.)
+      const stoneRadius =
+        (bp.objects ?? []).find((o) => o?.id === layout.wall)?.radius ?? 8;
+      const free = layout.doorWidth - stoneRadius * 2;
+      if (free < 20)
+        err(
+          `layout.doorWidth ${layout.doorWidth} leaves ${free}px of doorway ` +
+            `once its ${stoneRadius}px flanking stones take their half each — ` +
+            `a hero is 20px across`,
         );
     }
     if (
@@ -602,6 +611,19 @@ export function validateMap(bp, refs, description = "") {
           err(
             `${where}: enclosure "none" builds no walls, so a doorWidth does nothing`,
           );
+        else {
+          // The same body test the blueprint-wide default takes, because this
+          // is the number that actually gets punched on most of the map.
+          const stone =
+            (bp.objects ?? []).find((o) => o?.id === (a.wall ?? layout?.wall))
+              ?.radius ?? 8;
+          if (a.doorWidth - stone * 2 < 20)
+            err(
+              `${where}: doorWidth ${a.doorWidth} leaves ` +
+                `${a.doorWidth - stone * 2}px of doorway once its ${stone}px ` +
+                `flanking stones take their half each — a hero is 20px across`,
+            );
+        }
       }
       // A DOOR hung in every doorway of this district (`MapArea.doors`).
       if (a.doors !== undefined) {
@@ -1062,6 +1084,22 @@ export function validateMap(bp, refs, description = "") {
           warnings.push(
             `${tag}: ${where} has no openSprite — the doorway will be empty once opened`,
           );
+        // A DOOR THAT SIZES ITS OWN HOLE (`MapObject.opening`). Held to a body
+        // and the slats that fill it: below a hero's width plus the two half
+        // stones the flanking walls put into the opening, the door is hung in a
+        // hole nothing can walk through — which on a keyed gate is a level with
+        // no way in rather than a tight squeeze.
+        if (o.opening !== undefined) {
+          const stone = isPosNum(o.radius) ? o.radius : 8;
+          const body = 20; // PLAYER.radius * 2
+          if (!isPosNum(o.opening)) err(`${where}: opening must be positive`);
+          else if (o.opening < stone * 2 + body)
+            err(
+              `${where}: opening ${o.opening} leaves ${o.opening - stone * 2}px ` +
+                `of doorway once the flanking walls take their half stone each — ` +
+                `a hero is ${body}px across`,
+            );
+        }
       }
       // ANCHORED FURNITURE — a piece placed by rule instead of by density,
       // standing at a carved feature plus a nudge (see `MapObject.at`). Same

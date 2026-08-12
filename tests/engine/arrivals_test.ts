@@ -23,6 +23,7 @@ import {
   ARRIVALS,
   createGame,
   dismissIntro,
+  muteDialogue,
   registerDefs,
   skipCutscene,
   step,
@@ -39,12 +40,17 @@ import { DT, idle, steerTo } from "../helpers.ts";
 const LOT = "test_arrivals_level";
 /** …and the same tarmac with the hero landing at the far end of it. */
 const FAR_LOT = "test_arrivals_far_level";
+/** …and the same tarmac again as a CONTROLLED gate: a kiosk beside the doorway,
+ * a door with an open frame to draw, and the read for missing your moment. */
+const GATE_LOT = "test_gatehouse_level";
 /** The fixture's own door, hand-drawn at x=700 between y 740 and 860. */
 const DOOR = { x: 700, y: 800 };
 /** Where the far fixture lands him — the far corner of the same lot. */
 const FAR_SPAWN = { x: 150, y: 950 };
 /** The line the far fixture's lot has to say, registered below. */
 const READ = "test_night_shift";
+/** …and what the gate's lot says when he watches somebody go through it. */
+const MISSED = "test_missed_gate";
 
 beforeEach(() => {
   installFixtures(true);
@@ -60,6 +66,12 @@ beforeEach(() => {
         portrait: "hero",
         pages: [["TEST — THAT'S THE NIGHT SHIFT CLOCKING ON."]],
       },
+      [MISSED]: {
+        id: MISSED,
+        speaker: "{HERO}",
+        portrait: "hero",
+        pages: [["TEST — I'LL WAIT FOR THE NEXT AND WALK IN BEHIND THEM."]],
+      },
     },
   });
 });
@@ -69,6 +81,21 @@ function lot(seed = 7, level = LOT): GameState {
   const state = createGame(seed, level);
   skipCutscene(state);
   dismissIntro(state);
+  return state;
+}
+
+/** …and the GATE fixture, with its reads MUTED.
+ *
+ * The mute is load-bearing rather than tidy: this lot carries a thought, a
+ * thought takes the stage, and a scene on the stage freezes the whole run
+ * (`step` advances nothing but `playing`) — so an unmuted gate lot stops dead
+ * the first time somebody gets out of a car, with the walker frozen mid-tarmac
+ * and every assertion below it timing out on a beat that was never going to
+ * happen. Muted, the reads are still SPENT (`readOnce`), so `thoughtsSeen` says
+ * what it always said. */
+function gateLot(seed = 7): GameState {
+  const state = lot(seed, GATE_LOT);
+  muteDialogue(state);
   return state;
 }
 
@@ -192,6 +219,146 @@ describe("the staff lot", () => {
     expect(state.thoughtsSeen).toContain(READ);
   });
 
+  it("presents the card at the gatehouse window, not at the doorway", () => {
+    // A GATE IS NOT A DOOR WITH A LOCK ON IT. It is a lit box with somebody in
+    // it, and the way through is to go and be seen by them — so the walk ends
+    // at the KIOSK (`ArrivalPlan.reader`) and doglegs back to the gate once the
+    // card has been read. While it ended at the middle of the doorway the box
+    // was scenery: the badge read as something the DOOR did, and the one thing
+    // the beat exists to say was told by a sprite nobody ever walked to.
+    const bare = lot(7, LOT).arrivalPlan;
+    expect(bare).not.toBeNull();
+    // A lot with NO kiosk keeps the threshold, which is the plain badge beat
+    // every venue that ships no gatehouse gets.
+    if (bare) expect(bare.reader).toEqual(bare.apron);
+
+    const state = gateLot();
+    const plan = state.arrivalPlan;
+    expect(plan).not.toBeNull();
+    if (!plan) return;
+    const booth = state.obstacles.find((o) => o.sprite === "test_booth");
+    expect(booth, "no gatehouse").toBeDefined();
+    if (!booth) return;
+    const toBox = Math.hypot(
+      plan.reader.x - booth.pos.x,
+      plan.reader.y - booth.pos.y,
+    );
+    // AT the window — past the glass, and OUT of the box: an arrival is a real
+    // neutral and the separation pass shoves it out of furniture, so a reader
+    // inside the kiosk is somebody pushed back out of it every tick who then
+    // badges from wherever he landed.
+    expect(toBox).toBeGreaterThan(booth.radius);
+    expect(toBox).toBeLessThan(booth.radius + 28);
+    // …and it is not the threshold, which is the change that would otherwise
+    // compile, pass everything else, and put the beat back where it was.
+    expect(plan.reader).not.toEqual(plan.apron);
+    // The SWIPE is anchored there too, so what the player hears comes from the
+    // man at the glass rather than from the gate.
+    let swipe: { x: number; y: number } | null = null;
+    for (let t = 0; t < 40_000 / DT; t++) {
+      step(state, [idle], DT);
+      const beep = state.events.find((e) => e.type === "badgeSwiped");
+      if (beep) {
+        swipe = { ...beep.pos };
+        break;
+      }
+    }
+    expect(swipe, "nobody ever badged in").not.toBeNull();
+    if (swipe) {
+      expect(Math.hypot(swipe.x - plan.reader.x, swipe.y - plan.reader.y)).toBe(
+        0,
+      );
+    }
+  });
+
+  it("draws the gate open while it is open, and takes it back when it shuts", () => {
+    // A GATE HAS TWO MODES AND HAS TO SHOW BOTH. Shut, it is its own obstacle
+    // chain. OPEN was drawn as NOTHING — the slats came off the field and the
+    // doorway reverted to a hole in the wall — so "the way in is open right
+    // now", the single fact the whole beat is about, was one the player could
+    // only learn by walking at it. And the leaves have to come back OUT of the
+    // jambs when it shuts, or the gate stands closed with a pair of open leaves
+    // beside it, and a fresh pair after every badge for the rest of the run.
+    const state = gateLot();
+    const leaves = (): number =>
+      state.decor.filter((d) => d.kind === "test_gate_open").length;
+    expect(leaves(), "leaves before it ever opened").toBe(0);
+    let everOpened = false;
+    let peak = 0;
+    for (let t = 0; t < 40_000 / DT; t++) {
+      step(state, [idle], DT);
+      if (!shut(state)) {
+        everOpened = true;
+        peak = Math.max(peak, leaves());
+      } else if (everOpened) break;
+    }
+    expect(everOpened, "the gate never opened").toBe(true);
+    expect(peak, "the gate opened and drew nothing").toBeGreaterThan(0);
+    expect(shut(state), "the gate never shut").toBe(true);
+    expect(leaves(), "open leaves left standing beside a shut gate").toBe(0);
+  });
+
+  it("does not hold the gate open for somebody standing INSIDE", () => {
+    // "IT WILL NOT SHUT ON ANYBODY" IS ABOUT THE HOLE, NOT THE NEIGHBOURHOOD.
+    // The hold used to be a circle round the door's centre as wide as the
+    // doorway plus `DOORS.openRadius`, which reaches as far INTO the building as
+    // it does across the opening — and GOODCO parks its scripted rusher a step
+    // past the entrance. On the seeds where that body settled nearest the gate
+    // it stood in the circle for the whole run, so the gate the entire venue is
+    // built around opened once and never shut again, with nobody ever in its
+    // way.
+    // A bystander (8 across) held a stride PAST the threshold, on the
+    // building's side — which is where GOODCO's rusher stands.
+    const parked = (at: number): boolean => {
+      const state = gateLot();
+      const body = state.enemies.find((e) => e.defId === "test_bystander");
+      expect(body, "no bystander to park").toBeDefined();
+      if (!body) return false;
+      for (let t = 0; t < 40_000 / DT; t++) {
+        body.pos.x = DOOR.x + at;
+        body.pos.y = DOOR.y;
+        body.home = { x: body.pos.x, y: body.pos.y };
+        step(state, [idle], DT);
+        if (state.events.some((e) => e.type === "doorClosed")) return true;
+      }
+      return false;
+    };
+    expect(parked(40), "a body a stride inside held the gate open").toBe(true);
+    // …AND THE OTHER HALF OF THE RULE STILL HOLDS. It will not shut on somebody
+    // actually in the hole: the staffer whose badge opened it is walking through
+    // it, and a gate that closed on the man it just admitted would be a gate
+    // that teleports him.
+    expect(parked(0), "the gate shut on a body standing in it").toBe(false);
+  });
+
+  it("says he should wait for the next one when he watches one go in", () => {
+    // THE GATE IS A MOMENT, AND MISSING IT IS THE ORDINARY FIRST OUTCOME
+    // (`ArrivalsSpec.missedThought`). What the beat could not say for itself is
+    // what a miss MEANS — the way in opened, shut and went back to being a wall,
+    // with nothing on a deliberately quiet lot to tell the player "wait for the
+    // next car" from "that was never the way in".
+    //
+    // The hero does nothing at all, which is exactly the player it is for.
+    const state = gateLot();
+    let read = -1;
+    for (let t = 0; t < 60_000 / DT; t++) {
+      const at = state.players[0]?.pos ?? { x: 0, y: 0 };
+      step(state, [{ ...idle, view: seeing(at.x, at.y) }], DT);
+      if (state.thoughtsSeen.includes(MISSED)) {
+        read = t * DT;
+        break;
+      }
+    }
+    expect(read, "he watched somebody go in and said nothing").toBeGreaterThan(
+      0,
+    );
+    // …behind the arrival read, which is what introduces these people. Said the
+    // other way round, "and there they go" lands before anybody has arrived.
+    expect(state.thoughtsSeen.indexOf(MISSED)).toBeGreaterThan(
+      state.thoughtsSeen.indexOf(READ),
+    );
+  });
+
   it("stands its own people on the tarmac, and none of them is in the fight", () => {
     const state = lot();
     const guards = state.enemies.filter((e) => e.defId === "test_bystander");
@@ -259,11 +426,26 @@ describe("the staff lot", () => {
 
   it("takes the body off the field once it is through", () => {
     const state = lot();
-    idleFor(state, 40_000);
-    // Everybody who arrived has gone to work; only the lot's own guards are
-    // left standing on it.
-    expect(state.arrivals.some((a) => a.staff !== null)).toBe(false);
-    expect(state.enemies.filter((e) => e.arrival === true).length).toBe(0);
+    let everWalked = false;
+    for (let t = 0; t < 40_000 / DT; t++) {
+      step(state, [idle], DT);
+      everWalked ||= state.enemies.some((e) => e.arrival === true);
+    }
+    expect(everWalked, "nobody ever got out of a car").toBe(true);
+    // AN ARRIVAL THAT IS THROUGH IS GONE. Asked of the rule rather than of the
+    // timetable: "nobody is walking at t=40s" was a fact about how fast the
+    // lot happened to cycle, and the gate shutting the moment the doorway is
+    // CLEAR rather than the moment its neighbourhood is (`doorwayIsBlocked`)
+    // cycles it faster — so there is usually somebody mid-tarmac now, which is
+    // the beat working rather than the body being left behind.
+    for (const arrival of state.arrivals) {
+      if (arrival.phase === "entering") expect(arrival.staff).toBeNull();
+    }
+    // …and nothing that walked in is standing about on the far side of the wall.
+    expect(
+      state.enemies.filter((e) => e.arrival === true && e.pos.x > DOOR.x)
+        .length,
+    ).toBe(0);
   });
 
   it("shuts the gate again behind whoever badged in", () => {

@@ -271,6 +271,13 @@ function thoughtsSection(chapter, { href }) {
               // Not a speaker either: the venue ENDING, which on this one
               // venue is a beat rather than a splash (`LevelDef.exitByCar`).
               exit: "When the last of them stops moving",
+              // Not a speaker either: the GATE, and what the night shift does
+              // at it. The first is somebody arriving; the second is the one
+              // that only ever fires on a player who watched the way in open
+              // and shut without them.
+              gate: thought.missed
+                ? "When the gate takes somebody else"
+                : "The first car of the night shift",
               // Not a speaker either: a PLACE, and being in it is the whole
               // trigger. The slot gets what "being there" means.
               place: {

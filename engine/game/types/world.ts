@@ -844,6 +844,19 @@ export type Arrival = {
   /** Latched once the parked body's blockers are on the field, so a car that
    * stops twice does not lay two sets of them. */
   parked: boolean;
+  /**
+   * SOMEBODY ON THE TARMAC ACTUALLY WATCHED THIS ONE — latched the first tick a
+   * hero standing on the lot can see the walker (`visibleTo`), and read when
+   * they go through the gate (`ArrivalsSpec.missedThought`).
+   *
+   * It has to be a LATCH rather than a question asked at the end, because by
+   * the end there is nothing left to ask about: a staffer is taken off the
+   * field a step INSIDE the building, the fog stops at the walls, and the gate
+   * itself is usually further from the hero's landing than the fog has been
+   * lifted. The only moment the beat is visible is while it is happening, so
+   * that is the moment it is remembered.
+   */
+  watched: boolean;
 };
 
 /**
@@ -860,8 +873,28 @@ export type Arrival = {
 export type ArrivalPlan = {
   /** The doorway the badge opens — the mid-point of the entrance's chain. */
   door: Vec2;
-  /** A step short of it, on the LOT's side: where the card comes out. */
+  /** A step short of it, on the LOT's side: the threshold, and where anybody
+   * waiting to go through stands. */
   apron: Vec2;
+  /**
+   * THE READER — where the card actually comes out, which is at the GATEHOUSE
+   * WINDOW rather than at the gate.
+   *
+   * A gate is not a door with a lock on it: it is a lit box with somebody
+   * sitting in it, and the way through is to go and be seen by them. Walking
+   * the staffer to the middle of the doorway and having the gate open under
+   * their hand made the kiosk scenery — the badge read as a thing the DOOR did,
+   * and the beat the mission turns on ("somebody decides who comes through
+   * here") was told by a sprite nobody ever walked to. Sending him to the glass
+   * first costs a step off the shortest path and buys the whole read: a man
+   * stops at a window, something beeps, and the gate beside him opens.
+   *
+   * Stood off the doorway by the kiosk's own width, so the walk is a visible
+   * DOGLEG — box first, gate second — rather than a straight line the eye reads
+   * as one movement. Falls back to the apron on a venue with no gatehouse,
+   * which is every venue but this one.
+   */
+  reader: Vec2;
   /** One step PAST it, inside the building: where the body is taken away. */
   inside: Vec2;
   /** The footpath's world-y — the line people walk along to the apron. */

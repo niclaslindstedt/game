@@ -110,6 +110,12 @@ arrivals:
   # the first one anyway.
   maxCars: 3
   thought: goodco_follow_in
+  # …and what he says when he watches one of them go through without him. The
+  # gate is a MOMENT rather than a door (`ARRIVALS.gateHoldMs`), so missing it is
+  # the ordinary first outcome — and without a line it looks exactly like the way
+  # in not being the way in. Fires once, only while he is still on the tarmac, so
+  # a player who followed the first one through never hears it.
+  missedThought: goodco_missed_gate
 merchant:
   sprite: merchant_vendor
   # What he says across the counter, every visit (see `merchant.line`) — a

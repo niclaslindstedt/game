@@ -1674,6 +1674,26 @@ export type ArrivalsSpec = {
   /** THOUGHT_DEFS id fired once, when the first of them steps out of a car. */
   thought?: string;
   /**
+   * THOUGHT_DEFS id fired once, when he WATCHES one of them go through the gate
+   * and is still standing on the tarmac — the beat that names the rule the
+   * whole venue turns on, at the only moment the player has just been shown it.
+   *
+   * The gate holds for a second and a half (`ARRIVALS.gateHoldMs`) and a player
+   * who has not understood that the moment is the door will miss it — which is
+   * fine, because another car comes. What was NOT fine is that missing it looked
+   * exactly like the beat not working: the way in opened, shut, and the level
+   * said nothing about either, so a player standing at a wall that had briefly
+   * been a door had no way to tell "wait for the next one" from "that was not
+   * the way in". One line, at the moment the miss happens, turns a dead end back
+   * into an instruction.
+   *
+   * Held until it can actually be watched and spent only once it has PLAYED,
+   * exactly like `thought` — a read the player never saw is a read they are
+   * still owed. Ordered after `thought`, because "somebody is arriving" has to
+   * land before "and there they go".
+   */
+  missedThought?: string;
+  /**
    * The door the badge opens (`LevelDef.doors[].id`). Defaults to `entrance`,
    * which is what the carve hangs across the lot's own openings.
    */
