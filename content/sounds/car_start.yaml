@@ -3,8 +3,9 @@ id: car_start
 description: >-
   The hero turns the key on a thirty-year-old hatchback: the starter motor
   cranks — a dry whirr with three low square coughs riding it — then the
-  engine CATCHES: a saw swell climbing out of the floor into the idle the
-  running `carEngine` rumble takes over from.
+  engine CATCHES: a saw swell climbing out of the floor, flaring the way a
+  cold engine does, and settling onto the 40 Hz idle the running `carEngine`
+  rumble takes over from.
 on:
   type: carStarted
 voices:
@@ -36,7 +37,7 @@ voices:
     durationMs: 70
     volume: 0.035
     delayMs: 260
-  # The catch: the engine fires and swells up into its idle.
+  # The catch: the engine fires and swells up past where it will sit.
   - call: tone
     type: sawtooth
     from: 36
@@ -46,6 +47,18 @@ voices:
     delayMs: 380
     detuneCents: 14
     attackMs: 60
+  # …and settles onto its idle, which is where the running rumble comes in
+  # under it (`sfx/car-engine.ts` — 800 rpm at 20 rpm per Hz). Without this the
+  # start ended a fifth ABOVE the note that follows it, and the handover read
+  # as the engine dropping a gear the instant it caught.
+  - call: tone
+    type: sawtooth
+    from: 62
+    to: 40
+    durationMs: 300
+    volume: 0.032
+    delayMs: 800
+    detuneCents: 14
   - call: noise
     durationMs: 320
     volume: 0.03

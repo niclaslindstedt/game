@@ -249,10 +249,17 @@ export const CAR = {
    * well before the walking hero's own trigger (DOORS.openRadius), so the
    * roll-up has finished by the time the bumper reaches the threshold. */
   doorReach: 130,
-  /** The running engine's rumble cadence (ms between `carEngine` grains — the
-   * app's grain runs half again as long and HOLDS its peak past this, so the
-   * grains crossfade into one continuous rumble rather than putting one after
-   * another; see `sfx/world.ts`). */
+  /**
+   * The running engine's rumble cadence (ms between `carEngine` grains).
+   *
+   * The app answers each one with a grain THREE cadences long that HOLDS its
+   * peak past the next grain's arrival, so three are always sounding and they
+   * crossfade into one continuous rumble rather than putting one after another
+   * — the same bed the driving minigame's engine is made of, at half the rate
+   * and an octave down (`pwa/src/game/sfx/car-engine.ts`, which copies this
+   * number because no module in the sound bank may import the engine; the copy
+   * is pinned by `tests/content/car_engine_test.ts`).
+   */
   engineCueMs: 210,
   /** A bare axle's spark cadence (ms between `carGrind` bursts under way),
    * and the speed below which dragging steel stops sparking. */

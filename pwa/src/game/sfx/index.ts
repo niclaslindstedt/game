@@ -28,6 +28,7 @@ import {
   GENERATED_SOUND_KEYS,
 } from "../../generated/sounds.ts";
 
+import { resetCarEngine } from "./car-engine.ts";
 import { playCombatSound } from "./combat.ts";
 import { playJingle } from "./jingles.ts";
 import { clearListener } from "./listener.ts";
@@ -93,6 +94,11 @@ export function setSoundCatalog(
 export function stopRunSounds(): void {
   stopAllLoops();
   clearListener();
+  // The car's engine is a BED rather than a loop — one grain per cue, with the
+  // grain before it remembered so the note can glide (`sfx/car-engine.ts`).
+  // Nothing is playing that needs stopping, but the memory has to go, or the
+  // first grain of the next run glides away from the last one's last.
+  resetCarEngine();
 }
 
 /** The shipped bank, for the mod loader to merge onto and to restore. */

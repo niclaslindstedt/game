@@ -20,9 +20,14 @@ Three things make a bed, and all three are needed:
   grains.
 - **Cadence ≈ half the hold**, so three grains sound at once. The measured
   numbers for the drive: cadence 105, attack 60, hold 200, life 320 → ~1.2 dB
-  of wobble. At a cadence you cannot change (the run's `carEngine` is a
-  210 ms SIM event), attack 60 / hold 200 / life 320 is the best available and
-  gives ~2.3 dB, which reads as an idling engine rather than a fault.
+  of wobble. A CADENCE YOU CANNOT CHANGE IS NOT A CONSTRAINT ON THE BED — this
+  lesson used to say it was, and settled for ~2.3 dB on the run's `carEngine`
+  (a 210 ms SIM event) by keeping the drive's grain shape. The shape is a set of
+  RATIOS to the cadence, not four fixed numbers: scale all of them by
+  `cadence / 105` and a bed fired half as often is the SAME bed at the same
+  summed level (measured: 0.11–0.18 dB at 210 ms). `sfx/engine-bed.ts`'s
+  `grainShape` is that scaling, and it is what let one engine voice serve both
+  cars.
 - **A CONSTANT cadence.** A cadence that quickened with the revs made the rate
   of the putter the thing the ear followed; the rate the engine is turning at is
   the PITCH and always was. Rate-of-fire belongs in a separate CLATTER layer,
@@ -34,8 +39,11 @@ their linear baked-in fade means they take no hold. And the volumes are the
 SUM's, not the grain's: with three overlapping, divide the level you want by
 about 2.2 or the bed arrives at three times the intended loudness.
 
-The idle putter recipe still stands as a timbre: triangle 55→48 Hz (detune 12)
-under lowpass-220 noise; intensity adds ~+70 Hz and opens the filter to ~740 Hz
-at full throttle. A key-turn start is a static event sound (bandpass-1100 crank
-whirr + three square 110→90 coughs 130 ms apart, then a sawtooth 36→62 swell
-with `attackMs: 60` as the catch).
+The two-layer "idle putter" recipe this used to recommend (triangle 55→48 Hz
+under lowpass-220 noise) is RETIRED: it was a perfectly good engine that had no
+parts in it and no mass under it, and the run's car now plays the drive's own
+four-layer bed an octave down (`sfx/car-engine.ts`). A key-turn start is still a
+static event sound (bandpass-1100 crank whirr + three square 110→90 coughs
+130 ms apart, then a sawtooth 36→62 swell with `attackMs: 60` as the catch) —
+and it owes the bed a HANDOVER: the swell must settle onto the running note's
+idle, or the start ends a fifth above the sound that follows it.

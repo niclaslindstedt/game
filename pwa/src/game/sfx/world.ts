@@ -8,6 +8,8 @@ import { clamp01 } from "@game/lib/vec.ts";
 
 import type { Synth } from "@ui/lib/synth.ts";
 
+import { playCarEngine } from "./car-engine.ts";
+
 /** Play the sound for a world/movement event; false when it isn't one. */
 export function playWorldSound(synth: Synth, event: GameEvent): boolean {
   switch (event.type) {
@@ -446,42 +448,20 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
-    case "carEngine": {
+    case "carEngine":
       // The running engine: a grain fired on the sim's cadence
-      // (`CAR.engineCueMs` — 210 ms). `intensity` is the throttle: idle sits
-      // low and quiet, driving raises both the pitch and the volume of the
-      // chug.
+      // (`CAR.engineCueMs`). `intensity` is the throttle: idle sits low and
+      // quiet, driving raises both the pitch and the volume of the chug.
       //
-      // A GRAIN "A TOUCH LONGER THAN THE CADENCE" IS NOT A CONTINUOUS SOUND,
-      // which is what this used to be and what it sounded like. A tone falls
-      // exponentially across its whole duration — a tenth of its peak a
-      // quarter of the way in — so a 240 ms grain every 210 ms was audibly
-      // over before the next one arrived, and the car putt-putted. The fix is
-      // the sustain (`holdMs`): the grain holds its peak past the next grain's
-      // arrival and crossfades into it over the attack. The road minigame's
-      // engine is the same rule worked out in full — see the road's own
-      // `drive-screen/engine-note.ts`, which is where a continuous note lives.
-      const i = clamp01(event.intensity);
-      synth.tone({
-        type: "triangle",
-        from: 55 + 70 * i,
-        to: 48 + 62 * i,
-        durationMs: 320,
-        attackMs: 60,
-        holdMs: 200,
-        volume: 0.018 + 0.02 * i,
-        detuneCents: 12,
-      });
-      // The air under it runs longer still: uncorrelated noise sums in POWER,
-      // so a broadband bed needs a deeper stack of grains than a pitched one
-      // before it stops fluttering.
-      synth.noise({
-        durationMs: 840,
-        volume: 0.007 + 0.013 * i,
-        filter: { type: "lowpass", frequency: 220 + 520 * i },
-      });
+      // IT IS THE ROAD'S ENGINE, PITCHED DOWN, and that is the whole of it now.
+      // The bay used to hand-tune two layers of its own here — which was a
+      // decent engine noise belonging to a car the game does not have — and it
+      // is the SAME WAGON that drives the minigame. So both are voiced by
+      // `sfx/engine-bed.ts` and the only thing that differs is the crank:
+      // `sfx/car-engine.ts` puts this one in first at a walking pace, a good
+      // octave under the road's.
+      playCarEngine(synth, event.intensity);
       return true;
-    }
 
     case "carGrind": {
       // Bare axle on the road: a harsh little scrape grain per spark burst

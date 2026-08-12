@@ -1156,8 +1156,10 @@ escort.ts` walks the people an escort errand puts on the field, and
   something is actually struck; every effect is anchored to the ROAD and left
   behind except the HERO's own dead engine, whose column rides the car it came
   out of) and
-  `sfx/drive.ts` (the geared engine note, made of grains on a quickening
-  cadence) — with what a tick OWES those two lifted into
+  `drive-screen/engine-note.ts` (the geared engine note: what the WAGON's crank
+  is doing at this road speed, voiced through the shared bed in
+  `sfx/engine-bed.ts` — the same one the run's own car is heard through, an
+  octave down, in `sfx/car-engine.ts`) — with what a tick OWES those two lifted into
   `drive-screen/loop.ts` (`drainDrive`, `drawBursts`, `runEngineNote`), because
   the effects gallery's DRIVE shelf is a second host that has to drain a road
   exactly as the screen does. **A CRASHED CAR'S OWN CLOUD is the one pass in
