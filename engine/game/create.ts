@@ -661,9 +661,14 @@ export function createGame(
     if (m.patrol && m.patrol.length > 0)
       post.patrol = m.patrol.map((p) => vec(p.x, p.y));
     const sc = scaleRegular(m.mobLevels);
+    // A COPY of the cleared spot, never the spot itself: `clearOfFurniture`
+    // answers with `post.at` when the post is clear, and a mob minted ON that
+    // vector would drag the post's anchor around with it as it moves — which
+    // is exactly the aliasing the client/server world hash caught.
+    const spot = clearOfFurniture(post.at, m.enemy);
     const occupant = spawnEnemy(
       m.enemy,
-      clearOfFurniture(post.at, m.enemy),
+      vec(spot.x, spot.y),
       rng,
       nextId++,
       sc.hpMult,

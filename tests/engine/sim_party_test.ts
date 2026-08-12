@@ -167,12 +167,16 @@ describe("a simulated party", () => {
       // ding paused the whole run — and a simulator that only drained SEAT 0's
       // chooser wedged, because the phase never resumed. A run that completes at
       // all is the assertion.
+      // Three minutes rather than one: the parts moon fields a WoW-style
+      // garrison (one mob to a post) instead of the knots' streamed waves, so
+      // the same walk meets fewer bodies per minute and a one-minute window
+      // stopped containing anybody's first ding.
       const report = simulateLevel({
         levelId: "moon",
         difficulty: "easy",
         seed: 5,
         party: 3,
-        maxMinutes: 1,
+        maxMinutes: 3,
         realisticPacing: false,
       });
       expect(report.outcome).not.toBe("stuck");

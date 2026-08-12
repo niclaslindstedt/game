@@ -189,6 +189,14 @@ describe("the predicted local hero", () => {
     const rig = createRig();
     const a = rig.attach({ predict: true });
     takeTheField(rig, a);
+    // The walk must be COMBAT-FREE — the claim under test is prediction, and
+    // a mob brushing the hero applies server-side contact the client never
+    // predicts. The parts moon GARRISONS its landing (one mob to a post, a
+    // patroller among them), so the field is cleared outright: no bodies, and
+    // no posts to stand replacements back up mid-walk.
+    rig.session.state.enemies = [];
+    rig.session.state.mobSpawns = [];
+    rig.session.advance(TICK_MS);
     const state = a.client.state!;
     const spawn = { ...state.players[0].pos };
     // Due east from the moon's landing is open ground for hundreds of units —
