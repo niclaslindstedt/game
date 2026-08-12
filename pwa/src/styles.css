@@ -4811,8 +4811,15 @@ html.app-locked body {
   text-transform: uppercase;
 }
 
+/* Selected, it has to stay just as invisible — the display beneath draws the
+   text and the caret, so a selection painted in the UA's own colours puts a
+   second copy of the value over the top of the first. The foreground half is
+   spelled out twice for the two engines that disagree about which property
+   decides it (see `.drive-name-input::selection`). */
 .pixel-input-field::selection {
   background: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 /* A value the field can already tell is wrong (an address that does not parse):
@@ -7099,6 +7106,25 @@ html.app-locked body {
   font-size: 16px;
   text-align: center;
   cursor: text;
+}
+
+/* …AND IT STAYS UNSEEN WHILE IT IS SELECTED, which `color: transparent` above
+   does NOT buy on its own. A desktop entry arrives focused with all three
+   letters SELECTED (`DriveScores`, so the first keystroke replaces the previous
+   player's name), and a selection is painted with the UA's own selection
+   colours — foreground included — so the field's 16px "AAA" came up in the
+   highlight's ink ON TOP of the pixel glyphs it is supposed to be the invisible
+   half of. A phone never showed it because a coarse pointer is deliberately
+   left unfocused and unselected.
+
+   All three properties, because the engines disagree about which one decides:
+   Blink keeps the element's own `color` as soon as ANY `::selection` rule
+   matches, WebKit (which is what the Tauri shell renders in on macOS and Linux)
+   paints the selection through `-webkit-text-fill-color`. */
+.drive-name-input::selection {
+  background: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 /* THE SE FLOOR. 320 CSS px of height is the shortest screen this game is held
