@@ -12,9 +12,18 @@
 // post-update freeze (a still image of the map and hero, no UI), not as the
 // missing bump it is.
 
-import { createGame, LEVEL_ORDER, mapCols, mapRows } from "@game/core";
+import {
+  createGame,
+  DEPARTURE,
+  LEVEL_ORDER,
+  mapCols,
+  mapRows,
+  step,
+} from "@game/core";
 import type { Difficulty } from "@game/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { DT, idle, startGame } from "./helpers.ts";
 
 import {
   clearRiftRun,
@@ -446,6 +455,87 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "xpGained",
       "xpLost",
     ]);
+  });
+});
+
+describe("a run parked while the DRIVE was up", () => {
+  /**
+   * A garage run at the instant the road took over: the car has left the
+   * property, the dim has run out and `carDeparted` has already fired, so the
+   * app has raised the drive over the still-frozen run. Killing the app from
+   * the switcher (which is the ordinary way out of an iOS home-screen PWA) is
+   * what parks exactly this.
+   *
+   * The two fields are set rather than driven to. What a REAL drive-out leaves
+   * on the state is `tests/engine/drive_out_test.ts`'s subject — it pins that
+   * touching the tarmac latches `car.departed`, opens the dim, and books the
+   * trip once at `DEPARTURE.durationMs` — so re-driving it here would test that
+   * suite's rules again instead of this one's.
+   */
+  const departedRun = () => {
+    const state = startGame(3, "garage");
+    const car = state.vehicles.find((v) => v.kind === "car");
+    if (!car || car.kind !== "car") throw new Error("no car in the bay");
+    car.departed = true;
+    state.departure = {
+      ms: DEPARTURE.durationMs,
+      to: "goodco_hq",
+      booked: true,
+    };
+    return {
+      characterId: "hero-1",
+      difficulty: "medium" as Difficulty,
+      levelId: "garage",
+      state,
+    };
+  };
+
+  it("thaws with the trip UN-BOOKED, and the dim's clock left where it was", () => {
+    // The latch is the whole bug: `booked` is what stops `stepDeparture` from
+    // ever pushing `carDeparted` a second time, and the road that caught the
+    // first one lived only in React memory. Thawed as parked, the run is a hub
+    // the car has already driven out of, under a curtain the app paints at full
+    // black off `departure.ms` — no HUD, no pause menu, and CONTINUE leading
+    // there every launch.
+    saveRun(departedRun());
+
+    const thawed = loadSavedRun();
+    expect(thawed?.state.departure?.booked).toBe(false);
+    expect(thawed?.state.departure?.to).toBe("goodco_hq");
+    // `ms` is deliberately NOT rewound. It is what the app dims against, so a
+    // resume that reset it would fade UP from the garage the hero left before
+    // fading back out of it; left past the end, the resumed run opens already
+    // black and the road is the first thing the player sees.
+    expect(thawed?.state.departure?.ms).toBe(DEPARTURE.durationMs);
+  });
+
+  it("books the trip again on its first step, so the road opens on its title card", () => {
+    // The other half of the repair, and the half that makes the resume worth
+    // anything: the app answers `carDeparted` exactly as it did a minute ago
+    // (`beginDrive` → `DriveScreen`, which always opens on `DriveIntro`), so
+    // the leg is replayed from the top rather than lost.
+    saveRun(departedRun());
+    const state = loadSavedRun()!.state;
+
+    step(state, idle, DT);
+    const departures = state.events.filter((e) => e.type === "carDeparted");
+    expect(departures).toHaveLength(1);
+    expect(departures[0]).toMatchObject({ to: "goodco_hq" });
+    expect(state.departure?.booked).toBe(true);
+  });
+
+  it("leaves an ordinary parked run's departure alone", () => {
+    // Nothing to heal on the runs that are the overwhelming majority: a hero
+    // parked mid-level has never been near the car, and a departure caught
+    // mid-dim is parked UNBOOKED and simply finishes its own clock.
+    const state = createGame(1, LEVEL_ID, DIFFICULTY);
+    saveRun({
+      characterId: "hero-1",
+      difficulty: DIFFICULTY,
+      levelId: LEVEL_ID,
+      state,
+    });
+    expect(loadSavedRun()?.state.departure).toBeNull();
   });
 });
 

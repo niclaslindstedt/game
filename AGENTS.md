@@ -373,6 +373,16 @@ four seams while the tree has eight teaches a session to stop looking.
   `scripts/drive.lua`. The road's own bindings are NOT here: they are
   `drive-screen/dials.ts`, with the shared binding surface knowing only that a
   `drive` group exists.
+- **THE RUN UNDERNEATH IS STILL PARKED, AND ITS PARKED COPY IS A STATE NOTHING
+  COULD RESUME.** A campaign leg keeps the departing run mounted and FROZEN
+  (`driveRef` short-circuits both halves of the loop), so its autosave's
+  backgrounding flush is live while the road is up — and on a phone that flush
+  is how a minigame usually ends. What it writes is a hub the car has already
+  driven out of with `departure.booked` latched, which thaws as a black curtain
+  over a level nobody can reach. `rebookDeparture` (`saved-run.ts`) drops the
+  latch so the first tick books the trip again and the leg replays from its
+  title card. A second minigame that freezes a run under itself owes the same
+  pair — park the run, and repair whatever the freeze latched.
 
 Two smaller ones round it off: `App.tsx` lazy-imports the `?drive` developer
 workbench, and `engine/generated/botTuning.ts` carries a `DriveBotPatch` because

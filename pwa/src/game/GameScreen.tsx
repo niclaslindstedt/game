@@ -1917,12 +1917,20 @@ export function GameScreen({
           onScreenshot={() => takeScreenshot("THE DRIVE")}
           // ESCAPE → MAIN MENU, from the road. It ENDS the run rather than
           // parking it, which is the one thing that makes it different from the
-          // fight's own pause menu, and the difference is the road's: a parked
-          // run is a frozen `GameState` to be thawed, and the state behind a
-          // drive is a level the hero has already driven out of — its departure
-          // is booked and latched (`stepDeparture`), so a thaw would put him
-          // back behind a black curtain in a garage the car has left, with
-          // nothing left to book the trip a second time.
+          // fight's own pause menu, and the difference is the road's: LEAVING
+          // the road is a decision to turn the car around, so what the player
+          // asked for is the trip not to have happened.
+          //
+          // IT IS NO LONGER A CONSTRAINT, and that is worth stating because it
+          // read as one. The state behind a drive is a level the hero has
+          // already driven out of, its departure booked and latched
+          // (`stepDeparture`), and a thaw of that used to be a dead end — a
+          // black curtain over a garage the car had left, with nothing able to
+          // book the trip a second time. `rebookDeparture` (saved-run.ts) drops
+          // that latch on the way in now, because the app being KILLED
+          // mid-drive parks exactly that state and had exactly that dead end.
+          // So a parked road would resume onto the road; this button ends the
+          // run because ending it is what the player pressed.
           //
           // So the trip is what is given up, and NOTHING ELSE IS. The hero is
           // banked as he sits — the same bank the crossing on the far side of

@@ -34,6 +34,17 @@
 // A RESOLVED RUN IS NOT PARKED. On victory or defeat the outcome is banked onto
 // the CHARACTER (run-progress.ts) and the parked run is dropped: resuming into a
 // corpse or into an already-counted win is worse than having nothing to resume.
+//
+// A RUN UNDER A MINIGAME IS, THOUGH — and it is the one park whose state needs
+// repairing on the way back out. While the DRIVE is up the run stays mounted and
+// frozen (`driveRef`, GameScreen.tsx), so `tick` is never reached and these
+// listeners are the only thing that can still write: an app switcher killing the
+// page mid-road flushes a garage the car has already driven out of, its
+// departure booked and latched. That is a state nothing could resume until
+// `rebookDeparture` (saved-run.ts), which drops the latch on the thaw so the
+// leg opens again on its own title card. Nothing to do HERE — the flush is
+// right to write it, because the alternative is losing the run — but the two
+// halves only work as a pair.
 
 import type { GameEvent, GameState } from "@game/core";
 import type { MutableRefObject } from "react";
