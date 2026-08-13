@@ -11,6 +11,12 @@
 // the identical bug `wreck-smoke.ts` was written to fix, and the reason
 // `DriveFx.follow` is not the answer: that flag means THE HERO'S CAR.
 //
+// AND THE WALK IS ONLY HALF OF IT. A cadence puts the fire where the car was at
+// each issue; between issues the car keeps going, so the burn is re-seated on
+// its own vehicle every step (`carryBurns`) — position, HEIGHT and the bearing
+// the body is lying at. Without that a wreck launched into a cartwheel burns on
+// the tarmac it is spinning above, which is the one place the fire is not.
+//
 // THE GRIND IS THE SAME SHAPE FOR THE SAME REASON. A wheel-less, tilted shell
 // moving on its bare frame is a state, not an event, so the sparks coming off it
 // are issued on a cadence at the grounded end for as long as it lasts.
@@ -24,6 +30,7 @@
 import { DRIVE, vehicleDef, type DriveState } from "@game/core";
 
 import {
+  carryBurns,
   driveGrindSparks,
   driveVehicleFire,
   type DriveFxState,
@@ -97,11 +104,17 @@ export function stepBurning(
     if (burning) {
       driveVehicleFire(
         state,
+        other.id,
         other.pos.x,
         other.pos.y,
         drive.ms,
         other.fire,
-        FIRE_LIFT_PX,
+        // THE BODY'S OWN HEIGHT IS PART OF THE LIFT. A car thrown into a
+        // cartwheel is drawn `z` px above the point the physics holds it at
+        // (`wreck-draw.ts`), and a fire seated at that point is a fire on the
+        // tarmac with a burning car flying over it.
+        FIRE_LIFT_PX + other.z,
+        other.angle,
         FIRE_LIFE_MS,
         fairy,
       );
@@ -138,6 +151,13 @@ export function stepBurning(
         (grinding && !burning ? DRIVE.wreckage.grindEveryMs : FIRE_EVERY_MS),
     );
   }
+  // …AND EVERY BURN ALREADY IN THE AIR, BACK ONTO ITS CAR. The cadence above
+  // only puts a fire where the vehicle WAS at the moment of the issue, and one
+  // issue deliberately outlives the cadence so consecutive ones overlap — so a
+  // burning car doing 400 px/s trails its own fire the better part of a car's
+  // length behind itself, and one launched into a spin leaves it on the road.
+  // Re-seating here costs the draw nothing and cuts the lag to one step.
+  carryBurns(state, drive.traffic, FIRE_LIFT_PX);
   // A VEHICLE THE ROAD HAS FORGOTTEN IS FORGOTTEN HERE TOO — the same leak the
   // wreck smoke's own map has to be swept for, and worse if it is not: an id the
   // spawner reuses would inherit a dead car's cadence and go quiet.

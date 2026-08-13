@@ -1012,6 +1012,26 @@ the ratios between a windscreen, a fireball and a street light are right — wha
 was wrong was the absolute number of bright, additive, lingering specks a busy
 stretch accumulated.
 
+**A BURN IS ON THE CAR; EVERYTHING ELSE THE ROAD THROWS IS ON THE ROAD.** Grit,
+sparks, shards, glass and dust are thrown off and left behind — watching them
+recede is most of what makes speed read — and a fuel tank goes off where the
+tank was, with the shell thrown out of it. A fire is bodywork, and it is
+bodywork for the rest of the leg, so it is anchored twice: issued on a cadence
+at the vehicle (`stepBurning`, the same shape the wreck smoke uses) AND re-seated
+on its own vehicle every fixed step through `DriveFx.rider`, a traffic id
+resolved by `carryBurns`. Both halves are needed. `DriveFx.follow` is not one of
+them — that flag is answered at the DRAW out of the single live position
+`drawDriveFx` is handed, which is THE HERO'S WAGON, so a stranger's fire that
+set it would burn on the player's own bonnet. And a cadence alone only marks
+where the car was at the issue, while an issue deliberately outlives the cadence
+so consecutive ones overlap: at road speed that trails the fire a car's length
+behind its car, and a wreck launched into a cartwheel burns on the tarmac it is
+spinning above. The seat carries three things — the position, the vehicle's
+HEIGHT (`z`, since a launched car is drawn that far above the point the physics
+holds it at) and its `angle`, so the spread laid along a four-metre car turns
+with the car. Both materials read it: the flame's three tongues and the star
+fountain's grains are laid along the same line.
+
 **The other traffic runs with its lights on**, through the hero's own
 `drawLightCones` rather than a second implementation — every car in this game
 throws the same light, the rule the garage and the minigame already share. Two

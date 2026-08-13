@@ -40,8 +40,13 @@ export type StarSource = {
   /** Per-effect scatter seed, so two burning cars never twinkle in step. */
   seed: number;
   /** How far off the road it is thrown from (world px) — a bonnet, not the
-   * tarmac. */
+   * tarmac, plus however high the body itself currently is. */
   lift?: number;
+  /** Which way that body is lying (radians), so the fountain leaves from along
+   * the CAR. It only shows on a wreck that has been turned — level, the line is
+   * horizontal either way — and that is precisely when it matters: a car
+   * cartwheeling on its nose otherwise fizzes across the road beneath it. */
+  angle?: number;
 };
 
 /**
@@ -180,6 +185,8 @@ export function drawStarFire(
   sy: number,
 ): void {
   const lift = fx.lift ?? 0;
+  const cos = Math.cos(fx.angle ?? 0);
+  const sin = Math.sin(fx.angle ?? 0);
   const burn = Math.min(1, Math.max(0, fx.force));
   const count = Math.round(FIZZ_MIN + (FIZZ_MAX - FIZZ_MIN) * burn);
   // Fades in and out over its own short life so consecutive issues overlap
@@ -217,12 +224,20 @@ export function drawStarFire(
     // A star LEAVES fast and slows as it rises — hot gas throwing something
     // light, which runs out of push almost at once.
     const rise = life * (2 - life);
+    // WHERE ON THE BODY IT LEFT FROM, laid along the car's own line, and then
+    // the climb — which is vertical whatever the car is doing, because hot gas
+    // does not care which way up the wreck under it has ended up.
+    const along = (h1 - 0.5) * ALONG_PX;
     const px =
       sx +
-      (h1 - 0.5) * ALONG_PX +
+      along * cos +
       Math.sin(life * (2.2 + h3 * 3) * Math.PI) * WANDER_PX * h3;
     const py =
-      sy - lift - BODY_PX * (0.3 + h2) - rise * CLIMB_PX * (0.5 + h3 * 0.8);
+      sy -
+      lift +
+      along * sin -
+      BODY_PX * (0.3 + h2) -
+      rise * CLIMB_PX * (0.5 + h3 * 0.8);
     // A TWINKLE ON THE SIZE, never on the alpha: a grain that flickers its
     // opacity reads as a dropped frame, one that flickers its size reads as
     // catching the light.
