@@ -53,7 +53,8 @@ import {
   type QuestPage,
 } from "../defs/quests.ts";
 import { dropItem } from "../items/index.ts";
-import { addMapMarker } from "../map.ts";
+import { addMapMarker, removeMapMarkers } from "../map.ts";
+import { startPlayerThought } from "../story.ts";
 import { lineOfSight } from "../obstacles.ts";
 import { heroInPlay, partyLevel } from "../party.ts";
 import type {
@@ -111,6 +112,7 @@ export function createQuestGivers(
       faceLeft: spot.x < def.arrive.from.x,
       discovered: false,
       to: spot,
+      ...(def.arrive.delayMs ? { waitMs: def.arrive.delayMs } : {}),
       speed: def.arrive.speed ?? QUESTS.arriveSpeed,
     };
   });
@@ -127,10 +129,18 @@ export function createQuestGivers(
  * giver on the move, which is how the garage's roll-up goes up for the woman
  * with her own key.
  */
-function stepArrivingGivers(state: GameState, dt: number): void {
+function stepArrivingGivers(state: GameState, dt: number, dtMs: number): void {
   for (const giver of state.questGivers) {
     const to = giver.to;
-    if (!to) continue;
+    if (!to || giver.dead) continue;
+    // THE PAUSE BEFORE THE WALK (`QuestGiverDef.arrive.delayMs`) — they are
+    // standing on the spot they turned up at, which on the hub is the middle of
+    // the drive the car leaves by.
+    if (giver.waitMs !== undefined && giver.waitMs > 0) {
+      giver.waitMs -= dtMs;
+      if (giver.waitMs > 0) continue;
+      delete giver.waitMs;
+    }
     const step = (giver.speed ?? QUESTS.arriveSpeed) * dt;
     const left = distance(giver.pos, to);
     if (left <= step) {
@@ -184,13 +194,13 @@ export function stepQuests(state: GameState, dt: number, dtMs: number): void {
   }
 
   if (state.questGivers.length === 0) return;
-  stepArrivingGivers(state, dt);
+  stepArrivingGivers(state, dt, dtMs);
 
   for (const giver of state.questGivers) {
     // A giver still walking in has not met anybody: she is crossing the drive
     // with her back to him, and latching the meeting here would pin a map
-    // marker on a spot she is about to leave.
-    if (giver.to) continue;
+    // marker on a spot she is about to leave. Nor has one who did not make it.
+    if (giver.to || giver.dead) continue;
     // ANY hero meets a giver (the party rule): whoever walks up
     // discovers them for everybody, and the giver turns to face that hero.
     const meeter = state.players.find(
@@ -410,7 +420,7 @@ export function talkToQuestGiver(
   // Never step over a scene already on the stage.
   if (state.dialogue !== null) return false;
   const giver = state.questGivers.find((g) => g.id === giverId);
-  if (!giver || !giver.discovered) return false;
+  if (!giver || !giver.discovered || giver.dead) return false;
   if (distance(hero.pos, giver.pos) > QUESTS.tapRadius) return false;
 
   // A PERSON MAY OWE THE HERO A MEETING BEFORE THEY OWE HIM AN ERRAND
@@ -976,10 +986,57 @@ function runningQuest(state: GameState, giverId: string): string | null {
  * nothing = this person is done with you.
  */
 export function giverMark(state: GameState, giverId: string): QuestMark {
+  // Nothing over a body. Every errand of theirs is off the table for the rest
+  // of the run (`QuestGiver.dead`), so a mark would be pointing at a job the
+  // player can no longer take.
+  if (state.questGivers.some((g) => g.id === giverId && g.dead)) return "none";
   if (completableQuest(state, giverId)) return "turnIn";
   if (offerableQuests(state, giverId).length > 0) return "offer";
   if (runningQuest(state, giverId)) return "progress";
   return "none";
+}
+
+/**
+ * RUN DOWN. The one thing that can happen to a giver, and it can only happen
+ * while they are crossing open ground on their way in (`QuestGiverDef.arrive`)
+ * — see `runDownBystander` in vehicles.ts for what does it.
+ *
+ * The shape is the merchant's (`killMerchant`), because it is the same event
+ * with the same consequence: the mark comes off the map, anything of theirs on
+ * screen is closed, an event goes out for the blood and the noise, and the
+ * person is simply not there any more. Every errand of theirs is unreachable
+ * for the rest of the run — which is the whole cost, and it is a TRIP rather
+ * than a chain, because the hub mints its givers fresh on the next visit.
+ *
+ * No line and no toast: what the player is looking at says it.
+ */
+export function killQuestGiver(state: GameState, giverId: string): boolean {
+  const giver = state.questGivers.find((g) => g.id === giverId);
+  if (!giver || giver.dead) return false;
+  giver.dead = true;
+  delete giver.to;
+  delete giver.waitMs;
+  delete giver.speed;
+  // A conversation of hers on anybody's screen goes with her.
+  if (state.questOffer?.giverId === giverId) {
+    for (const hero of state.players) {
+      if (hero.screen === "quest") delete hero.screen;
+    }
+    state.questOffer = null;
+  }
+  removeMapMarkers(state, "questGiver", giverId);
+  state.events.push({
+    type: "questGiverKilled",
+    pos: { ...giver.pos },
+    giverId,
+  });
+  // …AND WHAT THE VENUE SAYS TO MAKE OF IT (`QuestGiverDef.runDown`): the one
+  // beat he gets on the spot, and the flag that carries the fact out of this
+  // run and down the rest of the campaign.
+  const runDown = questGiverDef(giverId).runDown;
+  if (runDown?.flag) state.questFlags[runDown.flag] = true;
+  if (runDown?.thought) startPlayerThought(state, runDown.thought);
+  return true;
 }
 
 /** What the dialogue box calls this person. */

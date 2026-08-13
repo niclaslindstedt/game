@@ -54,14 +54,40 @@ const VOICES: Record<string, DriveVoice> = {
 };
 
 /**
+ * …AND THE ONE THING THAT CAN HAPPEN BEFORE THE LEG THAT CHANGES WHAT HE SAYS
+ * ON IT: he came off his own driveway over Ada's mother (`ruth_run_down`, set
+ * by `killQuestGiver` and carried here on `DriveParams.flags`).
+ *
+ * The OPENING only, and only on the road out — the arrival line is about the
+ * place he has reached and has nothing to do with it, and the road home is a
+ * different leg with its own silence. What replaces it is the same man on the
+ * same road: he has an opinion about the front end and none about anybody, a
+ * level earlier than usual.
+ *
+ * A table rather than a branch because it is the shape the rest of this file
+ * is: a leg's voice is looked up, so a leg's ALTERED voice is looked up too.
+ */
+const MONOLOGUE_IF: readonly {
+  flag: string;
+  to: string;
+  monologue: string;
+}[] = [{ flag: "ruth_run_down", to: "goodco_hq", monologue: "drive_out_bump" }];
+
+/**
  * The lines this leg is driven to.
  *
  * The fallback is the road out, and it is a belt on a fastened belt: a drive is
  * only ever built for a destination the road has (`legDirection`, begin.ts),
  * which is exactly the two rows above.
  */
-export function driveVoice(params: Pick<DriveParams, "to">): DriveVoice {
-  return VOICES[params.to] ?? VOICES.goodco_hq!;
+export function driveVoice(
+  params: Pick<DriveParams, "to" | "flags">,
+): DriveVoice {
+  const voice = VOICES[params.to] ?? VOICES.goodco_hq!;
+  const swap = MONOLOGUE_IF.find(
+    (entry) => entry.to === params.to && params.flags?.[entry.flag] === true,
+  );
+  return swap ? { ...voice, monologue: swap.monologue } : voice;
 }
 
 /**

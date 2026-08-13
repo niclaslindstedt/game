@@ -130,14 +130,21 @@ export function addMapMarker(
   state.mapMarkers.push({ kind, pos: { ...pos }, defId });
 }
 
-/** Take every marker of one KIND back off the level map — what a pin that
- * described something that is no longer there owes the map (the trader's
- * stall after he has been run down). */
+/**
+ * Take markers back off the level map — what a pin that described something no
+ * longer there owes the map (the trader's stall after he has been run down).
+ *
+ * By KIND, and optionally by the ONE thing it pinned: a venue with three errand
+ * givers on it that lost one of them must not have the other two go with it.
+ */
 export function removeMapMarkers(
   state: GameState,
   kind: MapMarker["kind"],
+  defId?: string,
 ): void {
-  state.mapMarkers = state.mapMarkers.filter((m) => m.kind !== kind);
+  state.mapMarkers = state.mapMarkers.filter(
+    (m) => m.kind !== kind || (defId !== undefined && m.defId !== defId),
+  );
 }
 
 /** Open this hero's level map. Only possible mid-run, like the bag. */

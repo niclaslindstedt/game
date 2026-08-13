@@ -698,6 +698,7 @@
     "drive_arrive_wreck",
     "drive_broke_down",
     "drive_home_errand",
+    "drive_out_bump",
     "drive_out_welfare",
     "garage_on_foot",
     "garage_ship_unfinished",
@@ -731,7 +732,8 @@
     "moon_wisp_sight",
     "rift_arrival",
     "rift_asteroid",
-    "rift_graviton"
+    "rift_graviton",
+    "ruth_run_down"
   ],
   "storyItems": [
     "ada_hand",
@@ -3949,6 +3951,7 @@
     "gate_entered",
     "gate_opened",
     "gear_repaired",
+    "giver_run_down",
     "hay_ball_hit",
     "hellgate_opened",
     "hero_down",
@@ -4718,6 +4721,12 @@
       },
       "what": "Work done on a broken piece: two dull hammer taps on metal and a triangle note settling after them. The taps are bandpass noise rather than tone — what says \"repaired\" is the MATERIAL being worked, not a melody."
     },
+    "giver_run_down": {
+      "on": {
+        "type": "questGiverKilled"
+      },
+      "what": "A body goes under the car on the hero's own driveway. `merchant_run_down`'s blow — the bumper arriving, the mass going down, the tyre dragging out the far side — pitched DOWN and given a longer tail, because this one is somebody the player has stood and talked to rather than a trader on a road. The difference is deliberate and it is one note: the sawtooth under the boom runs lower and rings on past the tyre instead of dying with it, so what is left after the wheels have passed is a held low tone rather than silence. It is the only cue this beat gets — there is no toast and no line — so it has to be the thing that says LOOK BEHIND YOU without saying anything."
+    },
     "hay_ball_hit": {
       "on": {
         "type": "hayBallHit"
@@ -5478,6 +5487,7 @@
     "questCompleted",
     "questFailed",
     "questFlagSet",
+    "questGiverKilled",
     "questGiverMet",
     "questPieceBought",
     "questPieceSold",

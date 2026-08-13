@@ -356,6 +356,15 @@ ${speech(story.intro, "THE HERO")}`);
     parts.push(`      <h3>On leaving</h3>
 ${speech(story.outro, "THE HERO")}`);
   }
+  // …AND WHAT SOME HEROES HEAR INSTEAD OF NOTHING. A gated page is authored to
+  // be the LAST thing said, so it prints after the monologue it extends, under
+  // the fact the run had to be carrying — a reader who never made that mistake
+  // can still find out what it would have cost him.
+  for (const earned of story.outroIf ?? []) {
+    if (earned.pages.length === 0) continue;
+    parts.push(`      <h3>On leaving — if <code>${earned.needs}</code></h3>
+${speech(earned.pages, "THE HERO")}`);
+  }
   if (story.thoughts.length > 0) {
     // Said once, for the group. A row per monster all reading "the run stops
     // for a thought" is a column shouting the same sentence over the names —

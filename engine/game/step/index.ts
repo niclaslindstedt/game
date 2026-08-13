@@ -73,6 +73,7 @@ import {
   stepPlaceThoughts,
   stepSightThoughts,
   startPlayerThought,
+  outroPages,
 } from "../story.ts";
 import type { GameInput, GameState, Player, ViewRect } from "../types/index.ts";
 import { stepEnemies } from "./enemies.ts";
@@ -542,7 +543,7 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
     // A level with an epilogue goes out with a bang: the world quakes
     // through the whole loot-grab window, and the black-screen outro takes
     // the stage when the countdown runs out.
-    if ((runLevelDef(state).outro?.length ?? 0) > 0) {
+    if (outroPages(state).length > 0) {
       state.quakeMs = RUN.victoryDelayMs;
     }
   }
@@ -584,11 +585,9 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
       // chain hands over to the epilogue-or-splash below when it drains
       // (`advanceCutsceneChain`), so the order is one place either way.
       if (!beginFarewell(state)) {
-        const outro = runLevelDef(state).outro;
+        const outro = outroPages(state);
         state.phase =
-          !state.dialogueMuted && outro && outro.length > 0
-            ? "outro"
-            : "victory";
+          !state.dialogueMuted && outro.length > 0 ? "outro" : "victory";
       }
     }
   }

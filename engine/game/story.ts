@@ -70,9 +70,9 @@ export function advanceCutsceneChain(state: GameState): void {
   // already won behind it and hands over to the epilogue pages, or straight to
   // the splash when the level ships none. A DIALOGUE-muted run has neither.
   if (state.cutsceneThen === "victory") {
-    const outro = runLevelDef(state).outro;
+    const outro = outroPages(state);
     state.phase =
-      !state.dialogueMuted && outro && outro.length > 0 ? "outro" : "victory";
+      !state.dialogueMuted && outro.length > 0 ? "outro" : "victory";
     return;
   }
   state.phase = openingPhase(state);
@@ -420,6 +420,27 @@ export function startJoinWords(state: GameState, companionId: string): void {
  * `dialogueStarted` event lets the app cue it; the box resumes play — or a
  * pending level-up — when tapped through, like every other dialogue.
  */
+/**
+ * THE EPILOGUE THIS HERO ACTUALLY GETS — the level's `outro` with whatever
+ * `outroIf` he earned on the end of it.
+ *
+ * Every read of the outro goes through here rather than through
+ * `runLevelDef(state).outro`: the pages are walked by INDEX
+ * (`state.outroPage`), so one call site left on the raw list is a run that
+ * decides the epilogue is over one page early.
+ */
+export function outroPages(state: GameState): readonly (readonly string[])[] {
+  const def = runLevelDef(state);
+  const base = def.outro ?? [];
+  const extra = def.outroIf ?? [];
+  if (extra.length === 0) return base;
+  const earned = extra.filter(
+    (entry) => state.questFlags[entry.needs] === true,
+  );
+  if (earned.length === 0) return base;
+  return [...base, ...earned.flatMap((entry) => entry.pages)];
+}
+
 export function startPlayerThought(state: GameState, thoughtId: string): void {
   const def = thoughtDef(thoughtId);
   if (

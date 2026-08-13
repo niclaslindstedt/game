@@ -77,6 +77,7 @@ export function driveParamsFor(
   difficulty: Difficulty,
   attract = false,
   car?: CarDamage,
+  flags?: Readonly<Record<string, boolean>>,
 ): DriveParams | null {
   if (!areMinigamesEnabled()) return null;
   if (!solo) return null;
@@ -92,6 +93,10 @@ export function driveParamsFor(
     // (or the lot), so the leg opens on the machine the last one left behind
     // rather than on a replacement.
     ...(car ? { car } : {}),
+    // …AND WHAT HE HAS JUST DONE, which on this road is one question: did he
+    // come off his own drive over somebody. It changes what he says pulling out
+    // and nothing else (`driveVoice`).
+    ...(flags ? { flags } : {}),
     ...(attract ? { coursePx: DRIVE.attractCoursePx } : {}),
     // THE GORE GATE, ASKED ONCE AND CARRIED. The family switch (people bleed)
     // has to say yes for either, and then each way a body can come apart

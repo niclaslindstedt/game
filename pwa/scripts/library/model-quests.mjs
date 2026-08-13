@@ -81,6 +81,8 @@ export const QUEST_GIVER_FIELDS = {
   at: "not reader-facing: a world coordinate is a number the reader is standing in, not one they can use — where the person is on the map is what the mission page's map render shows",
   arrive:
     "not reader-facing, for `at`'s reason twice over: it is a second world coordinate, and the fact somebody WALKS IN is a thing to be watched happening rather than read about beforehand",
+  runDown:
+    "not reader-facing: what happens if the player kills this person is the one thing on their page that must be found out by doing it — the beat and what it costs are printed on the STORY chapter, where a reader has already asked to be told",
   greeting: "what they say, behind the reveal",
   farewell: "what they say, behind the reveal",
   intro:

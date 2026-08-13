@@ -284,13 +284,19 @@ function thoughtsSection(chapter, { href }) {
                 arrival: "The first minute he stands here",
                 pastDoor: "When he walks out of here instead",
               }[thought.where],
+              // Not a speaker either: somebody the CAR got. The slot below
+              // takes their name, because the beat is about them and he is
+              // the one saying it.
+              runDown: "When the wagon goes over somebody",
             }[thought.when]
           }${
             thought.door
               ? ` — ${escapeHtml(thought.door)}`
-              : who
-                ? ` — ${who}`
-                : ""
+              : thought.who
+                ? ` — ${escapeHtml(thought.who)}`
+                : who
+                  ? ` — ${who}`
+                  : ""
           }`;
       return `      <h3 id="thought-${i}">${heading}</h3>
 ${pinnedBeat(thought)}`;
@@ -385,12 +391,21 @@ ${reveal({ id: "reveal-found", label: "THE FINDS", body })}`;
 }
 
 function endingSection(chapter, linker) {
-  if (chapter.outro.length === 0 && !chapter.epilogue) return "";
+  const earned = (chapter.outroIf ?? []).filter((e) => e.pages.length > 0);
+  if (chapter.outro.length === 0 && !chapter.epilogue && earned.length === 0) {
+    return "";
+  }
   const parts = [
     chapter.epilogue
       ? prose(chapter.epilogue, { heading: "Epilogue", ...linker })
       : "",
     chapter.outro.length > 0 ? monologue(chapter.outro) : "",
+    // The pages only some heroes get, after the ones everybody gets — which is
+    // the order they are spoken in.
+    ...earned.map(
+      (e) => `<p class="note">…and if <code>${e.needs}</code>:</p>
+${monologue(e.pages)}`,
+    ),
   ].filter(Boolean);
   return `      <h2 id="ending">How it ends</h2>
 ${reveal({ id: "reveal-ending", label: "THE ENDING", body: parts.join("\n") })}`;

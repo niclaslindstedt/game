@@ -294,6 +294,42 @@ export function validateQuestGiver(id, def, refs) {
       ) {
         err("arrive.speed must be a positive walking pace (world px/s)");
       }
+      if (
+        def.arrive.delayMs !== undefined &&
+        (typeof def.arrive.delayMs !== "number" || def.arrive.delayMs < 0)
+      ) {
+        err(
+          "arrive.delayMs must be a non-negative pause before setting off (ms)",
+        );
+      }
+    }
+  }
+  // WHAT BEING RUN OVER MEANS. Only an ARRIVING giver can be — nothing reaches
+  // one standing at their spot — so a `runDown` on somebody who never walks in
+  // is a beat that can never play, which is worth saying out loud.
+  if (def.runDown !== undefined) {
+    if (
+      !def.runDown ||
+      typeof def.runDown !== "object" ||
+      Array.isArray(def.runDown)
+    ) {
+      err("runDown must be a mapping with `thought` and/or `flag`");
+    } else {
+      if (def.arrive === undefined) {
+        err(
+          "runDown needs `arrive` — only a giver still walking in can be hit, " +
+            "so this beat could never play",
+        );
+      }
+      if (def.runDown.thought !== undefined) {
+        if (!isStr(def.runDown.thought)) err("runDown.thought must be an id");
+        else if (refs.thoughts && !refs.thoughts.has(def.runDown.thought)) {
+          err(`runDown.thought "${def.runDown.thought}" does not exist`);
+        }
+      }
+      if (def.runDown.flag !== undefined && !isStr(def.runDown.flag)) {
+        err("runDown.flag must be a run-flag id");
+      }
     }
   }
   checkLore(def.lore, "every giver owes a paragraph", err, warn);

@@ -23,6 +23,7 @@ import {
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
   cutsceneVariant,
+  giversForLevel,
   itemName,
 } from "./catalogs.mjs";
 import { STORY_DOC, firstSentence, storySections } from "./story-doc.mjs";
@@ -335,6 +336,18 @@ function thoughtsOn(level) {
       when: "place",
       where: t.where,
     })),
+    // …and the beat somebody's DEATH raises. A giver who walks onto this map
+    // can be run over on the way in (`QuestGiverDef.runDown.thought`), and the
+    // trigger lives on the PERSON rather than on the level — so, like every
+    // entry above, without naming it here the line is authored, shipped,
+    // playable and on no page at all. The person is what the heading names.
+    ...giversForLevel(level.id)
+      .filter((giver) => giver.runDown?.thought)
+      .map((giver) => ({
+        thought: giver.runDown.thought,
+        when: "runDown",
+        who: giver.name,
+      })),
   ];
   return triggers.map((trigger) => {
     const def = THOUGHT_DEFS[trigger.thought];
@@ -350,6 +363,9 @@ function thoughtsOn(level) {
       door: trigger.door ?? null,
       // …and the PLACE a "place" beat answers, in the same slot.
       where: trigger.where ?? null,
+      // …and WHO a "runDown" beat is about, in the same slot again — the
+      // person under the wheels, who is never the speaker.
+      who: trigger.who ?? null,
       // …and which of the GATE's two beats this is: somebody arriving, or
       // somebody going through without him.
       missed: trigger.missed ?? false,
@@ -468,6 +484,10 @@ function chapterModel(level, sections) {
     ),
     intro: level.intro ?? [],
     outro: level.outro ?? [],
+    outroIf: (level.outroIf ?? []).map((entry) => ({
+      needs: entry.needs,
+      pages: entry.pages,
+    })),
     epilogue: sections.epilogue,
     // The hellborn are not part of this crime and say so themselves — their
     // beats live in their own chapter rather than crowding a mission's.
@@ -547,6 +567,7 @@ function hellbornChapter(order, section) {
     sceneTitles: [],
     intro: [],
     outro: [],
+    outroIf: [],
     epilogue: null,
     thoughts: [],
     speakers: [],
@@ -604,6 +625,7 @@ function chainChapter(section) {
     sceneTitles: [],
     intro: [],
     outro: [],
+    outroIf: [],
     epilogue: null,
     thoughts: [],
     speakers: [],

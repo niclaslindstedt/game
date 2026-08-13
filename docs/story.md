@@ -99,7 +99,18 @@ a shell with the living-room lamp still burning at the far end. Nothing is ever
 repaired, nobody comes out, and the hero says one word about the smell and then
 goes inside for a sandwich.
 
-**Side errands — RUTH.** Ada's mother has always had a key. She misses her
+**Side errands — RUTH.** Ada's mother has always had a key, and the player
+watches her use it: she is out on the drive when the hero comes down, square in
+front of the roll-up, and she waits a moment before letting herself in and
+crossing to the engine parts. **That is the same three seconds the car leaves
+by.** A player who gets in and goes without looking runs her over on his own
+driveway, and the game says almost nothing about it — one thought, three words,
+WHAT WAS THAT? — and then the road takes over exactly as it always does. It is
+the dealer's death told again about somebody the hero knows, and it is the one
+that follows him: it rides the whole campaign, changes what he mutters pulling
+onto the road, and is still waiting at the end. She is back on the next visit,
+because there is always another visit; the night is the thing that cannot be
+had again. She misses her
 daughter and says so plainly, and she has never once doubted she is winning —
 the pride and the missing her are the same feeling, and she asks for three
 things across the campaign, one per leg, because holding something of Ada's is
@@ -119,7 +130,11 @@ keepsake box up to a gilded chest she only calls THE INHERITANCE.
 
 **It opens on an empty outskirt** where he says the only two things he will ever
 say about any of this: the jacket is answering from GOODCO, and the people in
-town beg and are not on the welfare like him. **Then the town arrives** — four
+town beg and are not on the welfare like him. **If he came off his own drive
+over Ada's mother, the second of those is replaced** — he mentions the noise the
+front end is making now and wonders what he went over, and then he is on the
+same road saying nothing about anybody, which is the joke arriving a level
+early. **Then the town arrives** — four
 lanes through the block that lost its jobs, boarded windows near his own door
 and clipped hedges by the time he reaches GOODCO's fence, because that is simply
 the shape of the commute. The ones welfare did not reach are standing in the
@@ -380,6 +395,14 @@ the control-room glass, furious: "you took your time," then "nice hat." They wal
 home through the rift. With PAYLOAD gone the machines stop working everyone's
 jobs, people get hired back, and the world becomes somewhere you can afford to
 live. On Friday: movie night, chips and soda. This time he goes with her.
+
+**And if he ran her mother over on the way out, Friday has one more line on
+it.** Ada asks where her mum has got to — she has been ringing all week — and he
+says he will look into it. That is the last thing said in the game, and he still
+has not joined it up. **The homecoming will show what he drove past:** a cutscene
+of the pair arriving on his own drive with Ruth still lying on it, which nobody
+in it remarks on. _Not built yet — the beat is written here and the scene is
+still to come._
 
 ## Secret level — THE BUNKER
 

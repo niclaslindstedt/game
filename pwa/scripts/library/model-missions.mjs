@@ -46,6 +46,8 @@ export const LEVEL_FIELDS = {
   biome: "the ground the page is tiled with",
   intro: "the hero's arrival monologue, behind the reveal",
   outro: "the departure monologue, behind the reveal",
+  outroIf:
+    "…and the pages only some heroes earn, printed after it behind the same reveal, each under what the run had to be carrying",
   prelude: "the cutscene note, behind the reveal",
   farewell: "the cutscene note, behind the reveal — the scenes on the way OUT",
   objective: "the OBJECTIVE row and the opening line",
@@ -458,6 +460,14 @@ function missionModel(level, order) {
     story: {
       intro: level.intro ?? [],
       outro: level.outro ?? [],
+      // The pages a particular hero earned (`LevelDef.outroIf`) — printed
+      // after the monologue they extend, each labelled with the fact the run
+      // had to be carrying, because a reader who never ran anybody over should
+      // still be able to find out what he missed.
+      outroIf: (level.outroIf ?? []).map((entry) => ({
+        needs: entry.needs,
+        pages: entry.pages,
+      })),
       prelude: sceneChain(level.prelude),
       // …and the scenes on the way OUT, which the moon has and which read
       // beside the arrival rather than in place of it.

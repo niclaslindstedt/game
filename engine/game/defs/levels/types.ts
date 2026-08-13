@@ -458,6 +458,25 @@ export type LevelDef = {
    */
   outro?: readonly (readonly string[])[];
   /**
+   * …AND THE PAGES A PARTICULAR HERO EARNED — appended to `outro`, in order,
+   * for every entry whose `needs` flag the run is carrying (`questFlags`, which
+   * travel the whole campaign — see `bankCampaignQuests`).
+   *
+   * APPENDED, never inserted, and that is a writing rule as much as a
+   * mechanical one: a gated page is the LAST thing said, so it lands as the
+   * beat after the ending rather than as a seam in the middle of one. Boot
+   * Hill's is the case it exists for — a hero who ran Ada's mother over on his
+   * own driveway in the first ten seconds of the campaign gets one more line on
+   * Friday, and it is the last line in the game.
+   *
+   * A run carrying none of the flags plays exactly the outro it always did.
+   */
+  outroIf?: readonly {
+    /** The run flag that earns these pages. */
+    needs: string;
+    pages: readonly (readonly string[])[];
+  }[];
+  /**
    * THE LEVEL'S SEND-OFF — a cutscene, or a chain of them, played when the
    * objective falls, before the epilogue pages and the splash. The prelude's
    * mirror at the other end of the run (`prelude`), and it exists because a

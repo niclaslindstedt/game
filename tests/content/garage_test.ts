@@ -17,7 +17,9 @@ import {
   createGame,
   dismissIntro,
   enemyDef,
+  enterCar,
   FAUNA,
+  giverMark,
   LEVEL_ORDER,
   LEVELS,
   MAP_BLUEPRINTS,
@@ -28,13 +30,16 @@ import {
   SECRET_LEVEL_ORDER,
   skipCutscene,
   step,
+  outroPages,
   storyItemDef,
+  talkToQuestGiver,
   thoughtDef,
   vehicleFootprint,
   type GameState,
 } from "@game/core";
 
-import { DT, idle, SEED } from "../helpers.ts";
+import { driveVoice } from "../../pwa/src/game/drive-screen/voice.ts";
+import { DT, idle, SEED, steerTo } from "../helpers.ts";
 
 const garage = LEVELS.garage!;
 const BLUEPRINT = MAP_BLUEPRINTS.garage!;
@@ -145,6 +150,126 @@ describe("the venue", () => {
         }
       }
     }
+  });
+});
+
+/**
+ * ADA'S MOTHER LETTING HERSELF IN — the hub's one beat with a COST on it.
+ *
+ * She is not standing in the bay when the run opens: she is out on the drive,
+ * square on the roll-up's own line, and she waits a beat before walking in
+ * (`QuestGiverDef.arrive` in content/quest-givers.yaml). That line is the line
+ * the wagon leaves by, so the three seconds she spends crossing it are three
+ * seconds a player who jumps in and floors it can put her under the wheels —
+ * which is the whole point of walking her in rather than fading her in.
+ */
+describe("the arrival", () => {
+  const ruth = (state: GameState) =>
+    state.questGivers.find((g) => g.id === "ruth")!;
+
+  it("starts her outside, on the door's own line, and walks her in", () => {
+    const state = startHome();
+    const door = state.doors.find((d) => d.approach);
+    expect(door).toBeDefined();
+    const she = ruth(state);
+    // Outside the bay, level with the doorway, and on her way somewhere.
+    expect(she.to).toBeDefined();
+    expect(she.pos.x).toBeGreaterThan(door!.center.x);
+    expect(she.pos.y).toBeCloseTo(door!.center.y, 0);
+
+    // She holds still for the authored beat before setting off.
+    const from = { ...she.pos };
+    run(state, 30);
+    expect(ruth(state).pos).toEqual(from);
+
+    // …and is inside, at her spot, within four seconds of the first tick.
+    let arrivedAt: number | null = null;
+    for (let i = 30; i < 60 * 6 && arrivedAt === null; i++) {
+      run(state, 1);
+      if (!ruth(state).to) arrivedAt = i;
+    }
+    expect(arrivedAt).not.toBeNull();
+    expect(arrivedAt! / 60).toBeLessThan(4);
+    expect(ruth(state).pos.x).toBeLessThan(door!.center.x);
+    // She opened it herself on the way through — she has had a key for years.
+    expect(door!.open).toBe(true);
+  });
+
+  it("is run over by a hero who takes the wagon out without looking", () => {
+    const state = startHome();
+    const hero = state.players[0]!;
+    const car = state.vehicles.find((v) => v.kind === "car")!;
+    expect(enterCar(state, hero)).toBe(true);
+    const east = steerTo(car.pos.x + 2000, car.pos.y);
+    let killed = false;
+    for (let i = 0; i < 400 && !killed; i++) {
+      step(state, east, DT);
+      killed = state.events.some((e) => e.type === "questGiverKilled");
+    }
+    expect(killed).toBe(true);
+    const she = ruth(state);
+    expect(she.dead).toBe(true);
+    // …AND THE THREE WORDS HE GETS FOR IT, which is the whole of what the game
+    // says about it (`QuestGiverDef.runDown.thought`).
+    expect(state.dialogue?.source).toEqual({
+      kind: "playerThought",
+      defId: "ruth_run_down",
+    });
+    // …and the fact itself, banked on the run's flags so it travels the rest of
+    // the campaign: it is what he mutters pulling onto the road, and what Ada
+    // asks about on Friday.
+    expect(state.questFlags.ruth_run_down).toBe(true);
+    // Every errand of hers is off the table for the rest of the visit: no mark
+    // over her, no pin on the map, and a tap does nothing.
+    expect(giverMark(state, "ruth")).toBe("none");
+    expect(state.mapMarkers.some((m) => m.kind === "questGiver")).toBe(false);
+    expect(talkToQuestGiver(state, hero, "ruth")).toBe(false);
+  });
+
+  it("…and is perfectly safe from a player who waits for her", () => {
+    const state = startHome();
+    const hero = state.players[0]!;
+    run(state, 60 * 5);
+    expect(ruth(state).to).toBeUndefined();
+    const car = state.vehicles.find((v) => v.kind === "car")!;
+    expect(enterCar(state, hero)).toBe(true);
+    const east = steerTo(car.pos.x + 2000, car.pos.y);
+    for (let i = 0; i < 400; i++) step(state, east, DT);
+    expect(ruth(state).dead).toBeUndefined();
+  });
+
+  it("carries the mistake to the end of the campaign", () => {
+    // THE THREE SURFACES THE FLAG REACHES, and they are the whole point of it
+    // being a flag rather than a fact about the hub: every run flag is banked
+    // with the hero between levels (`bankCampaignQuests`), so a wagon that came
+    // off this driveway in the opening seconds is still readable from the last
+    // line of the game.
+    //
+    // …the road out, where the opinion he has about people who beg is replaced
+    // by the only opinion he ever really has, which is about the car.
+    expect(driveVoice({ to: "goodco_hq", flags: {} }).monologue).toBe(
+      "drive_out_welfare",
+    );
+    expect(
+      driveVoice({ to: "goodco_hq", flags: { ruth_run_down: true } }).monologue,
+    ).toBe("drive_out_bump");
+
+    // …and Friday, which gets one more page and it is the last in the game.
+    const end = createGame(SEED, "boot_hill", "medium");
+    const clean = outroPages(end).length;
+    end.questFlags.ruth_run_down = true;
+    const earned = outroPages(end);
+    expect(earned.length).toBe(clean + 1);
+    expect(earned[earned.length - 1]?.join(" ")).toContain("HER MUM");
+  });
+
+  it("is not run down by a car being parked", () => {
+    const state = startHome();
+    const car = state.vehicles.find((v) => v.kind === "car")!;
+    ruth(state).pos = { x: car.pos.x + CAR.footprint.radius, y: car.pos.y };
+    car.speed = CAR.roadkillSpeed - 5;
+    run(state, 10);
+    expect(ruth(state).dead).toBeUndefined();
   });
 });
 

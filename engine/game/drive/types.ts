@@ -1264,6 +1264,18 @@ export type DriveParams = {
    * road with no run behind it at all (the effects gallery, the workbench).
    */
   car?: CarDamage;
+  /**
+   * WHAT HE CAME OUT OF THE DRIVE HAVING JUST DONE — the run flags the night is
+   * carrying, of which this road reads exactly one: whether he came off his own
+   * driveway over Ada's mother (`ruth_run_down`, set by `killQuestGiver`).
+   *
+   * It picks WHICH opening he mutters on the outskirt (`driveVoice`), and it is
+   * a PARAMETER for the reason the seed, the rung and the car's dents are: a
+   * drive is settled whole before its first tick and then runs on its own, so
+   * nothing on the road asks the app which run it came from. Omitted on every
+   * road with no night behind it — the cabinet, the gallery, the workbench.
+   */
+  flags?: Readonly<Record<string, boolean>>;
 };
 
 /** The whole of a drive. */

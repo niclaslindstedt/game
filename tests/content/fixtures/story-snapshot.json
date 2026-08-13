@@ -3700,6 +3700,15 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
+    "drive_out_bump": {
+      "id": "drive_out_bump",
+      "pages": [
+        ["HER JACKET'S PINGING FROM GOODCO."],
+        ["FRONT END'S PULLING. MUST'VE GONE OVER SOMETHING BACK THERE."]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "drive_out_welfare": {
       "id": "drive_out_welfare",
       "pages": [
@@ -4115,6 +4124,12 @@
         ["NOTED. DON'T STAND STILL. DON'T TRUST THE FLOOR. THERE ISN'T ONE."]
       ],
       "portrait": "player",
+      "speaker": "{HERO}"
+    },
+    "ruth_run_down": {
+      "id": "ruth_run_down",
+      "pages": [["WHAT WAS THAT?"]],
+      "portrait": "hero",
       "speaker": "{HERO}"
     }
   }

@@ -69,6 +69,10 @@ export function drawQuestGivers(
   const inView = makeInView(camera, worldViewOf(ctx.canvas));
   const { sprites } = assets;
   for (const giver of state.questGivers) {
+    // NOBODY LEFT TO DRAW. A giver the car got on her way in is gone the way
+    // the trader is (`QuestGiver.dead`) — the blood on the drive is the whole
+    // statement, and the next visit quietly mints her again.
+    if (giver.dead) continue;
     if (!inView(giver.pos.x, giver.pos.y, 48)) continue;
     beginBillboard(ctx, giver.pos.x, giver.pos.y, camera.x, camera.y);
     const def = questGiverDef(giver.id);

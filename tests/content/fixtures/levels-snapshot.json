@@ -1198,6 +1198,16 @@
           "AND ON FRIDAY: MOVIE NIGHT. CHIPS AND SODA. SHE WENT OUT FOR THEM. I WENT WITH HER."
         ]
       ],
+      "outroIf": [
+        {
+          "needs": "ruth_run_down",
+          "pages": [
+            [
+              "SHE ASKED WHERE HER MUM HAD GOT TO. SAID SHE'D BEEN RINGING ALL WEEK. I SAID I'D LOOK INTO IT."
+            ]
+          ]
+        }
+      ],
       "gravity": 700,
       "biome": "boot_hill",
       "tiles": {

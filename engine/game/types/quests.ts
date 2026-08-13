@@ -54,8 +54,10 @@ export type QuestProgress = {
 
 /**
  * SOMEBODY STANDING ON THE MAP WITH SOMETHING TO ASK. Built at level creation
- * from `giversForLevel`; the horde is warded off them and nothing can hurt
- * them.
+ * from `giversForLevel`; the horde is warded off them and cannot hurt them.
+ *
+ * ONE THING CAN, and only while they are still walking in: a CAR
+ * (`runDownBystander`, vehicles.ts). See `dead` below.
  */
 export type QuestGiver = {
   /** QUEST_GIVER_DEFS id. */
@@ -73,8 +75,21 @@ export type QuestGiver = {
    * drawn walking rather than standing.
    */
   to?: Vec2;
+  /** Milliseconds still to stand still before setting off for `to`. */
+  waitMs?: number;
   /** Walking pace while `to` is set (world px/s). */
   speed?: number;
+  /**
+   * RUN OVER. A giver crossing open ground can be hit by the car
+   * (`runDownBystander`, vehicles.ts), and this is what is left: they are not
+   * drawn, not met, not talkable, and every errand of theirs is off the table
+   * for the rest of the run.
+   *
+   * PER RUN, not for good — the hub re-mints its givers on every visit, so
+   * what the mistake costs is the trip, not the chain. Absent on everybody
+   * still standing, which is everybody on a venue with nothing to be hit by.
+   */
+  dead?: boolean;
   /**
    * Latched the first time the hero comes near — pins them on the level map,
    * and is the gate on `talkToQuestGiver`. Meeting somebody is all approach
