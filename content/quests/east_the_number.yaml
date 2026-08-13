@@ -34,7 +34,7 @@ escorts:
     setOff: "I'M ON IN TWENTY. I'M ALWAYS ON."
     arrived: "THAT'S THE FURTHEST I'VE BEEN."
 reward:
-  xpShare: 0.85
+  xpShare: 1.44
   coins: 220
   loot:
     count: 2

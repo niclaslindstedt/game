@@ -816,6 +816,7 @@ parts:
         - { object: locker, at: [440, 80] }
         - { object: floor_marks, at: [280, 140] }
       spawns:
+        - { at: [350, 150] }
         - { at: [150, 150], patrol: true }
         - { at: [300, 90] }
         - { at: [300, 200] }
@@ -870,6 +871,7 @@ parts:
         - { object: plant, at: [400, 90] }
         - { object: part_rack, at: [80, 300] }
       spawns:
+        - { at: [240, 330] }
         - { at: [160, 200], slot: elite }
         - { at: [340, 140] }
         - { at: [360, 260], patrol: true }
@@ -892,6 +894,7 @@ parts:
         - { object: part_rack, at: [330, 100] }
         - { object: plant, at: [330, 270] }
       spawns:
+        - { at: [210, 300] }
         - { at: [140, 180], slot: elite }
         - { at: [120, 260] }
         - { at: [300, 220] }
@@ -916,6 +919,7 @@ parts:
         - { object: power_cabinet, at: [100, 390] }
         - { object: server, at: [520, 390] }
       spawns:
+        - { at: [310, 390] }
         - { at: [200, 240], slot: elite }
         - { at: [160, 140], patrol: true }
         - { at: [460, 140] }
@@ -941,6 +945,7 @@ parts:
         - { object: gas_rack, at: [120, 350] }
         - { object: server, at: [440, 350] }
       spawns:
+        - { at: [460, 230] }
         - { at: [180, 230], slot: elite }
         - { at: [160, 130], patrol: true }
         - { at: [400, 300] }

@@ -33,7 +33,7 @@ escorts:
     setOff: ...
     arrived: OH. I KNOW THIS PLACE.
 reward:
-  xpShare: 0.65
+  xpShare: 1.1
   coins: 140
   loot:
     count: 2

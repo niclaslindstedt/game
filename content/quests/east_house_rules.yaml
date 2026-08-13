@@ -23,7 +23,7 @@ objectives:
     enemy: saloon_brawler
     count: 40
 reward:
-  xpShare: 0.5
+  xpShare: 0.85
   coins: 150
   loot:
     count: 1

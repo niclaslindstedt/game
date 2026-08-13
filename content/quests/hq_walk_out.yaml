@@ -34,7 +34,7 @@ escorts:
     setOff: "DON'T LET THEM NEAR THE CRATE."
     arrived: "THAT'S THE DOOR. THANK YOU."
 reward:
-  xpShare: 0.6
+  xpShare: 1.02
   coins: 120
   loot:
     count: 2

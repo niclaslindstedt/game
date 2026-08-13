@@ -33,7 +33,7 @@ items:
       - archive_unit
     dropChance: 1
 reward:
-  xpShare: 0.2
+  xpShare: 0.34
   coins: 180
   loot:
     count: 1

@@ -23,7 +23,7 @@ objectives:
     enemy: vacuum_bot
     count: 40
 reward:
-  xpShare: 0.55
+  xpShare: 0.94
   coins: 180
   loot:
     count: 1

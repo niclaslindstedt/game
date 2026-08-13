@@ -26,6 +26,6 @@ objectives:
   - kind: reachLevel
     level: 99
 reward:
-  xpShare: 0.5
+  xpShare: 0.85
   coins: 2000
   cleanSlates: 1

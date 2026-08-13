@@ -24,7 +24,7 @@ objectives:
     enemy: mining_rover
     count: 20
 reward:
-  xpShare: 0.4
+  xpShare: 0.68
   coins: 100
   loot:
     count: 1

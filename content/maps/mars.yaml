@@ -418,6 +418,7 @@ parts:
         - { edge: e, at: 270 }
         - { edge: w, at: 270 }
       spawns:
+        - { at: [150, 390] }
         - { at: [150, 110] }
         - { at: [530, 130], patrol: true }
         - { at: [550, 430] }
@@ -438,6 +439,7 @@ parts:
         - { object: mars_pit_small, at: [370, 210] }
         - { object: tracks, at: [280, 150] }
       spawns:
+        - { at: [120, 220] }
         - { at: [140, 150], patrol: true }
         - { at: [300, 80] }
         - { at: [300, 230] }
@@ -462,6 +464,7 @@ parts:
         - { object: supply_crate, at: [150, 440] }
         - { object: mars_scar, at: [340, 270] }
       spawns:
+        - { at: [500, 400] }
         - { at: [320, 110] }
         - { at: [150, 300] }
         - { at: [470, 240], patrol: true }
@@ -484,6 +487,7 @@ parts:
         - { object: crater_red_small, at: [330, 170] }
         - { object: mars_debris, at: [250, 240] }
       spawns:
+        - { at: [110, 350] }
         - { at: [250, 130], slot: elite }
         - { at: [130, 250], patrol: true }
         - { at: [350, 340] }
@@ -506,6 +510,7 @@ parts:
         - { object: supply_crate, at: [420, 110] }
         - { object: mars_debris, at: [390, 170] }
       spawns:
+        - { at: [260, 330] }
         - { at: [260, 200], slot: elite }
         - { at: [110, 280] }
         - { at: [420, 290] }
@@ -526,6 +531,7 @@ parts:
         - { object: mars_pit, at: [460, 140] }
         - { object: supply_crate, at: [150, 110] }
       spawns:
+        - { at: [480, 360] }
         - { at: [310, 130], slot: elite }
         - { at: [150, 340] }
         - { at: [310, 360], patrol: true }
@@ -548,6 +554,7 @@ parts:
         - { object: colony_planter, at: [300, 230] }
         - { object: crate, at: [430, 340] }
       spawns:
+        - { at: [100, 220] }
         - { at: [280, 120], slot: elite }
         - { at: [140, 320] }
         - { at: [300, 340] }
@@ -569,6 +576,7 @@ parts:
         - { object: colony_planter, at: [340, 110] }
         - { object: colony_shrub, at: [150, 280] }
       spawns:
+        - { at: [230, 330] }
         - { at: [230, 190] }
         - { at: [340, 290] }
     # THE TERRARIUM — the billionaires' lifeboat garden, the boss's own room,

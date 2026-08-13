@@ -74,8 +74,8 @@
 # ×1.63/×2.64 on top, so the deep rungs are strictly slower still.
 
 # Flat kill payouts, in regular-mob units (see UNITS above).
-eliteXpMobMult: 5
-bossXpMobMult: 10
+eliteXpMobMult: 8
+bossXpMobMult: 15
 # The XP SCROLL's whole dial (see the note above): what it multiplies, for how
 # long, and how often one drops.
 scrollXpMult: 2
@@ -94,35 +94,35 @@ xpToNext:
   9: 2008 # ~28 kills
   10: 2048 # ~30 kills
   11: 2089 # ~31 kills
-  12: 2348 # ~32 kills
-  13: 2776 # ~34 kills
-  14: 3417 # ~35 kills
-  15: 4335 # ~37 kills
-  16: 5593 # ~39 kills
-  17: 7229 # ~40 kills
-  18: 9221 # ~42 kills
-  19: 11457 # ~44 kills
-  20: 13752 # ~46 kills
-  21: 15945 # ~48 kills
-  22: 18012 # ~50 kills
-  23: 20098 # ~53 kills
-  24: 22430 # ~55 kills
-  25: 25190 # ~58 kills
-  26: 28433 # ~60 kills
-  27: 32117 # ~63 kills
-  28: 36225 # ~66 kills
-  29: 40894 # ~69 kills
-  30: 46447 # ~72 kills
-  31: 53311 # ~75 kills
-  32: 61881 # ~78 kills
-  33: 72408 # ~82 kills
-  34: 84968 # ~85 kills
-  35: 99502 # ~89 kills
-  36: 115901 # ~93 kills
-  37: 134091 # ~98 kills
-  38: 154086 # ~102 kills
-  39: 176008 # ~107 kills
-  40: 184196 # ~111 kills
+  12: 2275 # ~31 kills
+  13: 2531 # ~31 kills
+  14: 3124 # ~32 kills
+  15: 3749 # ~32 kills
+  16: 4732 # ~33 kills
+  17: 5964 # ~33 kills
+  18: 7465 # ~34 kills
+  19: 8853 # ~34 kills
+  20: 10463 # ~35 kills
+  21: 11627 # ~35 kills
+  22: 12969 # ~36 kills
+  23: 13652 # ~36 kills
+  24: 15089 # ~37 kills
+  25: 16069 # ~37 kills
+  26: 18008 # ~38 kills
+  27: 19371 # ~38 kills
+  28: 21406 # ~39 kills
+  29: 23114 # ~39 kills
+  30: 25804 # ~40 kills
+  31: 28432 # ~40 kills
+  32: 32528 # ~41 kills
+  33: 36204 # ~41 kills
+  34: 41984 # ~42 kills
+  35: 46956 # ~42 kills
+  36: 53590 # ~43 kills
+  37: 60204 # ~44 kills
+  38: 67979 # ~45 kills
+  39: 77312 # ~47 kills
+  40: 81312 # ~49 kills
   41: 211615 # ~116 kills
   42: 242678 # ~122 kills
   43: 277872 # ~127 kills

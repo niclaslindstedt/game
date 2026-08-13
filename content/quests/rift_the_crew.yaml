@@ -32,7 +32,7 @@ objectives:
   - kind: killNamed
     enemy: scaled_ancestor
 reward:
-  xpShare: 0.75
+  xpShare: 1.27
   coins: 190
   loot:
     count: 1

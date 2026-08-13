@@ -35,7 +35,7 @@ items:
       - grigori_rasputin
     dropChance: 1
 reward:
-  xpShare: 1
+  xpShare: 1.5
   coins: 900
   loot:
     count: 2

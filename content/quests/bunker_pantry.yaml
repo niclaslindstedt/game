@@ -28,7 +28,7 @@ items:
     icon: icon_quest_tin
     dropFrom: [ice_agent, soldier]
 reward:
-  xpShare: 0.55
+  xpShare: 0.94
   coins: 170
   loot:
     count: 1

@@ -29,7 +29,7 @@ items:
     dropFrom: [voidling]
     at: [{ x: 940, y: 900 }]
 reward:
-  xpShare: 0.4
+  xpShare: 0.68
   coins: 110
   loot:
     count: 1

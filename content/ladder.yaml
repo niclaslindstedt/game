@@ -219,7 +219,7 @@ easy:
   moon: { hero: 13, mob: [8, 14] }
   mars: { hero: 19, mob: [15, 21] }
   the_rift: { hero: 25, mob: [20, 26] }
-  boot_hill: { hero: 31, mob: [26, 32] }
+  boot_hill: { hero: 32, mob: [26, 32] }
   the_bunker: { hero: 28, mob: [25, 28] }
 
 medium:
@@ -229,7 +229,7 @@ medium:
   moon: { hero: 13, mob: [8, 15] }
   mars: { hero: 19, mob: [16, 22] }
   the_rift: { hero: 25, mob: [21, 28] }
-  boot_hill: { hero: 32, mob: [28, 34] }
+  boot_hill: { hero: 34, mob: [28, 34] }
   the_bunker: { hero: 28, mob: [25, 30] }
 
 hard:
@@ -239,7 +239,7 @@ hard:
   moon: { hero: 15, mob: [9, 16] }
   mars: { hero: 22, mob: [18, 25] }
   the_rift: { hero: 29, mob: [24, 31] }
-  boot_hill: { hero: 35, mob: [31, 38] }
+  boot_hill: { hero: 36, mob: [31, 38] }
   the_bunker: { hero: 31, mob: [27, 34] }
 
 nightmare:

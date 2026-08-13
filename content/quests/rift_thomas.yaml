@@ -34,7 +34,7 @@ escorts:
     setOff: MOTHER SAID TO WAIT HERE.
     arrived: "SHE'LL SEE THE LIGHT FROM HERE."
 reward:
-  xpShare: 0.8
+  xpShare: 1.36
   coins: 200
   loot:
     count: 2

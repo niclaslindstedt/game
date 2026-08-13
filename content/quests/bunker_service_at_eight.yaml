@@ -31,7 +31,7 @@ objectives:
   - kind: killNamed
     enemy: permafrost_saint
 reward:
-  xpShare: 0.85
+  xpShare: 1.44
   coins: 240
   loot:
     count: 1

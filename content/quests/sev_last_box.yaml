@@ -35,7 +35,7 @@ items:
       - engineer
       - guard
 reward:
-  xpShare: 0.14
+  xpShare: 0.24
   coins: 120
   loot:
     count: 1

@@ -23,7 +23,7 @@ objectives:
     enemy: successor
     count: 20
 reward:
-  xpShare: 0.4
+  xpShare: 0.68
   coins: 70
   loot:
     count: 1

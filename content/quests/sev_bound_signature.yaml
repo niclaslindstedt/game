@@ -50,7 +50,7 @@ merchant:
         - sev_seal_sold
       pitch: NOW THAT I KNOW YOU'VE SEEN ONE — I HAVE THE OTHER HALF.
 reward:
-  xpShare: 0.35
+  xpShare: 0.59
   coins: 300
   loot:
     count: 1
