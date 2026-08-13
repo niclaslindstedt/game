@@ -79,6 +79,24 @@ const BODY_RADIUS = CAR.footprint.radius;
  */
 const REAR_END_BAND = 1;
 
+/**
+ * HOW NEAR TWO BODIES HAVE TO BE, ACROSS THE CONTACT, to be touching at all
+ * (world px) — the ONE reach the solver below tests against.
+ *
+ * IT IS EXPORTED BECAUSE THE PUSH IS NOT ALLOWED TO INVENT ITS OWN. `push.ts`
+ * answers what happens AFTER a contact, so a window wider than this one lets it
+ * claim a contact the bumper refused — and a wagon that shoves what it never
+ * hit takes a car from high speed to the push floor with no collision booked at
+ * all: no wear, no event, no sound, and an oncoming car turned round and
+ * carried up the road as if it had been leant on.
+ *
+ * `bodyRadius` is the struck thing's own footprint and `band` the share of the
+ * pair that is honestly on the road (see `solveImpact`'s `band`).
+ */
+export function contactReach(bodyRadius: number, band = 1): number {
+  return (BODY_RADIUS + bodyRadius) * band;
+}
+
 /** One solved collision — everything both parties need to answer for it. */
 export type Impact = {
   /** How much ground speed the CAR loses (world px/s, always ≥ 0). */
@@ -248,7 +266,7 @@ export function solveImpact(
   // nearest point lies along the other vehicle's side (`nx === 0`), stays on
   // the reduced scrape response.
   let fullVehicleCrash = bodyHalfLength > 0 && nx !== 0;
-  const reach = (BODY_RADIUS + bodyRadius) * band;
+  const reach = contactReach(bodyRadius, band);
   const dist = Math.hypot(nx, ny);
   if (dist > reach) return null;
   if (dist < 1e-6) {
