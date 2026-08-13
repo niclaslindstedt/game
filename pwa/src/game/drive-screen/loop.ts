@@ -112,7 +112,24 @@ export type Burst =
       force: number;
       heading: number;
       seed: number;
+      /** A BODY came apart into it, rather than a panel being dented. The heavy
+       * one is the mode's replacement for a death and gets the full shower; the
+       * light one only says "something happened here" and must stay visibly
+       * smaller, or the road stops distinguishing a person from a bumper. */
+      heavy: boolean;
     };
+
+/** How long a fairy-dust burst is drawn for (ms). Short on purpose: at road
+ * speed a cloud that lingers is left behind the camera and never seen, so the
+ * whole sweep has to happen while the impact is still on screen. */
+export const FAIRY_LIFE_MS = 800;
+export const FAIRY_PUFF_MS = 520;
+
+/** How close in time (ms) and space (world px) two collisions have to be before
+ * the second one's puff is folded into the first's. Wide enough to swallow the
+ * five events one rear-ender books as the wreck settles. */
+const DUST_GAP_MS = 260;
+const DUST_GAP_PX = 26;
 
 /** How long a burst's pieces are drawn for (ms) — the run's own figure. */
 export const BURST_LIFE_MS = 2600;
@@ -381,6 +398,66 @@ export function drainDrive(
   const carWreckedThisTick = drive.events.some(
     (event) => event.type === "trafficWrecked",
   );
+
+  // ── WHAT A COLLISION LEAVES WHEN THE GORE IS OFF ──────────────────────────
+  // With `collisionVisuals` withheld there is no smash, no sparks, no debris,
+  // no shake and no smoke, so a crash at ninety was a NOISE and nothing else.
+  // Every impact the road books therefore raises pastel dust at the contact
+  // point — the mode's whole vocabulary for "that happened, here".
+  //
+  // Which SIZE is the one distinction the road still has to make. A body gets
+  // the heavy shower; steel meeting steel gets a puff a third of it.
+  //
+  // ONE PUFF PER PLACE, and the window is measured in MILLISECONDS rather than
+  // in ticks. A single rear-ender books the contact, the panel folding, the
+  // glass, the bumper leaving and the write-off — some together, some a few
+  // ticks apart as the wreck settles — and every one of them stacked on the
+  // same bumper is a firework rather than feedback. The live burst list is the
+  // record, so no second one has to be kept in step with it.
+  //
+  // A heavy shower is never suppressed: a person is always worth their own
+  // cloud, and is what the puffs must stay smaller than.
+  const fairyDust = (
+    pos: { x: number; y: number },
+    force: number,
+    heavy: boolean,
+    seed: number,
+  ): void => {
+    if (
+      !heavy &&
+      bursts.some(
+        (b) =>
+          b.kind === "fairyDust" &&
+          drive.ms - b.bornMs < DUST_GAP_MS &&
+          Math.abs(b.x - pos.x) < DUST_GAP_PX &&
+          Math.abs(b.y - pos.y) < DUST_GAP_PX,
+      )
+    ) {
+      return;
+    }
+    bursts.push({
+      kind: "fairyDust",
+      x: pos.x,
+      y: pos.y,
+      bornMs: drive.ms,
+      force,
+      heading: drive.params.direction > 0 ? 0 : Math.PI,
+      seed,
+      heavy,
+    });
+  };
+  // Presentation may not spend the drive's RNG, so the contact point IS the
+  // seed — stable across a pause, a replay and a re-render of the same tick.
+  const crashDust = (pos: { x: number; y: number }, joules: number): void => {
+    if (collisionVisuals) return;
+    fairyDust(
+      pos,
+      Math.min(3, 0.5 + joules / 70_000),
+      false,
+      Math.abs(Math.floor(pos.x * 31 + pos.y * 17 + 11)),
+    );
+  };
+
   for (const event of drive.events) {
     soundAt = "pos" in event ? event.pos : undefined;
     // ── WHAT THE HIT LOOKS AND SOUNDS LIKE ────────────────────────────────
@@ -391,16 +468,13 @@ export function drainDrive(
     // whole frame. Nothing here decides how hard anything was; it only asks.
     if (event.type === "pedestrianHit") {
       if (!collisionVisuals) {
-        bursts.push({
-          kind: "fairyDust",
-          x: event.pos.x,
-          y: event.pos.y,
-          bornMs: drive.ms,
-          force: Math.min(6, 1 + event.joules / 30_000),
-          heading: drive.params.direction > 0 ? 0 : Math.PI,
-          // Presentation may not spend the drive's RNG. The collision's own
-          // position and victim are a stable seed for this disintegration.
-          seed: Math.abs(
+        // WHO it was joins the seed as well as where: two people taken in the
+        // same doorway peel away as two different clouds.
+        fairyDust(
+          event.pos,
+          Math.min(6, 1 + event.joules / 30_000),
+          true,
+          Math.abs(
             Math.floor(
               event.pos.x * 31 +
                 event.pos.y * 17 +
@@ -408,7 +482,7 @@ export function drainDrive(
                 (event.kind === "walker" ? 0 : 97),
             ),
           ),
-        });
+        );
       }
       if (collisionVisuals)
         driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
@@ -467,6 +541,7 @@ export function drainDrive(
     if (event.type === "debrisStruck") {
       if (collisionVisuals)
         drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
+      crashDust(event.pos, event.joules);
       play(DEBRIS_SOUND);
     }
     if (event.type === "trafficHit") {
@@ -476,6 +551,7 @@ export function drainDrive(
       // light scrape under it and make one crash sound like two impacts. Open
       // machines still use this ladder for their knock-down and snap outcomes.
       if (!carWreckedThisTick) {
+        crashDust(event.pos, event.joules);
         const hit = trafficHitSound(event.pos.x, event.pos.y, event.joules);
         if (hit.sub) {
           if (collisionVisuals)
@@ -500,6 +576,7 @@ export function drainDrive(
     if (event.type === "glassSmashed") {
       if (collisionVisuals)
         driveLampGlass(fx, event.pos.x, event.pos.y, WINDSCREEN_LIFT, drive.ms);
+      crashDust(event.pos, event.joules);
       play(glassSound(event.pos.x, event.pos.y));
     }
     // SOMEBODY DIED IN THEIR SEAT — the death this road cannot show in the air,
@@ -516,6 +593,7 @@ export function drainDrive(
     if (event.type === "trafficRolled") {
       if (collisionVisuals)
         driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      crashDust(event.pos, event.joules);
       play(ROLLOVER_SOUND);
       play(SUB_SOUND);
     }
@@ -526,6 +604,7 @@ export function drainDrive(
     if (event.type === "trafficBent") {
       if (collisionVisuals)
         drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
+      crashDust(event.pos, event.joules);
       play(panelSound(event.pos.x, event.pos.y));
     }
     // …AND ONE GIVING UP ENTIRELY. The breakdown noise, for the same reason:
@@ -542,14 +621,14 @@ export function drainDrive(
     if (event.type === "trafficWrecked") {
       if (collisionVisuals)
         driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      crashDust(event.pos, event.joules);
       // THREE AT ONCE, because a car being finished is three things happening:
       // the structure going (the big bank), the mass of it (the sub), and the
       // engine dying under all of it (the noise the player already knows as
       // exactly that, off his own bonnet).
       //
-      // …AND THE FIRST OF THEM IS PICKED RATHER THAN NAMED. It used to be
-      // `SMASH_SOUNDS[0]` flat, so every car the player ever finished went the
-      // same way while the bank sitting behind it had takes nothing reached.
+      // …AND THE FIRST OF THEM IS PICKED RATHER THAN NAMED, so the whole smash
+      // bank is reached instead of every finished car going the same way.
       play(pickSmash(event.pos.x, event.pos.y));
       play(SUB_SOUND);
       play(BREAKDOWN_SOUND);
@@ -564,6 +643,7 @@ export function drainDrive(
     if (event.type === "endSmashed") {
       if (collisionVisuals)
         driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      crashDust(event.pos, event.joules);
       play(pickSmash(event.pos.x, event.pos.y));
       play(SUB_SOUND);
     }
@@ -574,6 +654,7 @@ export function drainDrive(
     if (event.type === "wheelTorn") {
       if (collisionVisuals)
         drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+      crashDust(event.pos, event.joules);
       play(DEBRIS_SOUND);
     }
     // SOMETHING HAS CAUGHT. Quiet on purpose: the fire itself is not the beat —
@@ -590,6 +671,7 @@ export function drainDrive(
       if (collisionVisuals) {
         driveBlast(fx, event.pos.x, event.pos.y, drive.ms, event.big);
       }
+      crashDust(event.pos, event.joules);
       play(EXPLOSION_SOUND);
       // …AND THE RARE ONE THAT TAKES THE WHOLE STREET WITH IT. The tag comes in
       // on the event (`blowsBig`, engine/game/drive/wreckage.ts), so the ring
@@ -603,6 +685,7 @@ export function drainDrive(
     if (event.type === "machineDown") {
       if (collisionVisuals)
         drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+      crashDust(event.pos, event.joules);
       play(trafficHitSound(event.pos.x, event.pos.y, event.joules).id);
     }
     // …AND ONE COMING APART IN THE MIDDLE. Parts everywhere and the BIG shelf,
@@ -616,6 +699,7 @@ export function drainDrive(
         drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
         driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
       }
+      crashDust(event.pos, event.joules);
       play(pickSmash(event.pos.x, event.pos.y));
       play(SUB_SOUND);
     }
@@ -648,15 +732,12 @@ export function drainDrive(
     // joules say: there is no gentle version of coming out of a vehicle.
     if (event.type === "occupantThrown") {
       if (!collisionVisuals) {
-        bursts.push({
-          kind: "fairyDust",
-          x: event.pos.x,
-          y: event.pos.y,
-          bornMs: drive.ms,
-          force: Math.min(6, 2 + event.joules / 30_000),
-          heading: drive.params.direction > 0 ? 0 : Math.PI,
-          seed: Math.abs(Math.floor(event.pos.x * 31 + event.pos.y * 17 + 193)),
-        });
+        fairyDust(
+          event.pos,
+          Math.min(6, 2 + event.joules / 30_000),
+          true,
+          Math.abs(Math.floor(event.pos.x * 31 + event.pos.y * 17 + 193)),
+        );
       }
       if (collisionVisuals)
         driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
@@ -674,6 +755,7 @@ export function drainDrive(
         drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
         driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
       }
+      crashDust(event.pos, event.joules);
       // …AND THE LENS, out of the air where the head was. The event's position
       // is the post's while it is still standing, which is the one tick this
       // can be asked — a felled prop's `pos` is the flying half's and is moving
@@ -706,14 +788,19 @@ export function drainDrive(
       }
       play(glassSound(event.pos.x, event.pos.y));
     }
+    // The hero's OWN wagon taking a rung. No joules on either event — the panel
+    // has already priced the blow — so both get the floor of the puff ladder,
+    // which is all "you felt that" needs to look like.
     if (event.type === "panelBent") {
       if (collisionVisuals)
         drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
+      crashDust(event.pos, 0);
       play(panelSound(event.pos.x, event.pos.y));
     }
     if (event.type === "partShed") {
       if (collisionVisuals)
         drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+      crashDust(event.pos, 0);
       play(SHED_SOUND);
     }
     if (event.type === "breakdown") {
@@ -787,17 +874,19 @@ export function drawBursts(
   nowMs: number,
   sprites: Sprites,
 ): Burst[] {
-  const live = bursts.filter(
-    (b) => nowMs - b.bornMs < (b.kind === "fairyDust" ? 1250 : BURST_LIFE_MS),
+  const live = bursts.filter((b) =>
+    b.kind === "fairyDust"
+      ? nowMs - b.bornMs < (b.heavy ? FAIRY_LIFE_MS : FAIRY_PUFF_MS)
+      : nowMs - b.bornMs < BURST_LIFE_MS,
   );
   for (const b of live) {
     if (b.kind === "fairyDust") {
-      const durationMs = 1250;
+      const durationMs = b.heavy ? FAIRY_LIFE_MS : FAIRY_PUFF_MS;
       drawStardust(
         ctx,
         {
           kind: "stardust",
-          stardust: { intensity: b.force, burst: true, fairy: true },
+          stardust: { intensity: b.force, burst: b.heavy, fairy: true },
           pos: { x: b.x, y: b.y },
           angle: b.heading,
           seed: b.seed,

@@ -94,7 +94,13 @@ describe("the SFW gore override", () => {
     expect(stardustCount({ intensity: 1_000_000, burst: true })).toBe(56);
     expect(
       stardustCount({ intensity: 1_000_000, burst: true, fairy: true }),
-    ).toBe(72);
+    ).toBe(90);
+  });
+
+  it("keeps a road collision's puff well under a body's shower", () => {
+    const body = stardustCount({ intensity: 3, burst: true, fairy: true });
+    const crash = stardustCount({ intensity: 1.5, burst: false, fairy: true });
+    expect(crash).toBeLessThan(body / 2);
   });
 });
 
@@ -136,6 +142,7 @@ describe("the SFW DRIVE", () => {
         kind: "fairyDust",
         x: drive.car.pos.x + 4,
         y: drive.car.pos.y,
+        heavy: true,
       }),
     ]);
     expect(fx.fx).toEqual([]);
@@ -144,5 +151,65 @@ describe("the SFW DRIVE", () => {
     expect(gore.marks).toEqual([]);
     expect(gore.wet.size).toBe(0);
     expect(gore.tyre).toBe(0);
+  });
+
+  it("marks a steel-on-steel crash with one light puff per contact point", () => {
+    const drive = createDrive({
+      seed: 7,
+      direction: 1,
+      difficulty: "medium",
+      to: "goodco_hq",
+      gib: false,
+      split: false,
+    });
+    const pos = { x: drive.car.pos.x + 6, y: drive.car.pos.y };
+    // The four events one car crash actually books, all at the same contact.
+    drive.events.push(
+      { type: "trafficHit", pos, joules: 80_000, class: "car", headOn: false },
+      { type: "trafficBent", pos, joules: 80_000 },
+      { type: "glassSmashed", pos, joules: 80_000 },
+    );
+    const bursts: Burst[] = [];
+    const fx = createDriveFx();
+    drainDrive(
+      drive,
+      bursts,
+      fx,
+      createDriveGore(),
+      createSkids(),
+      undefined,
+      false,
+    );
+
+    expect(bursts).toEqual([
+      expect.objectContaining({ kind: "fairyDust", heavy: false }),
+    ]);
+    expect(fx.fx).toEqual([]);
+  });
+
+  it("leaves a crash unmarked while the graphic collision visuals are on", () => {
+    const drive = createDrive({
+      seed: 7,
+      direction: 1,
+      difficulty: "medium",
+      to: "goodco_hq",
+      gib: true,
+      split: true,
+    });
+    drive.events.push({
+      type: "trafficBent",
+      pos: { x: drive.car.pos.x + 6, y: drive.car.pos.y },
+      joules: 80_000,
+    });
+    const bursts: Burst[] = [];
+    drainDrive(
+      drive,
+      bursts,
+      createDriveFx(),
+      createDriveGore(),
+      createSkids(),
+    );
+
+    expect(bursts).toEqual([]);
   });
 });

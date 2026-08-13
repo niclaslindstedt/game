@@ -237,8 +237,9 @@ export type XpFloat = "on" | "off";
 export type GoreSwitch = "on" | "off";
 
 /** SFW MODE (SETTINGS → GORE): replace every graphic gore presentation with
- * pastel stardust and glitter; DRIVE body impacts become directional fairy
- * dust while its other collision sprites and effects stay hidden. The eight
+ * pastel stardust and glitter; DRIVE body impacts become wind-borne fairy dust
+ * and every other collision a smaller puff of it, while the road's own damaged
+ * sprites and effects stay hidden. The eight
  * detailed gore switches remain stored underneath it, so turning SFW mode back
  * off restores the player's exact choices instead of silently resetting them.
  * Pure presentation, read by the centralized gore gate and DRIVE renderer. */
