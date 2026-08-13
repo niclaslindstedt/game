@@ -13,9 +13,11 @@ import {
   advanceDialogue,
   anyZoneContains,
   applyRunCommand,
+  CAR,
   createGame,
   dismissIntro,
   enemyDef,
+  FAUNA,
   LEVEL_ORDER,
   LEVELS,
   MAP_BLUEPRINTS,
@@ -27,6 +29,7 @@ import {
   step,
   storyItemDef,
   thoughtDef,
+  vehicleFootprint,
   type GameState,
 } from "@game/core";
 
@@ -89,6 +92,52 @@ describe("the venue", () => {
 
   it("plays its own sanctuary score", () => {
     expect(garage.music).toBe("bench_light");
+  });
+
+  it("stands the hero AT his car rather than inside it", () => {
+    const state = startHome();
+    const car = state.vehicles.find((v) => v.kind === "car");
+    expect(car).toBeDefined();
+    const hero = state.players[0]!;
+    // The wagon is parked on the carve's own spawn anchor (`at: spawn` in
+    // content/maps/garage.yaml), so this is the venue the landing rule exists
+    // for: he steps clear of the blockers under it…
+    for (const print of vehicleFootprint(car!)) {
+      expect(
+        Math.hypot(hero.pos.x - print.pos.x, hero.pos.y - print.pos.y),
+      ).toBeGreaterThanOrEqual(print.radius);
+    }
+    // …TOWARD THE EYE, never behind the machine — the vehicle pass draws a car
+    // whose base is nearer the eye OVER the actors (`VehicleLayer`), so a hero
+    // nudged the other way would open the game under a roof.
+    expect(hero.pos.y).toBeGreaterThan(car!.pos.y);
+    // And still within arm's reach of it: the boardable mark is up and the tap
+    // works on the first frame, with nothing to walk.
+    expect(
+      Math.hypot(hero.pos.x - car!.pos.x, hero.pos.y - car!.pos.y),
+    ).toBeLessThan(CAR.boardRadius);
+  });
+
+  it("keeps the lawn's sparrows on the lawn", () => {
+    // Nothing collides with a critter and nothing steps one, so the fence its
+    // placement draws is the only thing between a bird and the bay's cement.
+    const state = startHome();
+    expect(state.critters.length).toBeGreaterThan(0);
+    const lawn = (carved.fauna ?? []).flatMap((line) => line.within ?? []);
+    expect(lawn.length).toBeGreaterThan(0);
+    for (const critter of state.critters) {
+      // Every corner of the lap, not just the home it is centred on.
+      for (const dx of [-critter.range, 0, critter.range]) {
+        for (const dy of [
+          -critter.range * FAUNA.ySweep,
+          0,
+          critter.range * FAUNA.ySweep,
+        ]) {
+          const at = { x: critter.home.x + dx, y: critter.home.y + dy };
+          expect(anyZoneContains(lawn, at)).toBe(true);
+        }
+      }
+    }
   });
 });
 

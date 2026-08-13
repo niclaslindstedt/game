@@ -238,6 +238,15 @@ export type Critter = {
   animated: boolean;
   /** The centre it wanders around, in level coordinates. */
   home: Vec2;
+  /**
+   * WHERE IT GOES TO SIT, in level coordinates — the piece of furniture it
+   * breaks its lap for (`LevelDef.fauna[].perches`, resolved against the
+   * obstacles marked `perch` when the level is built).
+   *
+   * Absent on everything that does not perch, and on a perching animal with
+   * nothing perchable within reach: a bird on a bare lawn works the grass.
+   */
+  perch?: Vec2;
   /** How far from home it strays, in world px. */
   range: number;
   /** Wander speed in world px/s — what the range is swept at. */
@@ -275,6 +284,13 @@ export type Obstacle = {
   half?: Vec2;
   /** True when a jumping player sails over it. */
   jumpable: boolean;
+  /**
+   * A BIRD MAY SIT IN THIS — a tree, a fence, a wire. Read once, when the
+   * level's fauna is placed (`scatterFauna`): a perching critter takes the
+   * nearest marked piece as the spot it breaks its lap for. Purely a
+   * presentation fact; nothing about collision, sight or damage reads it.
+   */
+  perch?: boolean;
   /**
    * BREAKABLE (a crate — see crates.ts): the hero's weapon smashes it. When
    * set, `hp`/`maxHp` are live and the obstacle drops loot and is removed from

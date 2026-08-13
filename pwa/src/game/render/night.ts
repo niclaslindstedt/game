@@ -28,7 +28,7 @@
 // under the same nearest-neighbour upscale as the pixels it is lighting. A CSS
 // layer would have to be re-laid every frame against a projection it cannot see.
 
-import { heroInPlay, heroes, nightAmount, runLevelDef } from "@game/core";
+import { heroInPlay, nightAmount, runLevelDef } from "@game/core";
 import type { GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
@@ -52,6 +52,21 @@ import { worldPitch, worldToCanvas } from "./tilt.ts";
  * the floor.
  */
 const NIGHT_ALPHA = 0.72;
+
+/**
+ * HOW MUCH OF THE FINISHED PICTURE SURVIVES THE WASH — 1 in daylight, and
+ * `1 - NIGHT_ALPHA` at a full night.
+ *
+ * What anything painted as LIGHT before the sheet goes down has to divide by to
+ * read at the strength it was authored at. Only the car's headlight cone reads
+ * it today (render/vehicle-lights.ts): the cone is part of the ASSEMBLY, so it
+ * is drawn with the panels and then washed over like the pavement it is lighting
+ * — and the drive's road, which has no night pass at all, is where the same beam
+ * shows what it is meant to look like.
+ */
+export function nightSurvival(state: GameState): number {
+  return 1 - NIGHT_ALPHA * nightAmount(state);
+}
 
 /** The colour the dark washes toward: a cold blue-black, never neutral grey.
  * Night on a lawn is blue because the sky is still the only light source left,
@@ -89,27 +104,20 @@ const HERO_LIGHT = { radius: 40, intensity: 0.42, rgb: "222, 226, 240" };
  */
 const LAMP_TINT = 0.42;
 
-/**
- * A DRIVEN CAR'S HEADLIGHTS ARE NOT DRAWN HERE — see `drawLightCones` in
- * render/vehicles.ts, which is the ONE pair of lamps the car has.
- *
- * There used to be a second: a wedge walked out of the nose as nine overlapping
- * glow pools and punched through this sheet, so a night drive laid its own light
- * along the pavement. It was the wrong picture twice over. It disagreed with the
- * assembly's own cone about what colour the lamps burn — the car threw warm
- * tungsten and the night pass threw cold daylight out of the same two bulbs —
- * and it disagreed about their SIZE, reaching half a screen and opening 26° each
- * side, so a wagon idling in its own bay lit the lot like a searchlight. Beside
- * the driving minigame, which has no night pass and is exactly the same car, it
- * read as a different vehicle.
- *
- * So the cone is the whole of it, on the road and on the drive alike. It is part
- * of the ASSEMBLY, drawn with the panels and the arches in the body's own screen
- * space, which is also why it never swivels: the lamps are sealed beams bolted
- * into a shell that is one side-profile cut nose-right, and nothing anywhere
- * mirrors or rotates it, while `CarVehicle.heading` swings the better part of
- * 180° inside the yaw stop.
- */
+// A DRIVEN CAR'S HEADLIGHTS ARE NOT CUT HERE — `drawLightCones`
+// (render/vehicle-lights.ts) is the ONE pair of lamps the car has, on the road
+// and on the drive alike. A second wedge punched through this sheet is a second
+// thing to keep in step with it, and the two disagreed about both the colour the
+// bulbs burn and how far they reach: a wagon idling in its own bay lit the lot
+// like a searchlight, and beside the driving minigame — no night pass, exactly
+// the same car — it read as a different vehicle.
+//
+// The cone is part of the ASSEMBLY, drawn with the panels in the body's own
+// screen space, which is also why it never swivels: the lamps are sealed beams
+// bolted into a shell that is one side-profile cut nose-right, while
+// `CarVehicle.heading` swings the better part of 180° inside the yaw stop. What
+// it does pay for being under this sheet is strength, which `nightSurvival`
+// above hands back.
 
 /**
  * The two lobes every lamp is cut with: `[radius scale, share of its alpha]`.
@@ -263,8 +271,17 @@ export function drawNight(
       ),
     });
   }
-  for (const hero of heroes(state)) {
+  for (const [seat, hero] of state.players.entries()) {
     if (!heroInPlay(hero)) continue;
+    // A HERO AT THE WHEEL CARRIES NO POOL. The concession above is for a body
+    // standing on a dark field — and a hero who is driving has no body on the
+    // field at all: the car assembly IS him this frame (render/player.ts skips
+    // his doll, render/vehicles.ts draws the machine). Left in, his pool travels
+    // with the car and reads as the WAGON glowing: a soft blob of light hanging
+    // around a machine whose own lamps are the thing that is supposed to be
+    // lighting the ground.
+    if (state.vehicles.some((v) => v.kind === "car" && v.driver === seat))
+      continue;
     const at = worldToCanvas(hero.pos.x, hero.pos.y, camera);
     lamps.push({
       x: at.x,

@@ -55,6 +55,7 @@ import {
 import type { DifficultyHp, DifficultyMobLevels } from "./defs/levels/types.ts";
 import { emptyCache } from "./cache.ts";
 import { crateMaxHp } from "./crates.ts";
+import { scatterFauna } from "./fauna.ts";
 import { buildWells } from "./hazards.ts";
 import {
   isOffhandItem,
@@ -70,7 +71,11 @@ import { revealAround } from "./fog.ts";
 import { createExplored } from "./map.ts";
 import { resolveLevelDef } from "./mapgen/index.ts";
 import { createMerchant, revealMerchant } from "./merchant.ts";
-import { createVehicles, vehicleFootprint } from "./vehicles.ts";
+import {
+  createVehicles,
+  landingClearOfVehicles,
+  vehicleFootprint,
+} from "./vehicles.ts";
 import { createQuestGivers } from "./quests/index.ts";
 import {
   difficultyBandIndex,
@@ -90,7 +95,6 @@ import { areCutscenesEnabled, isDialogueEnabled } from "./story.ts";
 import { anyZoneContains } from "./zones.ts";
 import type {
   CanopyPiece,
-  Critter,
   Decor,
   Difficulty,
   DoorState,
@@ -478,7 +482,13 @@ export function createGame(
   const canopy = scatterCanopy(createRng((seed ^ 0x2545f491) >>> 0), def);
   // The FAUNA gets its own stream too, and for the same reason — a level that
   // grows a herd must not shift where its rocks landed.
-  const critters = scatterFauna(createRng((seed ^ 0x27220a95) >>> 0), def);
+  const critters = scatterFauna(
+    createRng((seed ^ 0x27220a95) >>> 0),
+    def,
+    // What a bird may sit in, already stood up: a perch is a POINT, and an
+    // obstacle line is only a count until the scatter has run.
+    obstacles.filter((o) => o.perch),
+  );
 
   // Untouchable dialogue figures and neutral bystanders are not foes: neither
   // can be killed as it stands, so counting them would leave the HUD's total
@@ -865,7 +875,21 @@ export function createGame(
     explored: createExplored(def),
     mapMarkers: [],
     pathIndex: 0,
-    players: [createHero(playerSpawn, def, difficulty, diff, () => nextId++)],
+    // …STANDING AT THE MACHINES RATHER THAN INSIDE THEM. `playerSpawn` is the
+    // carve's anchor — what every `at: spawn` fixture is hung off — and the hub
+    // parks the wagon on it, so the hero's own body steps clear of whatever is
+    // parked there (`landingClearOfVehicles`). The anchor itself is untouched:
+    // the spawn bands, the quiet cell and the reveal are all measured from where
+    // the carve put it, not from where the man is standing.
+    players: [
+      createHero(
+        landingClearOfVehicles(playerSpawn, vehicles),
+        def,
+        difficulty,
+        diff,
+        () => nextId++,
+      ),
+    ],
     corpses: [],
     enemies,
     projectiles: [],
@@ -1618,6 +1642,7 @@ export function buildPropLines(
           radius,
           ...(half ? { half } : {}),
           jumpable: line.jumpable ?? false,
+          ...(line.perch ? { perch: true as const } : {}),
         });
       } else {
         // The line's own bearing rides along on the piece — see `Decor.facing`.
@@ -1915,6 +1940,7 @@ function scatterObstacles(
           jumpable: spec.jumpable,
         };
         if (half) obstacle.half = half;
+        if (spec.perch) obstacle.perch = true;
         // A breakable crate carries live break hp — the hero's weapon smashes
         // it for guaranteed loot (see crates.ts). A chance-based PROP
         // (`spec.loot`) carries its spill odds and themed drop weights too.
@@ -1960,53 +1986,6 @@ function scatterCanopy(rng: Rng, def: LevelDef): CanopyPiece[] {
         parallax: line.parallax ?? 1.35,
         blur: line.blur ?? 2,
         alpha: line.alpha ?? 0.55,
-        scale: randomRange(rng, scaleLo, scaleHi),
-      });
-    }
-  }
-  return out;
-}
-
-/**
- * Scatter the level's FAUNA — the living scenery that mills about on the ground
- * plane (see `LevelDef.fauna`).
- *
- * Each critter gets a HOME point and a wander envelope; the RENDERER derives
- * where it is at any moment from the render clock, exactly as it does for the
- * canopy. Nothing here is stepped and none of it reaches a save.
- *
- * The home point is drawn inside the line's `within` districts when it has any,
- * so a herd stays on the grass. It is NOT held off obstacles: a cow that clips a
- * fence post for a moment is a cow, and testing every home against the whole
- * obstacle field would cost more than the layer is worth.
- */
-function scatterFauna(rng: Rng, def: LevelDef): Critter[] {
-  const out: Critter[] = [];
-  for (const line of def.fauna ?? []) {
-    const [rangeLo, rangeHi] = line.range ?? [40, 110];
-    const [speedLo, speedHi] = line.speed ?? [6, 16];
-    const [scaleLo, scaleHi] = line.scale ?? [1, 1];
-    for (let i = 0; i < line.count; i++) {
-      let home = vec(0, 0);
-      for (let attempts = 0; attempts < 20; attempts++) {
-        home = vec(
-          randomRange(rng, 40, def.width - 40),
-          randomRange(rng, 40, def.height - 40),
-        );
-        if (line.within === undefined || anyZoneContains(line.within, home))
-          break;
-      }
-      out.push({
-        kind: line.kind,
-        sprite: line.sprite ?? line.kind,
-        animated: line.animated ?? false,
-        home,
-        range: randomRange(rng, rangeLo, rangeHi),
-        speed: randomRange(rng, speedLo, speedHi),
-        // Two independent phases, so the x and y sweeps are out of step and the
-        // path is a wandering figure rather than a diagonal.
-        phase: vec(rng() * Math.PI * 2, rng() * Math.PI * 2),
-        stepSec: randomRange(rng, 0.34, 0.62),
         scale: randomRange(rng, scaleLo, scaleHi),
       });
     }

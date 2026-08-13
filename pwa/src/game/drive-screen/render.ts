@@ -52,11 +52,8 @@ import {
   projectY,
   unprojectY,
 } from "../render/tilt.ts";
-import {
-  drawCarAssembly,
-  drawLightCones,
-  wheelSprite,
-} from "../render/vehicles.ts";
+import { drawLightCones } from "../render/vehicle-lights.ts";
+import { drawCarAssembly, wheelSprite } from "../render/vehicles.ts";
 
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 

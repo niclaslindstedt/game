@@ -529,6 +529,7 @@ export function buildObstacles(
     // supply crate to earn it.
     if (o.type === "crate" || o.loot) line.breakable = true;
     if (o.loot) line.loot = o.loot;
+    if (o.perch) line.perch = true;
     if (district.within) line.within = district.within;
     // Wall-hugging furniture: only meaningful with district rects to hug.
     if (o.edge && district.within) line.edge = true;
@@ -705,6 +706,7 @@ export function buildFauna(
     if (o.range) line.range = o.range;
     if (o.speed) line.speed = o.speed;
     if (o.scale) line.scale = o.scale;
+    if (o.perches) line.perches = true;
     if (district.within) line.within = district.within;
     out.push(line);
   }

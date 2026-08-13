@@ -24,3 +24,11 @@ centre, and if that misses, sweep a few ±10 px offsets, because the tap is
 checked against the LANDMARK's world position. Then assert `car.driver !== null`
 and fail loudly if it is still null, rather than carrying on with a state the
 game could not have reached.
+
+**THE LANDMARK IS WHY A RELOCATED CAR CANNOT BE BOARDED.** Boarding hit-tests
+the landmark (the parking spot); only getting back OUT hit-tests the machine
+(`player-input.ts`). So a probe that stands the car somewhere else to photograph
+it — the shortcut for "a running car on ground the bay's strip lights are not
+on", since a driven car is not steerable from Playwright's mouse or keyboard —
+has to move `state.landmarks`' `car` entry with it, or the tap lands on an empty
+bay and the probe throws.

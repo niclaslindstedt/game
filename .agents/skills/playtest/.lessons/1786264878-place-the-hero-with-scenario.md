@@ -17,7 +17,13 @@ the next read. Use the app's own staging param instead:
 `--scenario`.
 
 Worth knowing for the hub specifically: the garage's `playerSpawn` and the car's
-landmark are the SAME point, but the car's footprint blockers push the hero
-clear at the first tick, so he starts ~65 px away — outside the halo's full
-strength and just inside its fade. "Spawns at the car" is not "stands at the
-car".
+landmark are the SAME point, and `landingClearOfVehicles`
+(engine/game/vehicles.ts) is what stands the hero off it — one step SOUTH, clear
+of the blockers and well inside `CAR.boardRadius`. It is deterministic and the
+first tick does not move him, so the hub's landing is a fixed frame a probe can
+photograph, not a body still settling.
+
+And `place` accepts a coordinate as well as a name — `{"place":{"x":240,"y":66}}`
+— but the hero is resolved out of anything solid he lands in, so staging him
+against a tree or a machine puts him a radius away from where you asked. Read
+the position back out of `window.__game` rather than assuming the request took.

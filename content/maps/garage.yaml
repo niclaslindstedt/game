@@ -481,6 +481,12 @@ objects:
     range: [40, 120]
     speed: [10, 26]
     scale: [0.8, 1.1]
+    # …AND THEY GO UP INTO THE TREES. A bird that only ever walks is a mouse
+    # with wings: `perches` breaks the lap to sit in the nearest crown for a
+    # few seconds and drops back onto whatever patch of grass the wander has
+    # reached by then (engine/game/fauna.ts). The trees below carry the other
+    # half of it.
+    perches: true
 
   # ── THE TREES ────────────────────────────────────────────────────────────
   # THE ONES ON THE PAD ARE THE POINT. A patch of ground going black is a
@@ -495,7 +501,9 @@ objects:
   # as a burnt one.
   #
   # SOLID, like the colony's (`content/maps/mars.yaml`) — you cannot walk
-  # through a tree — and no `loot`: nothing on this lot is loot.
+  # through a tree — and no `loot`: nothing on this lot is loot. Every one of
+  # them is `perch`: a crown is where the lot's sparrows go to sit, which is the
+  # half of "birds" that is not walking about (see the `sparrow` line above).
   #
   # PLACED, NOT SCATTERED, for the reason the workbench world below is (see its
   # note): this is the STATIC map and the player is meant to learn it. The four
@@ -506,6 +514,7 @@ objects:
     type: obstacle
     sprite: lawn_tree
     radius: 7
+    perch: true
     at: goal
     offset: { x: -52, y: -32 }
     stages:
@@ -517,6 +526,7 @@ objects:
     type: obstacle
     sprite: lawn_tree
     radius: 7
+    perch: true
     at: goal
     offset: { x: 50, y: -36 }
     stages:
@@ -528,6 +538,7 @@ objects:
     type: obstacle
     sprite: lawn_tree
     radius: 7
+    perch: true
     at: goal
     offset: { x: -54, y: 30 }
     stages:
@@ -539,6 +550,7 @@ objects:
     type: obstacle
     sprite: lawn_tree
     radius: 7
+    perch: true
     at: goal
     offset: { x: 48, y: 32 }
     stages:
@@ -556,18 +568,21 @@ objects:
     type: obstacle
     sprite: lawn_tree
     radius: 7
+    perch: true
     at: goal
     offset: { x: -140, y: -20 }
   - id: lawn_tree_east
     type: obstacle
     sprite: lawn_tree
     radius: 7
+    perch: true
     at: goal
     offset: { x: 110, y: 10 }
   - id: lawn_tree_north
     type: obstacle
     sprite: lawn_tree
     radius: 7
+    perch: true
     at: goal
     offset: { x: -8, y: -70 }
   # ── THE LAWN ─────────────────────────────────────────────────────────────

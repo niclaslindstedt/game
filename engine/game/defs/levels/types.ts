@@ -937,6 +937,8 @@ export type LevelDef = {
      * reason.
      */
     within?: Zone[];
+    /** A bird may SIT on the pieces this line places — see `Obstacle.perch`. */
+    perch?: boolean;
     /**
      * WALL-HUGGING placement: candidates are drawn along the borders of the
      * line's `within` rects (inset by the prop's radius plus the wall's own)
@@ -1034,6 +1036,9 @@ export type LevelDef = {
     radius?: number;
     /** Colliding: a jumping hero clears it (default false). */
     jumpable?: boolean;
+    /** A bird may SIT on this piece — see `Obstacle.perch` and the fauna's own
+     * `perches`. */
+    perch?: boolean;
   }[];
   /**
    * Black holes: static gravity wells that drag the grounded player,
@@ -1352,6 +1357,16 @@ export type LevelDef = {
     /** DISTRICT RESTRICTION — see the obstacle field of the same name. Cattle
      * belong on the grass, chickens in the yard. */
     within?: Zone[];
+    /**
+     * THIS ONE GOES UP. A critter that perches breaks its lap to sit in the
+     * nearest piece of furniture marked `perch` (a tree, a fence, a wire) and
+     * comes back down again — which is what tells a bird from a rodent, and
+     * what stops a lawn's whole population reading as mice with wings.
+     *
+     * Only ever a promise about the ANIMAL: a lawn with nothing perchable on it
+     * leaves the bird working the grass, with nothing to author away.
+     */
+    perches?: boolean;
   }[];
   /** Keep decor at least this far from landmarks. */
   decorClearance: number;

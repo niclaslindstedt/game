@@ -583,6 +583,47 @@ export function vehicleFootprint(
 }
 
 /**
+ * WHERE THE HERO ACTUALLY STANDS ON HIS FIRST FRAME, given the machines parked
+ * on the lot.
+ *
+ * Every `at: spawn` fixture hangs off the carve's landing point, and the hub's
+ * wagon is one of them — parked a dozen px off it, on the roll-up's own line
+ * (content/maps/garage.yaml) — so the man who owns the garage opened every visit
+ * standing inside his own car, on top of its roof.
+ *
+ * THE STEP OUT IS ALWAYS TOWARD THE EYE, never the short way. The field is a
+ * painter's stack and a machine covers the ground above its own base
+ * (pwa/src/game/render.ts), so a hero nudged NORTH of the car would be a hero
+ * with a roof over his head — the same first frame with the two bodies swapped.
+ * South of it he is in front of the thing he is about to get into, which is
+ * where a man standing at his car is, and he is still well inside
+ * `boardRadius`, so the mark over the roof is up before he has moved.
+ *
+ * A landing clear of every machine is returned untouched, which is every venue
+ * but the hub.
+ */
+export function landingClearOfVehicles(
+  spawn: Vec2,
+  vehicles: readonly Vehicle[],
+): Vec2 {
+  let y = spawn.y;
+  for (const vehicle of vehicles) {
+    for (const print of vehicleFootprint(vehicle)) {
+      // His own body has to clear the blocker, not just his feet — the discs
+      // are solid ground and a landing inside one starts the run wedged.
+      const reach = print.radius + PLAYER.radius;
+      const dx = Math.abs(spawn.x - print.pos.x);
+      if (dx >= reach || spawn.y > print.pos.y + reach) continue;
+      // The lowest point on this disc's own circle at the landing's column —
+      // a step, not a shove: a hero pushed the disc's full radius clear of a
+      // five-disc chain would end up a car's length off his own mark.
+      y = Math.max(y, print.pos.y + Math.sqrt(reach * reach - dx * dx));
+    }
+  }
+  return { x: spawn.x, y };
+}
+
+/**
  * Park a vehicle's blockers back on the field — the same circles `create.ts`
  * lays under a machine when the level is built, minted fresh at wherever it
  * now stands. Used when a driver gets out (`exitCar`): a car left in the
