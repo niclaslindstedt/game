@@ -83,7 +83,7 @@ nine tempos, and it is the first thing to check when adding a tenth.
 
 | Track | The decisions |
 | --- | --- |
-| `title` MOONLIGHT VIGIL | Kept. Pads RE-STRUCK and staggered (they were whole notes = plucks); the tune lifted an octave clear of the arp and pad it was buried in. |
+| `title` MOONLIGHT VIGIL | NO PAD AT ALL — the middle is empty and the space is the decision · the tune sits an octave clear of the arp it was buried in · the bell carries the harmony wherever the arpeggios do not. |
 | `bench_light` BENCH LIGHT | A borrowed minor-iv once a phrase, never put back · the phrase is ONE BAR SHORT (bar 8 is empty) · no kit, only a wooden knock twice in four bars. |
 | `hq_lockdown` NIGHT SHIFT | Lobby muzak played straight · the floor SINKS — bars 5–7 are bars 1–3 a semitone down · a photocopier every 3 sixteenths against a bar of 16. |
 | `overdue` OVERDUE | Phrygian i–♭II lurch · a minor-second siren that is a chord tone in both chords · a clock in every pattern. SHORT FORM (2026-08): 36 bars, the build re-cut as a four-bar hinge played twice. |

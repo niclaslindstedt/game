@@ -1,20 +1,22 @@
 # MOONLIGHT VIGIL — the title screen.
 #
-# A RETOUCH, not a rewrite: the tune is the one that was here. Two things were
-# wrong with how it was PLAYED, and the sheet showed both in one glance.
+# Two things about how this one is PLAYED, and the first is the one to read
+# before adding anything to it.
 #
-#   THE PADS WERE PLUCKS. Written as whole notes — `e4*16` — which in this
-#   sequencer is a 2.6-second exponential decay, dead two-thirds of the way
-#   through the bar. The loudness curve under the verse sawtoothed twice a bar
-#   and the "washed-out pad" in the description did not exist. They are now
-#   RE-STRUCK and STAGGERED: padHi swells on beats 1 and 3, padLo on beat 2 and
-#   holds through 4, so one of the two is always rising and the wash is
-#   continuous. Nothing here sustains; a bed has to be re-hit to be a bed.
+#   THERE IS NO PAD, AND THE GAP IS THE POINT. This carried two square voices
+#   holding the chord under the tune, and on a synth where nothing sustains a
+#   bed has to be re-struck to be a bed — so they were, in turn: padHi on beats
+#   1 and 3, padLo on beat 2. Three isolated attacks at two pitches is not a
+#   texture, it is a TUNE, and what the title screen actually played was
+#   HIGH–low–HIGH, gap, in every bar of the track. Both voices are gone rather
+#   than re-spelled, because the room they leave suits a vigil: the bell
+#   arpeggiates the chord in the intro, the pulse arpeggios carry it everywhere
+#   else, and the bass has the floor. Anything that fills that space back in
+#   has to earn it against silence, which is a high bar here.
 #
-#   THE TUNE WAS INSIDE THE ACCOMPANIMENT. The flute sat A3–G4 — the same two
-#   staff spaces as the arpeggio's top and the whole of padHi. Three voices in
-#   one octave, and the one being masked was the one carrying the lament. It is
-#   an octave up now, note for note, which is also where a breathy sine stops
+#   THE TUNE STAYS ABOVE THE ACCOMPANIMENT. The flute sat A3–G4 once — the same
+#   two staff spaces as the arpeggio's top — and the masked voice was the one
+#   carrying the lament. An octave up is also where a breathy sine stops
 #   sounding like a stopped organ and starts sounding like somebody humming.
 #
 # Compile:  node scripts/song-import.mjs content/songs/title.song --sheet
@@ -23,11 +25,12 @@ id     title
 title  MOONLIGHT VIGIL
 tempo  90
 about
-  A slow A-minor vigil in the 16-bit console tradition: a breathy sine flute
-  carries the lament an octave above the room while rippling pulse arpeggios
-  and a staggered, re-struck pad wash hold the floor under it, a detuned
-  square lead takes the relative-major chorus, and glassy echo bells keep
-  watch through the breakdown. The harmonic language leans on the
+  A slow A-minor vigil in the 16-bit console tradition, and a sparse one: no
+  pad holds the middle, so a breathy sine flute carries the lament an octave
+  above a room with nothing in it but rippling pulse arpeggios and a plain
+  triangle bass. A detuned square lead takes the relative-major chorus, and
+  glassy echo bells keep watch through the breakdown. The harmonic language
+  leans on the
   progressions classic game scores are built from — i–VI–iv–V verses, a
   I–V–vi–IV chorus lift — but the melodies are original; nothing is sampled
   or transcribed.
@@ -35,15 +38,11 @@ about
 voice flute    sine vol=.042 gate=.95 attack=25 echo=.4 vib=5/18/250
 voice lead     square vol=.03 gate=.92 attack=12 detune=6 echo=.3 vib=5.5/14/200
 voice arp      square vol=.013 gate=.4 pan=.3 echo=.25
-voice padHi    square vol=.0095 gate=.98 attack=400 detune=12 pan=-0.25 echo=.35
-voice padLo    square vol=.0095 gate=.98 attack=400 detune=12 pan=.25 echo=.35
 voice bass     triangle vol=.05 gate=.95
 voice bell     sine vol=.024 gate=.5 pan=-0.4 echo=.55
 
 section intro
   bell   a4*4 c5*4 e5*8 | .*16 | a4*4 c5*4 f5*8 | g#4*4 b4*4 e5*8
-  padHi  e4*8 e4*8 | e4*8 e4*8 | c4*8 c4*8 | b3*8 b3*8
-  padLo  .*4 a3*12 | .*4 a3*12 | .*4 a3*12 | .*4 g#3*12
   bass   a2*16 | a2*16 | f2*16 | e2*16
 
 section verse
@@ -51,10 +50,6 @@ section verse
          e5*8 g5*4 e5*4 | f5*4 c5*4 a4*8 | d5*4 e5*4 f5*2 e5*2 d5*4 | b4*8 e5*8
   arp    a3 . c4 . e4 . c4 . a3 . c4 . e4 . c4 . | f3 . a3 . c4 . a3 . f3 . a3 . c4 . a3 . | d3 . f3 . a3 . f3 . d3 . f3 . a3 . f3 . | e3 . g#3 . b3 . g#3 . e3 . g#3 . b3 . g#3 .
          a3 . c4 . e4 . c4 . a3 . c4 . e4 . c4 . | f3 . a3 . c4 . a3 . f3 . a3 . c4 . a3 . | d3 . f3 . a3 . f3 . d3 . f3 . a3 . f3 . | e3 . g#3 . b3 . g#3 . e3 . g#3 . b3 . d4 .
-  padHi  e4*8 e4*8 | c4*8 c4*8 | d4*8 d4*8 | b3*8 b3*8
-         e4*8 e4*8 | c4*8 c4*8 | d4*8 d4*8 | b3*8 b3*8
-  padLo  .*4 c4*12 | .*4 a3*12 | .*4 a3*12 | .*4 g#3*12
-         .*4 c4*12 | .*4 a3*12 | .*4 a3*12 | .*4 g#3*12
   bass   a2*8 e2*8 | f2*8 c3*8 | d2*8 a2*8 | e2*8 b2*8
          a2*8 e2*8 | f2*8 c3*8 | d2*8 a2*8 | e2*8 b2*8
 
@@ -63,10 +58,6 @@ section chorus
          e5*4 g5*4 e5*4 d5*2 c5*2 | d5*4 b4*4 g4*4 b4*2 d5*2 | c5*4 a4*4 f4*4 a4*2 c5*2 | b4*8 g#4*4 e4*4
   arp    c4 . e4 . g4 . e4 . c4 . e4 . g4 . e4 . | g3 . b3 . d4 . b3 . g3 . b3 . d4 . b3 . | a3 . c4 . e4 . c4 . a3 . c4 . e4 . c4 . | f3 . a3 . c4 . a3 . f3 . a3 . c4 . a3 .
          c4 . e4 . g4 . e4 . c4 . e4 . g4 . e4 . | g3 . b3 . d4 . b3 . g3 . b3 . d4 . b3 . | f3 . a3 . c4 . a3 . f3 . a3 . c4 . a3 . | e3 . g#3 . b3 . g#3 . e3 . g#3 . b3 . g#3 .
-  padHi  g4*8 g4*8 | d4*8 d4*8 | e4*8 e4*8 | c4*8 c4*8
-         g4*8 g4*8 | d4*8 d4*8 | c4*8 c4*8 | b3*8 b3*8
-  padLo  .*4 e4*12 | .*4 b3*12 | .*4 c4*12 | .*4 a3*12
-         .*4 e4*12 | .*4 b3*12 | .*4 a3*12 | .*4 g#3*12
   bass   c3*4 c3*4 g2*4 c3*4 | g2*4 g2*4 d3*4 g2*4 | a2*4 a2*4 e2*4 a2*4 | f2*4 f2*4 c3*4 f2*4
          c3*4 c3*4 g2*4 c3*4 | g2*4 g2*4 d3*4 g2*4 | f2*4 f2*4 c3*4 f2*4 | e2*4 e2*4 b2*4 e2*4
 
@@ -76,16 +67,12 @@ section break
         f5*8 a5*4 .*4 | g5*8 b5*4 .*4 | e5*4 g#5*4 b5*4 .*4 | .*16
   arp   f3 . a3 . c4 . a3 . f3 . a3 . c4 . a3 . | g3 . b3 . d4 . b3 . g3 . b3 . d4 . b3 . | a3 . c4 . e4 . c4 . a3 . c4 . e4 . c4 . | a3 . c4 . e4 . c4 . a3 . c4 . e4 . c4 .
         f3 . a3 . c4 . a3 . f3 . a3 . c4 . a3 . | g3 . b3 . d4 . b3 . g3 . b3 . d4 . b3 . | e3 . g#3 . b3 . g#3 . e3 . g#3 . b3 . g#3 . | e3 . g#3 . b3 . g#3 . e3 . g#3 . b3 . g#3 .
-  padLo .*4 f3*12 | .*4 g3*12 | .*4 a3*12 | .*4 a3*12
-        .*4 f3*12 | .*4 g3*12 | .*4 e3*12 | .*4 e3*12
   bass  f2*8 f2*8 | g2*8 g2*8 | a2*8 a2*8 | a2*8 a2*8
         f2*8 f2*8 | g2*8 g2*8 | e2*8 e2*8 | e2*8 e2*8
 
 section outro
   flute  e5*8 c5*4 d5*4 | c5*8 a4*8 | b4*12 .*4 | .*16
   bell   .*16 | .*16 | .*16 | e5*4 b4*4 g#4*8
-  padHi  e4*8 e4*8 | c4*8 c4*8 | b3*8 b3*8 | b3*16
-  padLo  .*4 c4*12 | .*4 a3*12 | .*4 g#3*12 | .*16
   bass   a2*8 a2*8 | f2*8 f2*8 | e2*8 e2*8 | e2*16
 
 order  intro verse chorus verse break chorus outro

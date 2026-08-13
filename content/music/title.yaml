@@ -7,14 +7,14 @@
 id: title
 name: MOONLIGHT VIGIL
 description: >-
-  A slow A-minor vigil in the 16-bit console tradition: a breathy sine
-  flute carries the lament an octave above the room while rippling pulse
-  arpeggios and a staggered, re-struck pad wash hold the floor under it, a
-  detuned square lead takes the relative-major chorus, and glassy echo
-  bells keep watch through the breakdown. The harmonic language leans on
-  the progressions classic game scores are built from — i–VI–iv–V verses,
-  a I–V–vi–IV chorus lift — but the melodies are original; nothing is
-  sampled or transcribed.
+  A slow A-minor vigil in the 16-bit console tradition, and a sparse one:
+  no pad holds the middle, so a breathy sine flute carries the lament an
+  octave above a room with nothing in it but rippling pulse arpeggios and
+  a plain triangle bass. A detuned square lead takes the relative-major
+  chorus, and glassy echo bells keep watch through the breakdown. The
+  harmonic language leans on the progressions classic game scores are
+  built from — i–VI–iv–V verses, a I–V–vi–IV chorus lift — but the
+  melodies are original; nothing is sampled or transcribed.
 bpm: 90
 stepsPerBeat: 4
 instruments:
@@ -45,22 +45,6 @@ instruments:
     gate: 0.4
     pan: 0.3
     echo: 0.25
-  padHi:
-    wave: square
-    volume: 0.0095
-    gate: 0.98
-    attackMs: 400
-    detuneCents: 12
-    pan: -0.25
-    echo: 0.35
-  padLo:
-    wave: square
-    volume: 0.0095
-    gate: 0.98
-    attackMs: 400
-    detuneCents: 12
-    pan: 0.25
-    echo: 0.35
   bass:
     wave: triangle
     volume: 0.05
@@ -78,16 +62,6 @@ patterns:
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
       A4 =  =  =  C5 =  =  =  F5 =  =  =  =  =  =  =
       G#4 =  =  =  B4 =  =  =  E5 =  =  =  =  =  =  =
-    padHi: |
-      E4 =  =  =  =  =  =  =  E4 =  =  =  =  =  =  =
-      E4 =  =  =  =  =  =  =  E4 =  =  =  =  =  =  =
-      C4 =  =  =  =  =  =  =  C4 =  =  =  =  =  =  =
-      B3 =  =  =  =  =  =  =  B3 =  =  =  =  =  =  =
-    padLo: |
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  G#3 =  =  =  =  =  =  =  =  =  =  =
     bass: |
       A2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
       A2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
@@ -112,24 +86,6 @@ patterns:
       F3 .  A3 .  C4 .  A3 .  F3 .  A3 .  C4 .  A3 .
       D3 .  F3 .  A3 .  F3 .  D3 .  F3 .  A3 .  F3 .
       E3 .  G#3 .  B3 .  G#3 .  E3 .  G#3 .  B3 .  D4 .
-    padHi: |
-      E4 =  =  =  =  =  =  =  E4 =  =  =  =  =  =  =
-      C4 =  =  =  =  =  =  =  C4 =  =  =  =  =  =  =
-      D4 =  =  =  =  =  =  =  D4 =  =  =  =  =  =  =
-      B3 =  =  =  =  =  =  =  B3 =  =  =  =  =  =  =
-      E4 =  =  =  =  =  =  =  E4 =  =  =  =  =  =  =
-      C4 =  =  =  =  =  =  =  C4 =  =  =  =  =  =  =
-      D4 =  =  =  =  =  =  =  D4 =  =  =  =  =  =  =
-      B3 =  =  =  =  =  =  =  B3 =  =  =  =  =  =  =
-    padLo: |
-      .  .  .  .  C4 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  G#3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  C4 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  G#3 =  =  =  =  =  =  =  =  =  =  =
     bass: |
       A2 =  =  =  =  =  =  =  E2 =  =  =  =  =  =  =
       F2 =  =  =  =  =  =  =  C3 =  =  =  =  =  =  =
@@ -158,24 +114,6 @@ patterns:
       G3 .  B3 .  D4 .  B3 .  G3 .  B3 .  D4 .  B3 .
       F3 .  A3 .  C4 .  A3 .  F3 .  A3 .  C4 .  A3 .
       E3 .  G#3 .  B3 .  G#3 .  E3 .  G#3 .  B3 .  G#3 .
-    padHi: |
-      G4 =  =  =  =  =  =  =  G4 =  =  =  =  =  =  =
-      D4 =  =  =  =  =  =  =  D4 =  =  =  =  =  =  =
-      E4 =  =  =  =  =  =  =  E4 =  =  =  =  =  =  =
-      C4 =  =  =  =  =  =  =  C4 =  =  =  =  =  =  =
-      G4 =  =  =  =  =  =  =  G4 =  =  =  =  =  =  =
-      D4 =  =  =  =  =  =  =  D4 =  =  =  =  =  =  =
-      C4 =  =  =  =  =  =  =  C4 =  =  =  =  =  =  =
-      B3 =  =  =  =  =  =  =  B3 =  =  =  =  =  =  =
-    padLo: |
-      .  .  .  .  E4 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  B3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  C4 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  E4 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  B3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  G#3 =  =  =  =  =  =  =  =  =  =  =
     bass: |
       C3 =  =  =  C3 =  =  =  G2 =  =  =  C3 =  =  =
       G2 =  =  =  G2 =  =  =  D3 =  =  =  G2 =  =  =
@@ -204,15 +142,6 @@ patterns:
       G3 .  B3 .  D4 .  B3 .  G3 .  B3 .  D4 .  B3 .
       E3 .  G#3 .  B3 .  G#3 .  E3 .  G#3 .  B3 .  G#3 .
       E3 .  G#3 .  B3 .  G#3 .  E3 .  G#3 .  B3 .  G#3 .
-    padLo: |
-      .  .  .  .  F3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  G3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  F3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  G3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  E3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  E3 =  =  =  =  =  =  =  =  =  =  =
     bass: |
       F2 =  =  =  =  =  =  =  F2 =  =  =  =  =  =  =
       G2 =  =  =  =  =  =  =  G2 =  =  =  =  =  =  =
@@ -233,16 +162,6 @@ patterns:
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
       E5 =  =  =  B4 =  =  =  G#4 =  =  =  =  =  =  =
-    padHi: |
-      E4 =  =  =  =  =  =  =  E4 =  =  =  =  =  =  =
-      C4 =  =  =  =  =  =  =  C4 =  =  =  =  =  =  =
-      B3 =  =  =  =  =  =  =  B3 =  =  =  =  =  =  =
-      B3 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-    padLo: |
-      .  .  .  .  C4 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  A3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  G#3 =  =  =  =  =  =  =  =  =  =  =
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
     bass: |
       A2 =  =  =  =  =  =  =  A2 =  =  =  =  =  =  =
       F2 =  =  =  =  =  =  =  F2 =  =  =  =  =  =  =

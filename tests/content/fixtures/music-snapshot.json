@@ -149,8 +149,8 @@
   },
   "title": {
     "bpm": 90,
-    "digest": "d7f73996b2f1645daf6e14471b80fb3e6aca5b91ae004473f11b7ac476c66f90",
-    "instruments": ["arp", "bass", "bell", "flute", "lead", "padHi", "padLo"],
+    "digest": "a383cd3505de9a21d9d9d3158175e8b8f3ba9478ed828162af3a068b41a3d6f9",
+    "instruments": ["arp", "bass", "bell", "flute", "lead"],
     "loopSeconds": 128,
     "order": ["intro", "verse", "chorus", "verse", "break", "chorus", "outro"],
     "stepsPerBeat": 4,
