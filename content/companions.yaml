@@ -33,13 +33,13 @@ companions:
       everyLevels: 3
       chainPerRank: 1
     joinWords:
-      - - YOU HELD THE CURRENT AND GAVE IT BACK. I OWE YOU A LIFE. MY COIL WALKS WITH YOU NOW.
+      - - YOU HAD ME AND YOU LET ME GO. NOBODY HAS DONE THAT. I'LL COME WITH YOU.
     killQuotes:
       - SCIENCE!
-      - ALTERNATING CURRENT. DIRECT RESULTS.
-      - EDISON COULD NEVER.
-      - WIRELESS. PATENT PENDING.
-      - THE PIGEONS WOULD BE PROUD.
+      - THE CURRENT DOES THE WORK.
+      - I TOLD THEM THIS WOULD WORK.
+      - IT'S ONLY ELECTRICITY.
+      - MY PIGEONS WOULD NOT LIKE THIS.
 
   # The pilot. Navigates a place with no north by pure dead reckoning and
   # calls every takedown an airfield matter.
@@ -58,12 +58,12 @@ companions:
       everyLevels: 3
       pelletsPerRank: 1
     joinWords:
-      - - YOU HAD ME GROUNDED AND LET ME BACK UP. I PAY MY DEBTS. I'LL FLY YOUR WING.
+      - - YOU HAD ME GROUNDED AND YOU LET ME UP. I PAY WHAT I OWE. I'LL FLY YOUR WING.
     killQuotes:
-      - CLEARED FOR DEPARTURE.
-      - THAT ONE'S GROUNDED.
-      - SMOOTH LANDING.
-      - FLIGHT PLAN? NEVER FILED ONE.
+      - THAT'S ONE DOWN.
+      - I'VE HAD WORSE LANDINGS.
+      - KEEP UP.
+      - I NEVER DID FILE A FLIGHT PLAN.
 
   # The unkillable mystic. Finds the whole business of dying hilarious,
   # professionally speaking. His long stint frozen between universes rubbed
@@ -92,12 +92,12 @@ companions:
       novaRadiusPerRank: 10
       novaDamagePerRank: 8
     joinWords:
-      - - ONLY YOU EVER MADE ME KNEEL, AND YOU LET ME STAND. MY LIFE IS YOURS NOW, WARM ONE.
+      - - YOU PUT ME ON MY KNEES AND THEN YOU LET ME UP. NOBODY HAS EVER DONE BOTH. I'M YOURS.
     killQuotes:
-      - NOW YOU TRY DYING.
-      - I MAKE IT LOOK EASY.
-      - STAY DOWN. I NEVER DID.
-      - THE HOLY MAN SENDS REGARDS.
+      - NOW YOU TRY IT.
+      - IT'S EASIER THAN THEY SAY.
+      - STAY DOWN. I NEVER COULD.
+      - THAT ONE WENT QUICKLY.
 
   # The little man with the pot of gold. His luck rubs off: +50% MAGIC FIND
   # for the whole party while he's on his feet.
@@ -122,6 +122,6 @@ companions:
     killQuotes:
       - OOPS. BAD LUCK.
       - NOT YOUR DAY, FRIEND.
-      - FORTUNE FAVORS ME.
+      - AH, THAT'S A SHAME.
       - THAT'S ME GOLD NOW.
-      - SHOULDA RUBBED A CLOVER.
+      - I DIDN'T EVEN DO ANYTHING.

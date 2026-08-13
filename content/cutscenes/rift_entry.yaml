@@ -27,7 +27,7 @@ beats:
   - kind: say
     actor: hero
     text:
-      - NO CHARTS FOR WHAT'S IN THERE. NO GROUND. NO AIR? NO IDEA.
+      - NO CHARTS FOR WHAT'S IN THERE. NO GROUND. MAYBE NO AIR. I DON'T KNOW.
   - kind: say
     actor: hero
     text:

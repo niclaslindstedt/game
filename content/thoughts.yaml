@@ -48,7 +48,7 @@ thoughts:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - HER JACKET'S ANSWERING FROM GOODCO. THE CAR'S RIGHT THERE. TAKE IT.
+      - - HER JACKET'S STILL ANSWERING. IT'S COMING FROM GOODCO. THE CAR'S RIGHT THERE, I'LL TAKE THE CAR.
   # …AND THE SAME ERRAND, SAID LESS KINDLY. The hub's on-foot beat
   # (`placeThoughts`, `where: pastDoor`): he has walked out under the roll-up
   # door on his own two feet and left the car standing in the bay. It is the
@@ -61,7 +61,7 @@ thoughts:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR.
+      - - WHAT AM I DOING, WALKING. SHE'S NOT DOWN THE STREET. THE CAR. TAKE THE CAR.
   # ── THE DRIVE TO GOODCO (engine/game/drive/) ─────────────────────────────────
   # The earthbound leg, played rather than cut. These are NOT pinned by a level:
   # the drive is not a level, so the app plays them off the road's own beats
@@ -107,7 +107,7 @@ thoughts:
     portrait: hero
     pages:
       - - HER JACKET'S PINGING FROM GOODCO.
-      - - THEY BEG HARD IN TOWN. NOT ONE OF THEM IS ON THE WELFARE LIKE ME.
+      - - THEY BEG HARD IN TOWN. NONE OF THEM'S ON THE WELFARE. NOT LIKE ME.
   # …AND THE SAME ROAD GOING THE OTHER WAY, said on the outskirt between
   # GOODCO's gate and the first house — which is the stretch the leg out
   # finishes on, driven backwards.
@@ -131,14 +131,14 @@ thoughts:
     portrait: hero
     pages:
       - - THE PART'S ON THE SEAT. STRAIGHT HOME.
-      - - TEN YEARS. SHE ONLY EVER NEEDED THE ONE THING.
+      - - TEN YEARS I'VE BEEN BUILDING HER. AND SHE ONLY NEEDED THE ONE THING.
   # THE CAR GIVING UP ON THE ROAD. He blames the wagon, the way he blames the
   # road — never the thing that actually broke it.
   drive_broke_down:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - COME ON. NOT HERE. NOT TONIGHT.
+      - - COME ON. COME ON. NOT TONIGHT.
   # ── THE RUN-IN ────────────────────────────────────────────────────────────
   # Past the finish line the clock stops, the town stops, and the wheel comes off
   # the player: the car rolls the last stretch on its own, past GOODCO's fence
@@ -280,7 +280,7 @@ thoughts:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - STILL ONE PART SHORT. AND SHE ISN'T UP THERE. SHE'S AN HOUR DOWN THE ROAD.
+      - - IT'S STILL ONE PART SHORT. AND SHE ISN'T UP THERE ANYWAY. SHE'S AN HOUR DOWN THE ROAD.
   # THE WAY IN (the level's `arrivals` — engine/game/arrivals.ts). He lands on the
   # staff lot with the building in front of him and the fog over every inch of
   # its wall, and the first thing that happens is a car pulling in and somebody
@@ -375,7 +375,7 @@ thoughts:
     pages:
       - - HE SWUNG AGAIN. HARDER. AND THE WHOLE FLOOR IS TURNING ROUND TO WATCH.
       - them:
-          - I KNOW WHO YOU ARE, {HERO}. THEY TOLD US NOBODY GETS PAST. I'D LIKE TO KEEP MY JOB.
+          - I KNOW WHO YOU ARE, {HERO}. THEY SAID NOBODY GETS PAST. I'VE GOT A JOB HERE. I'VE GOT A FAMILY.
       - - STAY BACK. PLEASE. I'VE NEVER HIT ANYBODY IN MY LIFE. DON'T.
   # Blow three: he hits back, and THIS is the beat that ARMS his weapon and
   # starts the game. It is an apology, not a boast — the old "good thing I
@@ -393,7 +393,7 @@ thoughts:
       - them:
           - WE ALL WANT TO KEEP OUR JOBS. YOU HAD ONE. YOU KNOW WHAT IT'S LIKE WHEN IT GOES.
       - - I'M SORRY. I TRIED TO ASK. SHE'S IN THIS BUILDING AND YOU'RE IN MY WAY.
-      - - I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES.
+      - - I GOT THIS FAR WITHOUT THROWING A PUNCH. I'M SORRY. I'M SORRY.
   # Sighting the first SUCCESSOR at GOODCO HQ: he was on the team that built
   # the first one, before the AI redrew the line (the CORE LOG's "IT DREW
   # THE SUCCESSOR LINE") and the machines started walking everyone's jobs out
@@ -404,7 +404,7 @@ thoughts:
     portrait: hero
     pages:
       - - A SUCCESSOR. I HELPED BUILD THE FIRST ONE OF THOSE. THEN THEY REDREW IT WITHOUT US.
-      - - AND THAT LINE EMPTIED THE WHOLE FLOOR. WELL. I STILL KNOW WHERE ITS BOLTS ARE.
+      - - THAT LINE PUT EVERYONE I KNOW OUT OF WORK. AND I HELPED BUILD IT. I KNOW HOW TO TAKE ONE APART, AT LEAST.
   # THE FIRST VOLUNTEER HE SEES (the level's `martyrs.thought`, fired the first
   # time one is actually in sight rather than somewhere in the fog). The read
   # has to do two jobs in two lines: tell the player what is strapped to the man
@@ -416,7 +416,7 @@ thoughts:
     portrait: hero
     pages:
       - - THAT ONE'S NOT STAFF. THAT'S A WORK JACKET, AND THAT'S A VEST UNDER IT.
-      - - HE GOT THE SAME BOX I DID. HE JUST DIDN'T DRIVE HOME WITH IT.
+      - - HE GOT THE SAME BOX I DID. I DROVE HOME WITH MINE.
   # PAYLOAD-1 IS DOWN — the last beat of GOODCO, raised by the level's own
   # `exitByCar` the moment the objective clears (engine/game/step/index.ts).
   #
@@ -443,7 +443,7 @@ thoughts:
     speaker: "{HERO}"
     portrait: player
     pages:
-      - - IT CAME OUT OF THE DUST. NO SUIT. NO SHIP. NO FOOTPRINTS.
+      - - IT CAME OUT OF THE DUST. IT'S NOT WEARING A SUIT. THERE AREN'T EVEN FOOTPRINTS.
       - - NOBODY EVER SAID THE MOON HAD DEAD PEOPLE ON IT. SOMEBODY MUST HAVE KNOWN.
   # Downing the first wisp: the payoff of the sighting beat above (its
   # `after` gate keeps this from ever playing first) — the dead can fall,
@@ -469,7 +469,7 @@ thoughts:
     portrait: player
     pages:
       - - A ROVER. FRESH PAINT, WORN WHEELS. AND THE DUST IS FULL OF TIRE TRACKS. YEARS OF THEM.
-      - - THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF GOODCO. FIGURES.
+      - - THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF GOODCO. OF COURSE IT DOES.
   # Killing the first FEMBOT: the hero's read on the colony's... amenities.
   mars_fembot:
     speaker: "{HERO}"
@@ -529,7 +529,7 @@ thoughts:
     portrait: hero
     pages:
       - - IT DIED APOLOGIZING. 'YOUR EXPERIENCE MATTERS TO US.'
-      - - TRUST ME BRO HANDS. SAME OUTFIT THAT SAT AT MY BENCH, ONLY IN SPURS. RIGHT. NO GUILT, THEN.
+      - - TRUST ME BRO HANDS. SAME OUTFIT THAT SAT AT MY BENCH, ONLY IN SPURS. I DON'T FEEL BAD ABOUT THESE.
   # Sighting the first CIA AGENT in THE BUNKER: the arrival read — the
   # security state didn't collapse with the economy, it just changed
   # employers and postcodes. Wide drop-in radius, like the other surveys.
@@ -538,14 +538,14 @@ thoughts:
     portrait: hero
     pages:
       - - BLACK SUITS. EARPIECES. THE ALPHABET, ALL DOWN HERE, DRAWING A PRIVATE SALARY.
-      - - THE WORLD LOST ITS JOBS. THESE GUYS KEPT THEIRS - GUARDING THE ONES WHO DID IT.
+      - - THE WORLD LOST ITS JOBS. THESE ONES KEPT THEIRS. THEY'RE GUARDING THE PEOPLE WHO DID IT.
   # Sighting the first VACUUM BOT, once the arrival read has landed: the
   # housekeeping gag — even the cleaning staff got automated, and armed.
   bunker_vacuum:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - A VACUUM ROBOT. WITH A TASER. THE FLOORS ARE SPOTLESS AND HOSTILE.
+      - - A VACUUM ROBOT. WITH A TASER ON IT. THE FLOORS ARE VERY CLEAN, I'LL SAY THAT.
       - - OF COURSE THEY AUTOMATED THE HELP. CAN'T HAVE A CLEANER WHO TALKS.
   # Sighting the first ICE AGENT in THE BUNKER, once the arrival read has
   # landed: the place has no address, but it has a border patrol — and for
@@ -592,7 +592,7 @@ thoughts:
     speaker: "{HERO}"
     portrait: player
     pages:
-      - - I'M SWATTING FLIES AND CALLING IT PROGRESS. NONE OF THIS IS FOR HER.
+      - - I'M JUST HITTING THINGS NOW. NONE OF THIS IS FOR HER.
       - - SHE'S NOT IN HERE. FIND THE WAY OUT AND GET GOING.
   # ── HELLBORN FIRST SIGHTINGS (config HELLGATES) ───────────────────────────
   # The first time a rampage tears a hellgate open on a map and something

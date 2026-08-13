@@ -13,13 +13,13 @@ lore: >
   it is the gods who should worry. What she gives back is the family's own
   furniture, a piece deeper into her mother's house each difficulty.
 offer:
-  - - "THE THINGS THAT KEEP HER NOW ARE SCALED. BRING ME A SCALE OFF ONE — I WANT TO HOLD WHAT SHE'S UP AGAINST."
+  - - "THEY'RE SAYING THE THINGS THAT HAVE HER NOW ARE SCALED. CAN YOU GET ME ONE OF THE SCALES? I WANT TO SEE IT."
   - hero:
       - "SHE'LL HAVE PRIED ONE OFF ALREADY."
 incomplete:
   - "A SCALE. OFF SOMETHING THAT CALLS ITSELF A GOD. I'LL WAIT."
 complete:
-  - - "HARD AS A HULL, AND SHE PRIES THESE OFF BAREHANDED. I WAS NEVER SCARED FOR HER."
+  - - "HARD AS A HULL. AND SHE PULLS THESE OFF WITH HER HANDS. I'M NOT SCARED FOR HER. I JUST MISS HER."
     - "{CACHE}"
   - hero:
       - "THEN I'LL GO AND MEET HER HALFWAY."

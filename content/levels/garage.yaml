@@ -96,7 +96,7 @@ merchant:
   sprite: merchant_dealer
   name: THE DEALER
   beat: true
-  line: NO NAMES, NO RECEIPTS, NO REFUNDS. WHAT DO YOU NEED?
+  line: NO NAMES, AND I DON'T DO RECEIPTS. WHAT ARE YOU AFTER?
 travelDoors:
   # THE CAR — the earthbound leg. Always open; the campaign's first door.
   - id: car

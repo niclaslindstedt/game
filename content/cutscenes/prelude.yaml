@@ -192,7 +192,7 @@ beats:
   - kind: say
     actor: hero
     text:
-      - I'LL TAKE THE CAR AND GET HER.
+      - I'M GOING TO GO AND GET HER. I'LL TAKE THE CAR.
   # Out the door Ada walked out of, two hours behind her, armed. The same door,
   # the same road behind it — and it shuts on an empty living room this time.
   - { kind: move, actor: hero, to: { x: 201, y: 88 }, speed: 46 }

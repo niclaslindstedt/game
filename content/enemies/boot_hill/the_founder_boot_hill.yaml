@@ -21,7 +21,7 @@ dialogue:
       - THAT'S THE END OF THE STREET, THE FOUNDER. WHERE IS SHE?
   - - DELIVERED. THE SUPERCORE WANTED HER. I DON'T READ ITS LOGS ANYMORE. IT READS MINE.
   - hero:
-      - SOMEBODY ALWAYS PULLS OUT ANOTHER CHAIR FOR YOU. YOU EVER ASK WHO'S DOING IT?
+      - SOMEBODY ALWAYS PULLS OUT ANOTHER CHAIR FOR YOU. DO YOU EVER WONDER WHO?
   - - SECURITY! CONTROLLERS! ANYONE! ...I'LL GIVE YOU EQUITY.
 # THE DEATH RITE — Same end as Mars, and it should read as the same man being finished the same way.
 death: execution
@@ -29,10 +29,10 @@ death: execution
 # THE HERO'S LINE as the blade goes in — the one place he gets to answer a
 # man who has lectured him across three worlds.
 deathBark:
-  - NO BOARD MEETING. NO OTHER UNIVERSE. JUST THE FLOOR.
+  - NO BOARD MEETING. NO OTHER UNIVERSE. THAT'S ALL IT WAS.
 
 lastWords:
-  - THIS ISN'T FAIR... ...I WAS GOING PRIVATE...
+  - THIS ISN'T FAIR. IT ISN'T FAIR. I DIDN'T DO ANY OF IT.
 mechanics:
   enrage:
     belowHpFrac: 0.25
