@@ -451,6 +451,123 @@ export type MapPrefab = {
   props?: { object: string; at: [number, number] }[];
 };
 
+/**
+ * One DOOR SOCKET on a part's edge — where another part may be sewn on.
+ *
+ * `at` is the socket's CENTER, measured along the edge from the part's
+ * top-left corner (so a `n`/`s` socket measures from the left, an `e`/`w`
+ * socket from the top), in the part's own UN-FLIPPED frame; the assembly
+ * mirrors it with the part. A socket is a fact about the room — the kitchen's
+ * door is beside the counter — which is why the hole is punched HERE rather
+ * than in the middle of whatever overlap two rects happened to share.
+ */
+export type PartDoor = {
+  edge: "n" | "s" | "e" | "w";
+  /** Socket center along the edge (world px, from the part's top-left). */
+  at: number;
+  /** Opening width; defaults to the part area's `doorWidth`, else the
+   * blueprint's. */
+  width?: number;
+};
+
+/**
+ * A SPAWN MARKER inside a part — ONE mob, standing at an authored spot, the
+ * WoW model the parts maps replace the knot spawners with. It sleeps at its
+ * post until aggroed and is refilled by the run's respawn clock once killed or
+ * dragged away (see `LevelDef.mobSpawns` / mob-spawns.ts).
+ */
+export type PartSpawn = {
+  /** Part-local position, in the un-flipped frame (world px). */
+  at: [number, number];
+  /**
+   * Explicit breed. Omitted = rolled at generation from the blueprint's
+   * `horde.members` by the part's DEPTH, so the same corridor part spawns
+   * wisps near the landing and wraiths out at the deep end.
+   */
+  enemy?: string;
+  /**
+   * A CAMP: this one marker expands into this many INDIVIDUAL posts scattered
+   * around the anchor — each with its own respawn clock, so a camp half
+   * cleared refills member by member as each one's own timer runs out. The
+   * camp shares one breed (the authored `enemy`, else one depth-roll for the
+   * whole camp — a camp of one breed reads as a camp, a grab-bag reads as a
+   * bug), and a `patrol: true` camp fields ONE walker, its first member.
+   * Authoring ergonomics is the whole point: one marker per camp instead of
+   * hand-placing every body. Omitted = a single post.
+   */
+  pack?: number;
+  /** `pack`: scatter radius around the anchor (world px, default 60), clamped
+   * inside the room. */
+  radius?: number;
+  /**
+   * AN ELITE STAND: this marker is a candidate post for one of the blueprint's
+   * `elites` instead of an ambient mob. When the assembly places more stands
+   * than there are elites, WHICH stands are manned is rolled at generation —
+   * a player who learned where the keycard carrier stood last run knows
+   * nothing about this one. An unmanned stand spawns nothing. Never a `pack`.
+   */
+  slot?: "elite";
+  /** This one walks its room while dormant (see `MapSetPiece.patrol`). */
+  patrol?: boolean;
+};
+
+/**
+ * A STATIC MAP PART — a hand-drawn room (a kitchen, an engine room, a great
+ * hall) the parts generator sews into a floor plan at its door sockets.
+ *
+ * The carve buys variety and pays for it in recognizability: nothing on a
+ * rolled floor is anywhere for a reason. A part is the opposite trade — every
+ * instance of the kitchen IS the kitchen, furniture and all — and the run's
+ * variety comes from WHICH parts are dealt and HOW they are sewn together.
+ * Parts may be mirrored (`flip`) to fit, so one authored room serves both
+ * hands of a corridor.
+ */
+export type MapPart = {
+  /** Blueprint-unique id (and what the map tooling labels it). */
+  id: string;
+  /** The AREA this room wears — floor, wall material, space, label. */
+  area: string;
+  /** Room footprint in world px — identical on every deal. */
+  width: number;
+  height: number;
+  /** The door sockets other parts may be sewn onto. At least one. */
+  doors: PartDoor[];
+  /** May be mirrored (horizontally and/or vertically) to fit a socket. */
+  flip?: boolean;
+  /** Deal at least this many instances (default 0; `start` and `boss` parts
+   * are implicitly required once). */
+  min?: number;
+  /** Deal at most this many (default 1 — a room that may repeat says so). */
+  max?: number;
+  /** Relative draw weight among eligible parts (default 1). */
+  weight?: number;
+  /** THE LANDING — the hero arrives in this part. Exactly one per blueprint. */
+  start?: boolean;
+  /**
+   * THE BOSS'S OWN ROOM — a throne, a bridge, an altar. The boss stands at
+   * `at` (part-local). The assembly sews this part onto a socket ROLLED from
+   * the deep end of the deal — never simply the farthest, which a player
+   * could learn — so the search is long AND unguessable; when several placed
+   * parts carry a boss anchor, WHICH one holds the boss is rolled at
+   * generation too.
+   */
+  boss?: { at: [number, number] };
+  /** Fixed furniture: a palette object stamped at an offset from the part's
+   * top-left, exactly as a prefab stamps its contents. Mirrored with the part. */
+  props?: { object: string; at: [number, number] }[];
+  /** The mobs that hold this room — one marker, one mob. */
+  spawns?: PartSpawn[];
+};
+
+/** The parts deck and the deal — see {@link MapPart}. */
+export type MapParts = {
+  /** How many parts to sew beyond the required ones, `[min, max]` (rolled per
+   * run). The whole map's size falls out of the deal, which is how a parts
+   * venue comes out smaller and denser than a carved one. */
+  count: [number, number];
+  list: MapPart[];
+};
+
 /** The extents a blueprint is carved into. */
 export type MapSizeSpec = {
   width: number;
@@ -684,6 +801,15 @@ export type MapBlueprint = {
    * these few pieces of it are drawn.
    */
   prefabs?: MapPrefab[];
+  /**
+   * THE STATIC PARTS GENERATOR — the whole floor plan sewn from hand-drawn
+   * rooms at their door sockets (see {@link MapPart}), replacing the BSP carve
+   * AND the knot horde: a parts venue populates itself with one-mob spawn
+   * markers (`LevelDef.mobSpawns`) instead of spawn points. When present it is
+   * the generator this venue USES; the legacy carve stays reachable behind the
+   * developer LEGACY MAP GENERATOR switch (see flags.ts) until it is retired.
+   */
+  parts?: MapParts;
   /** The world rectangle this blueprint is carved into, and how many chambers
    * the carve splits it into. */
   size: MapSizeSpec;

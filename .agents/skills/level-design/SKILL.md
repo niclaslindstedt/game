@@ -1,6 +1,6 @@
 ---
 name: level-design
-description: "Use when adding a new level/mission to the game or substantially reworking one — the TWO files a venue is (the mission's YAML and the blueprint its map is carved from), their compile pipeline, the renderers for reading a carve, campaign registration and unlock order, the cumulative loot-pool rule, XP/intended-level pacing wiring, and the checker + test battery a new venue must pass before it ships."
+description: "Use when adding a new level/mission to the game or substantially reworking one — the TWO files a venue is (the mission's YAML and the blueprint its map is generated from), their compile pipeline, the STATIC PARTS deck a new venue should author (hand-drawn rooms sewn at door sockets, one-mob spawn posts — the shipping generator) versus the legacy carve, the renderers for reading a generated map, campaign registration and unlock order, the cumulative loot-pool rule, XP/intended-level pacing wiring, and the checker + test battery a new venue must pass before it ships."
 ---
 
 # Designing a Level
@@ -91,7 +91,29 @@ map LEVEL=<id>`). LOOK at it — it's the fastest way to judge how a level plays
   and moved), **spawns**, and **kills**, plus a `COVERAGE: N% of map` readout —
   the direct read for "is the whole map used, or is there dead space?".
 
-## The feel levers belong to the CARVE now
+## A NEW VENUE SHOULD AUTHOR A STATIC PARTS DECK
+
+The shipping generator is the PARTS assembler (`engine/game/mapgen/parts.ts`):
+the blueprint's `parts:` block is a deck of hand-drawn rooms — each a rectangle
+with door sockets on its edges, fixed props, and ONE-MOB SPAWN MARKERS — sewn
+into the whole floor plan per run. Exactly one part is the landing
+(`start: true`); a `boss: { at }` part is the throne room, sewn onto a deep
+socket rolled per run — far, never predictably the farthest (and never
+authored on a venue whose ending is an `annex`, which outranks it); `min`/`max`/`weight`/`flip` shape the deal. The horde is the
+deck's own markers (`LevelDef.mobSpawns` — a dormant individual per post,
+respawning on the difficulty's clock once killed or dragged off; `slot: elite`
+markers are the STANDS the blueprint's `elites` are dealt onto; `patrol: true`
+walks one its room). The legacy BSP carve runs on venues with no deck, and on
+any venue behind the developer LEGACY MAP GENERATOR switch. The shipped decks
+(`content/maps/moon.yaml`, `mars.yaml`, `goodco_hq.yaml`) are the references;
+the schema rules that bite (socket wall stubs, count[0] covering the mins, one
+start, no min/max on the boss part) are in `scripts/asset-tools/map-schema.mjs`
+and `mod/FORMAT.md`'s `parts:` section. Design guidance that holds every time:
+give the landing part a patroller (an idle hero must still be found — the
+balance test enforces it), give the cache picker 1-door dead-end parts, and
+size door sockets off a body (56–88 person doors, 130+ bays).
+
+## The feel levers belong to the CARVE (the legacy path) — and to the DECK
 
 The breather pockets, the pressure envelope, the caches and the trader's pitch
 are all decided per run by the generator, from the blueprint's own vocabulary —
@@ -102,9 +124,11 @@ so they are read, not authored:
   no wall either, so a hero who stands still is still found. Both are the carve's.
 - **A CACHE** is a `chest` object dropped at a dead end with one of the
   blueprint's `guardians` on it — the reward that makes a detour worth walking.
-- **PRESSURE** is a density: each cell takes as many knots as its floor is worth
-  (`KNOT_DENSITY`), cut into bands so a hall gets a fight at either end. There is
-  no authored tempo curve.
+- **PRESSURE** on a carve is a density: each cell takes as many knots as its
+  floor is worth (`KNOT_DENSITY`), cut into bands so a hall gets a fight at
+  either end. There is no authored tempo curve. On a PARTS venue pressure is
+  the deck's own spawn markers — 3–6 a room, 35–60 a map, breeds rolled by
+  depth from `horde.members` so the ramp still climbs.
 - **Breakable props** are still authored, but on the blueprint's object: a
   `crate`-type object with `loot.chance` (0..1) and `loot.drop` weights
   (health/stamina/gear), so a vending machine leans stamina drinks and a wine

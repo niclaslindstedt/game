@@ -170,6 +170,32 @@ export function autoStatGainsOn(): boolean {
   return autoStatGainsEnabled;
 }
 
+// -- The LEGACY map generator (pwa developer flag `legacyMapgen`) -------------
+//
+// Whether a blueprint that authors a STATIC PARTS deck (`MapBlueprint.parts`)
+// falls back to the old BSP carve anyway. The parts generator is the shipping
+// default wherever a deck exists; this switch exists so the two can be walked
+// side by side while the carve is judged for retirement — flip it on and the
+// next run of the same venue is carved instead of sewn (read when a level is
+// BUILT, in generateLevel, so a change lands on the next run rather than one
+// in progress). The engine default is OFF, matching the shipped app, so the
+// standalone/test/sim baseline runs the same parts-first regime the player
+// does. It lives here rather than in mapgen/ because the settings screen has
+// to flip it from the startup path, and mapgen/ drags the whole generator and
+// the level catalog along with it. Tests toggle it and must restore it.
+let legacyMapgenEnabled = false;
+
+/** Force the legacy BSP carve on blueprints that author a parts deck (a
+ * developer flag — see the note above). */
+export function setLegacyMapgenEnabled(enabled: boolean): void {
+  legacyMapgenEnabled = enabled;
+}
+
+/** Whether the legacy carve is forced over the parts generator. */
+export function legacyMapgenOn(): boolean {
+  return legacyMapgenEnabled;
+}
+
 // -- THE CAMERA'S YAW (pwa developer slider `cameraYaw`) ----------------------
 //
 // How far round from square-on the camera stands, in radians — the ONE number

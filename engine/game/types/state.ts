@@ -168,6 +168,33 @@ export type SpawnerRuntime = {
   alarmedUntilMs?: number | null;
 };
 
+/**
+ * One MOB POST's live slot (config MOB_SPAWNS / mob-spawns.ts): the runtime
+ * half of a `MobSpawnSpec` — who is standing the post, or how long until
+ * somebody is again. The parts maps' whole horde is an array of these.
+ */
+export type MobSpawnState = {
+  /** The spec's own id — what a saved run keys the slot by. */
+  id: string;
+  /** The post (world px): where its mob stands, sleeps and respawns. */
+  at: Vec2;
+  /** Key into ENEMY_DEFS — every occupant of this post is this breed. */
+  enemy: string;
+  /** The RESOLVED respawn delay (ms): the authored/default base scaled for the
+   * run's difficulty at creation, floored at `MOB_SPAWNS.respawnMinMs`. */
+  respawnMs: number;
+  /** The authored per-difficulty level band a fresh occupant is scaled by
+   * (see `resolveMobScaling`); absent = the level's own. */
+  mobLevels?: DifficultyMobLevels;
+  /** The dormant walk a fresh occupant inherits (see `SpawnSpec.patrol`). */
+  patrol?: Vec2[];
+  /** The live occupant's `Enemy.id` — null while the post is vacant. */
+  mobId: number | null;
+  /** When the vacant post refills (sim ms) — null while it is occupied. A due
+   * respawn is HELD (not cleared) while a hero stands close enough to watch. */
+  respawnAtMs: number | null;
+};
+
 export type PackState = {
   /** Where the pack sits on the map — the anchor its members spawn around. */
   at: Vec2;
@@ -1121,6 +1148,13 @@ export type GameState = {
    * drain their mob count over time. Empty when the level authors none.
    */
   spawners: SpawnerRuntime[];
+  /**
+   * MOB POSTS for this run, parallel to `LevelDef.mobSpawns` (see
+   * `MobSpawnState` / stepMobSpawns): one mob to a post, refilled on the
+   * difficulty's clock once killed or dragged away. Empty when the level
+   * authors none — every level but the STATIC PARTS maps.
+   */
+  mobSpawns: MobSpawnState[];
   /**
    * World px the player has walked that the spawner hasn't converted into
    * monsters yet — moving through the level stirs more of the horde awake

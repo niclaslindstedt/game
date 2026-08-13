@@ -140,6 +140,11 @@ const ANCHORS = new Set(["spawn", "goal", "stall", "counter", "home"]);
  * clearance (`OBSTACLES.spacing` plus a wall stone's radius). */
 const PREFAB_EDGE_CLEAR = 48;
 
+/** The wall stub a PART's door socket must leave either side of its opening
+ * (world px) — a hole flush with a corner is a wall run of nothing, which the
+ * chain builder draws as a gap in the room's own silhouette. */
+const PART_DOOR_STUB = 24;
+
 const isNum = (v) => typeof v === "number" && Number.isFinite(v);
 const isPosNum = (v) => isNum(v) && v > 0;
 
@@ -347,6 +352,233 @@ export function validateMap(bp, refs, description = "") {
     }
   }
 
+  // ---- parts (the static parts deck — see MapBlueprint.parts) ---------------
+  // Every check here is a build error for the prefabs' reason, doubled: an
+  // unassemblable deck is not merely silent, it THROWS at carve time (see
+  // assembleParts) — a runtime crash on whatever seed first drew the bad deal.
+  if (bp.parts !== undefined) {
+    const areaIdSet = new Set((bp.areas ?? []).map((a) => a?.id));
+    const objectIds = new Set((bp.objects ?? []).map((o) => o?.id));
+    const areaDoorWidth = new Map(
+      (bp.areas ?? [])
+        .filter((a) => typeof a?.id === "string")
+        .map((a) => [a.id, a.doorWidth]),
+    );
+    const defaultDoorWidth = bp.layout?.doorWidth ?? 64;
+    if (bp.plan !== undefined)
+      err("plan and parts both author the floor plan — a blueprint keeps one");
+    const list = Array.isArray(bp.parts.list) ? bp.parts.list : null;
+    const count = bp.parts.count;
+    if (
+      !Array.isArray(count) ||
+      count.length !== 2 ||
+      !count.every((n) => Number.isInteger(n) && n >= 0) ||
+      count[0] > count[1]
+    )
+      err("parts.count must be [min, max] non-negative integers, min <= max");
+    for (const key of Object.keys(bp.parts))
+      if (!["count", "list"].includes(key))
+        err(`parts: unknown field "${key}"`);
+    if (!list || list.length === 0)
+      err("parts.list must list at least one part");
+    else {
+      const seen = new Set();
+      let starts = 0;
+      let thrones = 0;
+      let minSum = 0;
+      list.forEach((p, i) => {
+        const where = `parts[${i}]`;
+        if (typeof p?.id !== "string" || p.id.length === 0) {
+          err(`${where}: needs a string id`);
+          return;
+        }
+        if (seen.has(p.id)) err(`duplicate part id "${p.id}"`);
+        seen.add(p.id);
+        if (!areaIdSet.has(p.area)) err(`${where}: unknown area "${p.area}"`);
+        if (!isPosNum(p.width) || !isPosNum(p.height))
+          err(`${where}: needs a positive width/height`);
+        if (
+          bp.size &&
+          isPosNum(p.width) &&
+          isPosNum(p.height) &&
+          (p.width > bp.size.width - 96 || p.height > bp.size.height - 96)
+        )
+          err(
+            `${where}: ${p.width}×${p.height} cannot fit inside size ` +
+              `(${bp.size.width}×${bp.size.height}) with its margins`,
+          );
+        if (p.start === true) starts++;
+        if (p.boss !== undefined) {
+          thrones++;
+          if (p.start === true)
+            err(`${where}: the landing part cannot also hold the boss`);
+          if (
+            !Array.isArray(p.boss?.at) ||
+            p.boss.at.length !== 2 ||
+            !p.boss.at.every((n) => isNum(n) && n >= 0) ||
+            (isPosNum(p.width) &&
+              isPosNum(p.height) &&
+              (p.boss.at[0] > p.width || p.boss.at[1] > p.height))
+          )
+            err(`${where}: boss.at must be an [x, y] inside the room`);
+          if ((p.min ?? 0) > 1 || p.max !== undefined)
+            err(
+              `${where}: the boss part is dealt exactly once — min/max say nothing`,
+            );
+        }
+        for (const key of ["min", "max"]) {
+          const v = p[key];
+          if (v !== undefined && (!Number.isInteger(v) || v < 0))
+            err(`${where}: ${key} must be a non-negative integer`);
+        }
+        if (Number.isInteger(p.min) && Number.isInteger(p.max) && p.min > p.max)
+          err(`${where}: min ${p.min} exceeds max ${p.max}`);
+        if (p.start !== true && p.boss === undefined)
+          minSum += Number.isInteger(p.min) ? p.min : 0;
+        if (p.weight !== undefined && !isPosNum(p.weight))
+          err(`${where}: weight must be a positive number`);
+        if (p.flip !== undefined && typeof p.flip !== "boolean")
+          err(`${where}: flip must be a boolean`);
+        // The DOOR SOCKETS — where the deal sews. Each must leave a wall stub
+        // either side of its opening, or the punched hole eats the room's edge.
+        if (!Array.isArray(p.doors) || p.doors.length === 0)
+          err(`${where}: doors must list at least one socket`);
+        else
+          p.doors.forEach((d, j) => {
+            const at = `${where}.doors[${j}]`;
+            if (!["n", "s", "e", "w"].includes(d?.edge)) {
+              err(`${at}: edge must be one of n, s, e, w`);
+              return;
+            }
+            const span = d.edge === "n" || d.edge === "s" ? p.width : p.height;
+            const opening =
+              d.width ?? areaDoorWidth.get(p.area) ?? defaultDoorWidth;
+            if (d.width !== undefined && !isPosNum(d.width))
+              err(`${at}: width must be positive`);
+            if (!isNum(d.at))
+              err(`${at}: "at" must be a number along the edge`);
+            else if (
+              isPosNum(span) &&
+              (d.at - opening / 2 < PART_DOOR_STUB ||
+                d.at + opening / 2 > span - PART_DOOR_STUB)
+            )
+              err(
+                `${at}: a ${opening}px opening centred at ${d.at} does not ` +
+                  `leave a ${PART_DOOR_STUB}px wall stub each side of the ` +
+                  `${span}px edge`,
+              );
+            for (const key of Object.keys(d))
+              if (!["edge", "at", "width"].includes(key))
+                err(`${at}: unknown field "${key}"`);
+          });
+        for (const [j, prop] of (p.props ?? []).entries()) {
+          const at = `${where}.props[${j}]`;
+          if (!objectIds.has(prop?.object))
+            err(`${at}: unknown object "${prop?.object}"`);
+          if (
+            !Array.isArray(prop?.at) ||
+            prop.at.length !== 2 ||
+            !prop.at.every((n) => isNum(n) && n >= 0) ||
+            (isPosNum(p.width) &&
+              isPosNum(p.height) &&
+              (prop.at[0] > p.width || prop.at[1] > p.height))
+          )
+            err(`${at}: "at" must be an [x, y] offset inside the room`);
+        }
+        // The SPAWN MARKERS — one mob a post (`LevelDef.mobSpawns`).
+        for (const [j, s] of (p.spawns ?? []).entries()) {
+          const at = `${where}.spawns[${j}]`;
+          if (
+            !Array.isArray(s?.at) ||
+            s.at.length !== 2 ||
+            !s.at.every((n) => isNum(n) && n >= 0) ||
+            (isPosNum(p.width) &&
+              isPosNum(p.height) &&
+              (s.at[0] > p.width || s.at[1] > p.height))
+          )
+            err(`${at}: "at" must be an [x, y] offset inside the room`);
+          if (s?.enemy !== undefined && !refs.enemies.has(s.enemy))
+            err(`${at}: unknown enemy "${s.enemy}"`);
+          if (s?.slot !== undefined && s.slot !== "elite")
+            err(`${at}: slot must be "elite"`);
+          if (s?.pack !== undefined) {
+            if (!Number.isInteger(s.pack) || s.pack < 2 || s.pack > 8)
+              err(
+                `${at}: pack must be an integer 2..8 (a single post omits it)`,
+              );
+            if (s?.slot !== undefined)
+              err(`${at}: an elite stand is a single — it cannot be a pack`);
+          }
+          if (s?.radius !== undefined) {
+            if (s?.pack === undefined)
+              err(`${at}: radius says how a PACK scatters — it needs pack`);
+            else if (!isPosNum(s.radius) || s.radius > 200)
+              err(`${at}: radius must be a positive number of world px (≤200)`);
+          }
+          if (s?.slot !== undefined && s?.enemy !== undefined)
+            err(
+              `${at}: an elite stand is manned by the blueprint's own elites — ` +
+                `it cannot also name an enemy`,
+            );
+          if (s?.patrol !== undefined && typeof s.patrol !== "boolean")
+            err(`${at}: patrol must be a boolean`);
+          for (const key of Object.keys(s ?? {}))
+            if (
+              !["at", "enemy", "slot", "patrol", "pack", "radius"].includes(key)
+            )
+              err(`${at}: unknown field "${key}"`);
+        }
+        for (const key of Object.keys(p))
+          if (
+            ![
+              "id",
+              "area",
+              "width",
+              "height",
+              "doors",
+              "flip",
+              "min",
+              "max",
+              "weight",
+              "start",
+              "boss",
+              "props",
+              "spawns",
+            ].includes(key)
+          )
+            err(`${where}: unknown field "${key}"`);
+      });
+      if (starts !== 1)
+        err(
+          `parts.list must mark exactly one "start: true" part (got ${starts})`,
+        );
+      // A parts venue that ends on a boss needs somewhere for him to stand:
+      // the throne room — unless the mission ends in an annex, which outranks
+      // every throne (the ending stays off the floor plan).
+      if (bp.boss && !bp.annex && thrones === 0)
+        err(
+          "parts venue has a boss but no part carries a boss anchor — author " +
+            "a throne room (boss: { at: [x, y] }) on one part",
+        );
+      if (bp.annex && thrones > 0)
+        warnings.push(
+          `${tag}: the annex outranks the parts' boss anchor — the throne ` +
+            `part will be dealt but the boss will stand in the annex`,
+        );
+      // The deal must be able to satisfy its own requirements: the target the
+      // count prices has to cover every `min` on top of the landing.
+      if (
+        Array.isArray(count) &&
+        Number.isInteger(count[0]) &&
+        minSum > count[0]
+      )
+        err(
+          `parts.count[0] (${count[0]}) cannot cover the ${minSum} required ` +
+            `instances the parts' own "min" fields add up to`,
+        );
+    }
+  }
+
   const enemy = (id, where) => {
     if (id === undefined) {
       err(`missing enemy id in ${where}`);
@@ -551,11 +783,12 @@ export function validateMap(bp, refs, description = "") {
         a.weight === 0 &&
         a.shellOf === undefined &&
         bp.annex?.area !== a.id &&
-        !(bp.prefabs ?? []).some((p) => p?.area === a.id)
+        !(bp.prefabs ?? []).some((p) => p?.area === a.id) &&
+        !(bp.parts?.list ?? []).some((p) => p?.area === a.id)
       )
         err(
           `${where}: weight 0 means never seeded, which only makes sense for a ` +
-            `shell, a prefab's room or the annex`,
+            `shell, a prefab's room, a part's room or the annex`,
         );
       if (a.horde !== undefined && (!isNum(a.horde) || a.horde < 0))
         err(`${where}: horde must be a non-negative multiplier`);

@@ -181,6 +181,11 @@ export function sightingProse(enemy, sighting) {
       `Spawn points on ${sighting.venue.name} release ${totals.spawner ? count(totals.spawner) : "a stream"} of them, a few at a time, until the point drains empty.`,
     );
   }
+  if (has("post")) {
+    lines.push(
+      `On ${sighting.venue.name} each one stands a post of its own, dormant until you close in — and a post cleared or pulled away fills back in on the respawn clock, faster on the higher difficulties.`,
+    );
+  }
   if (has("hellgate")) {
     lines.push(
       "It only reaches the board through a hellgate, which opens once the horde's rampage runs hot enough.",

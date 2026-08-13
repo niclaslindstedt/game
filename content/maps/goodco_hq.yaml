@@ -350,17 +350,21 @@ objects:
   - id: parked_car
     type: obstacle
     radius: 18
-    density: 3
+    # Thin — the PARTS lot lays its own ordered rank, and every stray on the
+    # tarmac is a stake through the arrivals planner's lane search: measured,
+    # one car and two lamps in the wrong half of the lot left seed 42 with no
+    # drivable run-in at all, which is a level with no way in.
+    density: 1.6
     space: outside
   - id: lamp_post
     type: obstacle
     radius: 5
-    density: 5
+    density: 2.5
     space: outside
   - id: dumpster
     type: obstacle
     radius: 10
-    density: 3
+    density: 1.8
     space: outside
     loot:
       chance: 0.3
@@ -668,6 +672,376 @@ objects:
   - id: rocket
     type: landmark
     at: goal
+
+# THE STATIC PARTS DECK — the building GOODCO is SEWN from (the shipping
+# generator; the carve above stays behind the developer LEGACY MAP GENERATOR
+# switch, and the `prefabs:` block is its alone — the deck authors the parking
+# rank and the janitor's cupboard as parts of its own). Every part is a room
+# somebody would recognise from a night shift: the staff lot the hero parks on,
+# a reception, the office wing's rooms and corridors, the break room, the copy
+# room, the server hall, the cleanroom, the assembly halls — and the LAUNCH BAY
+# at the far end of the deal, where PAYLOAD-1 is idling. The horde is the
+# deck's own spawn markers: ONE mob to a post (WoW-style), dormant until
+# aggroed, refilled on the difficulty's respawn clock, breeds rolled by DEPTH
+# from `horde.members` below — interns by the door, SUCCESSOR units in the bays.
+#
+# THE LOT IS THE START PART AND IT HAS EXACTLY ONE SOCKET. Every border between
+# the lot and the building wears the keyed `entrance` object, so the lot's one
+# socket IS the front gate — one way in, wherever the deal put the building —
+# and everything the entrance beat needs holds by construction: the arrivals
+# plan has a whole car park of clear tarmac to lay its lane and rank on, the
+# opening strike stages itself in whichever room the deal sewed onto the gate,
+# and NOTHING AMBIENT stands on the tarmac (no spawn markers out here — the
+# lot's cast is the neutral arrivals, exactly as `horde: 0` said of the carve).
+parts:
+  count: [7, 10]
+  list:
+    # THE STAFF LOT — he parked here, and the car landmark stands where he
+    # landed. Big on purpose: the rank of bays, the access lane, the kerb and
+    # the guard box all have to fit on it with room for the run-in to arrive
+    # out of the dark. The authored rank hugs the north edge (the learnable
+    # rank the prefab used to lay), and the middle stays open tarmac so the
+    # arrivals planner can always find a clear lane wherever the landing rolls.
+    - id: staff_lot
+      area: lot
+      start: true
+      width: 900
+      height: 700
+      doors:
+        - { edge: e, at: 350, width: 64 }
+      props:
+        - { object: parking_line, at: [150, 96] }
+        - { object: parking_line, at: [210, 96] }
+        - { object: parking_line, at: [270, 96] }
+        - { object: parking_line, at: [330, 96] }
+        - { object: parking_line, at: [390, 96] }
+        - { object: parking_line, at: [450, 96] }
+        - { object: parked_car, at: [180, 96] }
+        - { object: parked_car, at: [300, 96] }
+        - { object: parked_car, at: [420, 96] }
+        - { object: lamp_post, at: [560, 100] }
+    # RECEPTION — the front-of-house room, and (dealt early, being owed) often
+    # the first room past the gate: the opening strike's crowd plays wherever
+    # the gate's room is, so the middle floor stays walkable. Two of its posts
+    # walk the room while dormant — the garrison that finds a hero who stands
+    # on the doorstep and never comes in.
+    - id: reception
+      area: office
+      flip: true
+      min: 1
+      max: 1
+      weight: 2
+      width: 560
+      height: 440
+      doors:
+        - { edge: w, at: 220, width: 64 }
+        - { edge: e, at: 220, width: 64 }
+        - { edge: n, at: 280, width: 64 }
+        - { edge: s, at: 280, width: 64 }
+      props:
+        - { object: console_desk, at: [250, 110] }
+        - { object: console_desk, at: [310, 110] }
+        - { object: plant, at: [80, 80] }
+        - { object: plant, at: [480, 80] }
+        - { object: locker, at: [80, 360] }
+      # One CAMP, not a scatter: the posts stand together mid-room so a pull
+      # arrives as a PACK — spread across the room they trickle in one at a
+      # time at a staffer's walking pace and every one dies free to the
+      # auto-swinging blade (measured: an idle hero on the doorstep outlived
+      # the whole trickle). Two of the camp are EXPLICIT scientists: a body
+      # that survives the first swing is what actually lands a hit.
+      spawns:
+        - { at: [300, 190], enemy: guard }
+        - { at: [350, 220], enemy: scientist }
+        - { at: [300, 250], enemy: scientist }
+        - { at: [250, 220] }
+        - { at: [330, 160] }
+        - { at: [160, 120], patrol: true }
+        - { at: [420, 330], patrol: true }
+    # AN OFFICE ROW — the corridor piece of the wing, repeatable, flippable to
+    # serve either hand of the plan, with a spur socket south so the building
+    # branches instead of running out in a line.
+    - id: office_row
+      area: office
+      flip: true
+      max: 3
+      weight: 3
+      width: 560
+      height: 280
+      doors:
+        - { edge: w, at: 140, width: 64 }
+        - { edge: e, at: 140, width: 64 }
+        - { edge: n, at: 280, width: 64 }
+        - { edge: s, at: 280, width: 64 }
+      props:
+        - { object: plant, at: [120, 80] }
+        - { object: locker, at: [440, 80] }
+        - { object: floor_marks, at: [280, 140] }
+      spawns:
+        - { at: [150, 150], patrol: true }
+        - { at: [300, 90] }
+        - { at: [300, 200] }
+        - { at: [440, 180] }
+        - { at: [440, 90] }
+    # THE OPEN-PLAN FLOOR — cubicle land: the desks are the scatter's (the
+    # `desk` object already prices itself over the office), lockers and the
+    # plants somebody keeps alive are the authored furniture. One corner desk
+    # is an elite's stand.
+    - id: open_office
+      area: office
+      flip: true
+      max: 2
+      weight: 2.5
+      width: 620
+      height: 460
+      doors:
+        - { edge: n, at: 310, width: 64 }
+        - { edge: s, at: 310, width: 64 }
+        - { edge: w, at: 230, width: 64 }
+        - { edge: e, at: 230, width: 64 }
+      props:
+        - { object: plant, at: [100, 100] }
+        - { object: plant, at: [520, 100] }
+        - { object: locker, at: [100, 370] }
+        - { object: locker, at: [160, 370] }
+      spawns:
+        - { at: [200, 230], slot: elite }
+        - { at: [150, 150] }
+        - { at: [470, 150] }
+        - { at: [200, 340], patrol: true }
+        - { at: [460, 340] }
+        - { at: [310, 120] }
+        - { at: [320, 250] }
+    # THE BREAK ROOM — tables and the wall the vending bank stands on (the
+    # machines themselves are the scatter's own, so they keep their break hp
+    # and their stamina spill — an authored prop would stamp a dead one).
+    - id: break_room
+      area: floor
+      flip: true
+      max: 2
+      weight: 1.5
+      width: 480
+      height: 400
+      doors:
+        - { edge: s, at: 240, width: 88 }
+        - { edge: w, at: 200, width: 88 }
+        - { edge: e, at: 200, width: 88 }
+      props:
+        - { object: console_desk, at: [140, 110] }
+        - { object: console_desk, at: [220, 110] }
+        - { object: plant, at: [400, 90] }
+        - { object: part_rack, at: [80, 300] }
+      spawns:
+        - { at: [160, 200], slot: elite }
+        - { at: [340, 140] }
+        - { at: [360, 260], patrol: true }
+        - { at: [120, 300] }
+        - { at: [240, 220] }
+    # THE COPY ROOM — one door, which is what the cache picker looks for: a
+    # dead end off the wing that pays the walk.
+    - id: copy_room
+      area: office
+      flip: true
+      max: 2
+      weight: 1.2
+      width: 420
+      height: 360
+      doors:
+        - { edge: s, at: 210, width: 64 }
+      props:
+        - { object: console_desk, at: [120, 100] }
+        - { object: console_desk, at: [190, 100] }
+        - { object: part_rack, at: [330, 100] }
+        - { object: plant, at: [330, 270] }
+      spawns:
+        - { at: [140, 180], slot: elite }
+        - { at: [120, 260] }
+        - { at: [300, 220] }
+        - { at: [280, 130] }
+    # THE SERVER HALL — the racks lay themselves in aisles (the `server_rack`
+    # rank prices itself over the lab), the cooling plant is the authored
+    # furniture, and somebody stands a corner post over it all.
+    - id: server_hall
+      area: lab
+      flip: true
+      max: 2
+      weight: 2
+      width: 620
+      height: 480
+      doors:
+        - { edge: w, at: 240, width: 88 }
+        - { edge: e, at: 240, width: 88 }
+        - { edge: s, at: 310, width: 88 }
+      props:
+        - { object: cooling_unit, at: [100, 90] }
+        - { object: cooling_unit, at: [520, 90] }
+        - { object: power_cabinet, at: [100, 390] }
+        - { object: server, at: [520, 390] }
+      spawns:
+        - { at: [200, 240], slot: elite }
+        - { at: [160, 140], patrol: true }
+        - { at: [460, 140] }
+        - { at: [160, 340] }
+        - { at: [460, 340] }
+        - { at: [310, 200] }
+    # THE CLEANROOM — a straight-through lab: consoles at the benches, the gas
+    # bottles racked by the wall, the extraction vents in its own floor patch.
+    - id: cleanroom
+      area: lab
+      flip: true
+      max: 2
+      weight: 1.8
+      width: 560
+      height: 460
+      doors:
+        - { edge: n, at: 280, width: 88 }
+        - { edge: s, at: 280, width: 88 }
+        - { edge: e, at: 230, width: 88 }
+      props:
+        - { object: console_desk, at: [120, 110] }
+        - { object: console_desk, at: [440, 110] }
+        - { object: gas_rack, at: [120, 350] }
+        - { object: server, at: [440, 350] }
+      spawns:
+        - { at: [180, 230], slot: elite }
+        - { at: [160, 130], patrol: true }
+        - { at: [400, 300] }
+        - { at: [280, 120] }
+        - { at: [420, 140] }
+        - { at: [280, 340] }
+    # AN ASSEMBLY HALL — a bay by trade: the conveyor, the fuselage queue and
+    # the gantries lay themselves down its long axis (the `row` objects), so
+    # the authored pieces keep to the corners and the aisle stays a fight.
+    - id: assembly_hall
+      area: bay
+      flip: true
+      min: 1
+      max: 2
+      weight: 2.5
+      width: 760
+      height: 560
+      doors:
+        - { edge: w, at: 280, width: 130 }
+        - { edge: e, at: 280, width: 130 }
+        - { edge: n, at: 380, width: 130 }
+        - { edge: s, at: 380, width: 130 }
+      props:
+        - { object: robot_arm, at: [200, 120] }
+        - { object: robot_arm, at: [560, 120] }
+        - { object: gas_rack, at: [100, 450] }
+        - { object: part_rack, at: [660, 450] }
+      # The line camp mid-aisle (see the reception's note: a camp converges
+      # as a pack, a scatter trickles), the walkers on the floor around it.
+      spawns:
+        - { at: [250, 280], slot: elite }
+        - { at: [380, 250], enemy: guard }
+        - { at: [430, 280], enemy: scientist }
+        - { at: [380, 310], enemy: scientist }
+        - { at: [330, 280] }
+        - { at: [410, 220] }
+        - { at: [180, 180], patrol: true }
+        - { at: [580, 420], patrol: true }
+    # THE JANITOR'S CUPBOARD — the same room every run, mop bucket and all: the
+    # one room a returning player can measure the rest of the building against,
+    # exactly as the prefab promised. One door, so it is also a detour.
+    - id: janitor_closet
+      area: utility
+      flip: true
+      min: 1
+      max: 1
+      weight: 0.8
+      width: 360
+      height: 300
+      doors:
+        - { edge: s, at: 180, width: 56 }
+      props:
+        - { object: locker, at: [70, 70] }
+        - { object: locker, at: [120, 70] }
+        - { object: locker, at: [170, 70] }
+        - { object: mop_bucket, at: [70, 230] }
+        - { object: part_rack, at: [290, 90] }
+      spawns:
+        - { at: [230, 170] }
+    # THE RECORDS STORE — a keycard room: a dead end wearing the `vault` area,
+    # so the deal always has rooms for the `locks:` below to seal. Nothing the
+    # run needs is ever in one — a haul, and somebody standing over the haul.
+    # NO ELITE STANDS in here: the keycard carriers must never be dealt inside
+    # the room their own card opens.
+    - id: records_vault
+      area: vault
+      flip: true
+      # TWO promised, so every key in `locks:` below gets a room: with the AI
+      # core that is three sealed cells, one per card, exactly what the carve
+      # promised through its `promised` seeds.
+      min: 2
+      max: 2
+      weight: 0.6
+      width: 440
+      height: 380
+      doors:
+        - { edge: s, at: 220, width: 64 }
+      props:
+        - { object: part_rack, at: [100, 90] }
+        - { object: part_rack, at: [160, 90] }
+        - { object: locker, at: [340, 90] }
+      spawns:
+        - { at: [220, 190] }
+        - { at: [340, 280] }
+    # THE AI CORE — the deepest thing the ARCHITECT's own card opens: a sealed
+    # server room, racks and cooling and nothing that ever needed a door this
+    # good. A second vault shape so two sealed rooms never read as one room
+    # twice.
+    - id: ai_core
+      area: vault
+      flip: true
+      min: 1
+      max: 1
+      weight: 0.6
+      width: 480
+      height: 420
+      doors:
+        - { edge: s, at: 240, width: 64 }
+      props:
+        - { object: server, at: [140, 100] }
+        - { object: server, at: [340, 100] }
+        - { object: cooling_unit, at: [140, 320] }
+        - { object: power_cabinet, at: [340, 320] }
+      spawns:
+        - { at: [240, 210] }
+        - { at: [380, 160] }
+    # THE LAUNCH BAY — the boss's own room, sewn onto the socket farthest from
+    # the lot: PAYLOAD-1 idles under the rocket (the `goal` landmark is this
+    # room's centre), an honor guard of posts around it, and the authored
+    # hardware keeps to the walls so the fight has a floor.
+    - id: launch_bay
+      area: bay
+      flip: true
+      boss: { at: [380, 260] }
+      width: 760
+      height: 620
+      doors:
+        # Two sockets so the throne can hang off either axis of whatever the
+        # deal grew — only the sewn one becomes a doorway; an unsewn socket
+        # stays solid wall, so the bay still reads one way in.
+        - { edge: s, at: 380, width: 130 }
+        - { edge: w, at: 310, width: 130 }
+      props:
+        - { object: robot_arm, at: [120, 120] }
+        - { object: robot_arm, at: [640, 120] }
+        - { object: gas_rack, at: [120, 500] }
+        - { object: part_rack, at: [640, 500] }
+        - { object: engine_bell, at: [200, 500] }
+        - { object: nose_cone, at: [560, 500] }
+      spawns:
+        # One SUCCESSOR post is EXPLICIT: the mission pins a first-sight read
+        # on the breed (`goodco_successor`), and the deepest band's roll can
+        # miss it on a seed — the unit the line is about has to actually stand
+        # somewhere, and its own launch bay is where the story puts it.
+        - { at: [160, 260], enemy: successor }
+        - { at: [600, 260] }
+        - { at: [240, 470] }
+        - { at: [520, 470] }
+        - { at: [380, 420] }
 
 # THE HORDE: one finite knot per room, the staff escalating with depth exactly as
 # the authored floor does — interns at the door, SUCCESSOR units in the deep bays.

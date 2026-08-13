@@ -1,16 +1,31 @@
 ---
 name: mapgen-improvement
-description: "Use when improving the MAP GENERATOR — the GENERATED MAPS feature that carves a mission fresh from its v2 blueprint (`content/maps/<id>.yaml`) every run. Covers the carve → dress → verify architecture, the blueprint anatomy and how to add a new object purpose or area rule, the render → LOOK → judge → iterate loop (the renders are thousands of pixels on a side, so crop them), the invariants that are load-bearing and easy to undo by accident, and the verification traps that make a green check mean nothing."
+description: "Use when improving the MAP GENERATOR — the GENERATED MAPS feature that builds a mission fresh from its v2 blueprint (`content/maps/<id>.yaml`) every run, by one of TWO generators: the STATIC PARTS assembler (hand-drawn rooms sewn at door sockets, one-mob spawn posts — the shipping default where a blueprint authors a `parts:` deck) and the legacy BSP carve (kept behind the developer LEGACY MAP GENERATOR switch). Covers the assemble/carve → dress → verify architecture, the blueprint and parts-deck anatomy, how to add a new object purpose or area rule, the render → LOOK → judge → iterate loop (the renders are thousands of pixels on a side, so crop them), the invariants that are load-bearing and easy to undo by accident, and the verification traps that make a green check mean nothing."
 ---
 
 # Improving the Map Generator
 
 `map-improvement` improves ONE hand-authored map. This skill improves the thing
-that carves **every** map, fresh, per run — so a change here lands on every
-blueprint in `content/maps/` (seven today) × every seed at once. That leverage
+that builds **every** map, fresh, per run — so a change here lands on every
+blueprint in `content/maps/` × every seed at once. That leverage
 cuts both ways: a
 regression you cannot see on the seed you happened to render is still shipping
 on the other several thousand.
+
+**THERE ARE TWO GENERATORS BEHIND `resolveLevelDef`, and which one a venue uses
+is the blueprint's own choice.** A blueprint that authors a **STATIC PARTS
+deck** (`parts:` — see `MapPart` in `types.ts` and `engine/game/mapgen/parts.ts`)
+is SEWN: hand-drawn rectangular rooms joined at their authored door sockets,
+mirrored to fit (`flip`), the boss's own room dealt into a rolled deep corner —
+and its horde is ONE-MOB SPAWN POSTS (`LevelDef.mobSpawns`,
+`engine/game/mob-spawns.ts`: dormant individuals, respawning on a
+difficulty-scaled clock once killed or dragged off their leash) instead of knot
+spawn points. A blueprint without a deck keeps the legacy BSP CARVE, which also
+stays reachable on any venue behind the developer LEGACY MAP GENERATOR flag
+(`engine/game/flags.ts`) while the two are judged side by side. **Both emit the
+same `ChamberGrid`**, so everything downstream — walls, districts, scatter,
+depth, caches, vaults, the trader, quest reachability — is shared; a fix in the
+dressing lands on both, a fix in `parts.ts` lands only on the sewn venues.
 
 **This skill IS the design statement** — what a blueprint is, why the walls are
 derived, why the ending is not on the map — as well as the *working method*.
@@ -33,6 +48,8 @@ it at both ends of the session.
 | Where are the cells and the borders? | `engine/game/mapgen/rooms.ts` |
 | What gets scattered/aligned/tiled onto them? | `engine/game/mapgen/place.ts` |
 | Who decides — boss, hero, depth, knots, lifts? | `engine/game/mapgen/generate.ts` |
+| How is a parts deck SEWN — the deal, the flips, the boss attach, the loops, the perimeter? | `engine/game/mapgen/parts.ts` |
+| How does a one-mob post live — first watch, vacate, respawn clock, no-pop-in hold? | `engine/game/mob-spawns.ts` + config `MOB_SPAWNS` (`config/spawning.ts`) |
 | How does a run reach any of it? | `engine/game/mapgen/index.ts` → `resolveLevelDef` |
 | Which missions have a blueprint at all? | `engine/game/mapgen/blueprints.ts` — an import-free LEAF, so `registerDefs({ blueprints })` can swap a MOD's recipes in without the def registry pulling `generate.ts` |
 | Is the authored file legal? | `scripts/asset-tools/map-schema.mjs` |
@@ -56,8 +73,11 @@ spreadsheet, so **the render is the unit of judgement, not the JSON.**
    ```
 
    `--dormant` draws the mobs each spawn point still has queued — without it you
-   are looking at an empty map and calling it a level. The schematic view is
-   `node scripts/map-layout.mjs <id> --seed 3` (con colours, zones, labels).
+   are looking at an empty map and calling it a level. (A PARTS venue's whole
+   garrison is real dormant enemies minted at creation, so it is drawn either
+   way; every post also gets a small ring.) The schematic view is
+   `node scripts/map-layout.mjs <id> --seed 3` (con colours, zones, labels —
+   posts draw as con-coloured dots).
 3. **LOOK at it — which means CROP it.** The render is the whole map at true
    world scale, upscaled by `--zoom` (default 2) — several thousand pixels on a
    side — and a

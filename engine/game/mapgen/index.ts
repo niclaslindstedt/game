@@ -29,6 +29,7 @@ export {
   setMapBlueprints,
 } from "./blueprints.ts";
 export { generateLevel } from "./generate.ts";
+export { assembleParts, partSpawns, type PartsAssembly } from "./parts.ts";
 export { resolveStages } from "./stages.ts";
 export {
   carveChambers,
@@ -41,9 +42,13 @@ export type {
   MapBlueprint,
   MapObject,
   MapObjectType,
+  MapPart,
+  MapParts,
   MapPlan,
   MapSetPiece,
   MapSizeSpec,
+  PartDoor,
+  PartSpawn,
 } from "./types.ts";
 
 /**

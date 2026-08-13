@@ -91,6 +91,33 @@ describe("BOOT HILL level def", () => {
   it("ships the campaign epilogue: outro pages on the level def", () => {
     expect(BOOT_HILL.outro?.length ?? 0).toBeGreaterThanOrEqual(4);
   });
+
+  it("expands the deck's pack markers into camps of individual posts", () => {
+    // The deck authors a CAMP as one `pack:` marker; the carve expands it into
+    // N posts (ids `m<i>_<k>`) that share one rolled breed and stand scattered
+    // around the anchor — each with its OWN respawn clock, which is the whole
+    // point: a half-cleared camp refills member by member.
+    const state = startGame(SEED, "boot_hill");
+    const camps = new Map<string, typeof state.mobSpawns>();
+    for (const post of state.mobSpawns) {
+      const camp = /^(m\d+)_\d+$/.exec(post.id)?.[1];
+      if (!camp) continue;
+      camps.set(camp, [...(camps.get(camp) ?? []), post]);
+    }
+    // Every deal fields the park gate's cowbot camp; most field more.
+    expect(camps.size).toBeGreaterThanOrEqual(1);
+    for (const members of camps.values()) {
+      expect(members.length).toBeGreaterThanOrEqual(2);
+      // One breed to a camp, rolled once for the whole marker.
+      expect(new Set(members.map((m) => m.enemy)).size).toBe(1);
+      // Scattered, not stacked: no two members on the same spot.
+      const spots = new Set(members.map((m) => `${m.at.x},${m.at.y}`));
+      expect(spots.size).toBe(members.length);
+    }
+    // The park gate's camp is pinned on the breed the arrival read names.
+    const cowbots = state.mobSpawns.filter((m) => m.enemy === "cowbot");
+    expect(cowbots.length).toBeGreaterThanOrEqual(3);
+  });
 });
 
 describe("the park's resident staff", () => {

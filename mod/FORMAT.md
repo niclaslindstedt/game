@@ -238,6 +238,7 @@ Required: `id`, `level`, `size`, `areas`, `layout`, `objects`, `horde`.
 | `bystanders`            | the NEUTRAL cast an errand sends the hero to talk to, dropped into cells the horde stands in                                                              |
 | `arrivals` (on an area) | the STAFF LOT: people turn up here in cars, and the way in is the door one of them badges open (see below)                                                |
 | `prefabs`               | a STATIC room — a named area, and props placed at authored offsets inside it, the same on every seed                                                      |
+| `parts`                 | the STATIC PARTS deck — the whole floor plan sewn from hand-drawn rooms at their door sockets (see below); replaces the carve AND the knot horde          |
 | `annex`                 | the boss's own wing and the ELEVATOR that is the only way into it                                                                                         |
 | `locks`                 | the STORY ITEM ids that open a keyed district (see below)                                                                                                 |
 | `boss`                  | who, and the candidate **compass regions** one is rolled from per run                                                                                     |
@@ -458,6 +459,38 @@ its own headlights wherever it goes, and needs no authoring at all.
 **`patrol: true` ON AN ELITE** walks it a beat instead of leaving it standing.
 The route is derived from the room the carve grew it in — a sweep down the cell's
 long axis, inset off the walls — so it fits every size and every seed.
+
+### `parts:` — the STATIC PARTS deck
+
+A blueprint may replace the carve entirely: a `parts:` block is a deck of
+hand-drawn rooms — each a rectangle with **door sockets** on its edges — sewn
+together per run into the whole floor plan. Every instance of a room is that
+room, furniture and all; the run's variety is which rooms are dealt, how they
+join, and which way each is mirrored (`flip: true`). Exactly one part carries
+`start: true` (the hero lands in it); a part carrying `boss: { at: [x, y] }` is
+the boss's own room, sewn onto a deep socket rolled per run — far, but never
+predictably the farthest (and never authored on a venue whose ending is an
+`annex` — the annex outranks it). `min`/`max`/`weight`
+shape the deal; `count: [min, max]` prices how many parts are dealt beyond the
+required ones.
+
+**The deck's horde is one mob to a post.** Each `spawns:` marker in a part is a
+single mob standing that spot (`{ at: [x, y] }` — breed rolled by DEPTH from
+the blueprint's own `horde.members`, or named with `enemy:`), dormant until
+aggro wakes it, and refilled on a difficulty-scaled respawn clock once killed
+or dragged away. `pack: N` (2–8) expands the one marker into a CAMP of N
+individual posts scattered `radius:` (default 60) around the anchor — same
+breed, each with its own respawn clock, so a half-cleared camp refills member
+by member; one marker per camp is the ergonomic way to author a garrison.
+`patrol: true` walks it its room (a camp fields one walker); `slot: elite`
+makes the marker a STAND one of the blueprint's `elites` is dealt onto instead
+(which stands are manned is rolled per run — never a pack). `props:` stamps
+palette objects at fixed offsets, exactly as a prefab does.
+
+Two rules the schema enforces: a socket's opening must leave a 24px wall stub
+each side of its edge, and the deal must be able to satisfy its own
+requirements (`count[0]` at least the sum of every `min`). The shipped
+[`../content/maps/moon.yaml`](../content/maps/moon.yaml) is the reference deck.
 
 Full reference: [`examples/greenhouse/maps/greenhouse.yaml`](examples/greenhouse/maps/greenhouse.yaml)
 is a small commented one, and [`../content/maps/moon.yaml`](../content/maps/moon.yaml)

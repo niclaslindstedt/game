@@ -11,6 +11,7 @@ import {
   setAutoEquipEnabled,
   setAutoStatGainsEnabled,
   setBalanceTuning,
+  setLegacyMapgenEnabled,
   setCameraYaw,
   setCutscenesEnabled,
   setMinigamesEnabled,
@@ -140,6 +141,14 @@ export type DebugMode = "on" | "off";
  * from the same rule), so the two switch together and the balance stays whole.
  * Applied to the engine via `setAutoStatGainsEnabled`. */
 export type AutoLevelStats = "on" | "off";
+
+/** LEGACY MAP GENERATOR: a developer flag that holds a venue authored with a
+ * STATIC PARTS deck to the old BSP carve instead — the side-by-side switch
+ * kept while the parts generator is judged for the carve's retirement. Read
+ * when a level is BUILT (engine/game/mapgen/generate.ts), so flipping it lands
+ * on the next run rather than one in progress. Applied to the engine via
+ * `setLegacyMapgenEnabled`. */
+export type LegacyMapgen = "on" | "off";
 
 /** SKY CAMERA: a developer feature flag for the TITLE SKY's orrery. `off` (the
  * default) leaves the main menu's solar system framed as it ships. `on` hands
@@ -394,6 +403,8 @@ export type GameSettings = {
   debug: DebugMode;
   /** Developer flag: automatic per-level base-stat growth (see AutoLevelStats). */
   autoLevelStats: AutoLevelStats;
+  /** Developer flag: the old BSP carve over the parts generator (see LegacyMapgen). */
+  legacyMapgen: LegacyMapgen;
   skyCamera: SkyCamera;
   /** Developer flag: surface the coin store in any build, free (see StoreForce). */
   storeForce: StoreForce;
@@ -728,6 +739,8 @@ function defaults(): GameSettings {
     // hero's held weapon and its swing animation are now always on (shipped
     // as the default look), so they are no longer settings.
     autoLevelStats: "off",
+    // The parts generator is the shipping default; the old carve is opt-in.
+    legacyMapgen: "off",
     // The title sky stays a backdrop until a developer takes its camera.
     skyCamera: "off",
     // The coin store surfaces only in the native shell unless a developer
@@ -1070,6 +1083,7 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     developerUnlocked: base.developerUnlocked,
     debug: base.debug,
     autoLevelStats: base.autoLevelStats,
+    legacyMapgen: base.legacyMapgen,
     skyCamera: base.skyCamera,
     storeForce: base.storeForce,
     gameSpeed: base.gameSpeed,
@@ -1256,6 +1270,10 @@ function load(): GameSettings {
         stored.autoLevelStats === "on" || stored.autoLevelStats === "off"
           ? stored.autoLevelStats
           : base.autoLevelStats,
+      legacyMapgen:
+        stored.legacyMapgen === "on" || stored.legacyMapgen === "off"
+          ? stored.legacyMapgen
+          : base.legacyMapgen,
       skyCamera:
         stored.skyCamera === "on" || stored.skyCamera === "off"
           ? stored.skyCamera
@@ -1383,6 +1401,7 @@ const settings: GameSettings = __DEV_TOOLS__
 applyAudioVolumes(settings);
 setHapticsEnabled(settings.vibration === "on");
 setAutoStatGainsEnabled(settings.autoLevelStats === "on");
+setLegacyMapgenEnabled(settings.legacyMapgen === "on");
 setAutoEquipEnabled(settings.autoEquip === "on");
 setDialogueEnabled(settings.dialogue === "on");
 setCutscenesEnabled(settings.cutscenes === "on");
@@ -1417,6 +1436,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   applyAudioVolumes(settings);
   setHapticsEnabled(settings.vibration === "on");
   setAutoStatGainsEnabled(settings.autoLevelStats === "on");
+  setLegacyMapgenEnabled(settings.legacyMapgen === "on");
   setAutoEquipEnabled(settings.autoEquip === "on");
   setDialogueEnabled(settings.dialogue === "on");
   setCutscenesEnabled(settings.cutscenes === "on");

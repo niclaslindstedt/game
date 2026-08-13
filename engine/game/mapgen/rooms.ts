@@ -96,6 +96,15 @@ export type Border = {
   /** The opening (world px) punched through it — the owning area's own
    * `doorWidth`, or the blueprint's. */
   door: number;
+  /**
+   * WHERE the opening sits along the border (its CENTER coordinate), when the
+   * doorway was AUTHORED rather than rolled — a PART's door socket is a fact
+   * about the room (the kitchen's door is beside the counter, not wherever the
+   * overlap's middle lands), so the assembly records the matched socket here.
+   * Omitted = the middle of the border, which is what every carved and planned
+   * map has always done.
+   */
+  doorAt?: number;
 };
 
 export type ChamberGrid = {
@@ -159,13 +168,18 @@ export type DoorGap = {
   width: number;
 };
 
-/** Where a `door` border's opening sits: the MIDDLE of the border, which is the
- * one placement that leaves matching walls either side instead of a corner
- * sliver. Shared by the wall runs and the door gaps so the two can never
- * disagree about where the hole is. */
+/** Where a `door` border's opening sits: the authored socket when a PART said
+ * so (`doorAt`, clamped so the hole stays inside the border), else the MIDDLE
+ * of the border — the one placement that leaves matching walls either side
+ * instead of a corner sliver. Shared by the wall runs and the door gaps so the
+ * two can never disagree about where the hole is. */
 function doorwaySpan(border: Border): { from: number; to: number } {
-  const mid = (border.from + border.to) / 2;
-  return { from: mid - border.door / 2, to: mid + border.door / 2 };
+  const half = border.door / 2;
+  const mid =
+    border.doorAt !== undefined
+      ? Math.min(border.to - half, Math.max(border.from + half, border.doorAt))
+      : (border.from + border.to) / 2;
+  return { from: mid - half, to: mid + half };
 }
 
 /**

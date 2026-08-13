@@ -8,7 +8,13 @@
 
 import { describe, expect, it } from "vitest";
 
-import { ENEMY_AI, resolveLevelDef, runLevelDef, step } from "@game/core";
+import {
+  ENEMY_AI,
+  enemyDef,
+  resolveLevelDef,
+  runLevelDef,
+  step,
+} from "@game/core";
 import type { GameState, Obstacle } from "@game/core";
 import {
   clearStage,
@@ -180,13 +186,19 @@ describe("pack overlap", () => {
   it("separation pushes pairs apart only to the overlapped distance", () => {
     const state = startGame();
     clearStage(state);
-    state.obstacles = [];
-    // Two sleeping ghosts stacked nearly on top of each other, far from
-    // the player so nothing else moves them.
+    // Two sleeping ghosts stacked nearly on top of each other, far from the
+    // player so nothing else moves them. The spot has to be CHOSEN, not
+    // offset: a parts deal is rooms sewn into unexcavated rock, so a fixed
+    // "+1200" from the landing can stand the pair in the void, where the
+    // excavation push-out walks them apart before separation ever runs. The
+    // boss's stand is the one point promised to be BOTH open ground and far
+    // from the landing (the assembler's boss-walk floor), so borrow it —
+    // then clear the whole field, him included, so the pair is alone.
     const spot = {
-      x: state.players[0].pos.x + 1200,
-      y: state.players[0].pos.y,
+      ...state.enemies.find((e) => enemyDef(e.defId).role === "boss")!.pos,
     };
+    state.enemies = [];
+    state.obstacles = [];
     const a = makeEnemy({ id: 1, pos: { ...spot } });
     const b = makeEnemy({ id: 2, pos: { x: spot.x + 4, y: spot.y } });
     state.enemies.push(a, b);

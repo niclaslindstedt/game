@@ -224,6 +224,52 @@ export const SPAWNERS = {
 } as const;
 
 /**
+ * MOB POSTS (`LevelDef.mobSpawns` / mob-spawns.ts): the ONE-MOB-PER-SPAWN model
+ * the STATIC PARTS maps field instead of spawn points — the WoW garrison. Every
+ * mob on the floor is an individual standing an authored post, dormant until
+ * aggro wakes it. The moment a post is VACATED — its mob killed, or dragged off
+ * its leash chasing a hero — its respawn clock starts, and when it runs out a
+ * fresh mob stands the post again (held while a hero is close enough to watch
+ * it pop into being). Higher difficulties run shorter clocks
+ * (`DifficultyDef.spawnerRespawnMult`, the same ladder the spawn points use),
+ * so a JESUS floor repopulates behind the hero while an EASY one stays cleared.
+ */
+export const MOB_SPAWNS = {
+  /**
+   * BASE respawn delay (ms) — medium, before the rung's `spawnerRespawnMult`
+   * scales it (1.6× easy → 0.45× JESUS: ~64s to ~18s). Long enough that a
+   * cleared room STAYS cleared for the fight the hero walked on to, short
+   * enough that backtracking a whole floor means meeting the night shift's
+   * replacements.
+   */
+  respawnMs: 40_000,
+  /** Floor (ms) on the resolved delay after every factor is applied. */
+  respawnMinMs: 8_000,
+  /**
+   * How far (world px) a mob may stand from its post before the post counts as
+   * VACATED — dragged away, aggroed off, kited across the map. Roughly a
+   * screen: a mob pulled a screen off its ground has left it, and the ground
+   * refills on the clock behind it.
+   */
+  leashRadius: 420,
+  /**
+   * NO POP-INS: a due respawn is HELD while any hero stands within this of the
+   * post (world px) — about the phone viewport's half-diagonal, so a mob never
+   * blinks into being in front of somebody looking at the spot. The clock stays
+   * expired; the mob stands up the moment the hero steps away.
+   */
+  clearRadius: 280,
+  /**
+   * SOCIAL AGGRO (the WoW linked pull): when an ELITE wakes, every dormant
+   * post-standing mob within this of it (world px) wakes with it — the parts
+   * maps' answer to the knot maps' alarm link (`SpawnSpec.alarms`), and the
+   * same design promise: the sentry pulls the room, so a careless search
+   * costs more than a careful one. Roughly a room.
+   */
+  alarmRadius: 360,
+} as const;
+
+/**
  * HELLGATES (`SpawnerSpec.hellgate` / spawners.ts, mobs flagged
  * `EnemyDef.hellborn`) — the RAMPAGE-ONLY spawn points. A hellgate is an
  * ordinary spawn point with three differences, all keyed to the menace meter

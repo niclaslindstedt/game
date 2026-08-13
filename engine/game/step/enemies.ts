@@ -58,6 +58,7 @@ import { lineOfSight, resolveObstacles } from "../obstacles.ts";
 import { quarryFor } from "../aggro.ts";
 import { nearestHeroWhere, seatOf } from "../party.ts";
 import { moveRangedEnemy } from "../ranged.ts";
+import { alertPosts } from "../mob-spawns.ts";
 import { raiseAlarm } from "../spawners.ts";
 import { startEnemyDialogue, wantsDialogue } from "../story.ts";
 import { BALANCE } from "../tuning.ts";
@@ -606,9 +607,12 @@ function moveEnemy(
       }
       // Just woke: power-match the player before the ambush rush lands —
       // unless it is an apparition, which never fights anything. An
-      // alarm-linked speaker calls its spawn point as the scene springs.
+      // alarm-linked speaker calls its spawn point as the scene springs —
+      // and on a parts map the same wake pulls the elite's own camp of posts
+      // (social aggro, the WoW linked pull — see alertPosts).
       if (!def.apparition) maybePowerScale(state, enemy);
       raiseAlarm(state, enemy);
+      if (!def.apparition) alertPosts(state, enemy);
     }
     // The rush: an unplayed speaker closes in far faster than it fights,
     // so the scene starts seconds after the ambush springs. Once it has

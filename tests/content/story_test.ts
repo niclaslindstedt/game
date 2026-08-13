@@ -47,8 +47,15 @@ import {
 
 import { distance as dist } from "@game/lib/vec.ts";
 
-/** A hand-placed NIGHT MANAGER, parked `away` px right of the player. */
+/** A hand-placed NIGHT MANAGER, parked `away` px right of the player.
+ *
+ * The stage is a FREE-FIELD measurement (rush speed, the walk into speak
+ * range), so the furniture goes first: on a generated map the spot `away` px
+ * out can land inside a wall or a ridge, and the shared push-out would then
+ * read as movement the assertions never meant to be about. */
 function placeElite(state: GameState, away: number): Enemy {
+  state.obstacles = [];
+  state.obstaclesVersion++;
   const elite = makeEnemy(
     {
       pos: { x: state.players[0].pos.x + away, y: state.players[0].pos.y },

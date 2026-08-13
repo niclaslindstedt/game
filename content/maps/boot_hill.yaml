@@ -12,8 +12,10 @@ description: |-
   country. Which of the six outer thirds the lift is in is rolled per run, so the
   last thing to find is the WAY to the boss rather than the boss — and until the
   hero has ridden it, the minimap has nothing at all to show where the finale is.
-  There are no walls up here at all: the districts flow into each other and the
-  hero rides where he likes.
+  Up here the ground itself is never walled: where two pieces of country meet
+  they flow together, and what fencing there is — the park's own hazard-striped
+  crowd barriers, strung along the boundaries the operator never opened — only
+  marks the edge of the grounds and the backs of the yards.
   FEEL: still the theme park with the safety off — hay bales rolling, cowbots and
   tin outlaws boiling out of the storefronts — but the park is now mostly a place
   people (and cows) live in, which is what makes the town worth finding and the
@@ -120,18 +122,29 @@ layout:
   doorWidth: 230
   loopDoors: 0.32
   cluster: 0.5
-  wall: control_wall
+  # THE SURFACE FENCE. The parts assembly seals its perimeter and its unsewn
+  # seams with the layout wall, and steel control-room panelling on the prairie
+  # would read as the finale leaking upstairs — so the surface is fenced with
+  # the park's own crowd barrier instead, and the control room keeps its steel
+  # through its area's own `wall:` below.
+  wall: park_fence
 
 objects:
-  # THE ONE WALL LEFT ON THE MAP is seventy feet down, around the control room.
-  # Up here nothing is walled at all: the park is open country and you ride
-  # across it, which is what a western is. What used to fence the districts is
-  # now a PROP — a few lengths of rail standing about a yard, hoppable, marking
-  # somebody's land without ever closing a route.
+  # THE ONE BUILT WALL is seventy feet down, around the control room. Up on the
+  # surface the only barrier is the PARK'S OWN FENCE — the hazard-striped crowd
+  # panels the operator strung along the boundary of the grounds — which is what
+  # the parts assembly seals its perimeter and its unsewn seams with. What
+  # fences a YARD is still a PROP — a few lengths of rail standing about a yard,
+  # hoppable, marking somebody's land without ever closing a route.
   - id: control_wall
     type: wall
     kind: control_wall
     radius: 10
+  - id: park_fence
+    type: wall
+    kind: park_fence
+    sprite: compound_fence
+    radius: 9
   - id: picket_fence
     type: cover
     radius: 8
@@ -522,6 +535,226 @@ objects:
     type: landmark
     at: goal
     anchor: base
+
+# THE STATIC PARTS DECK — the stretch of country the park is SEWN from (the
+# shipping generator; the carve above stays behind the developer LEGACY MAP
+# GENERATOR switch). Every part is a piece of the frontier somebody would
+# recognise: the gate flats the hero rides in over, wagon roads, the grazing
+# range with its cattle, ONE plank-street town (min 1, max 1 — "exactly one
+# town" is the whole read, so the deck promises it instead of weighting it),
+# homesteads, the corral, the bone yard at the end of a dead track. The horde
+# is the deck's own spawn markers: ONE mob to a post (WoW-style), dormant until
+# aggroed, refilled on the difficulty's respawn clock, breeds rolled by DEPTH
+# from `horde.members` below — cowbots tipping their hats by the gate, tin
+# outlaws and longhorns out where the lift might be.
+#
+# NO BOSS PART, ON PURPOSE: the ending is the ANNEX (the buried control room),
+# so the deal owes the ELEVATOR PAD a long walk instead of a throne — the lift
+# lands in a rolled goal room picked far from the landing. The start part keeps
+# to TWO sockets so the landing always sits at the rim of the plan rather than
+# in the middle of it, which is what keeps that walk long on every deal.
+#
+# THE TOWN DRESSES ITSELF: its area carries `blocks: 140`, so the street
+# dresser walks the building palette down both sides of the part's long axis —
+# the deck authors the street's clutter and its people, never its frontages.
+# The two LAIRS (the marshal's house, the dacha) are placed by the engine at
+# the elite pick, re-homed into town/homestead cells — the deck only has to
+# deal such cells, which the three `min: 1` parts below guarantee.
+parts:
+  count: [7, 10]
+  list:
+    # THE PARK GATE — the hero steps out of the rift onto open hardpan; the
+    # gate landmark stands at his spawn. A cowbot camp mid-flat (the first one
+    # tips its hat — the arrival read is pinned on the breed), and one
+    # patroller sweeps the flat so a hero who never moves is still found (the
+    # promise the whole difficulty curve rests on).
+    - id: park_gate
+      area: hardpan
+      start: true
+      width: 660
+      height: 540
+      doors:
+        - { edge: e, at: 270 }
+        - { edge: s, at: 330 }
+      props:
+        - { object: cactus, at: [140, 110] }
+        - { object: sage_bush, at: [520, 430] }
+        - { object: cow_skull, at: [150, 430] }
+        - { object: tumbleweed, at: [400, 150] }
+      spawns:
+        - { at: [340, 280], enemy: cowbot, pack: 3, radius: 60 }
+        - { at: [530, 140], patrol: true }
+    # A WAGON ROAD — the corridor piece, repeatable, flippable to serve either
+    # hand of the plan, with a spur socket south so the country branches
+    # instead of running out in a line.
+    - id: wagon_road
+      area: hardpan
+      width: 580
+      height: 300
+      flip: true
+      max: 3
+      weight: 3
+      doors:
+        - { edge: w, at: 150, width: 200 }
+        - { edge: e, at: 150, width: 200 }
+        - { edge: s, at: 290, width: 200 }
+      props:
+        - { object: cactus, at: [200, 80] }
+        - { object: sage_bush, at: [380, 220] }
+        - { object: dry_shrub, at: [290, 150] }
+      spawns:
+        - { at: [140, 150], patrol: true }
+        - { at: [335, 150], pack: 3, radius: 60 }
+        - { at: [480, 220] }
+    # THE GRAZING RANGE — fenced grass, cattle standing in it (the critters
+    # price themselves over the prairie), a trough and a hay camp. Four sockets:
+    # the range is where the country opens out, so the plan branches here.
+    - id: grazing_range
+      area: prairie
+      width: 680
+      height: 560
+      flip: true
+      max: 2
+      weight: 2
+      doors:
+        - { edge: n, at: 340 }
+        - { edge: s, at: 340 }
+        - { edge: w, at: 280 }
+        - { edge: e, at: 280 }
+      props:
+        - { object: water_trough, at: [340, 140] }
+        - { object: sage_bush, at: [130, 120] }
+        - { object: haystack, at: [550, 430] }
+      spawns:
+        - { at: [330, 290], pack: 3, radius: 60 }
+        - { at: [530, 150], patrol: true }
+        - { at: [160, 430] }
+    # MAIN STREET — the one town, promised once and dealt once. The street
+    # dresser lays the frontages down the long axis (`blocks`); the deck stands
+    # the street fight on it: a camp on the boardwalk, a pair by the far
+    # corner, a patroller walking the planks, and the town-square stand one of
+    # the resident staff is dealt onto. Four sockets — the town is the
+    # crossroads of the whole park.
+    - id: main_street
+      area: town
+      flip: true
+      min: 1
+      max: 1
+      weight: 2
+      width: 900
+      height: 620
+      doors:
+        - { edge: w, at: 310 }
+        - { edge: e, at: 310 }
+        - { edge: n, at: 450 }
+        - { edge: s, at: 450 }
+      props:
+        - { object: barrel, at: [260, 220] }
+        - { object: barrel, at: [560, 220] }
+        - { object: ammo_crate, at: [480, 400] }
+        - { object: horseshoe, at: [400, 330] }
+      spawns:
+        - { at: [450, 240], slot: elite }
+        - { at: [315, 310], pack: 3, radius: 60 }
+        - { at: [640, 320], pack: 2, radius: 50 }
+        - { at: [750, 300], patrol: true }
+    # A HOMESTEAD — one family's place: the garden rows, the well, the wash
+    # line (the house and barn are the scatter's own). Promised once so the
+    # DACHA lair always has a homestead cell to stand on.
+    - id: homestead_yard
+      area: homestead
+      flip: true
+      min: 1
+      max: 2
+      weight: 1.5
+      width: 640
+      height: 520
+      doors:
+        - { edge: n, at: 320 }
+        - { edge: s, at: 320 }
+        - { edge: e, at: 260 }
+      props:
+        - { object: stone_well, at: [320, 260] }
+        - { object: haystack, at: [150, 120] }
+        - { object: water_trough, at: [490, 140] }
+        - { object: veg_row, at: [210, 430] }
+        - { object: veg_row, at: [270, 430] }
+        - { object: scarecrow, at: [430, 420] }
+      spawns:
+        - { at: [320, 170], slot: elite }
+        - { at: [205, 320], pack: 3, radius: 70 }
+        - { at: [490, 330] }
+    # THE CORRAL — the fenced pen, the herd's own heavy standing in it: one
+    # LONGHORN post is explicit, so the breed the wardrobe errand asks for is
+    # standing somewhere on every deal that includes the pen.
+    - id: corral_pen
+      area: corral
+      flip: true
+      max: 2
+      weight: 1.5
+      width: 580
+      height: 460
+      doors:
+        - { edge: w, at: 230 }
+        - { edge: s, at: 290 }
+      props:
+        - { object: haystack, at: [150, 120] }
+        - { object: water_trough, at: [440, 120] }
+        - { object: stone_well, at: [440, 330] }
+      spawns:
+        - { at: [400, 150], slot: elite }
+        - { at: [300, 240], enemy: longhorn }
+        - { at: [350, 270] }
+        - { at: [300, 300] }
+        - { at: [160, 330], patrol: true }
+    # THE BONE YARD — where the dead track ends: skulls, a stripped wagon, one
+    # way in. A dead end, which is what the cache picker looks for; its stand
+    # is one of the posts the resident staff are dealt onto.
+    - id: boneyard
+      area: hardpan
+      flip: true
+      min: 1
+      max: 2
+      weight: 1
+      width: 520
+      height: 420
+      doors:
+        - { edge: s, at: 260, width: 180 }
+      props:
+        - { object: cow_skull, at: [130, 110] }
+        - { object: cow_skull, at: [400, 120] }
+        - { object: dry_shrub, at: [260, 110] }
+        - { object: wagon, at: [370, 220] }
+        - { object: barrel, at: [150, 220] }
+      spawns:
+        - { at: [260, 180], slot: elite }
+        - { at: [140, 290] }
+        - { at: [390, 290] }
+    # OPEN RANGE — the big nothing the distances live on: scrub, a skull, a
+    # camp in the middle of it and a rider sweeping the flat.
+    - id: open_range
+      area: hardpan
+      flip: true
+      max: 2
+      weight: 2
+      width: 700
+      height: 560
+      doors:
+        - { edge: n, at: 350 }
+        - { edge: w, at: 280 }
+        - { edge: s, at: 350 }
+      props:
+        - { object: cactus, at: [150, 120] }
+        - { object: sage_bush, at: [560, 430] }
+        - { object: cow_skull, at: [350, 440] }
+        - { object: tumbleweed, at: [250, 180] }
+        - { object: dry_shrub, at: [520, 260] }
+      spawns:
+        - { at: [340, 260] }
+        - { at: [390, 290] }
+        - { at: [340, 320] }
+        - { at: [540, 150], patrol: true }
+        - { at: [160, 440] }
 
 horde:
   perRoom: [40, 56]

@@ -183,6 +183,9 @@ function carvesOf(levelId: string): ReturnType<typeof resolveLevelDef>[] {
 const SPAWN_SOURCES = [
   "spawns",
   "spawners",
+  // The parts maps' one-mob POSTS — each names the `enemy` standing it, and
+  // its respawns are always the same breed, so a post IS a spawner here.
+  "mobSpawns",
   "waves",
   "packs",
   "lairs",

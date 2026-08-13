@@ -62,6 +62,7 @@ import { stepQuests } from "../quests/index.ts";
 import { stepRangedAttacks } from "../ranged.ts";
 import { stepTimers } from "../timers.ts";
 import { stepTradeRequests } from "../trade.ts";
+import { stepMobSpawns } from "../mob-spawns.ts";
 import { stepSpawners } from "../spawners.ts";
 import {
   advanceCutsceneChain,
@@ -462,6 +463,8 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // so mobs run into view instead of popping on screen; headless callers have no
   // view and fall back to the phone baseline (see summonGeometry).
   stepSpawners(state, hostInput.view);
+  // The MOB POSTS' vacate-and-refill pass (parts maps — see mob-spawns.ts).
+  stepMobSpawns(state);
   stepSpawner(state, dtMs);
   stepItems(state, dtMs);
   stepDoors(state, dtMs);

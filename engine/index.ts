@@ -44,17 +44,23 @@ export {
 } from "./game/pathfind.ts";
 
 export {
+  assembleParts,
+  doorDistances,
   generateLevel,
   hasMapBlueprint,
   MAP_BLUEPRINTS,
   mapBlueprint,
   parseRegion,
+  partSpawns,
   regionRect,
   resolveLevelDef,
   setMapBlueprints,
   type MapBlueprint,
   type MapObject,
   type MapObjectType,
+  type MapPart,
+  type MapParts,
+  type PartsAssembly,
 } from "./game/mapgen/index.ts";
 export { IDLE_INPUT, step, type PartyInput } from "./game/step/index.ts";
 // CLIENT-SIDE MOVEMENT PREDICTION — the engine's own movement pass with combat
@@ -1427,6 +1433,7 @@ export {
   MOB_ARMOR,
   NUKE,
   OBSTACLES,
+  MOB_SPAWNS,
   PLAYER,
   PROJECTILE,
   QUALITY,

@@ -77,6 +77,10 @@ export function heroProjection(def, diff) {
     });
   for (const p of def.packs ?? [])
     knots.push({ lvl: bandMid(def.mobLevels[i]), n: memberCount(p.members) });
+  // MOB POSTS (the parts maps' horde): one mob apiece, at its own band. Their
+  // FIRST watch only — the respawns are farmable extra, not owed XP.
+  for (const m of def.mobSpawns ?? [])
+    knots.push({ lvl: bandMid((m.mobLevels ?? def.mobLevels)[i]), n: 1 });
   const total = knots.reduce((s, k) => s + k.n, 0);
   if (!total) return null;
   const marks = [0.25, 0.5, 0.75, 1];
@@ -364,6 +368,17 @@ export function drawSpawners(c, diff) {
       r,
       s.at,
     );
+  });
+  // MOB POSTS (the parts maps' one-mob garrison): a single con-coloured dot
+  // per post — the posts ARE the level design on a parts map, so the schematic
+  // shows every one, but a label apiece would bury the map under text.
+  (def.mobSpawns ?? []).forEach((m) => {
+    const px = wx(c, m.at.x);
+    const py = wy(c, m.at.y);
+    const con = conFor(def, m.mobLevels ?? def.mobLevels, diff);
+    const col = conColor(con);
+    fillRect(surf, px - 1, py - 1, 3, 3, col);
+    strokeCircle(surf, px, py, 5, [col[0], col[1], col[2], 90], 1);
   });
   (def.packs ?? []).forEach((p, i) => {
     const px = wx(c, p.at.x);

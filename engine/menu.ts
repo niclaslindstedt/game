@@ -73,6 +73,7 @@ export {
   setAutoStatGainsEnabled,
   setCameraYaw,
   setCutscenesEnabled,
+  setLegacyMapgenEnabled,
   setMinigamesEnabled,
   setDeathScenesEnabled,
   setDialogueEnabled,

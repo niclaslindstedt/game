@@ -354,6 +354,209 @@ objects:
     at: goal
     anchor: base
 
+# THE STATIC PARTS DECK — the floor plan Mars is SEWN from (the shipping
+# generator; the old carve stays behind the developer LEGACY MAP GENERATOR
+# switch). Every part is a hand-drawn piece of the colony's ground: hardpan
+# flats to cross, outcrop passes behind their marsrock spines, the working
+# hardware of the colony — a rover depot, a drill site, a colony pad on deck
+# plating — and THE TERRARIUM as the boss's own room, sewn farthest from
+# wherever the starship comes down. The horde is the deck's own spawn markers:
+# ONE mob to a post (WoW-style), dormant until aggroed, refilled on the
+# difficulty's respawn clock. Breeds are rolled by DEPTH from the horde members
+# below, so the same flats field scout rovers by the ship and fembots at the
+# dome.
+parts:
+  count: [7, 10]
+  list:
+    # THE LANDING — the starship puts down on open dust; the landmark stands at
+    # the hero's spawn. One patroller sweeps the flats so a hero who never
+    # moves is still found (the promise the difficulty curve rests on).
+    - id: landing_flats
+      area: plain
+      start: true
+      width: 660
+      height: 540
+      doors:
+        - { edge: n, at: 330 }
+        - { edge: s, at: 330 }
+        - { edge: e, at: 270 }
+        - { edge: w, at: 270 }
+      spawns:
+        - { at: [150, 110] }
+        - { at: [530, 130], patrol: true }
+        - { at: [550, 430] }
+    # A dust road — the corridor piece, rover-tracked, repeatable, flippable to
+    # serve either hand of the plan.
+    - id: dust_road
+      area: plain
+      width: 560
+      height: 300
+      flip: true
+      max: 3
+      weight: 3
+      doors:
+        - { edge: w, at: 150, width: 200 }
+        - { edge: e, at: 150, width: 200 }
+      props:
+        - { object: crater_red_small, at: [200, 90] }
+        - { object: mars_pit_small, at: [370, 210] }
+        - { object: tracks, at: [280, 150] }
+      spawns:
+        - { at: [140, 150], patrol: true }
+        - { at: [300, 80] }
+        - { at: [300, 230] }
+        - { at: [460, 160] }
+    # Open hardpan where the crust gave way — sinkholes to route around, which
+    # is the Martian terrain twist made into a room.
+    - id: sinkhole_basin
+      area: plain
+      width: 640
+      height: 560
+      flip: true
+      max: 2
+      weight: 2
+      doors:
+        - { edge: n, at: 320 }
+        - { edge: w, at: 280 }
+        - { edge: s, at: 320 }
+      props:
+        - { object: mars_sinkhole, at: [230, 200] }
+        - { object: crater_red_big, at: [450, 330] }
+        - { object: mars_pit, at: [500, 140] }
+        - { object: supply_crate, at: [150, 440] }
+        - { object: mars_scar, at: [340, 270] }
+      spawns:
+        - { at: [320, 110] }
+        - { at: [150, 300] }
+        - { at: [470, 240], patrol: true }
+        - { at: [330, 460] }
+        - { at: [550, 470] }
+    # An outcrop elbow — grit behind the marsrock spine, one way in, one way
+    # on, and somebody minding the corner.
+    - id: outcrop_pass
+      area: outcrop
+      width: 500
+      height: 480
+      flip: true
+      max: 2
+      weight: 2
+      doors:
+        - { edge: n, at: 250, width: 220 }
+        - { edge: e, at: 240, width: 220 }
+      props:
+        - { object: mars_pit_small, at: [180, 320] }
+        - { object: crater_red_small, at: [330, 170] }
+        - { object: mars_debris, at: [250, 240] }
+      spawns:
+        - { at: [250, 130], slot: elite }
+        - { at: [130, 250], patrol: true }
+        - { at: [350, 340] }
+    # THE ROVER DEPOT — pallets dropped at the landing stores and never
+    # unpacked. A dead end, which is what the cache picker looks for; its stand
+    # is one of the posts the blueprint's speaking elites are dealt onto.
+    - id: rover_depot
+      area: outcrop
+      width: 520
+      height: 400
+      flip: true
+      min: 1
+      max: 2
+      doors:
+        - { edge: s, at: 260, width: 180 }
+      props:
+        - { object: supply_crate, at: [110, 90] }
+        - { object: supply_crate, at: [170, 80] }
+        - { object: tracks, at: [140, 150] }
+        - { object: supply_crate, at: [420, 110] }
+        - { object: mars_debris, at: [390, 170] }
+      spawns:
+        - { at: [260, 200], slot: elite }
+        - { at: [110, 280] }
+        - { at: [420, 290] }
+    # THE DRILL SITE — the colony's mining ground, scarred and pitted, the
+    # mining units still working it.
+    - id: drill_site
+      area: plain
+      width: 620
+      height: 500
+      flip: true
+      min: 1
+      max: 2
+      doors:
+        - { edge: w, at: 250 }
+        - { edge: s, at: 310 }
+      props:
+        - { object: mars_scar, at: [300, 240] }
+        - { object: mars_pit, at: [460, 140] }
+        - { object: supply_crate, at: [150, 110] }
+      spawns:
+        - { at: [310, 130], slot: elite }
+        - { at: [150, 340] }
+        - { at: [310, 360], patrol: true }
+        - { at: [470, 240] }
+    # A COLONY PAD — deck plating, crates and the armory lockers, the hard
+    # rectangle of the colony out on the dust.
+    - id: colony_pad
+      area: dome_shell
+      width: 560
+      height: 440
+      flip: true
+      min: 1
+      max: 2
+      doors:
+        - { edge: w, at: 220, width: 150 }
+        - { edge: s, at: 280, width: 150 }
+      props:
+        - { object: crate, at: [150, 110] }
+        - { object: weapon_locker, at: [460, 120] }
+        - { object: colony_planter, at: [300, 230] }
+        - { object: crate, at: [430, 340] }
+      spawns:
+        - { at: [280, 120], slot: elite }
+        - { at: [140, 320] }
+        - { at: [300, 340] }
+        - { at: [460, 230], patrol: true }
+    # THE LIZARD SHRINE — the one room on Mars with a door on it, a dead end
+    # the green keycard answers to. What is in here is a cache and whatever the
+    # colony left standing over it — never an elite, whose own key must not be
+    # sealed inside the room it opens.
+    - id: lizard_shrine
+      area: shrine
+      width: 460
+      height: 400
+      max: 1
+      doors:
+        - { edge: s, at: 230, width: 140 }
+      props:
+        - { object: colony_shrub, at: [120, 100] }
+        - { object: colony_flowers, at: [230, 180] }
+        - { object: colony_planter, at: [340, 110] }
+        - { object: colony_shrub, at: [150, 280] }
+      spawns:
+        - { at: [230, 190] }
+        - { at: [340, 290] }
+    # THE TERRARIUM — the billionaires' lifeboat garden, the boss's own room,
+    # sewn farthest from the landing. THE FOUNDER holds court on the lawn with
+    # an honor guard of posts around him.
+    - id: terrarium_garden
+      area: terrarium
+      width: 720
+      height: 600
+      doors:
+        - { edge: s, at: 360, width: 160 }
+      boss: { at: [360, 250] }
+      props:
+        - { object: colony_tree, at: [130, 120] }
+        - { object: colony_palm, at: [590, 130] }
+        - { object: colony_fountain, at: [360, 470] }
+        - { object: colony_hedge, at: [130, 470] }
+        - { object: colony_tree_big, at: [590, 460] }
+      spawns:
+        - { at: [160, 280] }
+        - { at: [560, 280] }
+        - { at: [230, 470] }
+        - { at: [490, 470] }
+
 # THE HORDE: one finite knot per district, its breed mix handing over along the
 # depth axis and its mob level climbing the ladder — scout rovers where he lands,
 # servo bots and fembots through the middle, and the tanky SUCCESSOR only deep in,

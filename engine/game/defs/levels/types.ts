@@ -279,6 +279,41 @@ export type SpawnerSpec = {
   openStage?: number;
 };
 
+/**
+ * ONE MOB, ONE POST — the WoW spawn model (config MOB_SPAWNS / mob-spawns.ts),
+ * the horde the STATIC PARTS maps use instead of knot spawn points.
+ *
+ * The post spawns its single mob dormant at `at` when the level is built. The
+ * mob sleeps there (or walks its `patrol` beat) until aggro wakes it, exactly
+ * like a pinned spawn. The moment the post is VACATED — its mob killed, or
+ * dragged off its leash chasing a hero — the respawn clock starts, and when it
+ * runs out a fresh mob stands the post again (never right on top of a hero).
+ * Higher difficulties run shorter clocks (`spawnerRespawnMult`), so a JESUS
+ * floor repopulates behind the hero while an EASY one stays cleared.
+ */
+export type MobSpawnSpec = {
+  /** Level-unique id — the key the runtime slot and the save file use. */
+  id: string;
+  /** Key into ENEMY_DEFS. */
+  enemy: string;
+  /** The post (world px) — where the mob stands, sleeps and respawns. */
+  at: Vec2;
+  /**
+   * Per-difficulty mob level band, exactly as a spawn point's `mobLevels`
+   * (see `resolveMobScaling`). Omitted = the level's own `mobLevels`.
+   */
+  mobLevels?: DifficultyMobLevels;
+  /**
+   * BASE respawn delay (ms) for this post, before the difficulty scaling
+   * (see `resolveMobSpawnDelay` in create.ts). Omitted = `MOB_SPAWNS.respawnMs`.
+   */
+  respawnMs?: number;
+  /** Waypoints the mob WALKS while dormant (see `SpawnSpec.patrol`). */
+  patrol?: Vec2[];
+  /** Difficulty floor: the post sits out rungs below this. */
+  minDifficulty?: Difficulty;
+};
+
 /** The continuous spawner that turns a level into a survivors-style horde. */
 export type WaveSpec = {
   /** Time to full pressure; every window is a fraction of this. */
@@ -735,6 +770,13 @@ export type LevelDef = {
    * bog. A level uses `spawners` OR `waves` for its ambient horde, not both.
    */
   spawners?: SpawnerSpec[];
+  /**
+   * MOB POSTS: the one-mob-per-spawn model (see `MobSpawnSpec`) — the horde a
+   * STATIC PARTS map fields instead of `spawners`. Every mob on the floor is
+   * an individual with a post it stands, sleeps at and respawns to on the
+   * difficulty's clock, so a room reads as a garrison rather than a fountain.
+   */
+  mobSpawns?: MobSpawnSpec[];
   /**
    * PLACED PACKS: fixed clusters of monsters pinned around the map that sleep
    * until the player nears them, then boil up and give chase (see `PackSpec`

@@ -24,6 +24,7 @@ const PLACEMENT_LABEL = {
   pinned: "waiting at a post",
   placed: "already scattered about when you land",
   spawner: "streaming out of spawn points",
+  post: "standing posts one apiece, and standing them again once cleared",
   hellgate: "dragged in through a hellgate",
   pack: "asleep in packs until you walk into one",
   wave: "riding the ambient horde",

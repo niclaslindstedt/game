@@ -2570,6 +2570,41 @@ export const FIX_ALARM_LEVEL: LevelDef = {
   ],
 };
 
+/** A MOB-POST arena (config MOB_SPAWNS / mob-spawns.ts): open floor, two
+ * one-mob posts near the player spawn and one across the map — so the
+ * mob-spawn suite can watch the first watch stand dormant, a kill start the
+ * respawn clock, a dragged occupant vacate its post, and the no-pop-in hold
+ * defer a due respawn while a hero stands over the grave. The tiny base delay
+ * floors at MOB_SPAWNS.respawnMinMs, predictable regardless of difficulty. */
+export const FIX_MOB_SPAWN_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_mob_spawn_level",
+  waves: undefined,
+  obstacles: [],
+  walls: [],
+  decor: [],
+  spawns: [{ enemy: "test_boss", at: { x: 2130, y: 260 } }],
+  mobSpawns: [
+    { id: "post_a", enemy: "test_fodder", at: { x: 700, y: 1320 } },
+    {
+      id: "post_b",
+      enemy: "test_minion",
+      at: { x: 900, y: 1320 },
+      patrol: [{ x: 900, y: 1100 }],
+    },
+    { id: "post_far", enemy: "test_fodder", at: { x: 2000, y: 1320 } },
+  ],
+};
+
+/** The same garrison on a CLEAR-ALL objective — where the posts must never
+ * respawn, or the objective could not be finished. */
+export const FIX_MOB_SPAWN_CLEARALL_LEVEL: LevelDef = {
+  ...FIX_MOB_SPAWN_LEVEL,
+  id: "test_mob_spawn_clearall_level",
+  spawns: [],
+  objective: { type: "clearAll" },
+};
+
 let installed = false;
 
 /** Register the synthetic fixtures as the engine's active catalogs. Idempotent
@@ -2620,6 +2655,8 @@ export function installFixtures(force = false): void {
       test_spawner_early_level: FIX_SPAWNER_EARLY_LEVEL,
       test_spawner_late_level: FIX_SPAWNER_LATE_LEVEL,
       test_alarm_level: FIX_ALARM_LEVEL,
+      test_mob_spawn_level: FIX_MOB_SPAWN_LEVEL,
+      test_mob_spawn_clearall_level: FIX_MOB_SPAWN_CLEARALL_LEVEL,
       test_arrivals_level: FIX_ARRIVALS_LEVEL,
       test_arrivals_far_level: FIX_ARRIVALS_FAR_LEVEL,
       test_gatehouse_level: FIX_GATEHOUSE_LEVEL,

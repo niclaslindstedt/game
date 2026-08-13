@@ -96,6 +96,15 @@ export function buildPlaygroundMenu(ctx: MenuContext): MenuEntry[] {
         "auto-level-stats",
         "autoLevelStats",
       ),
+      // The old BSP carve, held over the STATIC PARTS generator while the two
+      // are judged side by side (read when a level is BUILT — see
+      // engine/game/flags.ts `setLegacyMapgenEnabled`).
+      "legacy-mapgen": onOffRow(
+        ctx,
+        "playground",
+        "legacy-mapgen",
+        "legacyMapgen",
+      ),
       // The in-run FPS meter (`GameScreen`'s `showFps`) — and the hook further
       // developer diagnostics read through `getSettings().debug`.
       debug: onOffRow(ctx, "playground", "debug", "debug"),

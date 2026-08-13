@@ -241,10 +241,189 @@ objects:
     at: goal
     anchor: base
 
+# THE STATIC PARTS DECK — the floor plan the moon is SEWN from (the shipping
+# generator; the old carve stays behind the developer LEGACY MAP GENERATOR
+# switch). Every part is a hand-drawn piece of the far side: crater basins to
+# drift across, rille channels behind their rubble ridges, and the Apollo
+# stations knotted into them — with the FLAG SITE as the boss's own room, sewn
+# farthest from wherever the lander comes down. The horde is the deck's own
+# spawn markers: ONE mob to a post (WoW-style), dormant until aggroed,
+# refilled on the difficulty's respawn clock once killed or dragged away.
+# Breeds are rolled by DEPTH from the horde members below, so the same basin
+# part fields wisps by the lander and wraiths out at the flag.
+parts:
+  count: [7, 10]
+  list:
+    # THE LANDING — the hero puts down here; the lander landmark stands at his
+    # spawn. One patroller sweeps the basin so a hero who never moves is still
+    # found (the promise the whole difficulty curve rests on).
+    - id: landing_basin
+      area: basin
+      start: true
+      width: 640
+      height: 520
+      doors:
+        - { edge: n, at: 320 }
+        - { edge: s, at: 320 }
+        - { edge: e, at: 260 }
+        - { edge: w, at: 260 }
+      spawns:
+        - { at: [140, 100] }
+        - { at: [520, 120], patrol: true }
+        - { at: [540, 420] }
+    # A dust pass — the corridor piece, repeatable, flippable to serve either
+    # hand of the plan.
+    - id: dust_pass
+      area: rille
+      width: 560
+      height: 300
+      flip: true
+      max: 3
+      weight: 3
+      doors:
+        - { edge: w, at: 150, width: 180 }
+        - { edge: e, at: 150, width: 180 }
+      props:
+        - { object: crater_small, at: [200, 90] }
+        - { object: moon_pit_small, at: [360, 210] }
+        - { object: moon_grit, at: [280, 150] }
+      spawns:
+        - { at: [140, 150], patrol: true }
+        - { at: [300, 80] }
+        - { at: [300, 230] }
+        - { at: [450, 160] }
+    # Open regolith pocked with craters — the drift-and-hop ground the moon's
+    # feel lives on.
+    - id: crater_field
+      area: basin
+      width: 660
+      height: 560
+      flip: true
+      max: 2
+      weight: 2
+      doors:
+        - { edge: n, at: 330 }
+        - { edge: w, at: 280 }
+        - { edge: s, at: 330 }
+      props:
+        - { object: crater_big, at: [230, 190] }
+        - { object: crater_small, at: [430, 330] }
+        - { object: moon_pit, at: [500, 150] }
+        - { object: crater_small, at: [160, 420] }
+        - { object: moon_scar, at: [340, 260] }
+      spawns:
+        - { at: [330, 120] }
+        - { at: [160, 280] }
+        - { at: [480, 240], patrol: true }
+        - { at: [340, 460] }
+        - { at: [560, 470] }
+    # A collapsed rille elbow — gravel wall to wall, one way in, one way on.
+    - id: rille_bend
+      area: rille
+      width: 480
+      height: 480
+      flip: true
+      max: 2
+      weight: 2
+      doors:
+        - { edge: n, at: 240 }
+        - { edge: e, at: 240 }
+      props:
+        - { object: moon_pit_small, at: [180, 310] }
+        - { object: crater_small, at: [330, 170] }
+        - { object: moon_debris, at: [240, 240] }
+      spawns:
+        - { at: [240, 130] }
+        - { at: [130, 240], patrol: true }
+        - { at: [350, 340] }
+    # THE MISSION STORES — an Apollo supply dump, stacked and never unpacked.
+    # A dead end, which is what the cache picker looks for; its stand is one of
+    # the posts the blueprint's speaking elites are dealt onto.
+    - id: supply_dump
+      area: station
+      width: 460
+      height: 380
+      flip: true
+      min: 1
+      max: 2
+      doors:
+        - { edge: s, at: 230, width: 130 }
+      props:
+        - { object: supply_crate, at: [100, 90] }
+        - { object: supply_crate, at: [160, 80] }
+        - { object: crate, at: [130, 140] }
+        - { object: supply_crate, at: [370, 100] }
+        - { object: crate, at: [350, 160] }
+      spawns:
+        - { at: [230, 200], slot: elite }
+        - { at: [100, 260] }
+        - { at: [360, 270] }
+    # A wrecked lander stage — the landing site the flag was NOT planted at.
+    - id: apollo_wreck
+      area: station
+      width: 580
+      height: 460
+      flip: true
+      min: 1
+      max: 2
+      doors:
+        - { edge: w, at: 230, width: 130 }
+        - { edge: s, at: 290, width: 130 }
+      props:
+        - { object: crate, at: [150, 110] }
+        - { object: supply_crate, at: [460, 130] }
+        - { object: moon_debris, at: [300, 230] }
+        - { object: crate, at: [430, 350] }
+      spawns:
+        - { at: [290, 120], slot: elite }
+        - { at: [140, 330] }
+        - { at: [300, 350] }
+        - { at: [460, 230], patrol: true }
+    # The relay hut — small, one door, somebody minding it.
+    - id: comm_relay
+      area: station
+      width: 420
+      height: 360
+      flip: true
+      max: 1
+      doors:
+        - { edge: s, at: 210, width: 130 }
+      props:
+        - { object: crate, at: [110, 100] }
+        - { object: supply_crate, at: [320, 110] }
+      spawns:
+        - { at: [210, 170], slot: elite }
+        - { at: [120, 250] }
+    # THE FLAG SITE — the boss's own room, sewn farthest from the landing. The
+    # flag landmark stands at the goal anchor, which is this room's own centre,
+    # and THE FLAGBEARER holds it with an honor guard of posts around him.
+    - id: flag_site
+      area: station
+      width: 720
+      height: 560
+      doors:
+        - { edge: s, at: 360, width: 150 }
+      boss: { at: [360, 240] }
+      props:
+        - { object: supply_crate, at: [120, 120] }
+        - { object: crate, at: [610, 130] }
+        - { object: moon_debris, at: [360, 400] }
+      spawns:
+        # THE SUCCESSOR stands the flag's own guard EXPLICITLY: the sight-beat
+        # `moon_successor` waits on the breed, and a depth-rolled honor guard
+        # missed it on real seeds. Pinning one here keeps the read on every
+        # deal — and the flag is exactly where a SUCCESSOR belongs.
+        - { at: [150, 260], enemy: successor }
+        - { at: [570, 260] }
+        - { at: [220, 450] }
+        - { at: [500, 450] }
+
 # THE HORDE: one finite knot per basin, its breed mix handing over along the
 # depth axis and its mob level climbing the ladder — wisps near the lander,
 # wraiths and the tanky SUCCESSOR only out at the deep end, so they never wall the
-# middle of the search.
+# middle of the search. On the PARTS generator these members and ramps price
+# the spawn markers instead (breed by depth, one mob a post); perRoom/maxAlive/
+# lingering are the legacy carve's alone.
 horde:
   perRoom: [30, 44]
   maxAlive: 10

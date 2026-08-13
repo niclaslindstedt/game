@@ -20,6 +20,7 @@ import {
   LOOT,
   MEDKIT,
   MENACE,
+  MOB_SPAWNS,
   OBSTACLES,
   PACKS,
   PATH,
@@ -91,6 +92,7 @@ import type {
   GameState,
   Item,
   Loadout,
+  MobSpawnState,
   Obstacle,
   PackState,
   Player,
@@ -276,9 +278,15 @@ export function createGame(
   const blocked = (pos: Vec2, radius: number) =>
     obstacles.some((o) => distance(pos, o.pos) < o.radius + radius);
   // A procedural placement must dodge both flavors of design zone: no mobs,
-  // obstacles or decor spawn inside a safe or quiet region (see zones.ts).
+  // obstacles or decor spawn inside a safe or quiet region (see zones.ts) —
+  // and never the ARRIVAL LOT, whose whole cast is NEUTRAL by rule (the hero
+  // walks it holstered, watching the night shift badge in; see arrivals.ts).
+  // The lot is bigger than the landing's quiet circle, so without its own
+  // entry a banded mission spawn could scatter a fighter onto the tarmac.
   const inNoSpawnZone = (pos: Vec2) =>
-    anyZoneContains(def.safeZones, pos) || anyZoneContains(def.quietZones, pos);
+    anyZoneContains(def.safeZones, pos) ||
+    anyZoneContains(def.quietZones, pos) ||
+    anyZoneContains(def.arrivalLot, pos);
 
   // A spareable unique the hero already SPARED walks the campaign at his side
   // (carried in the loadout's party), so its ENEMY twin must not spawn to be
@@ -375,6 +383,7 @@ export function createGame(
       let pos = vec(0, 0);
       // Rejection sampling is fine at this scale; the attempt cap keeps
       // pathological seeds from looping forever.
+      let placed = false;
       for (let attempts = 0; attempts < 40; attempts++) {
         pos = vec(
           randomRange(rng, margin, def.width - margin),
@@ -388,9 +397,16 @@ export function createGame(
           !blocked(pos, margin) &&
           !inNoSpawnZone(pos)
         ) {
+          placed = true;
           break;
         }
       }
+      // Exhaustion used to place the LAST roll regardless, which is how a
+      // fighter ended up standing on GOODCO's neutral staff lot: on a venue
+      // whose band ring mostly overlaps design zones, forty misses are the
+      // normal case, not a pathological one. A design zone is a promise —
+      // better one fewer scatter mob than a body where none may stand.
+      if (!placed && inNoSpawnZone(pos)) continue;
       const s = scaleRegular();
       enemies.push(
         spawnEnemy(
@@ -438,7 +454,10 @@ export function createGame(
     def,
     playerSpawn,
     bandReach,
-    blocked,
+    // The design zones are as solid as the furniture to a rolled encounter:
+    // a rare is still a FIGHTER, and one rolled onto the trader's pocket or
+    // GOODCO's neutral staff lot breaks the ground's whole promise.
+    (pos, radius) => blocked(pos, radius) || inNoSpawnZone(pos),
     enemies,
     () => nextId++,
     mobHp,
@@ -634,6 +653,57 @@ export function createGame(
   const spawnerTotal =
     spawners.reduce((sum, s) => sum + (s.openStage ? 0 : s.total), 0) +
     spawnerLingering;
+
+  // MOB POSTS (config MOB_SPAWNS / mob-spawns.ts): the parts maps' one-mob-per-
+  // spawn garrison. The FIRST WATCH is spawned right here on the creation
+  // stream — dormant at its authored post, patrol beat and all, exactly like a
+  // pinned spawn — and the runtime slot remembers who is standing it so the
+  // respawn pass can vacate and refill it on the difficulty's clock.
+  const mobSpawns: MobSpawnState[] = [];
+  let mobSpawnTotal = 0;
+  for (const m of def.mobSpawns ?? []) {
+    if (!meetsMinDifficulty(difficulty, m.minDifficulty)) continue;
+    const post: MobSpawnState = {
+      id: m.id,
+      at: vec(m.at.x, m.at.y),
+      enemy: m.enemy,
+      respawnMs: resolveMobSpawnDelay(
+        m.respawnMs ?? MOB_SPAWNS.respawnMs,
+        difficulty,
+      ),
+      mobId: null,
+      respawnAtMs: null,
+    };
+    if (m.mobLevels) post.mobLevels = m.mobLevels;
+    if (m.patrol && m.patrol.length > 0)
+      post.patrol = m.patrol.map((p) => vec(p.x, p.y));
+    const sc = scaleRegular(m.mobLevels);
+    // A COPY of the cleared spot, never the spot itself: `clearOfFurniture`
+    // answers with `post.at` when the post is clear, and a mob minted ON that
+    // vector would drag the post's anchor around with it as it moves — which
+    // is exactly the aliasing the client/server world hash caught.
+    const spot = clearOfFurniture(post.at, m.enemy);
+    const occupant = spawnEnemy(
+      m.enemy,
+      vec(spot.x, spot.y),
+      rng,
+      nextId++,
+      sc.hpMult,
+      0,
+      sc.mlvl,
+      sc.banded,
+    );
+    occupant.post = post.id;
+    if (post.patrol) {
+      occupant.patrol = [vec(post.at.x, post.at.y), ...post.patrol];
+      occupant.patrolIndex = 1;
+      occupant.patrolDir = 1;
+    }
+    enemies.push(occupant);
+    if (countsAsFoe(occupant)) mobSpawnTotal++;
+    post.mobId = occupant.id;
+    mobSpawns.push(post);
+  }
 
   // The prelude may be a single scene or a chain (the launch, then the
   // flight); each scene resolves its per-difficulty variant when one is
@@ -861,6 +931,7 @@ export function createGame(
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),
     packs,
     spawners,
+    mobSpawns,
     moveSpawnCredit: 0,
     // The camp clock opens anchored on the spawn — standing at the lander
     // farming the opening waves is exactly the camping the starvation answers.
@@ -880,7 +951,8 @@ export function createGame(
     earlyDropCursor: 0,
     stats: {
       kills: 0,
-      totalEnemies: foeCount + waveTotal + packTotal + spawnerTotal,
+      totalEnemies:
+        foeCount + waveTotal + packTotal + spawnerTotal + mobSpawnTotal,
       shotsFired: 0,
       jumps: 0,
       damageDealt: 0,
@@ -1029,6 +1101,18 @@ function resolveLandingSoftening(
   if (!(reach > 0) || !Number.isFinite(distToSpawn)) return 1;
   const t = clamp(distToSpawn / reach, 0, 1);
   return floor + (1 - floor) * t;
+}
+
+/**
+ * A MOB POST's respawn clock (config MOB_SPAWNS / mob-spawns.ts): the authored
+ * (or default) base, shortened by the rung's own `spawnerRespawnMult` — the
+ * same ladder the spawn points refill on, so "higher difficulty repopulates
+ * faster" is one dial across both horde models — and floored so no post ever
+ * refills in the middle of the fight that emptied it.
+ */
+function resolveMobSpawnDelay(baseMs: number, difficulty: Difficulty): number {
+  const diffMult = difficultyDef(difficulty).spawnerRespawnMult ?? 1;
+  return Math.max(MOB_SPAWNS.respawnMinMs, Math.round(baseMs * diffMult));
 }
 
 function resolveSpawnerRespawnDelay(
