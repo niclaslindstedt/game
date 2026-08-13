@@ -13,15 +13,15 @@ lore: >
   paperwork will later file the same fact as 'REFUSES COMPANY. BIT UNIT 34' -
   the mother predicted it from a kitchen on Earth.
 offer:
-  - - "WHEREVER SHE IS THEY'LL HAVE GIVEN HER A MACHINE WITH A FACE. SHE'LL HAVE BITTEN IT. BRING ME THE PLATE."
+  - - "THEY'LL HAVE PUT A MACHINE WITH A FACE ON HER. SHE'LL HAVE BITTEN IT. CAN YOU BRING ME THE PLATE?"
   - hero:
       - "I'LL FIND THE ONE WITH THE TEETH MARKS."
 incomplete:
   - "A MACHINE WITH A FACE AND A DENT IN IT. IT'S OUT THERE SOMEWHERE."
 complete:
-  - - "TEETH. RIGHT THROUGH THE SHELL. THAT'S MY GIRL."
+  - - "TEETH. RIGHT THROUGH THE SHELL. OH, THAT'S MY GIRL."
   - hero:
-      - "SHE'S STILL FIGHTING. I'LL KEEP UP."
+      - "SHE'S STILL FIGHTING. I'M TRYING TO KEEP UP WITH HER."
 objectives:
   - kind: collect
     item: bitten_plate

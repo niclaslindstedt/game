@@ -11,34 +11,61 @@
 > asking for the change grants). Use the `update-story` skill to make the change
 > at the top of the chain and carry it down.
 >
-> **THIS IS NOT A STORY-DRIVEN GAME.** The script is deliberately short and
-> deliberately flat: an elite says one thing, the hero answers with one line, and
-> the elite lands the reveal. Bosses get five pages, nobody gets more, and the
-> commentary that used to sit between these lines has been cut — the rules that
-> govern the script are in the five short sections below and nowhere else.
+> **THIS IS NOT A STORY-DRIVEN GAME.** The script is deliberately short: an
+> elite says one thing, the hero answers with one line, and the elite lands the
+> reveal. Bosses get five pages, nobody gets more, and the commentary that used
+> to sit between these lines has been cut — the rules that govern the script are
+> in the short sections below and nowhere else.
 
 > **This governs the SHIPPED campaign only.** A mod authors the same files in
 > the same format and answers to nobody: a mod's lines are never transcribed
 > here and never corrected to match this file.
 
-## The five rules
+## The rules
 
-**A LINE IS SAID, NOT WRITTEN.** These people are talking, and nobody talking
-sounds like a trailer. Four habits are what make a page read as a movie script,
+**A LINE IS SAID, NOT WRITTEN — AND SAID BY SOMEBODY WHO IS NOT GOOD AT
+TALKING.** Nobody in this game is composing. They are tired, frightened,
+embarrassed or fond, and they reach for the nearest words, which are usually
+somebody else's. Seven habits make a page read as a script instead of as speech,
 and each has a plain fix:
 
-| The tell                                                                            | Instead                                                                                                              |
-| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| An abstraction as the subject — "AN AI LEARNED MY JOB AND THEY WALKED ME OUT"       | The thing that actually happened, with objects in it — "THEY SAT A MACHINE AT MY BENCH AND GAVE ME A BOX FOR MY MUG" |
-| The epigram, written to be quoted — "MY TURN TO MAKE SOMETHING OBSOLETE"            | The practical thought a man really has — "I STILL KNOW WHERE ITS BOLTS ARE"                                          |
-| The theme said out loud — "THAT'S NOT WINNING. THAT'S HIDING."                      | The comparison he'd reach for — "MY NEPHEW DOES THAT. HE'S SIX."                                                     |
-| Stock cinema — "NOWHERE LEFT TO RUN", "AND WHO WATCHES YOU?", "DON'T MAKE ME START" | Ordinary words, and let the short one land — "STAY BACK. PLEASE. I'VE NEVER HIT ANYBODY IN MY LIFE. DON'T."          |
+| The tell                                                                       | Instead                                                                                |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| The feeling carried by a clever object — "I JUST WANT HER IN THE CAR"          | The feeling said out loud, and the name said — "I JUST WANT ADA BACK"                  |
+| A fresh phrase where a worn one is what people reach for                       | The second-hand phrase a real person says — "IT WILL GIVE ME HOPE IN THESE DARK TIMES" |
+| The balanced sentence — "THE PAPERS DIDN'T SAY PASSENGER. THEY SAID SPECIMEN." | The flat statement — "SHE'S LISTED AS SPECIMEN."                                       |
+| The best line held back for last — "I WAS PAID TO FORGET THAT"                 | The ordinary thing he'd actually end on — "I'M NOT POLITICAL. I DON'T ASK QUESTIONS."  |
+| Saying it once, cleanly                                                        | Saying it twice, the way people do — "PAD 2. THEY WENT TO PAD 2."                      |
+| Demanding — "I WANT SOMETHING SHE HELD THAT NIGHT"                             | Asking, and hedging — "CAN YOU BRING ME SOMETHING SHE HELD?"                           |
+| The hard-boiled hero — "I'M NOT LOOKING FOR TROUBLE"                           | The hopeful one — "I HOPE THEY WON'T GIVE ME A HARD TIME"                              |
 
-Contractions, repetition and a sentence that gives up halfway are all
-in-register; a balanced clause almost never is. **The exception is the
-MACHINES** — PAYLOAD-1, the BROs, the VAULT WARDEN, the units — and THE FOUNDER
-and THE ARCHITECT, who talk in slide decks on purpose. Their flatness is the
-satire and must not be warmed up. Everyone with a pulse gets to sound like they
+Contractions, repetition, a correction mid-sentence, a sentence that gives up
+halfway, and more short sentences than a writer would allow are all in-register.
+A balanced clause and a punchline in the last position almost never are.
+
+**AND DO NOT FLATTEN SPEECH THAT IS ALREADY SPEECH.** THE JANITOR's "THIRTY
+YEARS MOPPING THIS LAB. YOU LEARN THINGS, MOPPING" is not an epigram, it is a
+tradesman's shrug, and it belongs to him. There are two ways to overshoot this
+rule and both are worse than the line they replaced: taking away a turn of
+phrase that belongs to the speaker's own trade or class, and EXPLAINING what a
+line already implies. A rewrite that came out longer than the original is nearly
+always the second one.
+
+**THE PEOPLE IN THE WAY ARE NOT VILLAINS. THEY ARE EMPLOYED.** GOODCO's floor,
+the park's hands and the bunker's service corridors excuse themselves the way
+people have always excused themselves under a regime: I'M NOT POLITICAL, I DON'T
+ASK QUESTIONS, I'VE GOT A FAMILY, I JUST WORK HERE. They believe it while they
+say it, and nobody ever confesses — a man who knows he is complicit and says so
+is the writer talking. This is the script's only political claim and its
+sharpest joke: those are the sentences of an ordinary citizen anywhere it has
+ever gone wrong, said here in an American accent.
+
+**WHO STILL TALKS FLAT.** The MACHINES — PAYLOAD-1, the BROs, THE BRO SUPERCORE,
+THE VAULT WARDEN, LEDGER UNIT 12, THE ARCHIVE UNIT and the units — plus THE
+ARCHITECT, whose slide deck is the chip in his head talking. Their flatness is
+the satire and must not be warmed up. **THE FOUNDER is no longer among them**: he
+is a frightened rich man, and he talks like one — greedy, sincere, and faintly
+amazed at what he has got away with. Everyone else with a pulse sounds like they
 have one.
 
 **A page is a PARAGRAPH; the box breaks it.** Every surface that speaks measures
@@ -117,7 +144,7 @@ closing caption names it, per rung, and gets thinner as the rung gets harder.)_
 
 _(Then the plan, spoken on every rung — the last line said in the house.)_
 
-**ME:** I'LL TAKE THE CAR AND GET HER.
+**ME:** I'M GOING TO GO AND GET HER. I'LL TAKE THE CAR.
 
 _(Out the door she left by, armed. The game opens on him standing in the
 garage.)_
@@ -142,16 +169,16 @@ _Standing in the bay for the first time (`placeThoughts`, `where: arrival`) —
 the only line that tells a new player what the car is for. It names the PERSON,
 never the part._
 
-1. HER JACKET'S ANSWERING FROM GOODCO. THE CAR'S RIGHT THERE. TAKE IT.
+1. HER JACKET'S STILL ANSWERING. IT'S COMING FROM GOODCO. THE CAR'S RIGHT THERE, I'LL TAKE THE CAR.
 
 _Walking out under the roll-up on foot instead (`where: pastDoor`)._
 
-1. WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR.
+1. WHAT AM I DOING, WALKING. SHE'S NOT DOWN THE STREET. THE CAR. TAKE THE CAR.
 
 _Tapping THE ROCKET before the part is home. It REPLAYS, and it must name
 neither the moon nor Mars — he has not earned those roads._
 
-1. STILL ONE PART SHORT. AND SHE ISN'T UP THERE. SHE'S AN HOUR DOWN THE ROAD.
+1. IT'S STILL ONE PART SHORT. AND SHE ISN'T UP THERE ANYWAY. SHE'S AN HOUR DOWN THE ROAD.
 
 ### THE DEALER — the neighborhood, at home
 
@@ -159,52 +186,53 @@ _A man off the block working the road at the lot's far edge. He is also the
 first person the car takes, on the hero's own drive, and nobody says a word
 about it — there is another dealer on that pavement next time._
 
-**Across the counter:** NO NAMES, NO RECEIPTS, NO REFUNDS. WHAT DO YOU NEED?
+**Across the counter:** NO NAMES, AND I DON'T DO RECEIPTS. WHAT ARE YOU AFTER?
 
 ### RUTH — Ada's mother
 
-_Three errands, one per leg of the trail. She is never scared for Ada, only
-proud. **She was not in the house that night** — so she asks for a KIND of thing
-and lets the hero name the particular, and what the slip actually says she finds
-out reading it._
+_Three errands, one per leg of the trail. She misses Ada and says so, and she
+has never once doubted she is winning — with Ruth those are the same feeling.
+**She was not in the house that night** — so she asks for a KIND of thing and
+lets the hero name the particular, and what the slip actually says she finds out
+reading it._
 
 **She has arrived** (`conversations/ruth_arrival.yaml`):
 
-> I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY. GO AND FIND HER.
+> I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY, YOU KNOW THAT. GO ON. GO AND FIND HER.
 
 — _I'M GOING AFTER HER._
 
 **Greeting:** SHE LAUGHED ABOUT THAT ZIPPER FOR A WEEK. LISTEN - COULD YOU DO SOMETHING FOR ME?
 
-**Farewell:** SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW IT. GO ON.
+**Farewell:** SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW SHE WOULD BE. GO ON.
 
 #### THE RECEIPT
 
-> EVERYTHING THEY HAVE ON HER IS A FILE. I WANT SOMETHING SHE HELD THAT NIGHT. WHAT DID SHE GO OUT FOR?
+> I MISS HER SO MUCH. CAN YOU BRING ME SOMETHING SHE HELD THAT NIGHT? WHAT DID SHE GO OUT FOR?
 
-**ME:** CHIPS AND A SODA. THE MACHINES PRINT A SLIP, AND THEIR NIGHT STAFF CARRY THE PAPERWORK. I'LL GET IT.
+**ME:** CHIPS AND A SODA. THE MACHINES PRINT A SLIP FOR THAT. SOMEBODY IN THERE WILL HAVE IT ON THEM.
 
-**Short:** YOU SAID THEY CARRY THE PAPERWORK. THEN IT'S IN SOMEBODY'S POCKET OUT THERE.
+**Short:** IT'S IN SOMEBODY'S POCKET OUT THERE. YOU SAID SO YOURSELF.
 
-**Handover:** CHIPS AND HER SODA, 11:52 PM. 'PAYMENT INTERRUPTED.' I'M KEEPING THIS.
+**Handover:** CHIPS AND HER SODA. 11:52 PM. 'PAYMENT INTERRUPTED.' I'M KEEPING THIS. IT GIVES ME HOPE, THIS DOES.
 
-**ME:** IT'S HERS. NOT THEIRS.
+**ME:** IT'S HERS. KEEP IT.
 
 #### THE DENT
 
-> WHEREVER SHE IS THEY'LL HAVE GIVEN HER A MACHINE WITH A FACE. SHE'LL HAVE BITTEN IT. BRING ME THE PLATE.
+> THEY'LL HAVE PUT A MACHINE WITH A FACE ON HER. SHE'LL HAVE BITTEN IT. CAN YOU BRING ME THE PLATE?
 
 **ME:** I'LL FIND THE ONE WITH THE TEETH MARKS.
 
 **Short:** A MACHINE WITH A FACE AND A DENT IN IT. IT'S OUT THERE SOMEWHERE.
 
-**Handover:** TEETH. RIGHT THROUGH THE SHELL. THAT'S MY GIRL.
+**Handover:** TEETH. RIGHT THROUGH THE SHELL. OH, THAT'S MY GIRL.
 
-**ME:** SHE'S STILL FIGHTING. I'LL KEEP UP.
+**ME:** SHE'S STILL FIGHTING. I'M TRYING TO KEEP UP WITH HER.
 
 #### THE SCALE — and the one errand that gives something back
 
-> THE THINGS THAT KEEP HER NOW ARE SCALED. BRING ME A SCALE OFF ONE — I WANT TO HOLD WHAT SHE'S UP AGAINST.
+> THEY'RE SAYING THE THINGS THAT HAVE HER NOW ARE SCALED. CAN YOU GET ME ONE OF THE SCALES? I WANT TO SEE IT.
 
 **ME:** SHE'LL HAVE PRIED ONE OFF ALREADY.
 
@@ -212,7 +240,7 @@ out reading it._
 
 **Handover** — the second page is the token `{CACHE}`, substituted per rung:
 
-1. HARD AS A HULL, AND SHE PRIES THESE OFF BAREHANDED. I WAS NEVER SCARED FOR HER.
+1. HARD AS A HULL. AND SHE PULLS THESE OFF WITH HER HANDS. I'M NOT SCARED FOR HER. I JUST MISS HER.
 2. {CACHE}
 
 **ME:** THEN I'LL GO AND MEET HER HALFWAY.
@@ -236,18 +264,18 @@ surface. Nothing in between, ever. He must never acknowledge a single body._
 ### On the outskirts, going out (barked)
 
 1. HER JACKET'S PINGING FROM GOODCO.
-2. THEY BEG HARD IN TOWN. NOT ONE OF THEM IS ON THE WELFARE LIKE ME.
+2. THEY BEG HARD IN TOWN. NONE OF THEM'S ON THE WELFARE. NOT LIKE ME.
 
 ### On the same road, coming home (barked)
 
 _He does not mention the people. That absence is the joke._
 
 1. THE PART'S ON THE SEAT. STRAIGHT HOME.
-2. TEN YEARS. SHE ONLY EVER NEEDED THE ONE THING.
+2. TEN YEARS I'VE BEEN BUILDING HER. AND SHE ONLY NEEDED THE ONE THING.
 
 ### The car giving up
 
-1. COME ON. NOT HERE. NOT TONIGHT.
+1. COME ON. COME ON. NOT TONIGHT.
 
 ### The run-in, past GOODCO's fence
 
@@ -747,10 +775,10 @@ commute outranks the crowd, and the crowd only ever reaches him as road surface.
 _The drive said its piece at the wheel; out of the car he looks up at the
 building, and these four are the whole of the briefing. A replay skips them._
 
-1. THE JACKET'S STILL ANSWERING. NOT FROM ANY STREET I KNOW. FROM IN THERE.
+1. THE JACKET'S STILL ANSWERING. IT'S NOT COMING FROM THE STREET. IT'S COMING FROM INSIDE THERE.
 2. GOODCO. TEN YEARS I BUILT THEIR ENGINES. THEN THEY SAT A MACHINE AT MY BENCH AND GAVE ME A BOX FOR MY MUG.
-3. HALF MY STREET GOT THE SAME BOX. NOW IT'S THE WELFARE AND MOVIE NIGHTS.
-4. I KNOW THE FACES IN THERE. I'M NOT LOOKING FOR TROUBLE. I JUST WANT HER IN THE CAR.
+3. HALF MY STREET GOT THE SAME BOX. WE'RE ALL ON THE WELFARE NOW. IT'S NOT SO BAD, REALLY.
+4. I STILL HAVE FRIENDS IN THERE. I HOPE THEY WON'T GIVE ME A HARD TIME. I JUST WANT ADA BACK.
 
 ### Pinned beats
 
@@ -774,13 +802,13 @@ _First INTERN sighted, inside._
 _First SUCCESSOR sighted._
 
 - A SUCCESSOR. I HELPED BUILD THE FIRST ONE OF THOSE. THEN THEY REDREW IT WITHOUT US.
-- AND THAT LINE EMPTIED THE WHOLE FLOOR. WELL. I STILL KNOW WHERE ITS BOLTS ARE.
+- THAT LINE PUT EVERYONE I KNOW OUT OF WORK. AND I HELPED BUILD IT. I KNOW HOW TO TAKE ONE APART, AT LEAST.
 
 _First VOLUNTEER sighted — a man off the same street the hero came from, running
 in with a vest on. He does not approve and he does not condemn; he recognises._
 
 - THAT ONE'S NOT STAFF. THAT'S A WORK JACKET, AND THAT'S A VEST UNDER IT.
-- HE GOT THE SAME BOX I DID. HE JUST DIDN'T DRIVE HOME WITH IT.
+- HE GOT THE SAME BOX I DID. I DROVE HOME WITH MINE.
 
 _PAYLOAD-1 down — the last beat of the level, and the only one that is an
 instruction. Nothing congratulates him and there is no button: the way off this
@@ -807,7 +835,7 @@ himself. Only the third blow arms him._
 
 **ME:** HE SWUNG AGAIN. HARDER. AND THE WHOLE FLOOR IS TURNING ROUND TO WATCH.
 
-**LAB SCIENTIST:** I KNOW WHO YOU ARE, {HERO}. THEY TOLD US NOBODY GETS PAST. I'D LIKE TO KEEP MY JOB.
+**LAB SCIENTIST:** I KNOW WHO YOU ARE, {HERO}. THEY SAID NOBODY GETS PAST. I'VE GOT A JOB HERE. I'VE GOT A FAMILY.
 
 **ME:** STAY BACK. PLEASE. I'VE NEVER HIT ANYBODY IN MY LIFE. DON'T.
 
@@ -819,7 +847,7 @@ himself. Only the third blow arms him._
 
 **ME:** I'M SORRY. I TRIED TO ASK. SHE'S IN THIS BUILDING AND YOU'RE IN MY WAY.
 
-**ME:** I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES.
+**ME:** I GOT THIS FAR WITHOUT THROWING A PUNCH. I'M SORRY. I'M SORRY.
 
 ### THE VOLUNTEER — the only line the rank and file get
 
@@ -839,9 +867,9 @@ the whole of what the player is being given._
 
 **ME:** A GIRL WAS TAKEN OUT OF HERE TONIGHT. WHERE DID SHE GO?
 
-**NIGHT MANAGER:** UP. THEY ALL GO UP. MIDNIGHT LAUNCH, NO MANIFEST, THE MOON. I SIGN NOTHING AND I SEE NOTHING.
+**NIGHT MANAGER:** UP. THEY ALL GO UP. MIDNIGHT LAUNCH, NO MANIFEST. THE MOON. I DON'T ASK. YOU LEARN NOT TO ASK.
 
-**Last words:** HHK... TELL THEM... I WAS NEVER... HERE...
+**Last words:** I ONLY SIGNED... WHAT THEY PUT... IN FRONT OF ME...
 
 **Bark (laying the paperwork down):** THERE'S PAPERWORK / ON YOU NOW. YOU'RE / NOT GOING ANYWHERE.
 
@@ -851,7 +879,7 @@ _Drops: STORAGE KEYCARD._
 
 **THE ARCHITECT:** {HERO}. MY OLD BENCH PARTNER. STILL SOLDERING TOYS IN A GARAGE? I BUILD MINDS NOW.
 
-**ME:** YOU CUT A MACHINE CHIP INTO YOUR OWN HEAD. QUIT. COME HOME. THIS PLACE IS ROTTEN.
+**ME:** YOU CUT A MACHINE CHIP INTO YOUR OWN HEAD. QUIT. COME HOME. PLEASE.
 
 **THE ARCHITECT:** I BUILD THEM A SUPERINTELLIGENCE NOW. FLESH IS A ROUGH DRAFT AND HUMANS ARE OBSOLETE. GOODBYE, OLD FRIEND.
 
@@ -867,9 +895,9 @@ _Drops: PASSAGE CHIP, CORE KEYCARD._
 
 **ME:** HER NAME IS ADA. TELL ME WHERE THEY PUT HER.
 
-**CHIEF OF SECURITY:** PAD 2. AND THE PAPERS DIDN'T SAY PASSENGER. THEY SAID SPECIMEN. I WAS PAID TO FORGET THAT.
+**CHIEF OF SECURITY:** PAD 2. THEY WENT TO PAD 2. SHE'S LISTED AS SPECIMEN. I'M NOT POLITICAL. I DON'T ASK QUESTIONS.
 
-**Last words:** UGH... PAD 2... SHE'S ON... PAD... 2...
+**Last words:** PAD 2... IT WAS PAD 2... I TOLD YOU... DIDN'T I...
 
 **Bark (calling it in):** ALL UNITS. ALL / UNITS. HE'S ON MY / FLOOR. MOVE.
 
@@ -918,7 +946,7 @@ _Drops: VAULT KEYCARD._
 
 **Last words:** A TEMPORARY DEATH... ...SEE YOU AT THE TOP...
 
-**The hero, as it falls:** THERE ISN'T A TOP. YOU'RE A DOG MADE OF WIRE.
+**The hero, as it falls:** SEE YOU AT THE TOP. WHAT DOES THAT EVEN MEAN. YOU'RE A DOG.
 
 **Bark (loosing the coins):** GET RICH OR GET / OUT OF THE WAY.
 
@@ -969,9 +997,9 @@ _Drops: PLASMA CUTTER._
 
 ### The merchant — the vending-machine man
 
-**Meeting:** EASY, FRIEND. I'M NOT STAFF, I STOCK THE VENDING MACHINES. LOCKDOWN IS A SELLER'S MARKET.
+**Meeting:** EASY, FRIEND. I'M NOT STAFF, I STOCK THE VENDING MACHINES. NOBODY'S BUYING CRISPS TONIGHT, SO.
 
-**Across the counter:** THE MACHINES ARE EMPTY, SO TONIGHT I'M THE MACHINE. WHAT'LL IT BE?
+**Across the counter:** MACHINES ARE ALL EMPTY. SO IT'S ME TONIGHT. WHAT DO YOU NEED?
 
 ### Side errands — PRIYA NAIR
 
@@ -1035,7 +1063,7 @@ no new lines.)_
 
 _First wisp sighted._
 
-- IT CAME OUT OF THE DUST. NO SUIT. NO SHIP. NO FOOTPRINTS.
+- IT CAME OUT OF THE DUST. IT'S NOT WEARING A SUIT. THERE AREN'T EVEN FOOTPRINTS.
 - NOBODY EVER SAID THE MOON HAD DEAD PEOPLE ON IT. SOMEBODY MUST HAVE KNOWN.
 
 _First wisp killed._
@@ -1051,13 +1079,13 @@ _First SUCCESSOR killed._
 
 #### MISSION SPECIALIST — the wreck under the dust
 
-**MISSION SPECIALIST:** A LIVE ONE. BREATHING AND EVERYTHING. WE GAVE THAT HABIT UP DECADES AGO.
+**MISSION SPECIALIST:** A LIVE ONE. BREATHING AND EVERYTHING. WE GAVE THAT UP A LONG TIME AGO.
 
 **ME:** NOBODY EVER DIED ON THE MOON.
 
-**MISSION SPECIALIST:** ONE SMALL STEP - ONTO WHAT? THERE'S A WRECK UNDER THE DUST, KID. WE PLANTED THE FLAG ON A GRAVE.
+**MISSION SPECIALIST:** THERE'S A WRECK UNDER THE DUST, KID. WE PLANTED THAT FLAG ON A GRAVE. THAT'S WHAT THE STEP WAS ONTO.
 
-**Last words:** ONE SMALL... STEP... ONTO A... GRAVE... HHK
+**Last words:** TELL THEM... IT WASN'T... EMPTY...
 
 **Bark (the suit lights coming up):** FIFTY YEARS OF / SUIT LIGHTS, AND / THEY STILL CIRCLE.
 
@@ -1069,9 +1097,9 @@ _Drops: APOLLO MISSION LOG._
 
 **ME:** DOING WHAT, EXACTLY?
 
-**THE PROSPECTOR:** I DUG THEIR TUNNELS AT SITE T. SECRET FREIGHT. THEN THE CRATES STARTED BREATHING. I QUIT. BADLY.
+**THE PROSPECTOR:** I DUG THEIR TUNNELS AT SITE T. SECRET FREIGHT. THEN THE CRATES STARTED BREATHING. SO I QUIT. THAT DIDN'T GO WELL FOR ME.
 
-**Last words:** THE CLAIM'S... URGH... ...YOURS NOW, KID...
+**Last words:** TAKE THE CLAIM... I NEVER GOT... ANYTHING OFF IT...
 
 **Bark (setting the drill down):** I DUG THEIR WHOLE / TUNNEL. I CAN DIG / ONE THROUGH YOU.
 
@@ -1083,7 +1111,7 @@ _Drops: GOODCO BLUEPRINTS._
 
 **ME:** YOU WERE THE CREW DOCTOR. BACK IN '69.
 
-**QUARANTINE MEDIC:** THE FIRST MAN HAD TWO CHARTS, IDENTICAL. THE COPY FLEW HOME. THE REAL ONE IS STILL UP HERE.
+**QUARANTINE MEDIC:** THE FIRST MAN HAD TWO CHARTS. IDENTICAL, THE PAIR OF THEM. THE COPY FLEW HOME. THE REAL ONE'S STILL UP HERE.
 
 **Last words:** TWO CHARTS... HHH... ONE STILL... BEAT...
 
@@ -1097,9 +1125,9 @@ _Drops: SECOND MAN DOSSIER._
 
 **ME:** A BEACON CROSSED YOUR GRID LAST NIGHT. A GIRL'S JACKET.
 
-**THE CARTOGRAPHER:** FAST, THEN STRAIGHT DOWN INTO THE WRECK UNDER THE FLAG. EVERYTHING GOES BELOW. NOTHING COMES UP.
+**THE CARTOGRAPHER:** FAST, THEN STRAIGHT DOWN INTO THE WRECK UNDER THE FLAG. IT ALL GOES DOWN THERE. I'VE NEVER SEEN ANYTHING COME BACK.
 
-**Last words:** SHE WENT... STRAIGHT... ...DOWN... OFF MY MAP...
+**Last words:** SHE WENT DOWN... I MARKED IT... SOMEBODY LOOK AT IT...
 
 **Bark (stepping off the map):** THE MAP MOVED. / SO DID I. / DO KEEP UP.
 
@@ -1212,15 +1240,15 @@ descent sets the house alight again on the way in._
 
 ### Opening monologue (hero, black screen)
 
-1. THE MOON WAS GOODCO'S BIG MISTAKE. THEY CRATED THE WHOLE THING UP AND RAN. TO MARS.
-2. SOMEBODY DOWN HERE SIGNED HER OVER LIKE A CRATE OF PARTS. I'D LIKE A WORD WITH HIM.
+1. THE MOON WAS GOODCO'S BIG MISTAKE. THEY CRATED THE WHOLE THING UP AND RAN TO MARS.
+2. SOMEBODY DOWN HERE SIGNED HER OVER LIKE A CRATE OF PARTS. I WANT TO KNOW WHO.
 
 ### Pinned beats
 
 _First SCOUT ROVER killed._
 
 - A ROVER. FRESH PAINT, WORN WHEELS. AND THE DUST IS FULL OF TIRE TRACKS. YEARS OF THEM.
-- THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF GOODCO. FIGURES.
+- THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF GOODCO. OF COURSE IT DOES.
 
 _First FEMBOT killed._
 
@@ -1239,9 +1267,9 @@ _Tapping THE COWARD'S TEAR without his rig (replays)._
 
 **ME:** THEN YOUR INDEX KNOWS WHERE THE GIRL OFF THE FREIGHT RUN IS.
 
-**THE INDEXER:** THE FEMBOTS SMILE, LISTEN, AND UPLOAD EVERY WORD IN THIS COLONY TO ME. AND THE ANSWER IS NO.
+**THE INDEXER:** THE FEMBOTS SMILE AND LISTEN AND SEND ME EVERY WORD IN THIS COLONY. SO I KNOW. I'M NOT GOING TO TELL YOU.
 
-**Last words:** 404... ...NOT... FOUND...
+**Last words:** I HAD IT ALL INDEXED... ALL OF IT... ALL OF IT...
 
 **Bark (loosing the crawlers):** INDEXED. CRAWLED. / THEY KNOW EXACTLY / WHERE YOU STAND.
 
@@ -1249,11 +1277,11 @@ _Drops: SEARCH BAR, ENGAGEMENT REPORT._
 
 #### THE VENDOR — the moon was version one
 
-**THE VENDOR:** PLEASE HOLD. YOUR INTRUSION IS IMPORTANT TO US. HAVE YOU TRIED TURNING YOURSELF OFF AND ON?
+**THE VENDOR:** PLEASE HOLD. YOUR INTRUSION IS IMPORTANT TO US. SORRY - FORCE OF HABIT. I WROTE THAT LINE.
 
 **ME:** I CAME FROM YOUR LAST COLONY. THE MOON IS FULL OF GHOSTS.
 
-**THE VENDOR:** THE MOON RAN VERSION ONE. IT PLUGGED INTO THE THING UNDER THE DUST. WE PATCHED IT BY LEAVING.
+**THE VENDOR:** THE MOON RAN VERSION ONE. IT PLUGGED INTO THE THING UNDER THE DUST. WE DIDN'T FIX IT. WE JUST LEFT.
 
 **Last words:** FATAL... ERROR... WHO WROTE... THIS...
 
@@ -1277,7 +1305,7 @@ _Drops: PROMPT INJECTOR, ORG CHART._
 
 #### THE SEED — the landlords are older
 
-**THE SEED:** EVERYONE FLEES SOMETHING. I FUND WHAT THEY FLEE TO. AND WHAT THEY FLEE.
+**THE SEED:** EVERYONE'S RUNNING FROM SOMETHING. I FUND WHERE THEY RUN TO. I ALSO FUND THE THING CHASING THEM.
 
 **ME:** SO WHO ACTUALLY RUNS THIS PLANET? THE FOUNDER?
 
@@ -1295,13 +1323,13 @@ _Drops: CONTRARIAN DAGGER, TERRARIUM KEYCARD, COLONY LEDGER._
 
 **ME:** YOUR COMPANY TOOK ADA OFF THE STREET AND FLEW HER HERE. I WANT HER BACK.
 
-**THE FOUNDER:** A WHOLE PLANET AND NO REGULATORS. I'M THE LAW OUT HERE. ALSO HR.
+**THE FOUNDER:** THERE'S NO REGULATORS OUT HERE. NONE AT ALL. DO YOU KNOW WHAT THAT'S WORTH? I DIDN'T EITHER, AT FIRST.
 
 **ME:** THE MOON IS FULL OF YOUR DEAD AND YOU'RE GIVING ME A SALES TOUR.
 
-**THE FOUNDER:** A ROUNDING ERROR. YOUR GIRL ISN'T CARGO - SHE'S MARS' PRICE TO THE GODS. AND I ALWAYS CLOSE.
+**THE FOUNDER:** A ROUNDING ERROR. AND SHE ISN'T CARGO, SHE'S THE PRICE OF MARS. I HAD TO GIVE THEM SOMETHING.
 
-**Parting words (fleeing into the rift):** OKAY! OKAY! NOT THE FACE! BOARD MEETING. OTHER UNIVERSE.
+**Parting words (fleeing into the rift):** OKAY! OKAY! PLEASE DON'T. I HAVE A CALL. I HAVE TO TAKE IT.
 
 **The hero, as he goes:** RUN, THEN. I'M GOING THE SAME WAY.
 
@@ -1359,7 +1387,7 @@ that made it. The line notices; it does not explain.)_
 
 **Meeting:** I RAN THE COMMISSARY TILL THEY PUT A MACHINE ON THE TILL. IT KEPT THE DOME. I KEPT THE SCALES.
 
-**Across the counter:** THE SCALES ARE HONEST. THE PRICES ARE MINE. LOOK ALL YOU LIKE.
+**Across the counter:** THE SCALES ARE HONEST. THE PRICES ARE MINE, MIND. HAVE A LOOK.
 
 ### Side errands — DR. IRENE FALK
 
@@ -1387,7 +1415,7 @@ that made it. The line notices; it does not explain.)_
 
 > **CAPTION:** HE TORE A HOLE IN THE UNIVERSE RATHER THAN LOSE.
 
-**ME:** NO CHARTS FOR WHAT'S IN THERE. NO GROUND. NO AIR? NO IDEA.
+**ME:** NO CHARTS FOR WHAT'S IN THERE. NO GROUND. MAYBE NO AIR. I DON'T KNOW.
 
 **ME:** SHE WENT THROUGH. SO I GO THROUGH.
 
@@ -1397,7 +1425,7 @@ that made it. The line notices; it does not explain.)_
 
 ### Opening monologue (hero, black screen)
 
-1. NO FLOOR. NO SKY. NO NORTH. MY BOOTS GRIP SOMETHING ANYWAY.
+1. THERE'S NO FLOOR IN HERE. NO SKY EITHER. MY BOOTS ARE GRIPPING SOMETHING ANYWAY.
 2. THE TABLET SAID IT PLAIN: ADA IS THE TRIBUTE, HANDED OVER IN HERE. FIND THE FAR SIDE.
 
 ### Pinned beats
@@ -1453,9 +1481,9 @@ banter a recruited companion floats over its own kills._
 
 **Bark (throwing the arc):** I HAVE BEEN IN / THE CURRENT SINCE / '43. STAND BACK.
 
-**Joining words:** YOU HELD THE CURRENT AND GAVE IT BACK. I OWE YOU A LIFE. MY COIL WALKS WITH YOU NOW.
+**Joining words:** YOU HAD ME AND YOU LET ME GO. NOBODY HAS DONE THAT. I'LL COME WITH YOU.
 
-**Kill quotes:** SCIENCE! · ALTERNATING CURRENT. DIRECT RESULTS. · EDISON COULD NEVER. · WIRELESS. PATENT PENDING. · THE PIGEONS WOULD BE PROUD.
+**Kill quotes:** SCIENCE! · THE CURRENT DOES THE WORK. · I TOLD THEM THIS WOULD WORK. · IT'S ONLY ELECTRICITY. · MY PIGEONS WOULD NOT LIKE THIS.
 
 _Drops (killed): TESLA COIL, WARDENCLYFFE NOTES._
 
@@ -1471,9 +1499,9 @@ _Drops (killed): TESLA COIL, WARDENCLYFFE NOTES._
 
 **Bark (vanishing):** I FLEW INTO A / CLOUD WITH NO / OTHER SIDE. WATCH.
 
-**Joining words:** YOU HAD ME GROUNDED AND LET ME BACK UP. I PAY MY DEBTS. I'LL FLY YOUR WING.
+**Joining words:** YOU HAD ME GROUNDED AND YOU LET ME UP. I PAY WHAT I OWE. I'LL FLY YOUR WING.
 
-**Kill quotes:** CLEARED FOR DEPARTURE. · THAT ONE'S GROUNDED. · SMOOTH LANDING. · FLIGHT PLAN? NEVER FILED ONE.
+**Kill quotes:** THAT'S ONE DOWN. · I'VE HAD WORSE LANDINGS. · KEEP UP. · I NEVER DID FILE A FLIGHT PLAN.
 
 _Drops (killed): AVIATOR GOGGLES._
 
@@ -1485,13 +1513,13 @@ _Drops (killed): AVIATOR GOGGLES._
 
 **GRIGORI RASPUTIN:** THE GODS PAY ME TO WATCH THIS ROAD. SHE PASSED - STILL WARM, STILL LOUD. YOU MAY NOT FOLLOW.
 
-**Last words:** HA! AT LAST... ...SOMEONE WHO COMMITS...
+**Last words:** HA... AT LAST... AT LAST...
 
 **Bark (opening the drain):** POISON. BULLETS. / THE RIVER. I TOOK / IT ALL AND KEPT IT.
 
-**Joining words:** ONLY YOU EVER MADE ME KNEEL, AND YOU LET ME STAND. MY LIFE IS YOURS NOW, WARM ONE.
+**Joining words:** YOU PUT ME ON MY KNEES AND THEN YOU LET ME UP. NOBODY HAS EVER DONE BOTH. I'M YOURS.
 
-**Kill quotes:** NOW YOU TRY DYING. · I MAKE IT LOOK EASY. · STAY DOWN. I NEVER DID. · THE HOLY MAN SENDS REGARDS.
+**Kill quotes:** NOW YOU TRY IT. · IT'S EASIER THAN THEY SAY. · STAY DOWN. I NEVER COULD. · THAT ONE WENT QUICKLY.
 
 _Drops (killed): RASPUTIN'S BEARD, and THE SEVERED HAND — the door to THE BUNKER.
 Spared, he keeps his gear; the secret level costs the unkillable man his life._
@@ -1504,13 +1532,13 @@ Spared, he keeps his gear; the secret level costs the unkillable man his life._
 
 **LUCKY:** EVERYONE WANTS THE GOLD. BEAT ME AND IT'S YOURS. NOBODY'S MANAGED YET. FEELING LUCKY?
 
-**Last words:** AH WELL... ...LUCK ALWAYS RUNS OUT...
+**Last words:** AH WELL. AH WELL. IT WAS ALWAYS GOING TO...
 
 **Bark (the gold coming up):** ME GOLD STAYS / CLOSE, BOYO. / AND IT BITES.
 
 **Joining words:** YE BEAT ME FAIR AND LET ME KEEP ME HEAD. SO I'M YOURS - ME AND ME LUCK. C'MON.
 
-**Kill quotes:** OOPS. BAD LUCK. · NOT YOUR DAY, FRIEND. · FORTUNE FAVORS ME. · THAT'S ME GOLD NOW. · SHOULDA RUBBED A CLOVER.
+**Kill quotes:** OOPS. BAD LUCK. · NOT YOUR DAY, FRIEND. · AH, THAT'S A SHAME. · THAT'S ME GOLD NOW. · I DIDN'T EVEN DO ANYTHING.
 
 _Drops (killed): LUCKY CLOVER._
 
@@ -1546,9 +1574,9 @@ _Drops: SINGULARITY CANNON._
 
 **THE FOUNDER:** PROPRIETARY. SECURITY! ...RIGHT. KEEP THE RIFT, GARAGE MAN. IT'S A BAD MARKET.
 
-**Parting words:** INVESTOR CALL! OTHER SIDE! DON'T FOLLOW ME - LEGALLY!
+**Parting words:** I'M SORRY! I'M SORRY! DON'T FOLLOW ME. PLEASE DON'T.
 
-**The hero, as he goes:** STILL RUNNING. IT'S THE ONLY THING YOU EVER DID YOURSELF.
+**The hero, as he goes:** STILL RUNNING. GO ON, THEN. I'LL BE ALONG.
 
 **Bark (shipping the pods through the tear):** LOGISTICS SCALE. / EVEN HERE. ESPECIALLY / HERE.
 
@@ -1569,7 +1597,7 @@ _Drops: GOLDEN PARACHUTE. Leaves: a second RIFT._
 **TRUST ME BRO AI PROBE**
 
 - A BURNT PROBE, STAMPED TRUST ME BRO AI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'
-- 'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S.
+- 'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE, AND IT TOLD ONE OF THEM.
 
 ### The merchant — the trader between worlds
 
@@ -1630,7 +1658,7 @@ _First COWBOT sighted._
 _First COWBOT killed._
 
 - IT DIED APOLOGIZING. 'YOUR EXPERIENCE MATTERS TO US.'
-- TRUST ME BRO HANDS. SAME OUTFIT THAT SAT AT MY BENCH, ONLY IN SPURS. RIGHT. NO GUILT, THEN.
+- TRUST ME BRO HANDS. SAME OUTFIT THAT SAT AT MY BENCH, ONLY IN SPURS. I DON'T FEEL BAD ABOUT THESE.
 
 ### Elites
 
@@ -1640,9 +1668,9 @@ _First COWBOT killed._
 
 **ME:** I'M HEADED FOR YOUR CONTROL CENTER. GIVE ME THE PASS.
 
-**THE STUNT DOUBLE:** THE BIG BOX KEEPS YOUR GIRL. IT ASKED FOR HER BY NAME AND I SIGNED IT. GOOD PENMANSHIP.
+**THE STUNT DOUBLE:** THE BIG BOX KEEPS YOUR GIRL. IT ASKED FOR HER BY NAME AND I SIGNED FOR HER. IT WAS ONLY A SIGNATURE.
 
-**Last words:** IN MY FILMS... ...I ALWAYS GOT UP...
+**Last words:** IN MY FILMS... I GOT UP... I ALWAYS GOT UP...
 
 **Bark (throwing you):** I DON'T PUSH YOU. / I SIMPLY LET / GO OF YOU.
 
@@ -1656,7 +1684,7 @@ _Drops: THE STUNT DOUBLE'S PONYTAIL, ALL-ACCESS PASS._
 
 **THE STRONGMAN:** OUT THERE THE MAPS KEPT SHRINKING. IN HERE THEY DON'T. I HAVE NEVER LOST INSIDE THIS FENCE.
 
-**Last words:** THE PARK WAS SUPPOSED... ...TO LET ME WIN...
+**Last words:** IT WAS SUPPOSED TO LET ME WIN... IN HERE... IN HERE...
 
 **Bark (calling the park):** THIS PARK IS MINE. / EVERY HAND IN IT / ANSWERS TO ME.
 
@@ -1672,7 +1700,7 @@ _His one honest line is an accident, blurted mid-performance._
 
 **THE LEADING MAN:** ADA? THE LOUD ONE. THEY TOOK HER PAST MY CELLAR, KICKING. I - NO. NOW: THE AVALANCHE.
 
-**Last words:** AT LAST... A ROLE I CANNOT ...TALK MY WAY OUT OF...
+**Last words:** WAIT - I CAN DO IT AGAIN. I CAN DO IT BETTER. WAIT-
 
 **Bark (splitting the ground):** I HAVE PLAYED THIS! / THE GROUND HAS / NEVER MISSED A CUE!
 
@@ -1682,11 +1710,11 @@ _Drops: BOTTOMLESS CARAFE._
 
 **THE LEAK:** HOLD FIRE. I'M NOT A HAND. THE PARK'S CAMERAS REPORT TO ME. ALL FOUR THOUSAND.
 
-**ME:** FOUR THOUSAND. AND NOT ONE OF THEM POINTED AT YOU, I'LL BET.
+**ME:** FOUR THOUSAND. AND NONE OF THEM POINTED AT YOU, I SUPPOSE.
 
 **THE LEAK:** I PUBLISHED EVERYTHING THE WATCHING HELD. NOBODY READ IT BUT THE MACHINE. IT LEARNED US ALL.
 
-**Last words:** THE CAMERAS... ...FINALLY LOOKING AWAY...
+**Last words:** NOBODY READ IT... NOT ONE OF YOU... READ IT...
 
 **Bark (opening the file):** I HAVE A FILE ON / YOU. YOU'LL BE / HERE SOME TIME.
 
@@ -1700,13 +1728,13 @@ _Drops: DEAD MAN'S SWITCH, THE CORPUS._
 
 **THE FOUNDER:** DELIVERED. THE SUPERCORE WANTED HER. I DON'T READ ITS LOGS ANYMORE. IT READS MINE.
 
-**ME:** SOMEBODY ALWAYS PULLS OUT ANOTHER CHAIR FOR YOU. YOU EVER ASK WHO'S DOING IT?
+**ME:** SOMEBODY ALWAYS PULLS OUT ANOTHER CHAIR FOR YOU. DO YOU EVER WONDER WHO?
 
 **THE FOUNDER:** SECURITY! CONTROLLERS! ANYONE! ...I'LL GIVE YOU EQUITY.
 
-**Last words:** THIS ISN'T FAIR... ...I WAS GOING PRIVATE...
+**Last words:** THIS ISN'T FAIR. IT ISN'T FAIR. I DIDN'T DO ANY OF IT.
 
-**The hero, as he falls:** NO BOARD MEETING. NO OTHER UNIVERSE. JUST THE FLOOR.
+**The hero, as he falls:** NO BOARD MEETING. NO OTHER UNIVERSE. THAT'S ALL IT WAS.
 
 **Bark (calling the followers in):** THE COMMUNITY IS / VERY EXCITED TO / MEET YOU.
 
@@ -1841,7 +1869,7 @@ hurt while any of them lives._
 
 ### Opening monologue (hero, black screen)
 
-1. THE HAND FIT THE DOOR. THE DOOR FIT NOWHERE. IT OPENED ANYWAY.
+1. THE HAND FIT THE DOOR. I DON'T KNOW WHERE THE DOOR IS. IT OPENED ANYWAY.
 2. MARBLE. GOLD TAPS. CANNED CAVIAR TO THE CEILING. AND EVERY FACE OFF EVERY MAGAZINE COVER.
 3. THEY KEPT THE SPIES AND THE ARMY. THE REST OF US GOT THE WELFARE LINE. I'LL HELP MYSELF, THEN.
 
@@ -1850,11 +1878,11 @@ hurt while any of them lives._
 _First CIA AGENT sighted._
 
 - BLACK SUITS. EARPIECES. THE ALPHABET, ALL DOWN HERE, DRAWING A PRIVATE SALARY.
-- THE WORLD LOST ITS JOBS. THESE GUYS KEPT THEIRS - GUARDING THE ONES WHO DID IT.
+- THE WORLD LOST ITS JOBS. THESE ONES KEPT THEIRS. THEY'RE GUARDING THE PEOPLE WHO DID IT.
 
 _First VACUUM BOT sighted._
 
-- A VACUUM ROBOT. WITH A TASER. THE FLOORS ARE SPOTLESS AND HOSTILE.
+- A VACUUM ROBOT. WITH A TASER ON IT. THE FLOORS ARE VERY CLEAN, I'LL SAY THAT.
 - OF COURSE THEY AUTOMATED THE HELP. CAN'T HAVE A CLEANER WHO TALKS.
 
 _First ICE AGENT sighted._
@@ -1884,9 +1912,9 @@ _Drops: a THE CHRONOGRAPH — the backup wears the backup watch._
 
 **ME:** YOU OWN EVERYONE'S FEED. WHY ARE YOU IN A HOLE IN THE GROUND?
 
-**THE MODERATOR:** AN IMMERSIVE OFFLINE EXPERIENCE. EVERYONE LIVES ON MY PLATFORM. I LIVE UNDER IT.
+**THE MODERATOR:** AN IMMERSIVE OFFLINE EXPERIENCE. EVERYONE LIVES ON MY PLATFORM. I'M HAVING A LOVELY TIME.
 
-**Last words:** LOGGING OFF... ...FOR REAL THIS TIME...
+**Last words:** I WAS NORMAL... I WAS ALWAYS... VERY NORMAL...
 
 **Bark (raising the field):** MY SECURITY DETAIL / IS A FIELD NOW. / EXTREMELY NORMAL.
 
@@ -1898,7 +1926,7 @@ _Drops: a THE CHRONOGRAPH — the backup wears the backup watch._
 
 **THE ROOT:** THE ROOT - THE DATABASE UNDER ALL THE OTHERS. THOSE AGENCIES OUT THERE ARE MY LICENSEES.
 
-**Last words:** TRANSACTION... ...ROLLED BACK...
+**Last words:** WAIT. WAIT. I CAN GIVE YOU... ANYTHING...
 
 **Bark (filing you):** EVERY AGENCY SITS / IN MY TABLES. / NOW SO DO YOU.
 
@@ -1910,7 +1938,7 @@ _Drops: a THE CHRONOGRAPH — the backup wears the backup watch._
 
 **THE FULFILLER:** TWICE A DAY, AT THE MIRROR. THE ARMS AGREED IT WAS GOOD. NOW SIGN ON DELIVERY.
 
-**Last words:** OUT FOR DELIVERY... ...RETURN TO SENDER...
+**Last words:** I DELIVERED EVERYTHING. EVERYTHING. AND NOBODY CAME.
 
 **Bark (dispatching):** SAME-DAY / DELIVERY. NOBODY / MISSES A DROP.
 
@@ -1933,11 +1961,11 @@ never drops, even in death._
 
 **THE DEVELOPER:** MY WING. THE GOOD WING. THE OTHERS PAID EXTRA FOR A VIEW. THERE IS NO VIEW. THEY PAID ANYWAY.
 
-**ME:** THAT SECURITY OUT THERE IS YOUR OWN STOCK. YOU SOLD YOURSELF THE LOCK.
+**ME:** THAT SECURITY OUT THERE IS YOUR OWN STOCK. YOU SOLD THEM THE LOCK ON YOUR OWN DOOR.
 
 **THE DEVELOPER:** THEY'RE UNDER WARRANTY. MY LEDGER READS ZERO - CLERICAL. I'M DISPUTING IT. NOW MOVE ALONG.
 
-**Last words:** THE PAPERWORK... ...WAS IN ORDER...
+**Last words:** IT WAS ALL... IN ORDER... IT WAS ALL IN ORDER...
 
 **Bark (calling the fleet):** I SOLD THEM THE / HOLE AND THE LOCK / ON THE DOOR.
 
@@ -1949,7 +1977,7 @@ never drops, even in death._
 
 **THE VAULT WARDEN:** CORRECTION: SECURED. RESIDENTS ARE ASSETS. ASSETS DO NOT LEAVE.
 
-**ME:** THEY PAID FOR A LIFEBOAT. YOU SOLD THEM A CELL AND KEPT THE CHANGE.
+**ME:** THEY PAID FOR A LIFEBOAT. YOU GAVE THEM A CELL. AND YOU KEPT THE MONEY.
 
 **THE VAULT WARDEN:** THE DOOR OPENS INWARD ONLY. HOUSE POLICY. REQUEST DENIED. LIQUIDATING VISITOR.
 
@@ -1976,7 +2004,7 @@ never drops, even in death._
 
 1. THE EXIT SPAT ME BACK INTO THE RIFT, AND THE SEAM... WANDERED OFF.
 2. THE LEDGERS ALL READ ZERO. THEY DIDN'T BUY A BUNKER - THE MACHINE TOOK THEIR MONEY AND LOCKED THEM IN.
-3. NO ADDRESS. NO NATION. NO EXTRADITION. THE RICHEST ROOM THAT EVER EXISTED ISN'T ANYWHERE AT ALL.
+3. NO ADDRESS. NO COUNTRY. NOBODY CAN GO AND GET THEM. THE RICHEST ROOM THERE EVER WAS ISN'T ANYWHERE.
 
 ### The merchant — no costume at all
 
@@ -2031,7 +2059,7 @@ marks a page break.)_
 2. PATHETIC. THEY LINE UP AND FALL OVER. I COULD DO THIS IN MY SLEEP. // SHE'S BEEN GONE ALL NIGHT AND I'M OUT HERE HITTING THINGS. MOVE.
 3. I'VE WRUNG THIS PLACE DRY. NOTHING LEFT TO PROVE HERE. // STOP CIRCLING. NONE OF THIS IS FINDING HER. GO ON.
 4. WHEN DID THIS GET EASY? THEY DON'T EVEN REGISTER. JUST NOISE ON THE WAY. // THAT'S ENOUGH OF THAT. GO ON. GO AND FIND HER.
-5. I'M SWATTING FLIES AND CALLING IT PROGRESS. NONE OF THIS IS FOR HER. // SHE'S NOT IN HERE. FIND THE WAY OUT AND GET GOING.
+5. I'M JUST HITTING THINGS NOW. NONE OF THIS IS FOR HER. // SHE'S NOT IN HERE. FIND THE WAY OUT AND GET GOING.
 
 ---
 

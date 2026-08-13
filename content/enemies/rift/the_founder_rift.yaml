@@ -29,10 +29,10 @@ death: bolt
 
 # THE HERO'S LINE as he bolts a second time.
 deathBark:
-  - STILL RUNNING. IT'S THE ONLY THING YOU EVER DID YOURSELF.
+  - STILL RUNNING. GO ON, THEN. I'LL BE ALONG.
 
 lastWords:
-  - INVESTOR CALL! OTHER SIDE! DON'T FOLLOW ME - LEGALLY!
+  - I'M SORRY! I'M SORRY! DON'T FOLLOW ME. PLEASE DON'T.
 flees:
   landmark: rift
 mechanics:

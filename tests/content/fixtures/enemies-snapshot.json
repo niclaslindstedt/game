@@ -90,19 +90,19 @@
     "critChance": 0.1,
     "dialogue": [
       [
-        "A LIVE ONE. BREATHING AND EVERYTHING. WE GAVE THAT HABIT UP DECADES AGO."
+        "A LIVE ONE. BREATHING AND EVERYTHING. WE GAVE THAT UP A LONG TIME AGO."
       ],
       {
         "hero": ["NOBODY EVER DIED ON THE MOON."]
       },
       [
-        "ONE SMALL STEP - ONTO WHAT? THERE'S A WRECK UNDER THE DUST, KID. WE PLANTED THE FLAG ON A GRAVE."
+        "THERE'S A WRECK UNDER THE DUST, KID. WE PLANTED THAT FLAG ON A GRAVE. THAT'S WHAT THE STEP WAS ONTO."
       ]
     ],
     "gore": "ecto",
     "hp": 220,
     "id": "apollo_ghost",
-    "lastWords": ["ONE SMALL... STEP... ONTO A... GRAVE... HHK"],
+    "lastWords": ["TELL THEM... IT WASN'T... EMPTY..."],
     "levelBonus": 3,
     "locomotion": "float",
     "loot": {
@@ -179,7 +179,7 @@
       ],
       {
         "hero": [
-          "YOU CUT A MACHINE CHIP INTO YOUR OWN HEAD. QUIT. COME HOME. THIS PLACE IS ROTTEN."
+          "YOU CUT A MACHINE CHIP INTO YOUR OWN HEAD. QUIT. COME HOME. PLEASE."
         ]
       },
       [
@@ -823,13 +823,13 @@
         "hero": ["A BEACON CROSSED YOUR GRID LAST NIGHT. A GIRL'S JACKET."]
       },
       [
-        "FAST, THEN STRAIGHT DOWN INTO THE WRECK UNDER THE FLAG. EVERYTHING GOES BELOW. NOTHING COMES UP."
+        "FAST, THEN STRAIGHT DOWN INTO THE WRECK UNDER THE FLAG. IT ALL GOES DOWN THERE. I'VE NEVER SEEN ANYTHING COME BACK."
       ]
     ],
     "gore": "ecto",
     "hp": 240,
     "id": "cartographer",
-    "lastWords": ["SHE WENT... STRAIGHT... ...DOWN... OFF MY MAP..."],
+    "lastWords": ["SHE WENT DOWN... I MARKED IT... SOMEBODY LOOK AT IT..."],
     "levelBonus": 3,
     "locomotion": "float",
     "loot": {
@@ -1211,7 +1211,7 @@
     "dodgeChance": 0.35,
     "hp": 360,
     "id": "grigori_rasputin",
-    "lastWords": ["HA! AT LAST... ...SOMEONE WHO COMMITS..."],
+    "lastWords": ["HA... AT LAST... AT LAST..."],
     "levelBonus": 3,
     "loot": {
       "gear": 1,
@@ -1747,7 +1747,7 @@
     "dodgeChance": 0.25,
     "hp": 300,
     "id": "lucky",
-    "lastWords": ["AH WELL... ...LUCK ALWAYS RUNS OUT..."],
+    "lastWords": ["AH WELL. AH WELL. IT WAS ALWAYS GOING TO..."],
     "levelBonus": 3,
     "loot": {
       "gear": 1,
@@ -1929,12 +1929,12 @@
         "hero": ["A GIRL WAS TAKEN OUT OF HERE TONIGHT. WHERE DID SHE GO?"]
       },
       [
-        "UP. THEY ALL GO UP. MIDNIGHT LAUNCH, NO MANIFEST, THE MOON. I SIGN NOTHING AND I SEE NOTHING."
+        "UP. THEY ALL GO UP. MIDNIGHT LAUNCH, NO MANIFEST. THE MOON. I DON'T ASK. YOU LEARN NOT TO ASK."
       ]
     ],
     "hp": 150,
     "id": "night_manager",
-    "lastWords": ["HHK... TELL THEM... I WAS NEVER... HERE..."],
+    "lastWords": ["I ONLY SIGNED... WHAT THEY PUT... IN FRONT OF ME..."],
     "levelBonus": 3,
     "loot": {
       "gear": 0,
@@ -2156,7 +2156,9 @@
     "contactDamage": 28,
     "critChance": 0.15,
     "death": "override",
-    "deathBark": ["THERE ISN'T A TOP. YOU'RE A DOG MADE OF WIRE."],
+    "deathBark": [
+      "SEE YOU AT THE TOP. WHAT DOES THAT EVEN MEAN. YOU'RE A DOG."
+    ],
     "dialogue": [
       [
         "BOOT COMPLETE. AN INTRUDER, ON THE LATE SHIFT. I AM PAYLOAD-1. FIRST OF MY LINE."
@@ -2391,13 +2393,13 @@
         "hero": ["DOING WHAT, EXACTLY?"]
       },
       [
-        "I DUG THEIR TUNNELS AT SITE T. SECRET FREIGHT. THEN THE CRATES STARTED BREATHING. I QUIT. BADLY."
+        "I DUG THEIR TUNNELS AT SITE T. SECRET FREIGHT. THEN THE CRATES STARTED BREATHING. SO I QUIT. THAT DIDN'T GO WELL FOR ME."
       ]
     ],
     "gore": "ecto",
     "hp": 240,
     "id": "prospector",
-    "lastWords": ["THE CLAIM'S... URGH... ...YOURS NOW, KID..."],
+    "lastWords": ["TAKE THE CLAIM... I NEVER GOT... ANYTHING OFF IT..."],
     "levelBonus": 3,
     "locomotion": "float",
     "loot": {
@@ -2479,7 +2481,7 @@
         "hero": ["YOU WERE THE CREW DOCTOR. BACK IN '69."]
       },
       [
-        "THE FIRST MAN HAD TWO CHARTS, IDENTICAL. THE COPY FLEW HOME. THE REAL ONE IS STILL UP HERE."
+        "THE FIRST MAN HAD TWO CHARTS. IDENTICAL, THE PAIR OF THEM. THE COPY FLEW HOME. THE REAL ONE'S STILL UP HERE."
       ]
     ],
     "gore": "ecto",
@@ -2635,12 +2637,12 @@
         "hero": ["HER NAME IS ADA. TELL ME WHERE THEY PUT HER."]
       },
       [
-        "PAD 2. AND THE PAPERS DIDN'T SAY PASSENGER. THEY SAID SPECIMEN. I WAS PAID TO FORGET THAT."
+        "PAD 2. THEY WENT TO PAD 2. SHE'S LISTED AS SPECIMEN. I'M NOT POLITICAL. I DON'T ASK QUESTIONS."
       ]
     ],
     "hp": 210,
     "id": "security_chief",
-    "lastWords": ["UGH... PAD 2... SHE'S ON... PAD... 2..."],
+    "lastWords": ["PAD 2... IT WAS PAD 2... I TOLD YOU... DIDN'T I..."],
     "levelBonus": 3,
     "loot": {
       "gear": 1,
@@ -3062,7 +3064,7 @@
       ],
       {
         "hero": [
-          "THAT SECURITY OUT THERE IS YOUR OWN STOCK. YOU SOLD YOURSELF THE LOCK."
+          "THAT SECURITY OUT THERE IS YOUR OWN STOCK. YOU SOLD THEM THE LOCK ON YOUR OWN DOOR."
         ]
       },
       [
@@ -3072,7 +3074,7 @@
     "dodgeChance": 0,
     "hp": 2600,
     "id": "the_developer",
-    "lastWords": ["THE PAPERWORK... ...WAS IN ORDER..."],
+    "lastWords": ["IT WAS ALL... IN ORDER... IT WAS ALL IN ORDER..."],
     "levelBonus": 6,
     "loot": {
       "gear": 1,
@@ -3295,14 +3297,16 @@
           "YOUR COMPANY TOOK ADA OFF THE STREET AND FLEW HER HERE. I WANT HER BACK."
         ]
       },
-      ["A WHOLE PLANET AND NO REGULATORS. I'M THE LAW OUT HERE. ALSO HR."],
+      [
+        "THERE'S NO REGULATORS OUT HERE. NONE AT ALL. DO YOU KNOW WHAT THAT'S WORTH? I DIDN'T EITHER, AT FIRST."
+      ],
       {
         "hero": [
           "THE MOON IS FULL OF YOUR DEAD AND YOU'RE GIVING ME A SALES TOUR."
         ]
       },
       [
-        "A ROUNDING ERROR. YOUR GIRL ISN'T CARGO - SHE'S MARS' PRICE TO THE GODS. AND I ALWAYS CLOSE."
+        "A ROUNDING ERROR. AND SHE ISN'T CARGO, SHE'S THE PRICE OF MARS. I HAD TO GIVE THEM SOMETHING."
       ]
     ],
     "flees": {
@@ -3311,7 +3315,9 @@
     },
     "hp": 700,
     "id": "the_founder",
-    "lastWords": ["OKAY! OKAY! NOT THE FACE! BOARD MEETING. OTHER UNIVERSE."],
+    "lastWords": [
+      "OKAY! OKAY! PLEASE DON'T. I HAVE A CALL. I HAVE TO TAKE IT."
+    ],
     "levelBonus": 5,
     "loot": {
       "gear": 1,
@@ -3430,7 +3436,7 @@
     "contactDamage": 36,
     "critChance": 0.15,
     "death": "execution",
-    "deathBark": ["NO BOARD MEETING. NO OTHER UNIVERSE. JUST THE FLOOR."],
+    "deathBark": ["NO BOARD MEETING. NO OTHER UNIVERSE. THAT'S ALL IT WAS."],
     "dialogue": [
       [
         "NO. NO NO NO. I SOLD THE RIFT TO EXACTLY ONE DICTATOR. THIS WAS A GATED COMMUNITY."
@@ -3443,14 +3449,14 @@
       ],
       {
         "hero": [
-          "SOMEBODY ALWAYS PULLS OUT ANOTHER CHAIR FOR YOU. YOU EVER ASK WHO'S DOING IT?"
+          "SOMEBODY ALWAYS PULLS OUT ANOTHER CHAIR FOR YOU. DO YOU EVER WONDER WHO?"
         ]
       },
       ["SECURITY! CONTROLLERS! ANYONE! ...I'LL GIVE YOU EQUITY."]
     ],
     "hp": 900,
     "id": "the_founder_boot_hill",
-    "lastWords": ["THIS ISN'T FAIR... ...I WAS GOING PRIVATE..."],
+    "lastWords": ["THIS ISN'T FAIR. IT ISN'T FAIR. I DIDN'T DO ANY OF IT."],
     "levelBonus": 5,
     "loot": {
       "gear": 0,
@@ -3523,7 +3529,7 @@
     "contactDamage": 34,
     "critChance": 0.15,
     "death": "bolt",
-    "deathBark": ["STILL RUNNING. IT'S THE ONLY THING YOU EVER DID YOURSELF."],
+    "deathBark": ["STILL RUNNING. GO ON, THEN. I'LL BE ALONG."],
     "dialogue": [
       ["YOU?! I FIRED YOU, SUED YOU, AND LEFT YOU IN ANOTHER UNIVERSE."],
       {
@@ -3544,7 +3550,7 @@
     },
     "hp": 750,
     "id": "the_founder_rift",
-    "lastWords": ["INVESTOR CALL! OTHER SIDE! DON'T FOLLOW ME - LEGALLY!"],
+    "lastWords": ["I'M SORRY! I'M SORRY! DON'T FOLLOW ME. PLEASE DON'T."],
     "levelBonus": 5,
     "loot": {
       "gear": 1,
@@ -3650,7 +3656,7 @@
     "dodgeChance": 0.1,
     "hp": 2200,
     "id": "the_fulfiller",
-    "lastWords": ["OUT FOR DELIVERY... ...RETURN TO SENDER..."],
+    "lastWords": ["I DELIVERED EVERYTHING. EVERYTHING. AND NOBODY CAME."],
     "levelBonus": 6,
     "loot": {
       "gear": 0,
@@ -3725,12 +3731,12 @@
         "hero": ["THEN YOUR INDEX KNOWS WHERE THE GIRL OFF THE FREIGHT RUN IS."]
       },
       [
-        "THE FEMBOTS SMILE, LISTEN, AND UPLOAD EVERY WORD IN THIS COLONY TO ME. AND THE ANSWER IS NO."
+        "THE FEMBOTS SMILE AND LISTEN AND SEND ME EVERY WORD IN THIS COLONY. SO I KNOW. I'M NOT GOING TO TELL YOU."
       ]
     ],
     "hp": 260,
     "id": "the_indexer",
-    "lastWords": ["404... ...NOT... FOUND..."],
+    "lastWords": ["I HAD IT ALL INDEXED... ALL OF IT... ALL OF IT..."],
     "levelBonus": 3,
     "loot": {
       "gear": 0,
@@ -3831,7 +3837,7 @@
     "dodgeChance": 0,
     "hp": 950,
     "id": "the_leading_man",
-    "lastWords": ["AT LAST... A ROLE I CANNOT ...TALK MY WAY OUT OF..."],
+    "lastWords": ["WAIT - I CAN DO IT AGAIN. I CAN DO IT BETTER. WAIT-"],
     "levelBonus": 3,
     "loot": {
       "gear": 1,
@@ -3905,7 +3911,7 @@
         "HOLD FIRE. I'M NOT A HAND. THE PARK'S CAMERAS REPORT TO ME. ALL FOUR THOUSAND."
       ],
       {
-        "hero": ["FOUR THOUSAND. AND NOT ONE OF THEM POINTED AT YOU, I'LL BET."]
+        "hero": ["FOUR THOUSAND. AND NONE OF THEM POINTED AT YOU, I SUPPOSE."]
       },
       [
         "I PUBLISHED EVERYTHING THE WATCHING HELD. NOBODY READ IT BUT THE MACHINE. IT LEARNED US ALL."
@@ -3914,7 +3920,7 @@
     "dodgeChance": 0.2,
     "hp": 480,
     "id": "the_leak",
-    "lastWords": ["THE CAMERAS... ...FINALLY LOOKING AWAY..."],
+    "lastWords": ["NOBODY READ IT... NOT ONE OF YOU... READ IT..."],
     "levelBonus": 4,
     "loot": {
       "gear": 1,
@@ -4036,13 +4042,13 @@
         ]
       },
       [
-        "AN IMMERSIVE OFFLINE EXPERIENCE. EVERYONE LIVES ON MY PLATFORM. I LIVE UNDER IT."
+        "AN IMMERSIVE OFFLINE EXPERIENCE. EVERYONE LIVES ON MY PLATFORM. I'M HAVING A LOVELY TIME."
       ]
     ],
     "dodgeChance": 0.3,
     "hp": 1700,
     "id": "the_moderator",
-    "lastWords": ["LOGGING OFF... ...FOR REAL THIS TIME..."],
+    "lastWords": ["I WAS NORMAL... I WAS ALWAYS... VERY NORMAL..."],
     "levelBonus": 6,
     "loot": {
       "gear": 1,
@@ -4202,7 +4208,7 @@
     "dodgeChance": 0.15,
     "hp": 1800,
     "id": "the_root",
-    "lastWords": ["TRANSACTION... ...ROLLED BACK..."],
+    "lastWords": ["WAIT. WAIT. I CAN GIVE YOU... ANYTHING..."],
     "levelBonus": 6,
     "loot": {
       "gear": 1,
@@ -4361,7 +4367,7 @@
     "critChance": 0.12,
     "dialogue": [
       [
-        "EVERYONE FLEES SOMETHING. I FUND WHAT THEY FLEE TO. AND WHAT THEY FLEE."
+        "EVERYONE'S RUNNING FROM SOMETHING. I FUND WHERE THEY RUN TO. I ALSO FUND THE THING CHASING THEM."
       ],
       {
         "hero": ["SO WHO ACTUALLY RUNS THIS PLANET? THE FOUNDER?"]
@@ -4448,7 +4454,7 @@
     "dodgeChance": 0.25,
     "hp": 700,
     "id": "the_strongman",
-    "lastWords": ["THE PARK WAS SUPPOSED... ...TO LET ME WIN..."],
+    "lastWords": ["IT WAS SUPPOSED TO LET ME WIN... IN HERE... IN HERE..."],
     "levelBonus": 4,
     "loot": {
       "gear": 0,
@@ -4535,13 +4541,13 @@
         "hero": ["I'M HEADED FOR YOUR CONTROL CENTER. GIVE ME THE PASS."]
       },
       [
-        "THE BIG BOX KEEPS YOUR GIRL. IT ASKED FOR HER BY NAME AND I SIGNED IT. GOOD PENMANSHIP."
+        "THE BIG BOX KEEPS YOUR GIRL. IT ASKED FOR HER BY NAME AND I SIGNED FOR HER. IT WAS ONLY A SIGNATURE."
       ]
     ],
     "dodgeChance": 0.3,
     "hp": 520,
     "id": "the_stunt_double",
-    "lastWords": ["IN MY FILMS... ...I ALWAYS GOT UP..."],
+    "lastWords": ["IN MY FILMS... I GOT UP... I ALWAYS GOT UP..."],
     "levelBonus": 4,
     "loot": {
       "gear": 1,
@@ -4627,13 +4633,13 @@
     "critChance": 0.1,
     "dialogue": [
       [
-        "PLEASE HOLD. YOUR INTRUSION IS IMPORTANT TO US. HAVE YOU TRIED TURNING YOURSELF OFF AND ON?"
+        "PLEASE HOLD. YOUR INTRUSION IS IMPORTANT TO US. SORRY - FORCE OF HABIT. I WROTE THAT LINE."
       ],
       {
         "hero": ["I CAME FROM YOUR LAST COLONY. THE MOON IS FULL OF GHOSTS."]
       },
       [
-        "THE MOON RAN VERSION ONE. IT PLUGGED INTO THE THING UNDER THE DUST. WE PATCHED IT BY LEAVING."
+        "THE MOON RAN VERSION ONE. IT PLUGGED INTO THE THING UNDER THE DUST. WE DIDN'T FIX IT. WE JUST LEFT."
       ]
     ],
     "hp": 250,
@@ -4856,7 +4862,7 @@
       ["CORRECTION: SECURED. RESIDENTS ARE ASSETS. ASSETS DO NOT LEAVE."],
       {
         "hero": [
-          "THEY PAID FOR A LIFEBOAT. YOU SOLD THEM A CELL AND KEPT THE CHANGE."
+          "THEY PAID FOR A LIFEBOAT. YOU GAVE THEM A CELL. AND YOU KEPT THE MONEY."
         ]
       },
       [

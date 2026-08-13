@@ -62,7 +62,7 @@ questGivers:
     greeting:
       - SHE LAUGHED ABOUT THAT ZIPPER FOR A WEEK. LISTEN - COULD YOU DO SOMETHING FOR ME?
     farewell:
-      - SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW IT. GO ON.
+      - SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW SHE WOULD BE. GO ON.
 
   # ---------------------------------------------------------- GOODCO HQ
   hq_intern:

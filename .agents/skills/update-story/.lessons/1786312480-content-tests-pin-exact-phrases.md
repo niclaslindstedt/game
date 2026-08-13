@@ -7,10 +7,14 @@ concepts: [dialogue, testing, retone]
 
 Per-venue suites assert that a scene still hits its plot beats by string, not by
 shape: `goodco_test.ts` requires THE ARCHITECT's script to contain
-`SUPERINTELLIGENCE` and `OBSOLETE`, `rift_test.ts` requires BRO OMEGA's to
-contain `PRECISELY NO ONE`, `NOT YOUR` and `PRESIDENTS`. A trim that drops the
-sentence carrying one of those words goes green through `story_test` and
-`enemy_roundtrip_test` and fails only in the venue suite.
+`SUPERINTELLIGENCE`, `OBSOLETE` and `QUIT` (the hero's plea), `rift_test.ts`
+requires BRO OMEGA's to contain `PRECISELY NO ONE`, `NOT YOUR` and `PRESIDENTS`,
+`boot_hill_test.ts` requires THE STRONGMAN's last words to contain `LET ME WIN`,
+and `garage_test.ts` requires THE DEALER's counter line to contain `NO NAMES`.
+The pins are NOT confined to the two boss suites — assume any venue may hold
+one. A trim that drops the sentence carrying one of those words goes green
+through `story_test` and `enemy_roundtrip_test` and fails only in the venue
+suite.
 
 Before shortening a scene, grep the venue's own test for `toContain` and keep
 the pinned words — folding them into the page you are keeping is nearly always

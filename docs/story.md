@@ -99,16 +99,18 @@ a shell with the living-room lamp still burning at the far end. Nothing is ever
 repaired, nobody comes out, and the hero says one word about the smell and then
 goes inside for a sandwich.
 
-**Side errands — RUTH.** Ada's mother has always had a key. She is never scared
-for her daughter, only proud, and she asks for three things across the campaign,
-one per leg. **She was not in the house the night Ada went out**, so she never
-names the thing itself — she asks for a KIND of thing, and the hero, who was
-there, supplies the particular: **THE RECEIPT** (she wants something of Ada's
-that is not a company file, and asks him what her daughter went out for; he
-answers chips and a soda, and the machines print a slip GOODCO's night staff are
-still carrying), **THE DENT** (a Mars service robot carries the shell plate Ada
-bit), and **THE SCALE** (one pried off a lizard god, because that is what her
-daughter is up against). The last one pays her back:
+**Side errands — RUTH.** Ada's mother has always had a key. She misses her
+daughter and says so plainly, and she has never once doubted she is winning —
+the pride and the missing her are the same feeling, and she asks for three
+things across the campaign, one per leg, because holding something of Ada's is
+what gets her through the week. **She was not in the house the night Ada went
+out**, so she never names the thing itself — she asks for a KIND of thing, and
+the hero, who was there, supplies the particular: **THE RECEIPT** (she wants
+something of Ada's that is not a company file, and asks him what her daughter
+went out for; he answers chips and a soda, and the machines print a slip
+GOODCO's night staff are still carrying), **THE DENT** (a Mars service robot
+carries the shell plate Ada bit), and **THE SCALE** (one pried off a lizard god,
+because that is what her daughter is up against). The last one pays her back:
 the family furniture arrives against the bay's north wall and becomes where the
 hero keeps what he cannot carry. It **grows** with the difficulty, from a
 keepsake box up to a gilded chest she only calls THE INHERITANCE.

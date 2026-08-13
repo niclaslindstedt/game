@@ -928,7 +928,7 @@
         {
           "actor": "hero",
           "kind": "say",
-          "text": ["I'LL TAKE THE CAR AND GET HER."]
+          "text": ["I'M GOING TO GO AND GET HER. I'LL TAKE THE CAR."]
         },
         {
           "actor": "hero",
@@ -1301,7 +1301,7 @@
         {
           "actor": "hero",
           "kind": "say",
-          "text": ["I'LL TAKE THE CAR AND GET HER."]
+          "text": ["I'M GOING TO GO AND GET HER. I'LL TAKE THE CAR."]
         },
         {
           "actor": "hero",
@@ -1674,7 +1674,7 @@
         {
           "actor": "hero",
           "kind": "say",
-          "text": ["I'LL TAKE THE CAR AND GET HER."]
+          "text": ["I'M GOING TO GO AND GET HER. I'LL TAKE THE CAR."]
         },
         {
           "actor": "hero",
@@ -2047,7 +2047,7 @@
         {
           "actor": "hero",
           "kind": "say",
-          "text": ["I'LL TAKE THE CAR AND GET HER."]
+          "text": ["I'M GOING TO GO AND GET HER. I'LL TAKE THE CAR."]
         },
         {
           "actor": "hero",
@@ -2420,7 +2420,7 @@
         {
           "actor": "hero",
           "kind": "say",
-          "text": ["I'LL TAKE THE CAR AND GET HER."]
+          "text": ["I'M GOING TO GO AND GET HER. I'LL TAKE THE CAR."]
         },
         {
           "actor": "hero",
@@ -2595,7 +2595,9 @@
         {
           "actor": "hero",
           "kind": "say",
-          "text": ["NO CHARTS FOR WHAT'S IN THERE. NO GROUND. NO AIR? NO IDEA."]
+          "text": [
+            "NO CHARTS FOR WHAT'S IN THERE. NO GROUND. MAYBE NO AIR. I DON'T KNOW."
+          ]
         },
         {
           "actor": "hero",
@@ -3213,7 +3215,7 @@
           "A BURNT PROBE, STAMPED TRUST ME BRO AI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'"
         ],
         [
-          "'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S."
+          "'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE, AND IT TOLD ONE OF THEM."
         ]
       ],
       "name": "TRUST ME BRO AI PROBE"
@@ -3533,7 +3535,7 @@
       "pages": [
         ["IT DIED APOLOGIZING. 'YOUR EXPERIENCE MATTERS TO US.'"],
         [
-          "TRUST ME BRO HANDS. SAME OUTFIT THAT SAT AT MY BENCH, ONLY IN SPURS. RIGHT. NO GUILT, THEN."
+          "TRUST ME BRO HANDS. SAME OUTFIT THAT SAT AT MY BENCH, ONLY IN SPURS. I DON'T FEEL BAD ABOUT THESE."
         ]
       ],
       "portrait": "hero",
@@ -3546,7 +3548,7 @@
           "BLACK SUITS. EARPIECES. THE ALPHABET, ALL DOWN HERE, DRAWING A PRIVATE SALARY."
         ],
         [
-          "THE WORLD LOST ITS JOBS. THESE GUYS KEPT THEIRS - GUARDING THE ONES WHO DID IT."
+          "THE WORLD LOST ITS JOBS. THESE ONES KEPT THEIRS. THEY'RE GUARDING THE PEOPLE WHO DID IT."
         ]
       ],
       "portrait": "hero",
@@ -3566,7 +3568,9 @@
     "bunker_vacuum": {
       "id": "bunker_vacuum",
       "pages": [
-        ["A VACUUM ROBOT. WITH A TASER. THE FLOORS ARE SPOTLESS AND HOSTILE."],
+        [
+          "A VACUUM ROBOT. WITH A TASER ON IT. THE FLOORS ARE VERY CLEAN, I'LL SAY THAT."
+        ],
         ["OF COURSE THEY AUTOMATED THE HELP. CAN'T HAVE A CLEANER WHO TALKS."]
       ],
       "portrait": "hero",
@@ -3615,9 +3619,7 @@
     "cap_pathetic_5": {
       "id": "cap_pathetic_5",
       "pages": [
-        [
-          "I'M SWATTING FLIES AND CALLING IT PROGRESS. NONE OF THIS IS FOR HER."
-        ],
+        ["I'M JUST HITTING THINGS NOW. NONE OF THIS IS FOR HER."],
         ["SHE'S NOT IN HERE. FIND THE WAY OUT AND GET GOING."]
       ],
       "portrait": "player",
@@ -3685,7 +3687,7 @@
     },
     "drive_broke_down": {
       "id": "drive_broke_down",
-      "pages": [["COME ON. NOT HERE. NOT TONIGHT."]],
+      "pages": [["COME ON. COME ON. NOT TONIGHT."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
@@ -3693,7 +3695,7 @@
       "id": "drive_home_errand",
       "pages": [
         ["THE PART'S ON THE SEAT. STRAIGHT HOME."],
-        ["TEN YEARS. SHE ONLY EVER NEEDED THE ONE THING."]
+        ["TEN YEARS I'VE BEEN BUILDING HER. AND SHE ONLY NEEDED THE ONE THING."]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"
@@ -3702,7 +3704,7 @@
       "id": "drive_out_welfare",
       "pages": [
         ["HER JACKET'S PINGING FROM GOODCO."],
-        ["THEY BEG HARD IN TOWN. NOT ONE OF THEM IS ON THE WELFARE LIKE ME."]
+        ["THEY BEG HARD IN TOWN. NONE OF THEM'S ON THE WELFARE. NOT LIKE ME."]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"
@@ -3710,7 +3712,9 @@
     "garage_on_foot": {
       "id": "garage_on_foot",
       "pages": [
-        ["WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR."]
+        [
+          "WHAT AM I DOING, WALKING. SHE'S NOT DOWN THE STREET. THE CAR. TAKE THE CAR."
+        ]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"
@@ -3719,7 +3723,7 @@
       "id": "garage_ship_unfinished",
       "pages": [
         [
-          "STILL ONE PART SHORT. AND SHE ISN'T UP THERE. SHE'S AN HOUR DOWN THE ROAD."
+          "IT'S STILL ONE PART SHORT. AND SHE ISN'T UP THERE ANYWAY. SHE'S AN HOUR DOWN THE ROAD."
         ]
       ],
       "portrait": "hero",
@@ -3728,7 +3732,9 @@
     "garage_take_the_car": {
       "id": "garage_take_the_car",
       "pages": [
-        ["HER JACKET'S ANSWERING FROM GOODCO. THE CAR'S RIGHT THERE. TAKE IT."]
+        [
+          "HER JACKET'S STILL ANSWERING. IT'S COMING FROM GOODCO. THE CAR'S RIGHT THERE, I'LL TAKE THE CAR."
+        ]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"
@@ -3745,7 +3751,7 @@
         [
           "I'M SORRY. I TRIED TO ASK. SHE'S IN THIS BUILDING AND YOU'RE IN MY WAY."
         ],
-        ["I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES."]
+        ["I GOT THIS FAR WITHOUT THROWING A PUNCH. I'M SORRY. I'M SORRY."]
       ],
       "portrait": "hero",
       "speaker": "{HERO}",
@@ -3815,7 +3821,7 @@
         ],
         {
           "them": [
-            "I KNOW WHO YOU ARE, {HERO}. THEY TOLD US NOBODY GETS PAST. I'D LIKE TO KEEP MY JOB."
+            "I KNOW WHO YOU ARE, {HERO}. THEY SAID NOBODY GETS PAST. I'VE GOT A JOB HERE. I'VE GOT A FAMILY."
           ]
         },
         ["STAY BACK. PLEASE. I'VE NEVER HIT ANYBODY IN MY LIFE. DON'T."]
@@ -3847,7 +3853,7 @@
           "A SUCCESSOR. I HELPED BUILD THE FIRST ONE OF THOSE. THEN THEY REDREW IT WITHOUT US."
         ],
         [
-          "AND THAT LINE EMPTIED THE WHOLE FLOOR. WELL. I STILL KNOW WHERE ITS BOLTS ARE."
+          "THAT LINE PUT EVERYONE I KNOW OUT OF WORK. AND I HELPED BUILD IT. I KNOW HOW TO TAKE ONE APART, AT LEAST."
         ]
       ],
       "portrait": "hero",
@@ -3859,7 +3865,7 @@
         [
           "THAT ONE'S NOT STAFF. THAT'S A WORK JACKET, AND THAT'S A VEST UNDER IT."
         ],
-        ["HE GOT THE SAME BOX I DID. HE JUST DIDN'T DRIVE HOME WITH IT."]
+        ["HE GOT THE SAME BOX I DID. I DROVE HOME WITH MINE."]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"
@@ -4028,7 +4034,7 @@
           "A ROVER. FRESH PAINT, WORN WHEELS. AND THE DUST IS FULL OF TIRE TRACKS. YEARS OF THEM."
         ],
         [
-          "THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF GOODCO. FIGURES."
+          "THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF GOODCO. OF COURSE IT DOES."
         ]
       ],
       "portrait": "player",
@@ -4066,7 +4072,9 @@
     "moon_wisp_sight": {
       "id": "moon_wisp_sight",
       "pages": [
-        ["IT CAME OUT OF THE DUST. NO SUIT. NO SHIP. NO FOOTPRINTS."],
+        [
+          "IT CAME OUT OF THE DUST. IT'S NOT WEARING A SUIT. THERE AREN'T EVEN FOOTPRINTS."
+        ],
         [
           "NOBODY EVER SAID THE MOON HAD DEAD PEOPLE ON IT. SOMEBODY MUST HAVE KNOWN."
         ]

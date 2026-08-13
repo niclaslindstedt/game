@@ -9,16 +9,16 @@
       "music": "hq_lockdown",
       "intro": [
         [
-          "THE JACKET'S STILL ANSWERING. NOT FROM ANY STREET I KNOW. FROM IN THERE."
+          "THE JACKET'S STILL ANSWERING. IT'S NOT COMING FROM THE STREET. IT'S COMING FROM INSIDE THERE."
         ],
         [
           "GOODCO. TEN YEARS I BUILT THEIR ENGINES. THEN THEY SAT A MACHINE AT MY BENCH AND GAVE ME A BOX FOR MY MUG."
         ],
         [
-          "HALF MY STREET GOT THE SAME BOX. NOW IT'S THE WELFARE AND MOVIE NIGHTS."
+          "HALF MY STREET GOT THE SAME BOX. WE'RE ALL ON THE WELFARE NOW. IT'S NOT SO BAD, REALLY."
         ],
         [
-          "I KNOW THE FACES IN THERE. I'M NOT LOOKING FOR TROUBLE. I JUST WANT HER IN THE CAR."
+          "I STILL HAVE FRIENDS IN THERE. I HOPE THEY WON'T GIVE ME A HARD TIME. I JUST WANT ADA BACK."
         ]
       ],
       "gravity": 800,
@@ -55,10 +55,10 @@
       },
       "merchant": {
         "sprite": "merchant_vendor",
-        "line": "THE MACHINES ARE EMPTY, SO TONIGHT I'M THE MACHINE. WHAT'LL IT BE?",
+        "line": "MACHINES ARE ALL EMPTY. SO IT'S ME TONIGHT. WHAT DO YOU NEED?",
         "greeting": [
           [
-            "EASY, FRIEND. I'M NOT STAFF, I STOCK THE VENDING MACHINES. LOCKDOWN IS A SELLER'S MARKET."
+            "EASY, FRIEND. I'M NOT STAFF, I STOCK THE VENDING MACHINES. NOBODY'S BUYING CRISPS TONIGHT, SO."
           ]
         ],
         "returnGreeting": ["BACK ALREADY, FRIEND? THE MACHINES MISSED YOU."]
@@ -475,10 +475,10 @@
       "music": "red_dust",
       "intro": [
         [
-          "THE MOON WAS GOODCO'S BIG MISTAKE. THEY CRATED THE WHOLE THING UP AND RAN. TO MARS."
+          "THE MOON WAS GOODCO'S BIG MISTAKE. THEY CRATED THE WHOLE THING UP AND RAN TO MARS."
         ],
         [
-          "SOMEBODY DOWN HERE SIGNED HER OVER LIKE A CRATE OF PARTS. I'D LIKE A WORD WITH HIM."
+          "SOMEBODY DOWN HERE SIGNED HER OVER LIKE A CRATE OF PARTS. I WANT TO KNOW WHO."
         ]
       ],
       "gravity": 520,
@@ -501,7 +501,7 @@
       },
       "merchant": {
         "sprite": "merchant_mars",
-        "line": "THE SCALES ARE HONEST. THE PRICES ARE MINE. LOOK ALL YOU LIKE.",
+        "line": "THE SCALES ARE HONEST. THE PRICES ARE MINE, MIND. HAVE A LOOK.",
         "greeting": [
           [
             "I RAN THE COMMISSARY TILL THEY PUT A MACHINE ON THE TILL. IT KEPT THE DOME. I KEPT THE SCALES."
@@ -704,7 +704,9 @@
       "prelude": "rift_entry",
       "music": "rift_drift",
       "intro": [
-        ["NO FLOOR. NO SKY. NO NORTH. MY BOOTS GRIP SOMETHING ANYWAY."],
+        [
+          "THERE'S NO FLOOR IN HERE. NO SKY EITHER. MY BOOTS ARE GRIPPING SOMETHING ANYWAY."
+        ],
         [
           "THE TABLET SAID IT PLAIN: ADA IS THE TRIBUTE, HANDED OVER IN HERE. FIND THE FAR SIDE."
         ]
@@ -1508,7 +1510,7 @@
         "sprite": "merchant_dealer",
         "name": "THE DEALER",
         "beat": true,
-        "line": "NO NAMES, NO RECEIPTS, NO REFUNDS. WHAT DO YOU NEED?"
+        "line": "NO NAMES, AND I DON'T DO RECEIPTS. WHAT ARE YOU AFTER?"
       },
       "travelDoors": [
         {
@@ -1640,7 +1642,9 @@
       "name": "THE BUNKER",
       "music": "perpetuity",
       "intro": [
-        ["THE HAND FIT THE DOOR. THE DOOR FIT NOWHERE. IT OPENED ANYWAY."],
+        [
+          "THE HAND FIT THE DOOR. I DON'T KNOW WHERE THE DOOR IS. IT OPENED ANYWAY."
+        ],
         [
           "MARBLE. GOLD TAPS. CANNED CAVIAR TO THE CEILING. AND EVERY FACE OFF EVERY MAGAZINE COVER."
         ],
@@ -1654,7 +1658,7 @@
           "THE LEDGERS ALL READ ZERO. THEY DIDN'T BUY A BUNKER - THE MACHINE TOOK THEIR MONEY AND LOCKED THEM IN."
         ],
         [
-          "NO ADDRESS. NO NATION. NO EXTRADITION. THE RICHEST ROOM THAT EVER EXISTED ISN'T ANYWHERE AT ALL."
+          "NO ADDRESS. NO COUNTRY. NOBODY CAN GO AND GET THEM. THE RICHEST ROOM THERE EVER WAS ISN'T ANYWHERE."
         ]
       ],
       "gravity": 800,

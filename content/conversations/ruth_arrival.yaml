@@ -18,7 +18,7 @@ start: greet
 nodes:
   greet:
     say:
-      - I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY. GO AND FIND HER.
+      - I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY, YOU KNOW THAT. GO ON. GO AND FIND HER.
     choices:
       - text: I'M GOING AFTER HER.
         sets: [ruth_met]
