@@ -232,7 +232,7 @@ export function runDriveExhibit(deps: {
       while (owedMs >= STEP_MS) {
         owedMs -= STEP_MS;
         stepDrive(drive, STEP_MS, input);
-        drainDrive(drive, bursts, fx, gore, skids, undefined, !exhibit.sfw);
+        drainDrive(drive, bursts, fx, gore, skids, undefined, exhibit.sfw);
         // The moment this exhibit's own collision lands, the camera stops here.
         // Latched off the car's position rather than the event's, so the shift
         // below is exactly "how far the car has come since" and the shipped
@@ -308,28 +308,26 @@ export function runDriveExhibit(deps: {
         viewW,
         viewH,
         drive.ms,
-        exhibit.sfw ? undefined : gore,
+        gore,
         assets.font,
         skids,
-        !exhibit.sfw,
-        exhibit.sfw ? undefined : fx,
+        exhibit.sfw,
+        fx,
       );
       bursts = drawBursts(ctx, bursts, camera, drive.ms, assets.sprites);
-      if (!exhibit.sfw) {
-        drawDriveFx(
-          ctx,
-          fx,
-          camera,
-          drive.ms,
-          viewW,
-          viewH,
-          drive.car.pos,
-          assets.sprites,
-          // …and only the half that flies. The GLASS was laid on the tarmac
-          // inside `drawDrive`, under the wrecks it came out of.
-          "air",
-        );
-      }
+      drawDriveFx(
+        ctx,
+        fx,
+        camera,
+        drive.ms,
+        viewW,
+        viewH,
+        drive.car.pos,
+        assets.sprites,
+        // …and only the half that flies. The GLASS was laid on the tarmac
+        // inside `drawDrive`, under the wrecks it came out of.
+        "air",
+      );
     },
     onError: (err, phase) => {
       error(`drive exhibit ${phase} failed: ${describeError(err)}`);

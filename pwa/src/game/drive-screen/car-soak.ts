@@ -44,6 +44,7 @@
 import type { CarPanelId } from "@game/core";
 
 import { clamp01 } from "@game/lib/vec.ts";
+import type { GoreRamp } from "../render/recolor.ts";
 import { type CoatLayer } from "../render/soak-ladder.ts";
 
 /** How filthy each panel is, 0 (factory) to 1 (you cannot see the paint). */
@@ -413,13 +414,19 @@ export const CAR_COAT_AT: readonly number[] = [
 
 export function carCoat(
   soak: CarSoak,
+  /** WHAT THE FILM IS MADE OF, when it is not made of blood — the three stops
+   * the spatter art is re-hued onto before it is masked to a panel. Omitted is
+   * the authored red. SFW hands it the fairy ramp rather than handing the car a
+   * clean panel: what a player reads off this wagon is how the last minute
+   * went, and a car that arrives spotless has thrown that away. */
+  ramp?: GoreRamp,
 ): Partial<Record<CarPanelId, readonly CoatLayer[]>> {
   const out: Partial<Record<CarPanelId, readonly CoatLayer[]>> = {};
   for (const [panel, amount] of Object.entries(soak) as [
     CarPanelId,
     number,
   ][]) {
-    const film = carFilm(amount);
+    const film = carFilm(amount, ramp);
     if (film.length > 0) out[panel] = film;
   }
   return out;
@@ -433,7 +440,7 @@ export function carCoat(
  * same question about the same three sprites however small the thing wearing
  * them is.
  */
-function carFilm(amount: number): readonly CoatLayer[] {
+function carFilm(amount: number, ramp?: GoreRamp): readonly CoatLayer[] {
   if (amount < CAR_FILM_FLOOR) return [];
   const wet = filmWetness(amount);
   const spatter = wet * (1 - CAR_WASH_SHARE);
@@ -449,10 +456,12 @@ function carFilm(amount: number): readonly CoatLayer[] {
     {
       sprite: `car_gore_${CAR_FILM_COVER.length - 1}`,
       alpha: wet * CAR_WASH_SHARE,
+      ...(ramp ? { ramp } : {}),
     },
     {
       sprite: `car_gore_${rung}`,
       alpha: Math.min(1, spatter / CAR_FILM_COVER[rung]!),
+      ...(ramp ? { ramp } : {}),
     },
   ];
 }
@@ -466,8 +475,8 @@ function carFilm(amount: number): readonly CoatLayer[] {
  * they run out together. A tyre still printing tread down the road and drawn
  * factory-clean is the feature contradicting itself in one frame.
  */
-export function wheelCoat(tyre: number): readonly CoatLayer[] {
-  return carFilm(tyre).map((layer) => ({
+export function wheelCoat(tyre: number, ramp?: GoreRamp): readonly CoatLayer[] {
+  return carFilm(tyre, ramp).map((layer) => ({
     ...layer,
     // WELL under the panels' own alpha. A wheel is small, dark, moving, and
     // made almost entirely of the detail that says it is a wheel — the rim,

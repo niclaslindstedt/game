@@ -53,6 +53,7 @@ import {
   unprojectY,
 } from "../render/tilt.ts";
 import { drawLightCones } from "../render/vehicle-lights.ts";
+import { FAIRY_RAMP } from "../render/stardust.ts";
 import { drawCarAssembly, wheelSprite } from "../render/vehicles.ts";
 
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -401,9 +402,24 @@ export function drawDrive(
   /** The rubber the DRIVER left — every handbrake stop's two black lines
    * (`skid.ts`). Optional on the same terms as the gore beside it. */
   skids?: SkidState,
-  /** False in SFW mode: draw the road's live actors but none of the damaged,
-   * felled, thrown or remnant sprites collisions created. */
-  collisionVisuals = true,
+  /**
+   * SFW MODE — and what it now means out here, which is the opposite of what it
+   * used to.
+   *
+   * It ONCE withheld every sprite a collision made: the dents, the folds, the
+   * felled posts, the thrown wheels, the hero's own bent wagon. That is not a
+   * gentler road, it is an unreadable one — the player drove into a car at
+   * seventy and the car carried on looking showroom-fresh, so the single thing
+   * this whole minigame is about ("I hit that, and hard") had no picture at all.
+   *
+   * So the damage stays, all of it, and only what is made of a PERSON is
+   * re-dressed: the film on the panels, the marks on the tarmac, the smear
+   * inside a stranger's windows and the pieces themselves are re-hued onto the
+   * fairy ramp (`render/stardust.ts`), and the bodies peel away in pastel dust
+   * (`loop.ts`) instead of coming apart. Nothing is hidden; the mess is simply
+   * made of glitter.
+   */
+  fairy = false,
   /** WHAT THE ROAD HAS THROWN THAT LANDS ON IT — the effect list, so the
    * GROUND half of it (the glass) can be laid between the lamp pools and the
    * bodies. The other half is still painted over the finished frame by the
@@ -413,6 +429,9 @@ export function drawDrive(
   fx?: DriveFxState,
 ): void {
   const bands = roadBands();
+  // THE ONE PLACE THE MODE IS TURNED INTO A COLOUR. Everything below asks for a
+  // ramp or does not; nothing below asks whether the game is in SFW mode.
+  const ramp = fairy ? FAIRY_RAMP : undefined;
 
   // ── THE GROUND ────────────────────────────────────────────────────────────
   // Flat fills rather than tiles: the road is 24,000 px long and a baked tile
@@ -642,7 +661,7 @@ export function drawDrive(
   // was still moving and the mess is laid by what it then arrived at, so a
   // splash on top of a skid is the order those two things happened in.
   if (skids) drawSkidMarks(ctx, skids, camera, viewW);
-  if (gore) drawRoadMarks(ctx, gore, camera, sprites, viewW);
+  if (gore) drawRoadMarks(ctx, gore, camera, sprites, viewW, ramp);
 
   // ── AND WHAT THE STREET LIGHTING PUTS ON IT ───────────────────────────────
   // The pools go down LAST of everything lying on the road, because light falls
@@ -860,11 +879,6 @@ export function drawDrive(
       put(trafficSprite(prop.variant, 0), prop.pos.x, prop.pos.y);
       continue;
     }
-    if (!collisionVisuals) {
-      const stood = prop.stub ?? prop.pos;
-      put(mastAt(stood)?.sprite ?? LAMP_SPRITE, stood.x, stood.y);
-      continue;
-    }
     // EVERY POST ON THIS ROAD IS A MAST. The little yard lights that used to
     // stand between them are gone (`street.ts`): once the masts were tall
     // enough to throw real light on the tarmac, the short ones stopped reading
@@ -1002,10 +1016,7 @@ export function drawDrive(
   // beam never paints over the car in front of it.
   for (const other of drive.traffic) {
     const def = vehicleDef(other.variant);
-    const name = trafficSprite(
-      other.variant,
-      collisionVisuals ? other.rung : 0,
-    );
+    const name = trafficSprite(other.variant, other.rung);
     // ITS LIGHTS GO OUT WHEN IT DOES. A wreck coasting to a halt and a moped
     // lying on its side are both still drawn, and a beam thrown down the road
     // out of either one would undo the whole read — and a car somebody LEFT at
@@ -1015,11 +1026,7 @@ export function drawDrive(
     // …AND SOME OF THEM NEVER HAD ANY. A skateboard has no lamps on it, so it
     // throws none (`DriveVehicleDef.lights`) — which is a fact about the vehicle
     // and lives on its def, beside how much it weighs.
-    if (
-      def.lights &&
-      (!collisionVisuals || (!other.downed && !other.wrecked)) &&
-      !other.driverless
-    ) {
+    if (def.lights && !other.downed && !other.wrecked && !other.driverless) {
       drawn.push({
         y: other.pos.y - 0.001,
         draw: () =>
@@ -1052,7 +1059,7 @@ export function drawDrive(
           ),
       });
     }
-    if (collisionVisuals && other.downed && def.class === "open") {
+    if (other.downed && def.class === "open") {
       // ON ITS SIDE, and turned about its own centre — a dropped machine is
       // drawn about its MIDDLE rather than its wheels, because a thing lying
       // down has no wheels underneath it any more.
@@ -1065,13 +1072,12 @@ export function drawDrive(
     // comes out of it as the plain blit it always was.
     drawn.push({
       y: other.pos.y,
-      draw: () =>
-        drawTrafficBody(ctx, other, sprites, camera, timeMs, !collisionVisuals),
+      draw: () => drawTrafficBody(ctx, other, sprites, camera, timeMs, ramp),
     });
     // …AND THE PERSON ON IT, drawn on top at the machine's own saddle. Seated
     // separately rather than baked in, because the whole point of a rider is
     // that the machine can lose them (`ejectRider`).
-    if ((other.rider || !collisionVisuals) && def.rider !== null) {
+    if (other.rider && def.rider !== null) {
       const seat = RIDER_SEATS[def.id];
       const rider = RIDER_SPRITES[def.rider];
       if (seat && rider) {
@@ -1107,13 +1113,12 @@ export function drawDrive(
         // wagon covers it — what the player is meant to see of a body being
         // dragged is the red coming out from under the back, not the body.
         y: piece.dragMs > 0 ? piece.pos.y - 0.01 : piece.pos.y,
-        draw: () => drawRemain(ctx, piece, camera, sprites),
+        draw: () => drawRemain(ctx, piece, camera, sprites, ramp),
       });
     }
   }
 
   for (const ped of drive.pedestrians) {
-    if (!collisionVisuals && ped.mode !== "afoot") continue;
     // WHAT SOMEBODY WHO JUST WATCHED A COLLISION IS SHOUTING (`witness.ts`
     // picks WHO and WHAT ABOUT; `witnessLine` answers with the words). Gathered
     // here rather than in a pass of its own so the one line the picture can
@@ -1213,22 +1218,13 @@ export function drawDrive(
   // wearing whatever it has been driven through (`car-soak.ts`), masked to each
   // panel's own art. A clean wagon passes nothing and is the blit it always
   // was, which is what every other caller of that pass still gets.
-  const coat = gore && !carIsClean(gore.car) ? carCoat(gore.car) : undefined;
-  const tyres = gore ? wheelCoat(gore.tyre) : undefined;
+  const coat =
+    gore && !carIsClean(gore.car) ? carCoat(gore.car, ramp) : undefined;
+  const tyres = gore ? wheelCoat(gore.tyre, ramp) : undefined;
   drawn.push({
     y: drive.car.pos.y,
     draw: () =>
-      drawCarAssembly(
-        ctx,
-        drive.car,
-        sprites,
-        camera,
-        timeMs,
-        coat,
-        tyres,
-        undefined,
-        collisionVisuals,
-      ),
+      drawCarAssembly(ctx, drive.car, sprites, camera, timeMs, coat, tyres),
   });
 
   // ── A THROWN WHEEL, SPINNING AWAY DOWN THE ROAD ───────────────────────────
@@ -1247,31 +1243,29 @@ export function drawDrive(
   //                so rotating it costs the pixel art nothing — the same licence
   //                the felled lamp posts and the yawing traffic already take on
   //                this road.
-  if (collisionVisuals) {
-    for (const wheel of drive.wheelDebris) {
-      const frame = Math.floor(wheel.angle / (Math.PI / 5)) % 2;
-      const name = wheelSprite(wheel.wheelState, frame);
-      const sprite = spriteByName(sprites, name);
-      if (!sprite) continue;
-      drawn.push({
-        y: wheel.pos.y,
-        draw: () =>
-          billboard(ctx, wheel.pos.x, wheel.pos.y, camera.x, camera.y, () => {
-            ctx.save();
-            ctx.translate(
-              seatX(wheel.pos.x, camera.x),
-              seatY(wheel.pos.y, camera.y) - Math.round(wheel.z),
-            );
-            ctx.rotate(wheel.angle);
-            ctx.drawImage(
-              sprite,
-              -Math.round(sprite.width / 2),
-              -Math.round(sprite.height - 2),
-            );
-            ctx.restore();
-          }),
-      });
-    }
+  for (const wheel of drive.wheelDebris) {
+    const frame = Math.floor(wheel.angle / (Math.PI / 5)) % 2;
+    const name = wheelSprite(wheel.wheelState, frame);
+    const sprite = spriteByName(sprites, name);
+    if (!sprite) continue;
+    drawn.push({
+      y: wheel.pos.y,
+      draw: () =>
+        billboard(ctx, wheel.pos.x, wheel.pos.y, camera.x, camera.y, () => {
+          ctx.save();
+          ctx.translate(
+            seatX(wheel.pos.x, camera.x),
+            seatY(wheel.pos.y, camera.y) - Math.round(wheel.z),
+          );
+          ctx.rotate(wheel.angle);
+          ctx.drawImage(
+            sprite,
+            -Math.round(sprite.width / 2),
+            -Math.round(sprite.height - 2),
+          );
+          ctx.restore();
+        }),
+    });
   }
 
   // ── AND NOBODY IS EVER DRAWN OUT OF THE CAR ───────────────────────────────
@@ -1287,7 +1281,7 @@ export function drawDrive(
   // OVER THE ROOF: the half of somebody the bumper sent up. It is above the car
   // rather than behind it, so it is painted after the car whatever its ground y
   // says — which is exactly what the eye reads as "he went over the top".
-  for (const piece of overhead) drawRemain(ctx, piece, camera, sprites);
+  for (const piece of overhead) drawRemain(ctx, piece, camera, sprites, ramp);
   ctx.restore();
 
   // …AND THE WORDS, LAST OF ALL, OVER EVERYBODY — but only the NEAREST of them

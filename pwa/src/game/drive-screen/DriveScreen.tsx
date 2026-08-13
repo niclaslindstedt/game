@@ -43,6 +43,7 @@ import { type GameAssets } from "../assets.ts";
 import { carKeyControl } from "../car-keys.ts";
 import { carriedCarFilth, carryCarFilth } from "../car-condition.ts";
 import { actionForCode } from "../keybindings.ts";
+import { sfwModeEnabled } from "../game-screen/gore-gate.ts";
 import { getSettings } from "../settings.ts";
 import {
   DialogueBox,
@@ -237,9 +238,11 @@ export function DriveScreen({
 }): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   /** SFW is latched for the whole leg, just like the gore params the engine
-   * received. Physics, scoring and sound still run; only collision art and its
-   * transient effect layer are withheld. */
-  const [collisionVisuals] = useState(() => getSettings().sfwMode !== "on");
+   * received — a switch flipped mid-drive would leave half the tarmac in blood
+   * and half of it in glitter. It withholds NOTHING: the crashes, the dents,
+   * the debris and the shake all play, and only the substance of what a body
+   * leaves changes (`render.ts` for the whole of what that means). */
+  const [fairy] = useState(() => sfwModeEnabled());
   /** THE STEERING HINT — the run's own virtual dpad (`ScreenChrome.tsx`), worn
    * by the road. Written straight onto DOM styles from the frame loop, exactly
    * as the run writes its own: a hint that re-rendered React on every pointer
@@ -799,7 +802,7 @@ export function DriveScreen({
           goreRef.current,
           skidRef.current,
           say,
-          collisionVisuals,
+          fairy,
         );
         ageSpeech(drive.ms);
         // …AND WHAT THE WHEEL FELT. Read off the tick's own events after the
@@ -858,9 +861,7 @@ export function DriveScreen({
       // so the whole picture moves as one instead of the effects sliding
       // against the world they are standing in.
       const baseCamera = driveCamera(drive, viewW, viewH);
-      const camera = collisionVisuals
-        ? shakeCamera(fxRef.current, baseCamera, drive.ms)
-        : baseCamera;
+      const camera = shakeCamera(fxRef.current, baseCamera, drive.ms);
       ctx.setTransform(unit, 0, 0, unit, 0, 0);
       drawDrive(
         ctx,
@@ -870,15 +871,15 @@ export function DriveScreen({
         viewW,
         viewH,
         drive.ms,
-        collisionVisuals ? goreRef.current : undefined,
+        goreRef.current,
         assets.font,
         skidRef.current,
-        collisionVisuals,
-        collisionVisuals ? fxRef.current : undefined,
+        fairy,
+        fxRef.current,
       );
 
-      // In SFW mode this list carries fairy dust rather than gore, so it is the
-      // one collision layer deliberately still drawn.
+      // In SFW mode this list carries fairy dust rather than gore — the pastel
+      // shower a body peels away in, laid over the collision that caused it.
       burstsRef.current = drawBursts(
         ctx,
         burstsRef.current,
@@ -889,23 +890,21 @@ export function DriveScreen({
 
       // The sparks, the grit, the smoke and the bloom — over the finished
       // picture, on the same camera it was drawn with.
-      if (collisionVisuals) {
-        drawDriveFx(
-          ctx,
-          fxRef.current,
-          camera,
-          drive.ms,
-          viewW,
-          viewH,
-          drive.car.pos,
-          // …and the atlas, for the two effects out here made of authored ART
-          // rather than of particles: a burning car and a fuel tank going.
-          assets.sprites,
-          // …and only the half that FLIES. The glass went down on the tarmac
-          // inside `drawDrive`, under the wrecks and under the wagon.
-          "air",
-        );
-      }
+      drawDriveFx(
+        ctx,
+        fxRef.current,
+        camera,
+        drive.ms,
+        viewW,
+        viewH,
+        drive.car.pos,
+        // …and the atlas, for the two effects out here made of authored ART
+        // rather than of particles: a burning car and a fuel tank going.
+        assets.sprites,
+        // …and only the half that FLIES. The glass went down on the tarmac
+        // inside `drawDrive`, under the wrecks and under the wagon.
+        "air",
+      );
 
       // ── THE STEERING HINT ─────────────────────────────────────────────────
       // THE RUN'S OWN VIRTUAL DPAD, ON THE ROAD. The road's pad is anchored
@@ -975,16 +974,7 @@ export function DriveScreen({
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [
-    ageSpeech,
-    arrive,
-    assets,
-    auto,
-    clearSpeech,
-    collisionVisuals,
-    nose,
-    say,
-  ]);
+  }, [ageSpeech, arrive, assets, auto, clearSpeech, fairy, nose, say]);
 
   /** Give up on the road: arrive anyway, with whatever the trip had reached. */
   const skipDrive = useCallback(() => {

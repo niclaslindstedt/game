@@ -261,8 +261,10 @@ export type DriveExhibit = ExhibitCard & {
    * `gib` says, so an exhibit that wants a road with nobody coming apart on it
    * (the two CAR-damage ones) still only has to say so once. */
   split?: boolean;
-  /** Stage the shipped SFW road presentation: body impacts dissolve into fairy
-   * dust and the remaining collision sprites/effects are withheld. */
+  /** Stage the shipped SFW road presentation: bodies dissolve into fairy dust
+   * instead of coming apart, and every mark the road keeps is re-hued onto the
+   * pastel ramp. The collision itself — the dents, the folds, the sparks, the
+   * shake — plays exactly as it does with the gore on. */
   sfw?: boolean;
   /**
    * PLANT WHAT THE EXHIBIT IS OF in front of the bumper, and set the speed it

@@ -238,8 +238,8 @@ gore gate returns no blood family or dismemberment kind, `killPresentation`
 keeps an intact corpse for readable deaths, and `drawStardust` supplies the
 pastel hit/death flourish. The frozen hero-death tableau uses its own scene
 clock for a constellation in place of the blood pool. The DRIVE uses the same
-primitive in its denser `fairy` form while its damaged sprites and other
-collision effects are withheld — and there it is WIND-BORNE rather than radial:
+primitive in its denser `fairy` form, laid OVER a collision that still plays in
+full — and there it is WIND-BORNE rather than radial:
 each burst picks a gust 10°–70° off the wagon's own heading, to its own seeded
 side, and every grain strays and wobbles around it. The grains themselves come
 from a ten-shape kit (dust, chips, dashes, four- and six-point glints, diamonds,
@@ -247,11 +247,21 @@ rings, petals, flakes, hearts) weighted hard toward the small shapes, so the
 picture is a fine cloud with things catching the light in it.
 
 Two sizes, and the distinction is the mode's whole grammar: a BODY gets the
-heavy shower (`burst`), and any other collision — steel on steel, a panel
-folding, a lamp coming down — gets a puff about a third of it at the contact
-point, because with the collision visuals withheld a crash would otherwise be a
-noise and nothing else. Both are short (800 ms and 520 ms): at road speed a
-cloud that lingers is left behind the camera and never seen.
+heavy shower (`burst`) — which is the whole of what is left of them, since
+nothing comes apart in this mode — and any other collision — steel on steel, a
+panel folding, a lamp coming down — gets a puff about a third of it at the
+contact point, over the smash and the sparks rather than instead of them. Both
+are short (800 ms and 520 ms): at road speed a cloud that lingers is left behind
+the camera and never seen.
+
+**AND WHAT THE ROAD KEEPS IS RE-HUED, NOT WITHHELD.** A drive's feedback is
+cumulative — the wagon arrives wearing the last minute — so SFW leaves every
+mark exactly where it was and only changes what it is made of: `FAIRY_RAMP`
+(stardust.ts) is handed to `carCoat`/`wheelCoat`, `drawRoadMarks`, `drawRemain`
+and `drawTrafficBody`, each of which puts the authored red art through
+`recolorSprite` on the way down. It reaches nothing that is a PERSON'S OWN
+SPRITE: a green jacket stays a green jacket, because a re-hued crowd is a
+different crowd.
 
 **A PUSH IS A SCREEN DIRECTION AND HAS TO BE CONVERTED LIKE ANY OTHER —
 `screenDirToWorld`.** A destination goes through `toWorld`, but the controls that

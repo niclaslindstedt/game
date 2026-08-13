@@ -497,7 +497,7 @@ screens:
       - id: sfw-mode
         label: SFW MODE
         help:
-          on: GORE GLITTERS; DRIVE COLLISIONS DISSOLVE INTO FAIRY DUST
+          on: GORE GLITTERS; THE DRIVE KEEPS ITS WRECKS, IN FAIRY DUST
           off: THE GORE SWITCHES BELOW CONTROL THE MESS
       - id: blood
         label: HUMAN GORE
