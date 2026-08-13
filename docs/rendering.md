@@ -238,8 +238,20 @@ gore gate returns no blood family or dismemberment kind, `killPresentation`
 keeps an intact corpse for readable deaths, and `drawStardust` supplies the
 pastel hit/death flourish. The frozen hero-death tableau uses its own scene
 clock for a constellation in place of the blood pool. The DRIVE uses the same
-primitive in its denser `fairy` form, streaming dust with the collision bearing
-while its damaged sprites and other collision effects are withheld.
+primitive in its denser `fairy` form while its damaged sprites and other
+collision effects are withheld — and there it is WIND-BORNE rather than radial:
+each burst picks a gust 10°–70° off the wagon's own heading, to its own seeded
+side, and every grain strays and wobbles around it. The grains themselves come
+from a ten-shape kit (dust, chips, dashes, four- and six-point glints, diamonds,
+rings, petals, flakes, hearts) weighted hard toward the small shapes, so the
+picture is a fine cloud with things catching the light in it.
+
+Two sizes, and the distinction is the mode's whole grammar: a BODY gets the
+heavy shower (`burst`), and any other collision — steel on steel, a panel
+folding, a lamp coming down — gets a puff about a third of it at the contact
+point, because with the collision visuals withheld a crash would otherwise be a
+noise and nothing else. Both are short (800 ms and 520 ms): at road speed a
+cloud that lingers is left behind the camera and never seen.
 
 **A PUSH IS A SCREEN DIRECTION AND HAS TO BE CONVERTED LIKE ANY OTHER —
 `screenDirToWorld`.** A destination goes through `toWorld`, but the controls that

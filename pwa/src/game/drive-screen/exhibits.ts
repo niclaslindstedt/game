@@ -504,6 +504,48 @@ export function driveExhibits(): DriveExhibit[] {
     },
     {
       kind: "drive",
+      id: "drive-fairy-crash",
+      icon: "traffic_sedan_dent3",
+      label: "FAIRY DUST - STEEL",
+      blurb: "SFW - A CRASH IS MARKED BY A PUFF, A THIRD OF WHAT A BODY LEAVES",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "traffic",
+        "crash",
+        "sfw",
+        "fairy",
+        "stardust",
+        "glitter",
+        "puff",
+      ],
+      showMs: 1500,
+      shows: "trafficHit",
+      bank: CRUNCH_SOUNDS,
+      sfw: true,
+      input: throttle(0.67),
+      // The SFW road withholds every collision effect it has — no smash, no
+      // sparks, no debris, no shake — so this is the whole of what a crash looks
+      // like in the mode, and the one exhibit worth holding the body's shower
+      // against. Staged as the crunch exhibit's rear-ender, at the same speed
+      // and against the same van, so the only difference between the two cases
+      // is the gate.
+      road: (drive) => {
+        silence(drive);
+        const speed = openAt(drive, 0.67);
+        plantCar(
+          drive,
+          leadPx(speed) + 40,
+          drive.car.pos.y,
+          DRIVE.trafficSpeedPx.min,
+          6,
+        );
+      },
+    },
+    {
+      kind: "drive",
       id: "drive-drag",
       icon: "gib_road_smear_2",
       label: "CARRIED",

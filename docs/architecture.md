@@ -1160,8 +1160,11 @@ escort.ts` walks the people an escort errand puts on the field, and
   through somebody), asked once by `driveParamsFor` and fixed for the whole
   road. **SFW MODE replaces that entire presentation without changing the
   collision:** both params arrive false, `DriveScreen` latches the setting for
-  the leg, and `drainDrive` turns each body-hit event into deterministic,
-  directional fairy dust without spending the drive RNG. The clean render path
+  the leg, and `drainDrive` turns each body-hit event into a deterministic,
+  wind-borne shower of fairy dust — and every other impact it books into a puff
+  a third the size at the contact point, folded together when several land in
+  the same place within a fifth of a second. Neither spends the drive RNG: the
+  contact point IS the seed. The clean render path
   hides remains, struck bodies, damaged traffic/car art, felled props, wheel
   debris, stains, smoke and camera shake; physics, damage, scoring, sounds and
   haptics still consume the same events. The one mark on that tarmac the DRIVER
