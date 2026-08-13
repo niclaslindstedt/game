@@ -374,6 +374,7 @@ export function HighScoresBoard({
                         scale={1}
                         color="#9aa3ad"
                       />
+                      {/* The "there is more behind this row" chevron. */}
                       <PixelText
                         font={font}
                         text=">"

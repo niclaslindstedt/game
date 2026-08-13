@@ -35,6 +35,7 @@ import {
   talkToQuestGiver,
   thoughtDef,
   vehicleFootprint,
+  type GameEvent,
   type GameState,
 } from "@game/core";
 
@@ -202,19 +203,26 @@ describe("the arrival", () => {
     expect(enterCar(state, hero)).toBe(true);
     const east = steerTo(car.pos.x + 2000, car.pos.y);
     let killed = false;
+    let thought: Extract<GameEvent, { type: "heroThought" }> | undefined;
     for (let i = 0; i < 400 && !killed; i++) {
       step(state, east, DT);
       killed = state.events.some((e) => e.type === "questGiverKilled");
+      thought ??= state.events.find((e) => e.type === "heroThought");
     }
     expect(killed).toBe(true);
     const she = ruth(state);
     expect(she.dead).toBe(true);
     // …AND THE THREE WORDS HE GETS FOR IT, which is the whole of what the game
     // says about it (`QuestGiverDef.runDown.thought`).
-    expect(state.dialogue?.source).toEqual({
-      kind: "playerThought",
-      defId: "ruth_run_down",
-    });
+    expect(thought?.defId).toBe("ruth_run_down");
+    expect(thought?.lines).toEqual(["WHAT WAS THAT?"]);
+    // FLOATED, NOT STAGED. The words arrive with a car under him at speed, so
+    // they go over the wagon and the run never stops — no dialogue takes the
+    // stage, and the phase is still the one he was driving in.
+    expect(state.dialogue).toBeNull();
+    expect(state.phase).toBe("playing");
+    expect(thought!.pos.x).toBeCloseTo(car.pos.x, 5);
+    expect(thought!.pos.y).toBeCloseTo(car.pos.y, 5);
     // …and the fact itself, banked on the run's flags so it travels the rest of
     // the campaign: it is what he mutters pulling onto the road, and what Ada
     // asks about on Friday.

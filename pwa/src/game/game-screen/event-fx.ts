@@ -1698,6 +1698,27 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     }
   }
 
+  // THE HERO'S OWN LINE, FLOATED — a thought the run does not stop for (see
+  // `heroThought`). Same allocator and same stacking as the bark above, so a
+  // thought thought over a fight clears the damage numbers it lands among; the
+  // colour is the thought box's own parchment rather than the bosses' cold
+  // blue, because it is the character thinking rather than somebody shouting
+  // at him.
+  if (event.type === "heroThought") {
+    const lines = event.lines;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const line = lines[i];
+      if (!line) continue;
+      pushFloat(effects, state.stats.timeMs, {
+        pos: { x: event.pos.x, y: event.pos.y - 30 },
+        untilMs: state.stats.timeMs + 1800 + i * 120,
+        durationMs: 1800 + i * 120,
+        text: line,
+        color: "#f6e3b0",
+      });
+    }
+  }
+
   // A RICOCHET. The coin came off the wall instead of dying on it, and the
   // player has to SEE that happen or the shot that hits them from behind is
   // just a bug. One bright spark at the point of contact, every time.

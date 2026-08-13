@@ -14731,6 +14731,19 @@ canvas.tier-artifact {
   width: 0.85rem;
 }
 
+/* A ROW'S TEXT — the errand's name, and under it what pressing the row does
+   (see TOPIC_MARK). The column starts at the row's own top edge so the name
+   keeps sharing the mark's baseline; the note hangs off the bottom of it, one
+   glyph pixel down, the same air the on-screen tracker puts between an errand
+   and its objectives. */
+.quest-topic-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 0.125rem;
+}
+
 .quest-rewards {
   display: flex;
   flex-direction: column;
@@ -14957,7 +14970,14 @@ canvas.tier-artifact {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.05rem;
+  /* ONE PIXEL OF THE STRIP'S OWN GRID between the errand's name and its
+     objective lines. The rows are `PixelText` at scale 2, so a glyph pixel is
+     2 CSS px at the base root font = 0.125rem — and being rem it stays one
+     glyph pixel through the large-screen root-font bump, where a `px` gap would
+     shrink against the text it is separating. Anything under this reads as no
+     gap at all: the name and the count sat on adjacent rows with the gold
+     underline of one touching the caps of the other. */
+  gap: 0.125rem;
   padding: 0.2rem 0.35rem;
   background: rgba(11, 13, 16, 0.42);
   border-right: 2px solid rgba(255, 215, 94, 0.5);

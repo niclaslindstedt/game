@@ -65,6 +65,16 @@ const QUEST_WRAP_REM = 20;
  * `.quest-topic` in styles.css if either changes. */
 const ROW_INSET_REM = 0.7 * 2 + 0.25 + 0.6 + 0.85;
 
+/**
+ * THE CARET ON THE ROW THE PLAYER IS ON — and every character drawn here has to
+ * be one the pixel font actually carries (`scripts/asset-tools/font.mjs`),
+ * because a missing glyph does not leave a gap: it falls back to `?`
+ * (`glyphFor`, @ui/lib/pixel-font.ts). This one shipped as exactly that — a
+ * question mark on the answer the player was hovering, reading as punctuation
+ * on the end of the sentence rather than as a cursor.
+ */
+const CURSOR = ">";
+
 /** The cap for a label inside a pick-list row. */
 function rowLabelCap(colFontPx: number | null, fallbackRem: number): number {
   return Math.max(
@@ -276,7 +286,7 @@ export function TalkOverlay({
               >
                 <span className="quest-topic-mark">
                   <PixelText
-                    text={i === cursor ? ">" : " "}
+                    text={i === cursor ? CURSOR : " "}
                     font={font}
                     scale={TEXT_SCALE}
                     color="#ffb02e"

@@ -80,7 +80,7 @@ import {
   drawObstacles,
   drawWells,
 } from "./render/world.ts";
-import { drawVehicles } from "./render/vehicles.ts";
+import { drawLoomingShips, drawVehicles } from "./render/vehicles.ts";
 
 export {
   applyCameraShake,
@@ -345,6 +345,13 @@ export function drawFrame(
   // same footing and for the same reason: a canopy he has walked under is
   // between him and the player.
   drawObstacles(ctx, state, sprites, camera, inView, "over");
+  // …and LAST of the world's furniture, the towers: a hull too tall for the
+  // depth sort to mean anything (render/vehicles.ts, `HULL_LOOMS_PX`). The
+  // garage's booster stands on one point of grass and runs sixty feet up the
+  // screen, so the lawn's trees — the two behind it included — are all within a
+  // stride of its base and every one of them won the sort. It goes on after
+  // them, and only on the side of the hero the sort already put it.
+  drawLoomingShips(ctx, state, sprites, camera, inView, timeMs);
 
   // Hazards sweeping the field — the storms and stampedes drawn AFTER the hero
   // so they visibly pass OVER him (he lies knocked out beneath them).

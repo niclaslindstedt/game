@@ -61,26 +61,42 @@ import { label, objectiveLine } from "../quest-text.ts";
 import { SpritePortrait, useSpeakingBust } from "../SpritePortrait.tsx";
 
 /**
- * A list row's mark and colour, by what picking it opens. The `!` / `?` are the
- * SAME marks that float over a giver's head on the field, and the colour is
- * what carries the meaning — gold to take, green to hand in, grey for running.
+ * A list row's mark, its colour, and WHAT PICKING IT DOES — said in words under
+ * the errand's name, because the mark alone does not say it.
  *
- * THEY ARE DRAWN IN THE PIXEL FONT, NOT AS THE HEAD SPRITE, and that is the
- * fix for a real alignment bug rather than a shortcut. The head mark is an 8×12
- * sprite sized to be read across a room: dropped into a text row it is a glyph
- * of a different size, on a different baseline, in a box whose ink is not even
- * centred (one blank row at the top, none at the bottom). Every attempt to line
- * that box up with a text canvas is a magic number that goes wrong again the
- * moment either changes — and the game HAS two UI scale tiers, so it would.
+ * The `!` / `?` are the SAME marks that float over a giver's head on the field,
+ * and the colour carries the same meaning there — gold to take, green to hand
+ * in, grey for running. That vocabulary is WoW's and it is worth keeping, but it
+ * is a vocabulary the player has to be TAUGHT, and the slate is the only surface
+ * with room to teach it: a row reading `? THE RECEIPT` says nothing about
+ * whether pressing it takes a job, hands one in, or repeats a nag, so the one
+ * screen where somebody decides to take on an errand was the one screen that
+ * never used the word. The note is the caption; the glyph is the shorthand it
+ * teaches.
+ *
+ * THE GLYPHS ARE DRAWN IN THE PIXEL FONT, NOT AS THE HEAD SPRITE, and that is
+ * the fix for a real alignment bug rather than a shortcut. The head mark is an
+ * 8×12 sprite sized to be read across a room: dropped into a text row it is a
+ * glyph of a different size, on a different baseline, in a box whose ink is not
+ * even centred (one blank row at the top, none at the bottom). Every attempt to
+ * line that box up with a text canvas is a magic number that goes wrong again
+ * the moment either changes — and the game HAS two UI scale tiers, so it would.
  * The font's own `!` and `?` share the label's baseline by construction, at
  * every scale, for free.
  */
-const TOPIC_MARK: Record<QuestTopic["kind"], { glyph: string; color: string }> =
-  {
-    complete: { glyph: "?", color: "#7fe3a0" },
-    offer: { glyph: "!", color: "#ffd75e" },
-    incomplete: { glyph: "?", color: "#9aa3ad" },
-  };
+const TOPIC_MARK: Record<
+  QuestTopic["kind"],
+  { glyph: string; color: string; note: string }
+> = {
+  complete: { glyph: "?", color: "#7fe3a0", note: "FINISHED - HAND IT IN" },
+  offer: { glyph: "!", color: "#ffd75e", note: "NEW QUEST - HEAR IT OUT" },
+  incomplete: { glyph: "?", color: "#9aa3ad", note: "IN PROGRESS - CHECK IT" },
+};
+
+/** The note's own colour — one dim grey for all three rows. It is a caption
+ * rather than a second label, and colouring it with the mark would give the row
+ * two things competing to be read first. */
+const TOPIC_NOTE_COLOR = "#8d97a3";
 
 /** Text scale the box's body prints at — the dialogue box's, so a quest line
  * and a dialogue line are the same size on the same screen. */
@@ -259,6 +275,13 @@ export function QuestOverlay({
   const { ref: objRef, fontPx: objColFontPx } = useTextColumn(TEXT_SCALE);
   const { ref: rewardRef, fontPx: rewardColFontPx } = useTextColumn(TEXT_SCALE);
   const { ref: topicRef, fontPx: topicColFontPx } = useTextColumn(TEXT_SCALE);
+  // What one pick-list row has left for its text, after the row's own furniture
+  // (`ROW_INSET_REM`). Both of a row's lines are measured against it, so the
+  // name and the note wrap on the same column.
+  const rowLabelCap = Math.max(
+    4,
+    columnCapRem(topicColFontPx, TEXT_SCALE, QUEST_TEXT_REM) - ROW_INSET_REM,
+  );
   const spokenLines = useMemo(
     () =>
       wrapPage(
@@ -527,17 +550,24 @@ export function QuestOverlay({
                       color={mark.color}
                     />
                   </span>
-                  <PixelText
-                    font={font}
-                    text={questDef(topic.questId).name}
-                    scale={TEXT_SCALE}
-                    color={mark.color}
-                    maxWidth={Math.max(
-                      4,
-                      columnCapRem(topicColFontPx, TEXT_SCALE, QUEST_TEXT_REM) -
-                        ROW_INSET_REM,
-                    )}
-                  />
+                  {/* The errand's name, and under it what pressing the row
+                      actually does — see TOPIC_MARK. */}
+                  <span className="quest-topic-text">
+                    <PixelText
+                      font={font}
+                      text={questDef(topic.questId).name}
+                      scale={TEXT_SCALE}
+                      color={mark.color}
+                      maxWidth={rowLabelCap}
+                    />
+                    <PixelText
+                      font={font}
+                      text={mark.note}
+                      scale={TEXT_SCALE}
+                      color={TOPIC_NOTE_COLOR}
+                      maxWidth={rowLabelCap}
+                    />
+                  </span>
                 </button>
               );
             })}

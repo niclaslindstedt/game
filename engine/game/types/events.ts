@@ -885,6 +885,22 @@ export type GameEvent =
    * the rest of the run. */
   | { type: "questGiverKilled"; pos: Vec2; giverId: string }
   /**
+   * A THOUGHT THE RUN DOES NOT STOP FOR — the hero's own line, floated over him
+   * at `pos` instead of taking the stage.
+   *
+   * The same split `bossBark` is on, arrived at from the other side. Every
+   * other inner monologue in the game freezes the run into the `dialogue`
+   * phase, which is right for a beat the player is meant to sit with and wrong
+   * for one that lands WHILE they are doing something — the three words the
+   * hero says pulling off his own driveway over somebody
+   * (`QuestGiverDef.runDown`) arrive with a car under him at speed, and a modal
+   * there stops the car, demands a tap, and makes a shrug read as a scene.
+   *
+   * `defId` is the thought it came from; `lines` are that thought's first page,
+   * resolved here so the app floats text rather than looking a catalog up.
+   */
+  | { type: "heroThought"; pos: Vec2; defId: string; lines: string[] }
+  /**
    * The hero walked up to somebody with an errand for the first time: they are
    * pinned on the level map and their mark is now readable. `giverId` keys
    * QUEST_GIVER_DEFS.
