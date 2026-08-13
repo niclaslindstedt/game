@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // SFW MODE is one presentation override over every gore family and kind. It
 // replaces graphic deaths with stardust, keeps an intact readable corpse, and
-// makes the DRIVE drain collision audio without recording collision visuals.
+// re-dresses the DRIVE rather than blanking it: the crash still lands with its
+// full weight and the body peels away in fairy dust.
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -10,6 +11,11 @@ import { createDrive } from "@game/core";
 import { setDevicePolicyForTest } from "../pwa/src/app/device-policy.ts";
 import { arcadeDriveParams } from "../pwa/src/game/drive-screen/begin.ts";
 import { createDriveFx } from "../pwa/src/game/drive-screen/drive-fx.ts";
+import {
+  carCoat,
+  cleanCar,
+  wheelCoat,
+} from "../pwa/src/game/drive-screen/car-soak.ts";
 import { createDriveGore } from "../pwa/src/game/drive-screen/drive-gore.ts";
 import { drainDrive, type Burst } from "../pwa/src/game/drive-screen/loop.ts";
 import { createSkids } from "../pwa/src/game/drive-screen/skid.ts";
@@ -20,7 +26,7 @@ import {
   splashOnly,
 } from "../pwa/src/game/game-screen/gore-gate.ts";
 import { killPresentation } from "../pwa/src/game/game-screen/kill-presentation.ts";
-import { stardustCount } from "../pwa/src/game/render/stardust.ts";
+import { FAIRY_RAMP, stardustCount } from "../pwa/src/game/render/stardust.ts";
 import { updateSettings } from "../pwa/src/game/settings.ts";
 import { ALL_GORE_ON } from "./gore-settings.ts";
 
@@ -116,7 +122,7 @@ describe("the SFW DRIVE", () => {
     });
   });
 
-  it("drains a collision into fairy dust without recording graphic effects", () => {
+  it("peels a body into fairy dust while the collision itself still lands", () => {
     const drive = createDrive({
       seed: 7,
       direction: 1,
@@ -135,8 +141,9 @@ describe("the SFW DRIVE", () => {
     const bursts: Burst[] = [];
     const fx = createDriveFx();
     const gore = createDriveGore();
-    drainDrive(drive, bursts, fx, gore, createSkids(), undefined, false);
+    drainDrive(drive, bursts, fx, gore, createSkids(), undefined, true);
 
+    // The body is dust — no viscera burst anywhere in the list.
     expect(bursts).toEqual([
       expect.objectContaining({
         kind: "fairyDust",
@@ -145,12 +152,36 @@ describe("the SFW DRIVE", () => {
         heavy: true,
       }),
     ]);
-    expect(fx.fx).toEqual([]);
-    expect(fx.shake).toBe(0);
-    expect(fx.flash).toBe(0);
-    expect(gore.marks).toEqual([]);
-    expect(gore.wet.size).toBe(0);
-    expect(gore.tyre).toBe(0);
+  });
+
+  it("keeps the crash's own weight — the effects, the shake and the marks", () => {
+    const drive = createDrive({
+      seed: 7,
+      direction: 1,
+      difficulty: "medium",
+      to: "goodco_hq",
+      gib: false,
+      split: false,
+    });
+    const pos = { x: drive.car.pos.x + 6, y: drive.car.pos.y };
+    drive.events.push(
+      { type: "trafficHit", pos, joules: 800_000, class: "car", headOn: false },
+      { type: "trafficBent", pos, joules: 800_000 },
+    );
+    const fx = createDriveFx();
+    drainDrive(
+      drive,
+      [],
+      fx,
+      createDriveGore(),
+      createSkids(),
+      undefined,
+      true,
+    );
+
+    // The whole point of the change: a crash in SFW mode is still a crash.
+    expect(fx.fx.length).toBeGreaterThan(0);
+    expect(fx.shake).toBeGreaterThan(0);
   });
 
   it("marks a steel-on-steel crash with one light puff per contact point", () => {
@@ -170,24 +201,42 @@ describe("the SFW DRIVE", () => {
       { type: "glassSmashed", pos, joules: 80_000 },
     );
     const bursts: Burst[] = [];
-    const fx = createDriveFx();
     drainDrive(
       drive,
       bursts,
-      fx,
+      createDriveFx(),
       createDriveGore(),
       createSkids(),
       undefined,
-      false,
+      true,
     );
 
     expect(bursts).toEqual([
       expect.objectContaining({ kind: "fairyDust", heavy: false }),
     ]);
-    expect(fx.fx).toEqual([]);
   });
 
-  it("leaves a crash unmarked while the graphic collision visuals are on", () => {
+  it("re-dresses the film the wagon wears instead of washing it off", () => {
+    const soak = { ...cleanCar(), bumper: 1 };
+    const bloody = carCoat(soak).bumper ?? [];
+    const dusted = carCoat(soak, FAIRY_RAMP).bumper ?? [];
+    expect(bloody.length).toBeGreaterThan(0);
+    // The SAME art at the SAME strength — a wagon driven through a crowd is
+    // still visibly a wagon driven through a crowd. Only the palette moves.
+    expect(dusted.map((layer) => layer.sprite)).toEqual(
+      bloody.map((layer) => layer.sprite),
+    );
+    expect(dusted.map((layer) => layer.alpha)).toEqual(
+      bloody.map((layer) => layer.alpha),
+    );
+    expect(dusted.every((layer) => layer.ramp === FAIRY_RAMP)).toBe(true);
+    expect(bloody.every((layer) => layer.ramp === undefined)).toBe(true);
+    expect(
+      wheelCoat(1, FAIRY_RAMP).every((layer) => layer.ramp === FAIRY_RAMP),
+    ).toBe(true);
+  });
+
+  it("leaves a crash undusted while the graphic gore is on", () => {
     const drive = createDrive({
       seed: 7,
       direction: 1,

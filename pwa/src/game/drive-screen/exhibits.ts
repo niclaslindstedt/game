@@ -478,7 +478,8 @@ export function driveExhibits(): DriveExhibit[] {
       id: "drive-fairy-dust",
       icon: "spell_rending_strike",
       label: "FAIRY DUST",
-      blurb: "SFW - THE BODY PEELS AWAY IN PASTEL DUST ON THE SLIPSTREAM",
+      blurb:
+        "SFW - THE BODY PEELS AWAY IN DUST, THE CRASH LANDS AS IT ALWAYS DID",
       group: "DRIVE",
       keywords: [
         "drive",
@@ -507,7 +508,7 @@ export function driveExhibits(): DriveExhibit[] {
       id: "drive-fairy-crash",
       icon: "traffic_sedan_dent3",
       label: "FAIRY DUST - STEEL",
-      blurb: "SFW - A CRASH IS MARKED BY A PUFF, A THIRD OF WHAT A BODY LEAVES",
+      blurb: "SFW - THE FULL SMASH, WITH A PUFF OF DUST OVER IT",
       group: "DRIVE",
       keywords: [
         "drive",
@@ -526,12 +527,12 @@ export function driveExhibits(): DriveExhibit[] {
       bank: CRUNCH_SOUNDS,
       sfw: true,
       input: throttle(0.67),
-      // The SFW road withholds every collision effect it has — no smash, no
-      // sparks, no debris, no shake — so this is the whole of what a crash looks
-      // like in the mode, and the one exhibit worth holding the body's shower
-      // against. Staged as the crunch exhibit's rear-ender, at the same speed
-      // and against the same van, so the only difference between the two cases
-      // is the gate.
+      // THE SAME CRASH THE CRUNCH EXHIBIT STAGES, in the mode — same speed,
+      // same van, so the only difference between the two cases is the dressing.
+      // Which is the point worth looking at: the smash, the sparks, the debris
+      // and the shake are all still there, and the mode's whole contribution is
+      // the puff of pastel over the top of them. Held against the body's shower
+      // beside it, it is also what keeps the two sizes honest.
       road: (drive) => {
         silence(drive);
         const speed = openAt(drive, 0.67);

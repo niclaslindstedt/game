@@ -16,6 +16,7 @@
 // names and alphas out.
 
 import { clamp01 } from "@game/lib/vec.ts";
+import type { GoreRamp } from "./recolor.ts";
 
 /** The zones of the hero the blood is tracked over — the four armor slots plus
  * BOTH arms, in paint order. A zone IS a slot: what cleans one is putting
@@ -55,8 +56,12 @@ export const COAT_AT = [0.06, 0.34, 0.72];
 const COAT_ALPHA_MIN = 0.4;
 const COAT_ALPHA_MAX = 0.94;
 
-/** One piece of coat art to draw over a zone: the sprite and how hard. */
-export type CoatLayer = { sprite: string; alpha: number };
+/** One piece of coat art to draw over a zone: the sprite, how hard, and — for a
+ * surface wearing something other than blood — the three stops the art is
+ * re-hued onto before it is laid (`render/recolor.ts`). Absent draws the
+ * authored red, which is every wearer in the run; the DRIVE's SFW dressing is
+ * the one caller that fills it in (`render/stardust.ts`'s `FAIRY_RAMP`). */
+export type CoatLayer = { sprite: string; alpha: number; ramp?: GoreRamp };
 
 /**
  * The coat art for one zone at one soak: which rung of the ladder it has

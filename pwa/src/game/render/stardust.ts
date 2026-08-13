@@ -15,6 +15,7 @@
 
 import { clamp01, fract } from "./shared.ts";
 import type { Effect } from "./effects.ts";
+import type { GoreRamp } from "./recolor.ts";
 
 const COLORS = [
   "#ff8fd8", // rose
@@ -25,6 +26,38 @@ const COLORS = [
   "#ffb98a", // peach
   "#9fb4ff", // periwinkle
   "#ffc8f0", // blush
+];
+
+/**
+ * THE SAME PALETTE, FOR THE MARKS THAT STAY — what blood-red art is re-hued
+ * onto (render/recolor.ts) when a surface has to keep wearing what hit it.
+ *
+ * The motes above are the INSTANT: a body peels away, the glitter blows down
+ * the slipstream and a second later there is nothing. That is the whole answer
+ * for a kill in the field, and it is only half an answer on the ROAD, where the
+ * feedback the player is actually reading is cumulative — the wagon he has been
+ * driving through a crowd for a minute arrives at GOODCO wearing the evidence,
+ * and a car that shrugs every collision off spotless says the last minute did
+ * not happen. So SFW does not withhold the film; it re-hues it. The bumper is
+ * still filthiest, the airstream still streaks it back over the bonnet, the
+ * tyres still print what they rolled through — in dust rather than in blood.
+ *
+ * Lilac, rose, pale gold: the three stops the mote palette's own lilac, rose
+ * and butter sit on, so a dusted panel and the cloud that dusted it are
+ * recognisably the same substance. Read as `"r, g, b"`, darkest first, exactly
+ * as a gore family's own ramp is.
+ *
+ * ALL THREE STOPS ARE LIGHT, INCLUDING THE DARKEST, and that is the one thing
+ * that separates this ramp from a gore family's. A family's shadow stop is dark
+ * because it is re-hueing a body drawn against whatever it is standing on; these
+ * marks go down at a third alpha on NIGHT TARMAC, so a dark shadow stop turns
+ * the road's whole record into a scatter of holes. Dust catches the light — it
+ * has no dark parts at all.
+ */
+export const FAIRY_RAMP: GoreRamp = [
+  "150, 110, 205",
+  "250, 170, 225",
+  "255, 248, 210",
 ];
 
 /** How far off the wagon's own heading a gust may blow, in radians. The dust

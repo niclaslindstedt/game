@@ -1158,16 +1158,22 @@ escort.ts` walks the people an escort errand puts on the field, and
   as the hero's bootprints are. Both gore-page switches ride in on
   `DriveParams` (`gib` for the lumps torn off, `split` for the bumper going
   through somebody), asked once by `driveParamsFor` and fixed for the whole
-  road. **SFW MODE replaces that entire presentation without changing the
-  collision:** both params arrive false, `DriveScreen` latches the setting for
-  the leg, and `drainDrive` turns each body-hit event into a deterministic,
-  wind-borne shower of fairy dust — and every other impact it books into a puff
-  a third the size at the contact point, folded together when several land in
-  the same place within a fifth of a second. Neither spends the drive RNG: the
-  contact point IS the seed. The clean render path
-  hides remains, struck bodies, damaged traffic/car art, felled props, wheel
-  debris, stains, smoke and camera shake; physics, damage, scoring, sounds and
-  haptics still consume the same events. The one mark on that tarmac the DRIVER
+  road. **SFW MODE RE-DRESSES that presentation without changing the
+  collision, and without hiding it:** both params arrive false, `DriveScreen`
+  latches the setting for the leg, and `drainDrive` turns each body-hit event
+  into a deterministic, wind-borne shower of fairy dust — and lays a puff a
+  third the size over every other impact it books, folded together when several
+  land in the same place within a fifth of a second. Neither spends the drive
+  RNG: the contact point IS the seed. **Every damaged sprite and every collision
+  effect still plays** — the dent rungs, the folds, the felled posts, the thrown
+  wheels, the sparks, the debris, the wreck smoke, the fires and the camera
+  shake, including the hero's own bent wagon — because a crash the player cannot
+  see removes the one thing the minigame is about. What changes is the SUBSTANCE
+  of what a person leaves: nothing comes apart, and the marks on the tarmac, the
+  film on the panels and tyres and the smear inside a stranger's windows are
+  re-hued onto `FAIRY_RAMP` (`render/stardust.ts`, through `recolorSprite`)
+  rather than withheld. Physics, damage, scoring, sounds and haptics were always
+  untouched and still are. The one mark on that tarmac the DRIVER
   makes rather than a body is
   `drive-screen/skid.ts` — the two black lines a handbrake stop scrubs off the
   back axle, laid by ground covered like every trail in this game and drawn under

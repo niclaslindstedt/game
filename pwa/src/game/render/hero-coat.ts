@@ -30,6 +30,7 @@
 import { spriteByName, type Sprites } from "../assets.ts";
 import type { DollLayer } from "../paper-doll.ts";
 import type { CoatLayer } from "./soak-ladder.ts";
+import { recolorSprite } from "./recolor.ts";
 import { drawSpriteFacing } from "./shared.ts";
 import type { SpriteImage } from "@ui/lib/atlas.ts";
 
@@ -94,8 +95,18 @@ export function soaked(
   paint(base.ctx);
   let painted = false;
   for (const layer of coat) {
-    const image = spriteByName(sprites, layer.sprite);
-    if (!image) continue;
+    const found = spriteByName(sprites, layer.sprite);
+    if (!found) continue;
+    // A LAYER MAY BE WEARING SOMETHING OTHER THAN BLOOD, and it says so with a
+    // ramp rather than with art of its own. The film is a lot of authored
+    // pixels — four rungs of spatter over seven panels' worth of silhouette —
+    // and a second set of them in pastel would be the same combinatorial trap
+    // the whole module exists to avoid, one palette along. A luminance re-hue
+    // keeps every speckle and every ragged edge and only changes what colour
+    // they are, which is exactly what the gore families already do to the spray.
+    const image = layer.ramp
+      ? recolorSprite(found, layer.sprite, layer.ramp)
+      : found;
     blood.ctx.globalAlpha = layer.alpha;
     blood.ctx.drawImage(image, 0, 0);
     painted = true;

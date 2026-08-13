@@ -238,8 +238,11 @@ export type GoreSwitch = "on" | "off";
 
 /** SFW MODE (SETTINGS → GORE): replace every graphic gore presentation with
  * pastel stardust and glitter; DRIVE body impacts become wind-borne fairy dust
- * and every other collision a smaller puff of it, while the road's own damaged
- * sprites and effects stay hidden. The eight
+ * and every other collision a smaller puff of it, laid OVER the road's own
+ * damage — the dents, the folds, the felled posts, the thrown wheels and the
+ * hero's own bent wagon all still play, because a crash the player cannot see
+ * is the minigame with its point removed. What a body leaves behind is re-hued
+ * onto the fairy palette rather than withheld. The eight
  * detailed gore switches remain stored underneath it, so turning SFW mode back
  * off restores the player's exact choices instead of silently resetting them.
  * Pure presentation, read by the centralized gore gate and DRIVE renderer. */

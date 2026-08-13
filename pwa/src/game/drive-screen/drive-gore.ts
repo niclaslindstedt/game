@@ -43,6 +43,7 @@ import { DRIVE, type DriveRemain, type DriveState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { goreFamily } from "../game-screen/gore.ts";
+import { recolorSprite, type GoreRamp } from "../render/recolor.ts";
 import { slicedPiece, splitSprite } from "../render/sprite-split.ts";
 import { fract, seatX, seatY } from "../render/shared.ts";
 import { billboard } from "../render/tilt.ts";
@@ -568,13 +569,20 @@ export function drawRoadMarks(
   camera: Camera,
   sprites: Sprites,
   viewW: number,
+  /** WHAT THE ROAD IS WEARING, when it is not wearing blood — the three stops
+   * every mark is re-hued onto (`render/recolor.ts`). The marks are the whole
+   * record of where the wagon has been, so SFW re-colours them rather than
+   * sweeping the road: a smear, a splat and a tyre print still say what they
+   * always said about the last four seconds, in dust. */
+  ramp?: GoreRamp,
 ): void {
   const left = camera.x - 64;
   const right = camera.x + viewW + 64;
   for (const mark of state.marks) {
     if (mark.x < left || mark.x > right) continue;
-    const art = spriteByName(sprites, mark.sprite);
-    if (!art) continue;
+    const found = spriteByName(sprites, mark.sprite);
+    if (!found) continue;
+    const art = ramp ? recolorSprite(found, mark.sprite, ramp) : found;
     ctx.save();
     ctx.globalAlpha = mark.alpha;
     // A PLAIN CAMERA SUBTRACT, because this pass runs INSIDE the world
@@ -600,6 +608,14 @@ export function drawRemain(
   piece: DriveRemain,
   camera: Camera,
   sprites: Sprites,
+  /** The dressing, as `drawRoadMarks` takes it. It reaches only the pieces that
+   * are made of a PERSON'S INSIDES — a torn-off lump, the wet band along a cut
+   * — and never the body's own art: a green jacket stays a green jacket
+   * whatever mode the game is in, because a re-hued crowd is a different crowd.
+   * With SFW on the road carries no such piece anyway (`gib` and `split` are
+   * both refused before the first tick), so this is what keeps a mode switched
+   * on over a road already holding one honest. */
+  ramp?: GoreRamp,
 ): void {
   // A BILLBOARD, like every other body on this road: the caller has the world
   // projection on the context, so the piece is un-projected around its own
@@ -608,7 +624,7 @@ export function drawRemain(
   // explains at length — the effect layer's anchor would project it twice and
   // hang it a lane and a half above the road it is lying on.
   billboard(ctx, piece.pos.x, piece.pos.y, camera.x, camera.y, () =>
-    drawRemainAt(ctx, piece, camera, sprites),
+    drawRemainAt(ctx, piece, camera, sprites, ramp),
   );
 }
 
@@ -617,6 +633,7 @@ function drawRemainAt(
   piece: DriveRemain,
   camera: Camera,
   sprites: Sprites,
+  ramp?: GoreRamp,
 ): void {
   const sx = seatX(piece.pos.x, camera.x);
   const sy = seatY(piece.pos.y, camera.y) - Math.round(piece.z) - BODY_LIFT;
@@ -677,14 +694,14 @@ function drawRemainAt(
   }
 
   if (piece.part === "chunk") {
-    const art = spriteByName(
-      sprites,
+    const name =
       CHUNK_SPRITES[
         Math.floor(fract(piece.seed * 0.618) * CHUNK_SPRITES.length) %
           CHUNK_SPRITES.length
-      ] ?? CHUNK_SPRITES[0]!,
-    );
-    if (!art) return;
+      ] ?? CHUNK_SPRITES[0]!;
+    const found = spriteByName(sprites, name);
+    if (!found) return;
+    const art = ramp ? recolorSprite(found, name, ramp) : found;
     ctx.save();
     ctx.translate(sx, sy);
     ctx.rotate(piece.angle);
@@ -710,7 +727,7 @@ function drawRemainAt(
   ctx.save();
   ctx.translate(sx, sy);
   ctx.rotate(piece.angle);
-  const half = halfOf(body, name, piece, sprites);
+  const half = halfOf(body, name, piece, sprites, ramp);
   ctx.drawImage(
     half ?? body,
     -Math.round(body.width / 2),
@@ -737,16 +754,33 @@ function halfOf(
   name: string,
   piece: DriveRemain,
   sprites: Sprites,
+  ramp?: GoreRamp,
 ): SpriteImage | null {
   if (piece.part === "whole") return null;
   // The cut is a fraction from the TOP of the sprite; `splitSprite` measures its
   // offset from the MIDDLE, along the cut's own normal.
   const cutPx = Math.round((piece.cut - 0.5) * body.height);
   const side = piece.part === "upper" ? -1 : 1;
-  const wet = spriteByName(sprites, goreFamily("blood").inside);
+  const inside = goreFamily("blood").inside;
+  const tile = spriteByName(sprites, inside);
+  // ONLY THE WET FACE IS RE-DRESSED. The body's own art either side of the cut
+  // is the person, and re-hueing a person is a costume change rather than a
+  // presentation mode.
+  const wet = tile && ramp ? recolorSprite(tile, inside, ramp) : tile;
   const band = side * TEAR_PX;
   if (wet) {
-    const sliced = slicedPiece(body, name, wet, 0, cutPx + band, cutPx, side);
+    // THE FILL IS PART OF THE BAKE'S IDENTITY, and `slicedPiece` keys its cache
+    // on the NAME alone — so a re-dressed inside asks under a name of its own
+    // rather than being handed the red bake of the same body from the last leg.
+    const sliced = slicedPiece(
+      body,
+      ramp ? `${name}/fairy` : name,
+      wet,
+      0,
+      cutPx + band,
+      cutPx,
+      side,
+    );
     if (sliced) return sliced;
   }
   // No viscera tile to hand (a headless canvas, a stripped atlas): fall back to
