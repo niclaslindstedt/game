@@ -12,6 +12,11 @@
 // not another impact. It is a push, it lasts for as long as the player keeps his
 // foot in, and everything interesting about it is what changes WHILE it lasts.
 //
+// …AND IT MAY NEVER REACH FURTHER THAN ONE. A push is what FOLLOWS a contact, so
+// the window below is the collision's own (`contactReach`) narrowed by this
+// file's slack and never widened by it — see `touching` for what a wider one
+// costs, and for why nothing coming the other way is ever being pushed.
+//
 // FOUR THINGS, AND EACH IS ONE THE PLAYER CAN FEEL:
 //
 //   HE CARRIES IT      the wreck is dragged up the road at his speed rather than
@@ -36,6 +41,7 @@
 // road.
 
 import { CAR } from "../vehicles.ts";
+import { contactReach } from "./impact.ts";
 import { DRIVE, DRIVE_UNITS } from "./config.ts";
 import { vehicleDef } from "./fleet.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
@@ -97,16 +103,46 @@ export function pushTraffic(drive: DriveState, dt: number): void {
       continue;
     }
     // ── ARE THE TWO OF THEM ACTUALLY IN CONTACT ─────────────────────────────
+    // `along` is the gap between the two bodies' ENDS and `across` the offset
+    // between their axes — the same pair `solveImpact` measures its contact
+    // with, so a negative `along` means the two are overlapped exactly as its
+    // `nx === 0` does.
     const along =
       (other.pos.x - car.pos.x) * dir - (HALF_BODY + def.halfLengthPx);
     const across = Math.abs(other.pos.y - car.pos.y);
+    // …AND THE BUMPER HAS TO BE ABLE TO REACH IT. The two knobs below are the
+    // push's own slack, and slack may only ever make this window SMALLER than
+    // the one the collision pass solves against — never larger. Wider by even a
+    // pixel and the wagon shoves cars it has never hit: between the two windows
+    // sat a crescent about the width of a wing mirror in which a car was picked
+    // up, carried, and had its speed overwritten with no collision booked at
+    // all — no wear, no `trafficHit`, no sound, the victim untouched — while the
+    // hero was dragged from flat out down to `pushFloorPx`. An ONCOMING car
+    // caught in it was simply turned round and driven along, which is the one
+    // event on this road that has to be a crash.
+    const reach = contactReach(def.radiusPx, DRIVE.impact.bodyBandFrac);
     const touching =
       along <= wreckage.pushGripPx &&
       along > -def.halfLengthPx &&
-      across <= wreckage.pushBandPx + CAR.footprint.radius;
-    // …AND IS HE PRESSING? A wreck running away up the road faster than the
-    // wagon is not being pushed by it, whatever the gap says.
-    if (!touching || mine <= Math.abs(other.speed) * 0.98) {
+      across <= wreckage.pushBandPx + CAR.footprint.radius &&
+      Math.hypot(Math.max(0, along), across) <= reach;
+    // …AND IS HE PRESSING? Read as a SIGNED pace along his own heading, because
+    // the two questions the magnitude conflates have opposite answers:
+    //
+    //   IT IS GOING HIS WAY, SLOWER   he is shoving it — the whole of this pass.
+    //   IT IS GOING HIS WAY, FASTER   it is running away up the road, and a
+    //                                 wreck ahead of the bumper is not a push.
+    //   IT IS COMING THE OTHER WAY    he is not pushing it, he is HITTING it.
+    //
+    // The third one is why the sign matters. On magnitude a car closing at 300
+    // simply read as "slower than me", so the shove took it — and `other.speed`
+    // below is an assignment, so the pass reversed an oncoming car outright and
+    // carried it off in the direction it had just been coming from. A head-on
+    // belongs to `collide.ts`, which is the pass that charges both parties for
+    // it; leaving it there is what makes the speed the wagon loses to one add up
+    // to a crash instead of to nothing.
+    const its = other.speed * dir;
+    if (!touching || its < 0 || mine <= its * 0.98) {
       release(other);
       continue;
     }
