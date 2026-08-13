@@ -1,28 +1,32 @@
 name: gib_tyre_print
 family: effects
-size: [10, 8]
+size: [14, 7]
 plane: floor
 description: >
-  A tread pattern printed in blood — one turn of a wheel that has just rolled
-  through somebody.
+  A short length of tyre track, printed by ONE wheel that has just rolled
+  through somebody — the second wheel is a second print, laid an axle away.
 subject:
   kind: ground decal
-  build: three ribs running the length of the print, each broken into two-pixel blocks by transverse grooves, with clear empty grooves between the ribs; the top two ribs in the blood midtone and the last in clotted, so a print reads as drier at one end
+  build: a narrow ribbon running the length of the print, split down the middle by a clean circumferential groove; either side of it a rib of blood midtone, two rows deep, one row continuous and one broken into two-pixel blocks by transverse sipes; a single row of clotted blood along each outer edge as the shoulder; the two halves' sipes offset a pixel from each other across the groove
   flavor: >-
     the one mark on this road that names its cause outright — a smear could be
-    anything being dragged, and a tread pattern could only be a car. It has to
-    read as a PATTERN rather than as a red block, which is what it was when the
-    grooves were one pixel wide: the empty rows are doing more work than the
-    filled ones
+    anything being dragged, and a tyre track could only be a car. Four things
+    make it one and every one of them was arrived at by looking at the trail
+    rather than at the tile: it is twice as long as it is wide, so it reads as
+    ground COVERED rather than as a stamp; the groove down its middle is what
+    separates a tyre from a rectangle; the sipes within one rib share their
+    columns, because staggering them row by row turned the trail into
+    brickwork; and the two ribs do NOT share theirs, because when all four
+    siped rows lined up the sipes joined into bars straight through the track
+    and it read as a ladder
 palette:
   d: "#a82c2c" # blood midtone
   i: "#772020" # clotted blood
 grid: |
-  dd.dd.dd.d
-  dd.dd.dd.d
-  ..........
-  dd.dd.dd.d
-  dd.dd.dd.d
-  ..........
-  ii.ii.ii.i
-  ii.ii.ii.i
+  i.ii.ii.ii.ii.
+  dddddddddddddd
+  d.dd.dd.dd.dd.
+  ..............
+  dd.dd.dd.dd.dd
+  dddddddddddddd
+  ii.ii.ii.ii.ii

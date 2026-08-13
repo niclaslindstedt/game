@@ -793,6 +793,54 @@ export function driveExhibits(): DriveExhibit[] {
     },
     {
       kind: "drive",
+      id: "drive-fairy-fire",
+      icon: "flame_4a",
+      label: "STAR FIRE",
+      blurb: "SFW - THE TANK POPS IN GOLD STARS AND THE WRECK FIZZES",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "traffic",
+        "explosion",
+        "fire",
+        "burning",
+        "sfw",
+        "star",
+        "glitter",
+        "sparkle",
+      ],
+      // LONGER THAN THE FIREBALL CARD IT MIRRORS, because the pop is only half
+      // of what this exhibit is for: the burn underneath it is re-issued on a
+      // cadence for as long as the wreck is alight (`burning.ts`), and the
+      // question a reviewer has to answer — does a fizzing car still read as a
+      // car in trouble — cannot be asked of the first half second.
+      showMs: 3600,
+      shows: "trafficExploded",
+      bank: [EXPLOSION_SOUND],
+      sfw: true,
+      road: (drive) => {
+        silence(drive);
+        const speed = openAt(drive);
+        // THE SAME TANK THE FIREBALL CARD PINS — id 1, the explosion third of
+        // the collision's deterministic roll and NOT the tenth that goes up big
+        // — so the two cards are one event in its two materials and nothing
+        // else about them differs.
+        plantCar(
+          drive,
+          leadPx(speed) + 40,
+          drive.car.pos.y,
+          0,
+          0,
+          false,
+          undefined,
+          1,
+        );
+      },
+    },
+    {
+      kind: "drive",
       id: "drive-shockwave",
       icon: "flame_4b",
       label: "THE BIG ONE",

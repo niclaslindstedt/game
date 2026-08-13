@@ -39,6 +39,15 @@
 // a near-miss pun on one (docs/naming.md). THE GLUED is a role, and a role does
 // not date: there has been somebody sitting in a road since there have been
 // roads.
+//
+// AND EVERY ONE OF THE THREE HAS AN SFW TWIN (`placards-sfw.ts`), reached
+// through the three pickers at the bottom of this file rather than by indexing a
+// list. The mode does not silence the road: a stretch that stopped speaking
+// would lose most of what makes it feel inhabited, and a crowd shouting about
+// pieces of somebody over a shower of glitter would be telling the player
+// exactly what the mode is refusing to draw. So the words are swapped for words
+// that agree with the picture, and the SHAPES — private thought, unheard shout,
+// short badly-formed reaction — are the same shapes in both.
 
 import type { WitnessScene } from "@game/core";
 
@@ -46,6 +55,11 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { worldToCanvas } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
+import {
+  CROWD_THOUGHTS_SFW,
+  GLUED_BARKS_SFW,
+  WITNESS_LINES_SFW,
+} from "./placards-sfw.ts";
 
 /**
  * THE LINES, in `DrivePedestrian.bark`'s own order. The engine picks an index
@@ -346,12 +360,40 @@ export const WITNESS_LINES: Readonly<Record<WitnessScene, readonly string[]>> =
  *
  * `roll` is the 0→1 the sim hashed off the incident (`DriveWitness.roll`), so
  * the same seed driven the same way shouts the same words — and no draw was
- * spent off `state.rng` to get there.
+ * spent off `state.rng` to get there. The SAME roll is used in either mode, so
+ * a leg replayed with the switch flipped picks the twin of the line it picked
+ * before rather than a differently-seeded road.
  */
-export function witnessLine(scene: WitnessScene, roll: number): string {
-  const lines = WITNESS_LINES[scene];
+export function witnessLine(
+  scene: WitnessScene,
+  roll: number,
+  sfw = false,
+): string {
+  const lines = (sfw ? WITNESS_LINES_SFW : WITNESS_LINES)[scene];
   const at = Math.min(lines.length - 1, Math.floor(roll * lines.length));
   return lines[at] ?? lines[0] ?? "";
+}
+
+/**
+ * ONE OF THE GLUED'S LINES, by the index the sim dealt them
+ * (`DrivePedestrian.bark`).
+ *
+ * THE MODULO IS HERE RATHER THAN AT THE CALL SITE, and that is the whole reason
+ * these two pickers exist: the sim indexes a list it has never been shown
+ * (`GLUED_BARKS` / `CROWD_THOUGHTS` are counts on its side and words on this
+ * one), so every list this can be pointed at has to be wrapped against its OWN
+ * length. A caller that indexed the shipped list's length into the SFW one
+ * would silently stop using its tail the day the two lengths differed.
+ */
+export function gluedBark(index: number, sfw = false): string | undefined {
+  const lines = sfw ? GLUED_BARKS_SFW : GLUED_BARKS;
+  return lines[index % lines.length];
+}
+
+/** …and one of the crowd's, dealt from the same deck. */
+export function crowdThought(index: number, sfw = false): string | undefined {
+  const lines = sfw ? CROWD_THOUGHTS_SFW : CROWD_THOUGHTS;
+  return lines[index % lines.length];
 }
 
 /**

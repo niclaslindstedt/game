@@ -2,14 +2,16 @@
 // SFW MODE is one presentation override over every gore family and kind. It
 // replaces graphic deaths with stardust, keeps an intact readable corpse, and
 // re-dresses the DRIVE rather than blanking it: the crash still lands with its
-// full weight and the body peels away in fairy dust.
+// full weight, the body peels away in fairy dust, and the one thing no re-hue
+// can reach — fire — is replaced outright by gold stars.
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createDrive } from "@game/core";
+import { createDrive, createTraffic, type DriveState } from "@game/core";
 
 import { setDevicePolicyForTest } from "../pwa/src/app/device-policy.ts";
 import { arcadeDriveParams } from "../pwa/src/game/drive-screen/begin.ts";
+import { stepBurning } from "../pwa/src/game/drive-screen/burning.ts";
 import { createDriveFx } from "../pwa/src/game/drive-screen/drive-fx.ts";
 import {
   carCoat,
@@ -18,7 +20,7 @@ import {
 } from "../pwa/src/game/drive-screen/car-soak.ts";
 import { createDriveGore } from "../pwa/src/game/drive-screen/drive-gore.ts";
 import { drainDrive, type Burst } from "../pwa/src/game/drive-screen/loop.ts";
-import { createSkids } from "../pwa/src/game/drive-screen/skid.ts";
+import { createSkids, RUBBER_RAMP } from "../pwa/src/game/drive-screen/skid.ts";
 import { bossRitePresentation } from "../pwa/src/game/game-screen/boss-rite.ts";
 import {
   dismemberAllowed,
@@ -109,6 +111,30 @@ describe("the SFW gore override", () => {
     expect(crash).toBeLessThan(body / 2);
   });
 });
+
+/** A road with one car alight beside the wagon — the state `stepBurning` walks,
+ * staged rather than driven to, because how a car catches is the sim's business
+ * and what it then looks like is this suite's. */
+function burningRoad(): DriveState {
+  const drive = createDrive({
+    seed: 7,
+    direction: 1,
+    difficulty: "medium",
+    to: "goodco_hq",
+    gib: false,
+    split: false,
+  });
+  drive.traffic.length = 0;
+  const one = createTraffic(
+    99,
+    0,
+    { x: drive.car.pos.x + 40, y: drive.car.pos.y },
+    0,
+  );
+  one.fire = 0.6;
+  drive.traffic.push(one);
+  return drive;
+}
 
 describe("the SFW DRIVE", () => {
   it("disables the engine's split and gib outcomes for both cabinet variants", () => {
@@ -234,6 +260,86 @@ describe("the SFW DRIVE", () => {
     expect(
       wheelCoat(1, FAIRY_RAMP).every((layer) => layer.ramp === FAIRY_RAMP),
     ).toBe(true);
+  });
+
+  it("burns a wrecked car as gold stars rather than as flame", () => {
+    // THE ONE EFFECT ON THIS ROAD THAT OUTLIVES ITS COLLISION. A burn is
+    // re-issued on a cadence for the rest of the leg (`burning.ts`), so a fire
+    // left in its own material is not one bright frame — it is the brightest
+    // thing on the road for a minute, in a mode where nothing else is made of
+    // fire at all.
+    const alight = (fairy: boolean): string[] => {
+      const drive = burningRoad();
+      const fx = createDriveFx();
+      stepBurning(fx, drive, fairy);
+      return fx.fx.map((one) => one.kind);
+    };
+    expect(alight(true)).toContain("starfire");
+    expect(alight(true)).not.toContain("fire");
+    expect(alight(false)).toContain("fire");
+    expect(alight(false)).not.toContain("starfire");
+  });
+
+  it("pops a fuel tank in stars while keeping everything the blast threw", () => {
+    const blown = (fairy: boolean) => {
+      const drive = createDrive({
+        seed: 7,
+        direction: 1,
+        difficulty: "medium",
+        to: "goodco_hq",
+        gib: !fairy,
+        split: !fairy,
+      });
+      drive.events.push({
+        type: "trafficExploded",
+        pos: { x: drive.car.pos.x + 6, y: drive.car.pos.y },
+        joules: 800_000,
+        big: true,
+      });
+      const fx = createDriveFx();
+      drainDrive(
+        drive,
+        [],
+        fx,
+        createDriveGore(),
+        createSkids(),
+        undefined,
+        fairy,
+      );
+      return fx.fx.map((one) => one.kind);
+    };
+    expect(blown(true)).toContain("starblast");
+    expect(blown(true)).not.toContain("blast");
+    expect(blown(false)).toContain("blast");
+    // ONLY THE BALL IS SWAPPED. The shards, the glass, the black column, the
+    // pall and the pressure front are what steel and air did, and a blast the
+    // player could not read would lose him the biggest event on the road.
+    for (const kind of [
+      "spark",
+      "shard",
+      "glass",
+      "smoke",
+      "dust",
+      "shockwave",
+    ])
+      expect(blown(true), `SFW withheld the blast's ${kind}`).toContain(kind);
+  });
+
+  it("lays a tread print in rubber rather than in the pastel palette", () => {
+    // A SPLAT AND A SMEAR ARE PLACES A BODY CAME APART, and in this mode a body
+    // comes apart into glitter — so those keep the fairy ramp. A TREAD PRINT is
+    // the shape of a TYRE, and a pastel picture of a tyre reads as a decal
+    // somebody stuck on the road where the same print in rubber reads as the
+    // thing the player just did with the car (`drawRoadMarks`).
+    const luma = (stop: string): number => {
+      const [r, g, b] = stop.split(",").map((v) => Number(v.trim()));
+      return 0.299 * (r ?? 0) + 0.587 * (g ?? 0) + 0.114 * (b ?? 0);
+    };
+    // Every stop dark, INCLUDING the lightest — the fairy ramp's defining
+    // property is that all three of its stops catch the light, and rubber's is
+    // that none of them do.
+    for (const stop of RUBBER_RAMP) expect(luma(stop)).toBeLessThan(56);
+    for (const stop of FAIRY_RAMP) expect(luma(stop)).toBeGreaterThan(120);
   });
 
   it("leaves a crash undusted while the graphic gore is on", () => {

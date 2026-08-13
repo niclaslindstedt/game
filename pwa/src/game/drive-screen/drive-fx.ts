@@ -26,6 +26,7 @@ import { DRIVE } from "@game/core";
 import { spriteByName, type Sprites } from "../assets.ts";
 import { bodyAnchorX, bodyAnchorY, projectOffset } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
+import { drawStarBlast, drawStarFire } from "./star-fire.ts";
 
 /** What the road can throw. */
 type DriveFxKind =
@@ -101,6 +102,17 @@ type DriveFxKind =
    */
   | "fire"
   /**
+   * …AND THE SAME CAR ALIGHT WITH THE GORE SWITCHED OFF — gold stars streaming
+   * off the bodywork instead of flame (`star-fire.ts`).
+   *
+   * ITS OWN KIND RATHER THAN A RE-HUED `fire`, because there is no re-hue that
+   * gets there: the flame ladder is authored ART with a flame's silhouette in
+   * it, and a yellow flame is still a flame. The mode's whole vocabulary is
+   * particles, so its answer to a burn is particles too — which is also why
+   * this one needs no atlas and draws in a host that has none.
+   */
+  | "starfire"
+  /**
    * …AND THE FUEL TANK GOING.
    *
    * ITS OWN KIND RATHER THAN A BIG `fire`, because it is a different shape as
@@ -110,6 +122,10 @@ type DriveFxKind =
    * keeps rising.
    */
   | "blast"
+  /** …and the same tank with the gore switched off: a party popper's worth of
+   * gold stars, opening under the shell and climbing through it. Paired with
+   * `starfire` for the reason that one is its own kind. */
+  | "starblast"
   /**
    * …AND THE PRESSURE THAT LEAVES WITH IT — the one effect on this road that is
    * bigger than the thing that made it.
@@ -559,6 +575,11 @@ export function driveWindscreenGore(
  * `force` is the burn itself (`DriveTraffic.fire`), which is what picks the
  * stage of the flame ladder — so the player watches a flicker under a wing
  * become an engine bay going up, rather than a fire switching on.
+ *
+ * THE MODE IS ANSWERED HERE, WHERE THE EFFECT IS DECIDED, never at the draw —
+ * the rule the whole gore system rests on. `fairy` picks the star fountain
+ * instead (`star-fire.ts`); the same `force`, the same cadence and the same
+ * lift feed either, so a burn grows identically in both modes.
  */
 export function driveVehicleFire(
   state: DriveFxState,
@@ -569,8 +590,20 @@ export function driveVehicleFire(
   /** How far off the road it burns (world px) — a bonnet, not the tarmac. */
   lift: number,
   lifeMs: number,
+  fairy = false,
 ): void {
-  push(state, "fire", x, y, nowMs, lifeMs, force, false, 0, lift);
+  push(
+    state,
+    fairy ? "starfire" : "fire",
+    x,
+    y,
+    nowMs,
+    lifeMs,
+    force,
+    false,
+    0,
+    lift,
+  );
 }
 
 /**
@@ -583,6 +616,14 @@ export function driveVehicleFire(
  * sparks thrown out of it, the shards of what used to be a car, and the pall
  * that hangs there afterwards — and it takes the frame harder than anything
  * else out here, which is the ceiling `SMASH_SHAKE_MAX` exists for.
+ *
+ * ONLY THE BALL CHANGES IN SFW. The sparks, the shards, the glass, the black
+ * column, the pall and the pressure front are all things STEEL and AIR did, and
+ * the mode has never withheld those — a blast the player could not read would
+ * lose him the biggest event on the road. What is swapped is the fire itself,
+ * for the popper's worth of stars that goes with the fizz the wreck then burns
+ * with (`star-fire.ts`); the alternative is a golden fountain rising out of an
+ * orange fireball on the same car half a second apart.
  */
 export function driveBlast(
   state: DriveFxState,
@@ -592,8 +633,20 @@ export function driveBlast(
   /** THE RARE ONE — carried on the event rather than rolled here, so what the
    * player sees and what he hears are the same tank. */
   big = false,
+  fairy = false,
 ): void {
-  push(state, "blast", x, y, nowMs, BLAST_MS, 1, false, 0, BLAST_LIFT);
+  push(
+    state,
+    fairy ? "starblast" : "blast",
+    x,
+    y,
+    nowMs,
+    BLAST_MS,
+    1,
+    false,
+    0,
+    BLAST_LIFT,
+  );
   push(state, "spark", x, y, nowMs, 620, 1, false, 0, BLAST_LIFT);
   push(state, "shard", x, y, nowMs, 1300, 1, false, 0, BLAST_LIFT);
   push(state, "glass", x, y, nowMs, 1000, 1, false, 0, BLAST_LIFT);
@@ -848,6 +901,12 @@ export function drawDriveFx(
     else if (fx.kind === "glass") drawGlass(ctx, fx, t, sx, sy, sprites);
     else if (fx.kind === "shockwave") drawShockwave(ctx, fx, t, sx, sy);
     else if (fx.kind === "blood") drawBlood(ctx, fx, t, sx, sy);
+    // THE TWO SFW BURNS NEED NO ATLAS, which is the one practical difference
+    // between them and the pair below: they are drawn out of primitives, so a
+    // host with no sprites to hand still gets the whole effect rather than
+    // nothing.
+    else if (fx.kind === "starfire") drawStarFire(ctx, fx, t, sx, sy);
+    else if (fx.kind === "starblast") drawStarBlast(ctx, fx, t, sx, sy);
     else if (fx.kind === "fire") {
       if (sprites) drawFire(ctx, sprites, fx, t, sx, sy, nowMs);
     } else if (fx.kind === "blast") {

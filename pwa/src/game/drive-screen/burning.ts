@@ -65,7 +65,16 @@ const NEAR_PX = 520;
  * Called from `drainDrive` beside the skids and the wreck smoke, inside the
  * fixed step and on the drive's own clock.
  */
-export function stepBurning(state: DriveFxState, drive: DriveState): void {
+export function stepBurning(
+  state: DriveFxState,
+  drive: DriveState,
+  /** SFW MODE — the burn is issued as a fountain of gold stars rather than as
+   * flame (`star-fire.ts`). The GRIND is untouched: sparks off steel scraping
+   * tarmac are what the mode already lets every collision throw, and dimming
+   * them would leave a shell being bullied up the road with nothing to show for
+   * it. */
+  fairy = false,
+): void {
   const live = new Set<number>();
   for (const other of drive.traffic) {
     const burning = other.fire > 0;
@@ -94,6 +103,7 @@ export function stepBurning(state: DriveFxState, drive: DriveState): void {
         other.fire,
         FIRE_LIFT_PX,
         FIRE_LIFE_MS,
+        fairy,
       );
     }
     if (grinding) {

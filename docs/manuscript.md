@@ -492,6 +492,228 @@ spent the last minute doing. Nobody follows it up. Nothing comes of it.
 76. SOMEBODY GET HIS PLATE
 77. HE'S NOT EVEN SLOWING DOWN
 
+### THE SAME ROAD IN SFW MODE — all three voices, swapped (`drive-screen/placards-sfw.ts`)
+
+_SETTINGS → SFW MODE does not silence the road and does not censor it. It
+re-dresses it: a body peels away in glitter rather than coming apart, the marks
+it leaves are re-hued, and a car alight fizzes gold stars instead of burning. The
+words have to agree with that picture, so the three lists below stand in for the
+three above, one for one, in the same order and at the same lengths._
+
+_This is why they exist at all: a bystander shouting THERE'S PIECES OF THEM over
+a shower of glitter tells the player exactly what the mode is refusing to draw,
+and a road that went quiet instead would lose the thing that makes this stretch
+feel inhabited. The SHAPES survive the swap and nothing else does — a thought is
+still private and has still never heard of the car, a shout is still aimed at a
+driver who is not reading it, and a reaction is still short and badly formed._
+
+_Nobody out here is destitute and nothing that happens costs anybody anything.
+The hero is unchanged: he does not read these either._
+
+**THE GLUED, in the mode.** Still sitting across all four lanes with the road
+shut — for a chalk mural and a road party rather than for a cause, so nothing
+here argues with anybody.
+
+1. SLOW DOWN! WE'RE DRAWING ON THE ROAD
+2. THE ROAD IS CLOSED FOR THE PARADE
+3. WE'RE COUNTING CARS FOR THE SCIENCE FAIR
+4. MIND THE GLITTER, IT GETS EVERYWHERE
+5. SORRY FOR THE HOLD-UP!
+
+**THE CROWD, in the mode.** Forty again, one to a walker, dealt from the same
+deck and read in the same half second. What they are turning over is the road
+itself — how fast that one went, what the sparks are doing, what the glitter
+gets into — and a few of them are still small rather than spectacular, because a
+list where every line is WOW reads as a laugh track.
+
+1. THAT CAR IS GOING VERY FAST
+2. LOOK AT ALL THE LITTLE STARS
+3. THE GLITTER GETS IN YOUR HAIR
+4. I HOPE HE MAKES IT ON TIME
+5. SOMEBODY IS IN A DREADFUL HURRY
+6. THE SPARKS ARE MY FAVOURITE PART
+7. I COUNTED SIX STARS THAT TIME
+8. THAT ONE WENT PAST LIKE A COMET
+9. MY COAT IS COVERED IN SPARKLES
+10. THE ROAD SMELLS LIKE BIRTHDAY CANDLES
+11. I SHOULD HAVE BROUGHT MY CAMERA
+12. THE STARS ARE WARM WHEN THEY LAND
+13. NOBODY DRIVES THAT FAST ON PURPOSE
+14. I WONDER WHERE HE IS GOING
+15. THE GLITTER TASTES A BIT LIKE LEMON
+16. I WAVED AND I THINK HE SAW
+17. THAT WAS FASTER THAN THE LAST ONE
+18. THE PIGEONS LOVE THE SHINY BITS
+19. I AM GOING TO SWEEP UP LATER
+20. MY SISTER WOULD LOVE THIS STREET
+21. THE SPARKLES LAND LIKE WARM SNOW
+22. HE MUST BE LATE FOR SOMETHING
+23. I FOUND A STAR IN MY POCKET
+24. THE WHOLE ROAD IS TWINKLING TONIGHT
+25. I LIKE THE YELLOW ONES BEST
+26. THAT ENGINE SOUNDS VERY PLEASED WITH ITSELF
+27. THE LAMP POSTS ARE ALL SPARKLY NOW
+28. I HOPE THERE IS MORE GLITTER LATER
+29. SOMEBODY SHOULD PUT UP A SIGN
+30. IT SOUNDS LIKE A ROCKET GOING PAST
+31. THE STARS GO UP AND COME DOWN SLOWLY
+32. I AM SAVING THE PRETTIEST ONE
+33. MY BOOTS ARE FULL OF SPARKLES
+34. THAT CAR NEEDS A GOOD WASH
+35. THE GLITTER STICKS TO EVERYTHING OUT HERE
+36. I CAUGHT ONE BEFORE IT FADED
+37. THE STREET LOOKS LIKE A BIRTHDAY CAKE
+38. I THINK HE IS SHOWING OFF
+39. EVERY CAR SHOULD SPARKLE LIKE THAT
+40. I WILL TELL THEM ABOUT THIS
+
+**THE BYSTANDERS, in the mode.** Filed by the same scenes the sim names, so this
+table is total exactly as the shipped one is. A person struck turns into confetti
+and comes out the other side, so what is shouted is delight rather than horror —
+and the MACHINES keep their alarm, which is what stops the whole road reading as
+a birthday party. The mode changed what a person is made of; it did not change
+what steel does.
+
+_A walker, with nothing about them to name_
+
+1. WOW, DID YOU SEE THAT
+2. HE TURNED THEM INTO CONFETTI
+3. THAT WAS A LOT OF SPARKLES
+4. THEY WENT ALL TWINKLY
+5. OOOOOH
+
+_A woman_
+
+6. SHE WENT OFF LIKE A FIREWORK
+7. THAT LADY IS ALL GLITTER NOW
+8. SHE'LL BE BACK, THEY ALWAYS ARE
+9. LOOK AT HER GO
+
+_Somebody who could not have got out of the way._ Not one of these says a
+gender, for the same reason the shipped scene's do not.
+
+10. THEY POPPED LIKE A PARTY POPPER
+11. OFF THEY GO, SPARKLING
+12. THAT ONE MADE GOLD STARS
+13. THEY DIDN'T EVEN SPILL THEIR TEA
+
+_The wheelchair_
+
+14. THE CHAIR TURNED INTO RIBBONS
+15. WHEELS AND ALL, JUST SPARKLES
+16. THAT WAS A GLITTERY ONE
+
+_Somebody walking a dog_
+
+17. THE DOG IS MADE OF STARS
+18. GOOD BOY, VERY SPARKLY
+19. HERE COMES THE DOG AGAIN
+
+_A bike and its rider_
+
+20. THE BIKE WENT UP IN GLITTER
+21. THEY CARTWHEELED INTO CONFETTI
+22. HELMET AND ALL, POOF
+23. THAT'S THE SHINIEST ONE YET
+
+_One of THE GLUED_
+
+24. THEY GOT THE WHOLE CHALK CREW
+25. THAT'S THE PICNIC RUINED
+26. SPARKLES ALL OVER THE CROSSING
+27. THERE GOES THE SIT-DOWN
+
+_A body in two, caught under the car, or found by a wheel._ The mode never
+raises this scene — the split and the gib are both refused before the first tick
+— but the table is total, so it is written anyway.
+
+28. A WHOLE BUCKET OF GLITTER
+29. CONFETTI EVERYWHERE, LOOK AT IT
+30. THE BIGGEST SPARKLE OF THE NIGHT
+31. IT'S SNOWING STARS
+32. COVER YOUR DRINKS
+
+_A car_
+
+33. HE'S BUMPING THE CARS NOW
+34. DID YOU HEAR THAT CLANG
+35. THAT'S SOMEBODY'S NICE CAR
+36. BUMPER CARS, IS IT
+
+_A bus or a lorry_
+
+37. HE'S HAVING A GO AT BUSES
+38. THAT'S A BUS, YOU BANANA
+39. THE BUS BARELY WOBBLED
+
+_Nose to nose_
+
+40. THEY BOOPED EACH OTHER
+41. NOSE TO NOSE, THAT ONE
+42. BOTH OF THEM AT ONCE
+43. RIGHT ON THE FRONT BUMPER
+44. THAT WAS A PROPER CLONK
+
+_A two-wheeler down, or broken in half_
+
+45. THE MOPED'S IN TWO BITS
+46. HE PUT THE LITTLE BIKE DOWN
+47. THERE'S A SCOOTER IN THE ROAD
+48. PARTS EVERYWHERE, WHAT A MESS
+
+_Something with a roof gone over_
+
+49. IT'S ON ITS ROOF, LOOK
+50. IT WENT RIGHT OVER, WHEELS UP
+51. SOMEBODY GIVE IT A PUSH
+
+_Somebody out through a windscreen_
+
+52. SOMEBODY POPPED OUT THE FRONT
+53. OUT THE WINDOW IN A PUFF
+54. THEY LANDED IN GOLD DUST
+
+_Something has caught._ A car alight FIZZES in this mode — gold stars climbing
+off the bodywork — and it still GROWS, so these are people watching it thicken
+rather than reacting to a bang.
+
+55. IT'S SPARKLING ALL OVER
+56. LOOK AT THE STARS COMING OFF
+57. THE WHOLE BONNET IS TWINKLING
+58. IT'S FIZZING LIKE A SPARKLER
+59. GOLD STARS, EVERYWHERE, LOOK
+
+_And the tank went_
+
+60. THAT WAS THE BIGGEST FIREWORK YET
+61. CONFETTI CANNON, THAT WAS
+62. IT WENT BANG AND SPARKLED
+63. HAPPY NEW YEAR, EVERYBODY
+64. MIND THE STREAMERS
+
+_And the front it threw._ A pressure wave is the same pressure wave in any
+mode, so these stay about the chest, the ears, the windows and the lights.
+
+65. I FELT THAT IN MY BOOTS
+66. THE WINDOWS ALL RATTLED
+67. MY EARS ARE RINGING, WOW
+68. ALL THE LAMPS BLINKED AT ONCE
+69. THE WHOLE STREET WOBBLED
+
+_A street light down_
+
+70. THERE GOES A STREET LIGHT
+71. HE'S BENT THE LAMP POST
+72. THE COUNCIL WILL BE THRILLED
+
+_And the one about him._ Still unlocked by the second body, still the only line
+out here about the driver, and still becomes nothing at all.
+
+73. HE'S NOT STOPPING, IS HE
+74. OFF HE GOES AGAIN
+75. SOMEBODY TELL HIM TO SLOW DOWN
+76. HE'S IN A REAL HURRY
+
 ### The arrival verdict — seven readings of one trip
 
 _Spoken ON THE RUN-IN, at the wheel, folded into the front of the place's own
@@ -1932,6 +2154,7 @@ changes with it, in the same commit.
 | What he mutters ON the road                         | `content/thoughts.yaml` (`drive_out_welfare`, `drive_home_errand`, `drive_broke_down`, `drive_arrive_goodco`/`_home`)          |
 | THE GLUED's shouts and THE CROWD's thoughts         | `GLUED_BARKS` / `CROWD_THOUGHTS`, `pwa/src/game/drive-screen/placards.ts` — no name, no portrait, no box, so no thought def    |
 | What a BYSTANDER shouts at a collision              | `WITNESS_LINES`, same file — keyed on the SCENE the sim names (`WitnessScene`, `engine/game/drive/witness.ts`), never an index |
+| All three of those, in SFW MODE                     | `pwa/src/game/drive-screen/placards-sfw.ts` — one twin list per shipped list, reached through the pickers in `placards.ts`     |
 | Companion joining words + kill quotes               | `content/companions.yaml`                                                                                                      |
 | Found lore on story items                           | `content/story-items.yaml`                                                                                                     |
 | The merchant's greeting, counter line, welcome back | `content/levels/<id>.yaml` (`merchant.*`) + `MERCHANT_RETURN_SENDOFF` in `engine/game/defs/difficulties.ts`                    |

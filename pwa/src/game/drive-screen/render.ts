@@ -70,9 +70,9 @@ import { drawSkidMarks, type SkidState } from "./skid.ts";
 import { drawDriveFx, type DriveFxState } from "./drive-fx.ts";
 import { drawTrafficBody } from "./wreck-draw.ts";
 import {
-  CROWD_THOUGHTS,
+  crowdThought,
   drawPlacard,
-  GLUED_BARKS,
+  gluedBark,
   MAX_PLACARDS,
   placardOrder,
   PLACARD_READ_PX,
@@ -418,6 +418,11 @@ export function drawDrive(
    * fairy ramp (`render/stardust.ts`), and the bodies peel away in pastel dust
    * (`loop.ts`) instead of coming apart. Nothing is hidden; the mess is simply
    * made of glitter.
+   *
+   * …AND THE ROAD SAYS SO. All three voices swap to their SFW twins
+   * (`placards-sfw.ts`) through the pickers below, because a bystander shouting
+   * about pieces of somebody over a shower of glitter tells the player exactly
+   * what the mode is refusing to draw.
    */
   fairy = false,
   /** WHAT THE ROAD HAS THROWN THAT LANDS ON IT — the effect list, so the
@@ -1132,7 +1137,7 @@ export function drawDrive(
     // own people.
     if (font && witness?.ped === ped.id && ped.mode === "afoot") {
       bubbles.push({
-        line: witnessLine(witness.scene, witness.roll),
+        line: witnessLine(witness.scene, witness.roll, fairy),
         voice: "reaction",
         ped,
       });
@@ -1146,7 +1151,7 @@ export function drawDrive(
       // whole y-sorted field rather than inside it, or the body in the next row
       // back is painted over its own neighbour's words.
       if (font && ped.bark >= 0) {
-        const line = GLUED_BARKS[ped.bark % GLUED_BARKS.length];
+        const line = gluedBark(ped.bark, fairy);
         if (line) bubbles.push({ line, voice: "shout", ped });
       }
       continue;
@@ -1162,7 +1167,7 @@ export function drawDrive(
     // be the game making a remark about what just happened — which is the one
     // thing this whole minigame refuses to do.
     if (font && ped.bark >= 0 && ped.mode === "afoot") {
-      const line = CROWD_THOUGHTS[ped.bark % CROWD_THOUGHTS.length];
+      const line = crowdThought(ped.bark, fairy);
       if (line) bubbles.push({ line, voice: "thought", ped });
     }
     // WHOSE ART, ASKED ONCE. Only the WALKERS have a stride; everybody else on

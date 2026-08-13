@@ -145,6 +145,17 @@ GOODCO's fence a minute after that, reviewing the ride. **The town is not
 indifferent to what he does — he is indifferent to the town,** and until somebody
 was allowed to shout, the road could not tell those two apart.
 
+**And the road has a second dressing.** With SFW MODE on, everything out here
+still happens — the same people, the same blockade, the same collisions with the
+same weight behind them — but a body peels away in glitter rather than coming
+apart, and a car alight fizzes gold stars rather than burning. All three of the
+road's voices change with it: the crowd think about how fast that one went and
+what the sparkles get into, THE GLUED have shut the lanes for a chalk mural, and
+a bystander who watches somebody turn into confetti is delighted rather than
+sick. **The joke underneath survives the swap intact** — he reads none of it in
+either dressing, and arrives remarking on the suspension. What is lost is only
+the part that was never the joke.
+
 **What he says about it is about the car.** Coming in past the fence with the
 place growing in the windscreen, he reviews the whole trip in a couple of words
 and then names what he is looking at — ROUGH RIDE. THERE'S GOODCO. The review is

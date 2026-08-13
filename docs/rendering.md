@@ -263,6 +263,37 @@ and `drawTrafficBody`, each of which puts the authored red art through
 SPRITE: a green jacket stays a green jacket, because a re-hued crowd is a
 different crowd.
 
+**A TREAD PRINT IS THE ONE MARK THAT GOES DARK INSTEAD** (`RUBBER_RAMP`,
+skid.ts — the same black the handbrake's own lines are laid in). Every other
+mark on that road is a place a BODY came apart, and in this mode a body comes
+apart into glitter; a tread print is the shape of a TYRE, and a pastel picture
+of a tyre reads as a decal somebody stuck on the tarmac. The same print in
+rubber reads as the thing the player just did with the car, which is what the
+mark was always for. So the mess stays bright and the tread goes dark.
+
+**FIRE IS THE ONE THING NO RE-HUE REACHES, so it is replaced outright.** The
+flame is authored ART with a flame's silhouette in it, and a yellow flame is
+still a flame — so SFW answers a burning car with a fountain of gold stars off
+the bodywork and a fuel tank with a popper's worth of them (`star-fire.ts`, the
+`starfire` / `starblast` effect kinds). It is drawn from canvas primitives for
+the reason `drawStardust` is: hundreds of grains, where the MASS is the picture
+and an atlas would owe a tile per size-and-colour pair. Three things make it
+read against the flame it stands in for, and each was measured in the gallery
+rather than guessed — it is issued on the SAME cadence and at the same lift, so
+a burn grows identically in both modes; the fountain leaves from the flame
+sprite's BODY rather than from its foot, or it pours out from under the sills;
+and it carries a low additive halo, because the flame is mostly glow and a
+fountain of hard little stars lights nothing at all on its own. The gold is
+deliberately NOT the fairy ramp: a glance has to tell a fizzing wreck from the
+lilac cloud a person leaves. ONLY the ball is swapped out of a blast — the
+sparks, shards, glass, column, pall and pressure front are what steel and air
+did, and the mode has never withheld those.
+
+**AND THE ROAD'S WORDS MOVE WITH THE PICTURE.** All three of the drive's voices
+have SFW twins (`drive-screen/placards-sfw.ts`), reached through the pickers in
+`placards.ts`: a bystander shouting about pieces of somebody over a shower of
+glitter tells the player exactly what the mode is refusing to draw.
+
 **A PUSH IS A SCREEN DIRECTION AND HAS TO BE CONVERTED LIKE ANY OTHER —
 `screenDirToWorld`.** A destination goes through `toWorld`, but the controls that
 STEER rather than point (the touch dpad, the stick, the WASD cluster) have no
