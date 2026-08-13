@@ -363,8 +363,18 @@ export const WHEEL_DEBRIS = {
 } as const;
 
 export const SHIP = {
-  /** One blocker under the hull — a rocket stands on its own pad. */
-  footprint: { offsets: [0], radius: 10 },
+  /**
+   * One blocker under the hull — a rocket stands on its own pad — and it is the
+   * FEET, not the fuselage.
+   *
+   * The `starship` art is 24 px across at the fins and tapers to a bell and
+   * three legs about 12 px wide where it meets the ground, and only that last
+   * bit is on the floor with the hero: the rest of it is a tower he walks
+   * UNDER. So the disc is the width of the legs (6 px), which puts a man of
+   * `PLAYER.radius` shoulder to the pad — close enough to look like he is about
+   * to climb in — and still stops him walking through the thing.
+   */
+  footprint: { offsets: [0], radius: 6 },
 } as const;
 
 /** The landmark kinds that stand for a vehicle, and what each mints. */

@@ -7,8 +7,8 @@ description: |-
   mid-floor, the ROLL-UP DOOR on its east wall, the rift seam humming beside
   the car once it exists at all); the clean PAVED DRIVE out front of the
   door (swept pavement, no garbage — the house stands just south of it, off
-  the map's edge); THE LAWN behind the garage to the north, grass where the
-  rocket stands and the trader parks; and — down the whole east edge, the
+  the map's edge); THE LAWN behind the garage to the north, grass with the
+  rocket standing on its burnt patch at the west end of it; and — down the whole east edge, the
   one piece of the lot that is not the household's — THE ROAD, two lanes of
   dark tarmac with a painted centre line, running off both ends of the map.
   The road is where the driveway leads and where a driven car is finally
@@ -70,9 +70,9 @@ areas:
   # A man built a rocket in the bay and lights it on the grass behind it
   # (`content/cutscenes/launch.yaml`), so the ground under it is whatever the
   # last fire left. It is its OWN district rather than the whole lawn's floor
-  # because the lawn is mostly fine: the far end of the lot, past the house, has
-  # never had anything lit on it, and blacking all of it read as a different
-  # place. The cutscene draws exactly the same patch, derived from where the
+  # because the lawn is mostly fine: the east half of the lot, between the garage
+  # door and the road, has never had anything lit on it, and blacking all of it
+  # reads as a different place. The cutscene draws exactly the same patch, derived from where the
   # ship is parked — the two have to agree, because the player walks the one and
   # watches the other.
   #
@@ -162,33 +162,39 @@ areas:
 # THE FLOOR PLAN — authored, not carved: the cutscene's establishing shot as
 # rooms. The GARAGE BAY southwest with its roll-up door east onto the clean
 # PAVED DRIVE (the house stands south of the drive, just off the map's edge),
-# and THE LAWN spanning the whole back of the lot to the north, where the
-# rocket stands and the trader parks. Walls derive from the areas' enclosures
+# and THE LAWN spanning the whole back of the lot to the north, with the rocket
+# standing on its burnt patch at the WEST end of it. Walls derive from the areas' enclosures
 # exactly as a carve's would: the hard bay is walled with ONE doorway (the
 # garage door hangs across it); lawn and drive meet as open ground.
 plan:
   rooms:
-    # THE LAWN, in three pieces around the burnt PAD the ship stands on: the
-    # west end (the stretch behind the house, still grass), the strip north of
-    # the pad, and the east end running down to the road. A plan is rectangles,
-    # so a patch with lawn on three sides is spelled as the lawn around it.
+    # THE LAWN, in two pieces around the burnt PAD the ship stands on: the strip
+    # north of the pad, which runs the whole width of the lot, and the long east
+    # end running down to the road. A plan is rectangles, so a patch with lawn
+    # around it is spelled as the lawn around it.
+    #
+    # THE PAD IS AT THE WEST END, hard against the lot's own boundary. A rocket
+    # is not parked in the middle of somebody's back garden: it went up at the
+    # far end, as far from the house as the ground allowed, and the fire ran to
+    # the fence. Standing it there also leaves the whole east half of the lawn
+    # walkable between the garage door and the road, which is the stretch the
+    # player actually crosses on every errand.
     - area: lawn
-      rect: { x: 0, y: 0, width: 176, height: 140 }
-    - area: lawn
-      rect: { x: 176, y: 0, width: 128, height: 44 }
+      rect: { x: 0, y: 0, width: 400, height: 44 }
     - area: pad
-      rect: { x: 176, y: 44, width: 128, height: 96 }
+      rect: { x: 0, y: 44, width: 160, height: 96 }
     - area: lawn
-      rect: { x: 304, y: 0, width: 96, height: 140 }
+      rect: { x: 160, y: 44, width: 240, height: 96 }
     - area: bay
       rect: { x: 0, y: 140, width: 224, height: 140 }
     - area: drive
       rect: { x: 224, y: 140, width: 176, height: 140 }
-    # THE ROAD, appended last so every chamber id above keeps the number it has
-    # always had. Three rooms, all TILE-ALIGNED (16 px): an open district's floor
-    # is emitted as a ragged patch and then grown back out to the tile grid, so a
-    # strip whose edges already sit on it comes out crisp and full height, which
-    # is what a painted line needs and what a kerbside wants anyway.
+    # THE ROAD, kept last in the list: a chamber's id is its position here, so a
+    # room appended at the end leaves every id above it alone. Three rooms, all
+    # TILE-ALIGNED (16 px): an open district's floor is emitted as a ragged patch
+    # and then grown back out to the tile grid, so a strip whose edges already sit
+    # on it comes out crisp and full height, which is what a painted line needs
+    # and what a kerbside wants anyway.
     - area: road
       rect: { x: 400, y: 0, width: 32, height: 280 }
     - area: road_line
@@ -562,15 +568,15 @@ objects:
   # the other half. A lot where everything green goes black at once is a lot
   # with a SETTING; a lot where the fire stopped at the edge of the patch it was
   # lit on is a lot where somebody DID something. Same sprite, no ladder — the
-  # far ends of the lawn have never had anything lit on them, and after Mars
-  # they are the only green left out here.
-  - id: lawn_tree_west
+  # lawn east of the patch and the strip along the back fence have never had
+  # anything lit on them, and after Mars they are the only green left out here.
+  - id: lawn_tree_far_east
     type: obstacle
     sprite: lawn_tree
     radius: 7
     perch: true
     at: goal
-    offset: { x: -140, y: -20 }
+    offset: { x: 250, y: -14 }
   - id: lawn_tree_east
     type: obstacle
     sprite: lawn_tree
