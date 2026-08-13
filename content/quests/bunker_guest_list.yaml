@@ -34,7 +34,7 @@ escorts:
     setOff: THE CASE STAYS WITH ME, SIR.
     arrived: ON STATION. THE CASE IS INTACT.
 reward:
-  xpShare: 0.9
+  xpShare: 1.5
   coins: 260
   loot:
     count: 2

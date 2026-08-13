@@ -23,7 +23,7 @@ objectives:
     enemy: longhorn
     count: 20
 reward:
-  xpShare: 0.45
+  xpShare: 0.77
   coins: 130
   loot:
     count: 1

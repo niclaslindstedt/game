@@ -310,6 +310,7 @@ parts:
         - { edge: e, at: 260 }
         - { edge: w, at: 260 }
       spawns:
+        - { at: [140, 370] }
         - { at: [140, 100] }
         - { at: [520, 120], patrol: true }
         - { at: [540, 420] }
@@ -330,6 +331,7 @@ parts:
         - { object: moon_pit_small, at: [360, 210] }
         - { object: moon_grit, at: [280, 150] }
       spawns:
+        - { at: [120, 220] }
         - { at: [140, 150], patrol: true }
         - { at: [300, 80] }
         - { at: [300, 230] }
@@ -354,6 +356,7 @@ parts:
         - { object: crater_small, at: [160, 420] }
         - { object: moon_scar, at: [340, 260] }
       spawns:
+        - { at: [510, 400] }
         - { at: [330, 120] }
         - { at: [160, 280] }
         - { at: [480, 240], patrol: true }
@@ -375,6 +378,7 @@ parts:
         - { object: crater_small, at: [330, 170] }
         - { object: moon_debris, at: [240, 240] }
       spawns:
+        - { at: [110, 350] }
         - { at: [240, 130] }
         - { at: [130, 240], patrol: true }
         - { at: [350, 340] }
@@ -397,6 +401,7 @@ parts:
         - { object: supply_crate, at: [370, 100] }
         - { object: crate, at: [350, 160] }
       spawns:
+        - { at: [230, 310] }
         - { at: [230, 200], slot: elite }
         - { at: [100, 260] }
         - { at: [360, 270] }
@@ -420,6 +425,7 @@ parts:
         - { object: solar_array, at: [420, 250] }
         - { object: rover_tracks, at: [260, 300] }
       spawns:
+        - { at: [100, 230] }
         - { at: [290, 120], slot: elite }
         - { at: [140, 330] }
         - { at: [300, 350] }
@@ -439,6 +445,7 @@ parts:
         - { object: dish_antenna, at: [210, 90] }
         - { object: seismometer, at: [320, 240] }
       spawns:
+        - { at: [80, 180] }
         - { at: [210, 170], slot: elite }
         - { at: [120, 250] }
     # THE FLAG SITE — the boss's own room, sewn farthest from the landing. The

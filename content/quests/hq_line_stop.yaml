@@ -24,7 +24,7 @@ objectives:
     enemy: assembler
     count: 40
 reward:
-  xpShare: 0.45
+  xpShare: 0.77
   coins: 80
   loot:
     count: 1

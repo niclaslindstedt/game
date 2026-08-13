@@ -242,6 +242,7 @@ parts:
         - { edge: e, at: 270 }
         - { edge: w, at: 270 }
       spawns:
+        - { at: [150, 390] }
         - { at: [150, 110] }
         - { at: [530, 130], patrol: true }
         - { at: [550, 430] }
@@ -262,6 +263,7 @@ parts:
         - { object: rift_shard, at: [370, 210] }
         - { object: stardust, at: [290, 150] }
       spawns:
+        - { at: [450, 220] }
         - { at: [140, 150], patrol: true }
         - { at: [300, 80] }
         - { at: [300, 230] }
@@ -286,6 +288,7 @@ parts:
         - { object: rift_debris, at: [340, 260] }
         - { object: rift_shard, at: [160, 420] }
       spawns:
+        - { at: [500, 400] }
         - { at: [320, 120], slot: elite }
         - { at: [160, 290] }
         - { at: [480, 240], patrol: true }
@@ -307,6 +310,7 @@ parts:
         - { object: rift_shard, at: [330, 170] }
         - { object: space_junk, at: [240, 240] }
       spawns:
+        - { at: [110, 350] }
         - { at: [240, 130] }
         - { at: [130, 250], patrol: true }
         - { at: [350, 340] }
@@ -329,6 +333,7 @@ parts:
         - { object: lost_tv, at: [310, 250] }
         - { object: space_junk, at: [440, 350] }
       spawns:
+        - { at: [110, 250] }
         - { at: [310, 140], slot: elite }
         - { at: [150, 340] }
         - { at: [320, 370] }
@@ -351,6 +356,7 @@ parts:
         - { object: rift_debris, at: [260, 210] }
         - { object: rift_singularity, at: [420, 290] }
       spawns:
+        - { at: [260, 340] }
         - { at: [260, 190], slot: elite }
         - { at: [120, 290] }
     # THE PYLON YARD — a cage with two gates somebody left open, pinned
@@ -369,6 +375,7 @@ parts:
         - { object: rift_seam, at: [300, 230] }
         - { object: rift_singularity, at: [440, 340] }
       spawns:
+        - { at: [440, 130] }
         - { at: [280, 120], slot: elite }
         - { at: [140, 330] }
         - { at: [460, 230], patrol: true }
@@ -388,7 +395,10 @@ parts:
         - { object: rift_seam, at: [370, 460] }
         - { object: rift_debris, at: [150, 470] }
       spawns:
-        - { at: [180, 280] }
+        # A GRAVITON stands the cage's own guard EXPLICITLY: the sight-beat
+        # `rift_graviton` waits on the breed, and a depth-rolled watch missed
+        # it on real seeds (same fix as the moon's pinned SUCCESSOR).
+        - { at: [180, 280], enemy: graviton }
         - { at: [560, 280] }
         - { at: [240, 470] }
         - { at: [500, 470] }

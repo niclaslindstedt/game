@@ -28,7 +28,7 @@ items:
     icon: icon_quest_biscuit
     dropFrom: [star_jelly]
 reward:
-  xpShare: 0.4
+  xpShare: 0.68
   coins: 110
   loot:
     count: 1

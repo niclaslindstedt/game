@@ -24,7 +24,7 @@ objectives:
   - kind: killNamed
     enemy: night_manager
 reward:
-  xpShare: 0.7
+  xpShare: 1.19
   coins: 150
   loot:
     count: 1

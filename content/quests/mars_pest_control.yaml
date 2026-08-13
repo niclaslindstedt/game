@@ -23,7 +23,7 @@ objectives:
     enemy: scout_rover
     count: 40
 reward:
-  xpShare: 0.45
+  xpShare: 0.77
   coins: 110
   loot:
     count: 1

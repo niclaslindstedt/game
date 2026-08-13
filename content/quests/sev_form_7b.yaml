@@ -29,5 +29,5 @@ items:
     at:
       - { x: 1840, y: 1020 }
 reward:
-  xpShare: 0.06
+  xpShare: 0.1
   coins: 40

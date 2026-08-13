@@ -26,7 +26,7 @@ objectives:
   - kind: killNamed
     enemy: the_thirteenth_man
 reward:
-  xpShare: 0.7
+  xpShare: 1.19
   coins: 160
   loot:
     count: 1

@@ -295,6 +295,7 @@ parts:
         - { object: marble_column, at: [150, 390] }
         - { object: crate, at: [500, 400] }
       spawns:
+        - { at: [320, 430] }
         - { at: [320, 250], enemy: cia_agent }
         - { at: [370, 280], enemy: vacuum_bot }
         - { at: [320, 310] }
@@ -324,6 +325,7 @@ parts:
         - { object: marble_column, at: [460, 80] }
         - { object: art_pedestal, at: [310, 220] }
       spawns:
+        - { at: [140, 220] }
         - { at: [140, 150], patrol: true }
         - { at: [320, 110] }
         - { at: [370, 150] }
@@ -349,6 +351,7 @@ parts:
         - { object: marble_column, at: [170, 410] }
         - { object: marble_column, at: [530, 410] }
       spawns:
+        - { at: [350, 460] }
         - { at: [350, 280], slot: elite }
         - { at: [250, 250] }
         - { at: [300, 220] }
@@ -375,6 +378,7 @@ parts:
         - { object: chandelier, at: [320, 120] }
         - { object: money_pile, at: [500, 340] }
       spawns:
+        - { at: [140, 330] }
         - { at: [320, 240], slot: elite }
         - { at: [200, 300] }
         - { at: [250, 330] }
@@ -400,6 +404,7 @@ parts:
         - { object: art_pedestal, at: [330, 370] }
         - { object: marble_column, at: [120, 340] }
       spawns:
+        - { at: [540, 240] }
         - { at: [330, 240], slot: elite }
         - { at: [200, 290] }
         - { at: [250, 320] }
@@ -424,6 +429,7 @@ parts:
         - { object: weapon_locker, at: [250, 100] }
         - { object: crate, at: [370, 120] }
       spawns:
+        - { at: [240, 330] }
         - { at: [240, 200], slot: elite }
         - { at: [130, 280] }
         - { at: [360, 280] }
@@ -468,6 +474,7 @@ parts:
         - { object: security_camera, at: [280, 90] }
         - { object: crate, at: [450, 340] }
       spawns:
+        - { at: [120, 320] }
         - { at: [280, 230], slot: elite }
         - { at: [180, 150] }
         - { at: [230, 180] }

@@ -74,8 +74,8 @@
 # ×1.63/×2.64 on top, so the deep rungs are strictly slower still.
 
 # Flat kill payouts, in regular-mob units (see UNITS above).
-eliteXpMobMult: 5
-bossXpMobMult: 10
+eliteXpMobMult: 8
+bossXpMobMult: 15
 # The XP SCROLL's whole dial (see the note above): what it multiplies, for how
 # long, and how often one drops.
 scrollXpMult: 2

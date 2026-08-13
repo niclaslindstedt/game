@@ -615,6 +615,7 @@ parts:
         - { object: sage_bush, at: [380, 220] }
         - { object: dry_shrub, at: [290, 150] }
       spawns:
+        - { at: [130, 220] }
         - { at: [140, 150], patrol: true }
         - { at: [335, 150], pack: 3, radius: 60 }
         - { at: [480, 220] }
@@ -638,6 +639,7 @@ parts:
         - { object: sage_bush, at: [130, 120] }
         - { object: haystack, at: [550, 430] }
       spawns:
+        - { at: [340, 460] }
         - { at: [330, 290], pack: 3, radius: 60 }
         - { at: [530, 150], patrol: true }
         - { at: [160, 430] }
@@ -666,6 +668,7 @@ parts:
         - { object: ammo_crate, at: [480, 400] }
         - { object: horseshoe, at: [400, 330] }
       spawns:
+        - { at: [700, 450] }
         - { at: [450, 240], slot: elite }
         - { at: [315, 310], pack: 3, radius: 60 }
         - { at: [640, 320], pack: 2, radius: 50 }
@@ -693,6 +696,7 @@ parts:
         - { object: veg_row, at: [270, 430] }
         - { object: scarecrow, at: [430, 420] }
       spawns:
+        - { at: [140, 370] }
         - { at: [320, 170], slot: elite }
         - { at: [205, 320], pack: 3, radius: 70 }
         - { at: [490, 330] }
@@ -714,6 +718,7 @@ parts:
         - { object: water_trough, at: [440, 120] }
         - { object: stone_well, at: [440, 330] }
       spawns:
+        - { at: [290, 380] }
         - { at: [400, 150], slot: elite }
         - { at: [300, 240], enemy: longhorn }
         - { at: [350, 270] }
@@ -739,6 +744,7 @@ parts:
         - { object: wagon, at: [370, 220] }
         - { object: barrel, at: [150, 220] }
       spawns:
+        - { at: [260, 340] }
         - { at: [260, 180], slot: elite }
         - { at: [140, 290] }
         - { at: [390, 290] }
@@ -762,6 +768,7 @@ parts:
         - { object: tumbleweed, at: [250, 180] }
         - { object: dry_shrub, at: [520, 260] }
       spawns:
+        - { at: [130, 280] }
         - { at: [340, 260] }
         - { at: [390, 290] }
         - { at: [340, 320] }

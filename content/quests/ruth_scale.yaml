@@ -57,7 +57,7 @@ items:
     # campaign is not a hunt, it is a lottery on a beat the story needs.
     dropChance: 1
 reward:
-  xpShare: 1
+  xpShare: 1.5
   coins: 800
   # THE CACHE — the antique chest against the bay's north wall (engine/game/
   # cache.ts). The last thing Ruth has to give, paid for the last errand she

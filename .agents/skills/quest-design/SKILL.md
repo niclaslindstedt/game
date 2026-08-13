@@ -221,11 +221,16 @@ worth reconsidering the errand before widening the engine.
 Calibrated against the 42 shipped errands — stay inside these unless you have a
 reason:
 
-- **A run errand:** `xpShare` 0.35–0.9 (median **0.5**), coins 60–260 (median
-  **135**). It is one map's side work.
-- **A campaign errand:** `xpShare` 0.06–1.0 (median **0.26**), coins 40–2000.
-  They start deliberately tiny (a typewriter ribbon pays 0.06) and the last link
+- **A run errand:** `xpShare` 0.59–1.5 (median **0.85**), coins 60–260 (median
+  **135**). It is one map's side work — and on the parts-era maps errands are
+  deliberately a progression PILLAR (the garrison fields fewer bodies per
+  minute than the old knots), so the pay is real.
+- **A campaign errand:** `xpShare` 0.1–1.5 (median **0.44**), coins 40–2000.
+  They start deliberately tiny (a typewriter ribbon pays 0.1) and the last link
   pays the game's only respec.
+- **The hard ceiling is 1.5** — `tests/content/quests_test.ts` refuses more;
+  past a level and a half per errand a chain out-paces the kills-per-level
+  table entirely.
 - **Kill counts** are **40** for a breed the map's horde is thick with and
   **20** for a scarce or heavy one, and `tests/content/quests_test.ts` fails
   anything over 40. They used to run 1–10 and that was the wrong size of job:

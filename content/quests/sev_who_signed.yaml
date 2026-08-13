@@ -26,7 +26,7 @@ objectives:
     flag: sev_surveyor_talked
     name: GET THE SURVEYOR TO SAY WHO SIGNED
 reward:
-  xpShare: 0.26
+  xpShare: 0.44
   coins: 260
   loot:
     count: 1

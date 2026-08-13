@@ -29,7 +29,7 @@ items:
     icon: icon_quest_suitekey
     dropFrom: [vacuum_bot]
 reward:
-  xpShare: 0.5
+  xpShare: 0.85
   coins: 160
   loot:
     count: 1

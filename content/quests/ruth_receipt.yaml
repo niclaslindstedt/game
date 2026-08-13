@@ -31,7 +31,7 @@ items:
     icon: icon_ada_receipt
     dropFrom: [intern, scientist]
 reward:
-  xpShare: 0.5
+  xpShare: 0.85
   coins: 120
   loot:
     count: 1

@@ -29,7 +29,7 @@ items:
     icon: icon_quest_timesheet
     dropFrom: [intern, scientist, engineer]
 reward:
-  xpShare: 0.35
+  xpShare: 0.59
   coins: 60
   loot:
     count: 1

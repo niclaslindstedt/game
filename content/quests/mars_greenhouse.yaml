@@ -29,7 +29,7 @@ items:
     icon: icon_quest_seedpod
     dropFrom: [servo_bot, fembot]
 reward:
-  xpShare: 0.4
+  xpShare: 0.68
   coins: 100
   loot:
     count: 1

@@ -138,10 +138,13 @@ describe("the campaign's errands", () => {
     for (const quest of QUESTS) {
       expect(quest.reward, `${quest.id} pays nothing`).toBeDefined();
       const share = quest.reward?.xpShare ?? 0;
-      // `xpShare` is a fraction of the hero's CURRENT level bar, so a value
-      // near 1 is a free level for one errand — which would out-pace the
-      // kills-per-level table the whole campaign is tuned against.
-      expect(share, `${quest.id} xpShare`).toBeLessThanOrEqual(1);
+      // `xpShare` is a fraction of the hero's CURRENT level bar. Errands are
+      // deliberately a progression PILLAR on the parts-era maps — the garrison
+      // fields fewer bodies per minute than the old knots, and quest pay makes
+      // up part of the difference — so the biggest single errand may pay up to
+      // a level and a half. Past that a chain out-paces the kills-per-level
+      // table entirely.
+      expect(share, `${quest.id} xpShare`).toBeLessThanOrEqual(1.5);
     }
   });
 

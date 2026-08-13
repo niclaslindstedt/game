@@ -29,7 +29,7 @@ objectives:
   - kind: killNamed
     enemy: the_long_noon
 reward:
-  xpShare: 0.8
+  xpShare: 1.36
   coins: 210
   loot:
     count: 1

@@ -31,7 +31,7 @@ objectives:
   - kind: killNamed
     enemy: phobos_shepherd
 reward:
-  xpShare: 0.75
+  xpShare: 1.27
   coins: 180
   loot:
     count: 1
