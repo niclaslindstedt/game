@@ -54,6 +54,7 @@ contrastExempt:
     moon_scar,
     moon_debris,
     moon_pocks,
+    rover_tracks,
   ]
 # Sprites whose isolated pixels are AUTHORED, not accidental — the orphan-pixel
 # check skips them (see scripts/generate-assets.mjs).

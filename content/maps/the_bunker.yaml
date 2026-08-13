@@ -158,6 +158,35 @@ objects:
         health: 1
   - id: cache
     type: chest
+  # THE FURNITURE THE RESIDENTS PAID FOR. The columns and pedestals say
+  # "expensive"; only a sofa somebody sat on, a fern somebody watered and a
+  # bar cart abandoned mid-pour say "inhabited" — which is the difference
+  # between a bunker and a marble corridor.
+  - id: leather_sofa
+    type: obstacle
+    radius: 11
+    density: 3
+    areas: [atrium, wing]
+  - id: potted_fern
+    type: obstacle
+    radius: 6
+    density: 5
+    areas: [atrium, hall, wing]
+  - id: bar_cart
+    type: obstacle
+    radius: 7
+    density: 2.5
+    areas: [wing, hall]
+  # …AND THE ONE RESIDENT THE VETTING MISSED. Rats, everywhere — including
+  # the vault, where they are the only thing the gold is any use to. A
+  # critter: collides with nothing, costs the simulation nothing.
+  - id: rat
+    type: critter
+    animated: true
+    density: 2.2
+    range: [40, 110]
+    speed: [10, 24]
+    scale: [0.8, 1.1]
   # THE OCCUPIED SUITES. A marble frontage in a hall like any other, right up
   # until the hero is close enough for the door to matter.
   - id: penthouse

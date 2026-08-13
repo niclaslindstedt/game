@@ -1,0 +1,35 @@
+name: rover_tracks
+family: moon
+plane: floor
+size: [16, 16]
+description: >
+  Twin wheel ruts pressed into the regolith, ladder tread pressed between
+  the rims — a buggy passed this way once, and on the moon the tracks stay
+  forever.
+subject:
+  kind: ground decor — rover wheel tracks
+  build: two parallel ruts running down the tile, ladder tread bars pressed in each
+  features: dark ruts with paler kicked-up rims between them
+  accent: none — a mark in the dust
+  flavor: a crossing made once, kept forever
+palette:
+  A: "#8d9196" # pressed rut shadow
+  v: "#7e828a" # deep tread press
+  u: "#a9adb5" # kicked-up rim
+grid: |
+  .AvA........AvA.
+  .AAA...uu...AAA.
+  .AvA........AvA.
+  ..AvA......AvA..
+  ..AAA..uu..AAA..
+  ..AvA......AvA..
+  ..AvA......AvA..
+  ...AvA....AvA...
+  ...AAA.uu.AAA...
+  ...AvA....AvA...
+  ...AvA....AvA...
+  ...AvA.uu.AvA...
+  ..AvA......AvA..
+  ..AAA......AAA..
+  ..AvA..uu..AvA..
+  .AvA........AvA.

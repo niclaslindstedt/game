@@ -1,0 +1,39 @@
+name: moon_buggy
+family: moon
+size: [26, 16]
+description: >
+  The expedition's abandoned rover — an open chassis on four wire-mesh wheels,
+  gold-foil equipment bay behind two empty bucket seats, a small dish still
+  cocked off the front fender. Parked mid-traverse and never boarded again.
+subject:
+  kind: solid obstacle prop — abandoned lunar rover
+  build: a low open buggy in three-quarter view, four wire-mesh wheels under a flat pale frame
+  features: two empty bucket seats, a gold-foil equipment bay aft, a stub dish off the front
+  accent: the gold-foil bay
+  flavor: parked mid-traverse, never boarded again
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white seat back
+  A: "#8d9196" # grey frame shadow
+  a: "#d6dce4" # pale frame
+  o: "#d6a842" # gold foil bay
+  q: "#96762e" # gold-foil shadow
+  v: "#60687e" # slate wheel mesh
+  k: "#342c26" # tire shadow
+grid: |
+  ..........................
+  ...OOO....................
+  ..OaaaO...................
+  ..OAaaO.OOOO.....OOOO.....
+  ...OvO.OWWaaO...OWWaaO....
+  ...OvO.OWaaAO...OWaaAO....
+  .OOOOOOOOOOOOOOOOOOOOOOO..
+  .OaaaaaaaaaaaaaaaooqoqaO..
+  .OaaaaaaaaaaaaaaaoqooqaO..
+  .OAaaaaaaaaaaaaaAqoqoqAO..
+  .OOOOOOOOOOOOOOOOOOOOOO...
+  ..OvvO..OvvO..OvvO..OvvO..
+  .OvkkvOOvkkvOOvkkvOOvkkvO.
+  .OvkkvOOvkkvOOvkkvOOvkkvO.
+  ..OvvO..OvvO..OvvO..OvvO..
+  ...OO....OO....OO....OO...

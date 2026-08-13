@@ -1,0 +1,32 @@
+name: office_chair
+family: goodco
+space: inside
+size: [10, 13]
+description: >
+  A swivel task chair pushed back from a desk that no longer has anyone at
+  it — dark seat and back on a chrome star base, turned a little off true.
+subject:
+  kind: small obstacle prop — swivel chair
+  build: a task chair seen three-quarter on, seat and low back over a star base
+  features: dark upholstery, chrome column and five-point base
+  accent: the chrome column
+  flavor: pushed back mid-shift and never pulled in again
+palette:
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark upholstery
+  v: "#60687e" # upholstery light
+  V: "#9095a5" # chrome base
+grid: |
+  ..........
+  ..OOOOO...
+  .ObvvvbO..
+  .ObbbbbO..
+  .ObbbbbO..
+  ..OOOOO...
+  .ObbbbbO..
+  .OObbbOO..
+  ...OVO....
+  ...OVO....
+  .OVOVOVO..
+  .OO.O.OO..
+  ..........

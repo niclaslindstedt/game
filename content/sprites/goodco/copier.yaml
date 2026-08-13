@@ -1,0 +1,37 @@
+name: copier
+family: goodco
+space: inside
+size: [16, 14]
+description: >
+  A floor-standing office copier — beige body, lifted lid over a green
+  scanner glow, an output tray already overflowing onto the carpet and a
+  red jam light nobody has come to clear.
+subject:
+  kind: solid obstacle prop — office copier
+  build: a boxy floor-standing copier, lid lifted at an angle over the platen
+  features: beige body, papers spilling off the side tray, control strip up top
+  accent: a green scanner glow under the lid, a red jam light
+  flavor: jammed since the last honest quarter
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # paper
+  a: "#d8d3c3" # beige body
+  A: "#a9a494" # beige shadow
+  b: "#3f4553" # dark slot
+  G: "#7ae04a" # scanner glow
+  r: "#d83a3a" # jam light
+grid: |
+  ................
+  ...OOOOOOOOO....
+  ..OWWWWWWWWWO...
+  .OOOOOOOOOOOOO..
+  .OaGGGGGGGGraO..
+  .OaaaaaaaaaaaO..
+  .OaObbbbbbOaaOO.
+  .OaaaaaaaaaaOWO.
+  .OaaaaaaaaaaOWO.
+  .OAaaaaaaaAaOOO.
+  .OAaaaaaaaAaO...
+  .OOAAAAAAAAOO...
+  ..OO......OO....
+  ................

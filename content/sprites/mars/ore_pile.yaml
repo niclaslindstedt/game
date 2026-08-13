@@ -1,0 +1,30 @@
+name: ore_pile
+family: mars
+size: [16, 10]
+description: >
+  A tailings heap beside a bore — a low mound of broken rust rock with amber
+  ore glints in the spill, seams showing where each bucket-load was dumped
+  on the last.
+subject:
+  kind: cover prop — ore tailings heap
+  build: a low wide mound of broken rock, dumped in overlapping loads
+  features: dark seams between spills, amber ore glinting in the faces
+  accent: the amber ore glints
+  flavor: a bore's leavings, still waiting for the pickup run
+palette:
+  O: "#1a1c2c" # outline
+  B: "#a05236" # rust rock
+  d: "#7a3c28" # seam shadow
+  a: "#c98a5e" # lit rock face
+  o: "#d6a842" # amber ore glint
+grid: |
+  ................
+  ......OOOO......
+  ....OOaBBaOO....
+  ...OaBodBBBaO...
+  ..OaBBdBoBdBaO..
+  .OaBoBBdBBdBBO..
+  .OBBdBBaBoBBaO..
+  .OBdBBoBBdBBBO..
+  ..OOOOOOOOOOO...
+  ................

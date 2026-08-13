@@ -1,0 +1,27 @@
+name: sparrow_1
+family: earth
+size: [10, 8]
+description: >
+  A sparrow mid-hop — wings flicked open a crack, tail down, the same bird
+  an inch further along the lawn.
+subject:
+  kind: critter — sparrow
+  build: a small round bird mid-hop, wings flicked slightly open
+  features: brown back over a buff breast, a short dark beak
+  accent: the buff breast
+  flavor: the lawn's own tenant, unbothered by the rocket
+palette:
+  O: "#1a1c2c" # outline
+  B: "#92643e" # brown back
+  E: "#5d4028" # wing shadow
+  u: "#e2c494" # buff breast
+  K: "#0c0b12" # eye and beak
+grid: |
+  ..........
+  ..OOO.....
+  .OBBBO....
+  OKuBBEOO..
+  .OuuBBEBO.
+  .OuBEBBO..
+  ..OOBBOO..
+  ....OO....

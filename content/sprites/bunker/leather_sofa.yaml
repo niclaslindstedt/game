@@ -1,0 +1,34 @@
+name: leather_sofa
+family: bunker
+size: [24, 13]
+description: >
+  A deep oxblood chesterfield — rolled arms, tufted back, brass studs along
+  the frame — the kind of sofa bought by the yard for a lobby seventy feet
+  under the permafrost.
+subject:
+  kind: solid obstacle prop — chesterfield sofa
+  build: a wide three-seat sofa, rolled arms, low tufted back
+  features: oxblood leather with button tufting, dark wood feet
+  accent: brass studs along the frame
+  flavor: lobby furniture for the end of the world
+palette:
+  O: "#1a1c2c" # outline
+  C: "#8c2e34" # oxblood leather
+  i: "#5e1e24" # leather shadow
+  u: "#b0555a" # leather highlight
+  h: "#e2c640" # brass stud
+  E: "#5d4028" # dark wood foot
+grid: |
+  ........................
+  .OOOOOOOOOOOOOOOOOOOOOO.
+  .OCuCCChCCCChCCCChCCCuO.
+  .OCCiCCCiCCCCiCCCCiCCCO.
+  .OCuChCCCChCCCChCCCCuCO.
+  .OOCCiCCCCiCCCCiCCCCOO..
+  .OuOOOOOOOOOOOOOOOOOOuO.
+  .OCCuuuuuOuuuuuOuuuuuCO.
+  .OCCCCCCCOCCCCCOCCCCCCO.
+  .OCiCCCCCOCCCCCOCCCCiCO.
+  .OOiiiiiiiiiiiiiiiiiiOO.
+  ..OEO...OEO..OEO...OEO..
+  ........................

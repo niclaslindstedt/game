@@ -1,0 +1,27 @@
+name: rat_0
+family: bunker
+size: [12, 8]
+description: >
+  A grey rat at a scurry, head to the left, tail trailing — because even
+  seventy feet down, behind the blast doors and the gold, there are rats.
+subject:
+  kind: critter — rat
+  build: a rat seen from above at a scurry, head left, long tail trailing right
+  features: grey coat, pink ears and tail, a dark bead of an eye
+  accent: the pink tail
+  flavor: the one resident the vetting missed
+palette:
+  O: "#1a1c2c" # outline
+  A: "#8d9196" # grey coat
+  v: "#60687e" # coat shadow
+  P: "#d89aa0" # pink ears and tail
+  K: "#0c0b12" # eye
+grid: |
+  ............
+  ..OO........
+  .OPAOOOO....
+  OKAAAAAAO...
+  OAAvAAvAOPP.
+  .OAAAAAAOP..
+  ..OvOOvO....
+  ............
