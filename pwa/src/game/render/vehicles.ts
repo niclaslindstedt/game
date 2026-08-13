@@ -30,6 +30,7 @@ import {
   type CarDetachable,
   type CarPanelId,
   type GameState,
+  type ShipVehicle,
   type Vehicle,
 } from "@game/core";
 
@@ -215,6 +216,35 @@ function onLayer(
   return (pos.y > heroFeetY ? "over" : "under") === layer;
 }
 
+/**
+ * HOW TALL A HULL HAS TO BE BEFORE IT STOPS BEING FURNITURE (px of drawn art).
+ *
+ * The depth sort above answers "which of these two is nearer the eye", and that
+ * is a question only two pictures of comparable height can be asked. The
+ * garage's booster is 208 px of hull standing off one point on the grass, so
+ * EVERY piece of the lawn is within a few dozen px of its base while the art
+ * runs sixty feet up the screen — including the two trees planted BEHIND it.
+ * Sorted, a lifted 28 px canopy wins the whole tower.
+ *
+ * So a hull past this is a TOWER: it has no behind among the ground furniture,
+ * and it is painted after all of it rather than sorted against it. The tallest
+ * thing on any lot that is not a ship draws 28 px (`lawn_tree`), so 64 clears
+ * the furniture by more than double and clears Mars's own 32 px `starship` —
+ * which IS an ordinary prop and must keep sorting like one.
+ */
+const HULL_LOOMS_PX = 64;
+
+/** This ship's hull if it is a TOWER rather than a prop, else undefined — the
+ * one place `HULL_LOOMS_PX` is applied, and it hands the sprite back because
+ * the pass that draws these culls against the hull's own height. */
+function loomingHull(
+  ship: ShipVehicle,
+  sprites: Sprites,
+): SpriteImage | undefined {
+  const hull = spriteByName(sprites, ship.sprite);
+  return hull && hull.height >= HULL_LOOMS_PX ? hull : undefined;
+}
+
 export function drawVehicles(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -268,6 +298,11 @@ export function drawVehicles(
         );
       }
     } else {
+      // A TOWER standing nearer the eye than the hero is held back for
+      // `drawLoomingShips`, after the lifted furniture — see `HULL_LOOMS_PX`.
+      // On the "under" side there is nothing to hold it back FROM: the ground
+      // furniture in front of the hero is in front of the tower too.
+      if (layer === "over" && loomingHull(vehicle, sprites)) continue;
       drawShip(ctx, vehicle, sprites, camera, timeMs);
     }
   }
@@ -318,6 +353,46 @@ export function drawVehicles(
       camera,
       "base",
     );
+  }
+}
+
+/**
+ * THE TOWERS — a hull too tall to sort against the ground furniture, painted
+ * after all of it (`HULL_LOOMS_PX`). One caller, at the end of the world stack:
+ * after `drawObstacles(…, "over")`, which is the last pass that can put a lawn
+ * tree across sixty feet of rocket.
+ *
+ * Only the machines the depth sort already put in FRONT of the hero come
+ * through here, so this changes nothing about the hero himself — he still walks
+ * behind the hull and in front of it exactly where he did. On the "under" side
+ * the pass order is already right: the floor furniture in front of the hero is
+ * in front of the tower too.
+ *
+ * THE TRADE, stated because it is real: a tree genuinely planted between the
+ * eye and the pads no longer covers the landing leg it overlaps. That is a
+ * 28 px crown against a leg, and the alternative was the same crown painted
+ * across the whole tower — including from the two trees standing BEHIND it.
+ *
+ * The cull margin is the hull's own height rather than the shared 64: a tower
+ * is anchored at its pads and drawn straight up from them, so it is still on
+ * screen with its base a couple of hundred px below the bottom edge.
+ */
+export function drawLoomingShips(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  sprites: Sprites,
+  camera: Camera,
+  inView: InView,
+  timeMs: number,
+): void {
+  const heroY = localHero(state).pos.y + PLAYER.footLift;
+  for (const vehicle of state.vehicles) {
+    if (vehicle.kind !== "ship") continue;
+    if (!onLayer(vehicle.pos, heroY, "over")) continue;
+    const hull = loomingHull(vehicle, sprites);
+    if (!hull) continue;
+    if (!inView(vehicle.pos.x, vehicle.pos.y, hull.height)) continue;
+    drawShip(ctx, vehicle, sprites, camera, timeMs);
   }
 }
 

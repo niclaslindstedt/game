@@ -54,7 +54,7 @@ import {
 } from "../defs/quests.ts";
 import { dropItem } from "../items/index.ts";
 import { addMapMarker, removeMapMarkers } from "../map.ts";
-import { startPlayerThought } from "../story.ts";
+import { floatPlayerThought } from "../story.ts";
 import { lineOfSight } from "../obstacles.ts";
 import { heroInPlay, partyLevel } from "../party.ts";
 import type {
@@ -1009,8 +1009,17 @@ export function giverMark(state: GameState, giverId: string): QuestMark {
  * than a chain, because the hub mints its givers fresh on the next visit.
  *
  * No line and no toast: what the player is looking at says it.
+ *
+ * `by` is WHERE THE BLOW CAME FROM — the car's own anchor, which while somebody
+ * is driving is also the hero's. The `runDown` beat below is floated over it
+ * rather than over the body, because it is the driver's thought and he never
+ * looks back.
  */
-export function killQuestGiver(state: GameState, giverId: string): boolean {
+export function killQuestGiver(
+  state: GameState,
+  giverId: string,
+  by?: Vec2,
+): boolean {
   const giver = state.questGivers.find((g) => g.id === giverId);
   if (!giver || giver.dead) return false;
   giver.dead = true;
@@ -1033,9 +1042,20 @@ export function killQuestGiver(state: GameState, giverId: string): boolean {
   // …AND WHAT THE VENUE SAYS TO MAKE OF IT (`QuestGiverDef.runDown`): the one
   // beat he gets on the spot, and the flag that carries the fact out of this
   // run and down the rest of the campaign.
+  //
+  // THE BEAT IS FLOATED, NEVER STAGED, and `by` is why the caller passes a
+  // position at all. The only way a giver dies is a moving car, so the hero is
+  // at the wheel of one when this fires: a dialogue box here stops the wagon
+  // mid-driveway and holds it there for a tap, which turns three words the
+  // character does not think twice about into a scene the game clearly does.
+  // Floated over the car instead, he says it and keeps driving — which is the
+  // line (`thoughts.yaml` → `ruth_run_down`). Falls back to the body when
+  // nothing said where the blow came from.
   const runDown = questGiverDef(giverId).runDown;
   if (runDown?.flag) state.questFlags[runDown.flag] = true;
-  if (runDown?.thought) startPlayerThought(state, runDown.thought);
+  if (runDown?.thought) {
+    floatPlayerThought(state, runDown.thought, by ?? giver.pos);
+  }
   return true;
 }
 

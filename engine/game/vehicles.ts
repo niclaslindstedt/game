@@ -1816,7 +1816,9 @@ function runDownBystander(state: GameState, car: CarVehicle): void {
     // uses rather than standing where the level put her.
     if (giver.dead || !giver.to) continue;
     if (struck(giver.pos, QUESTS.radius)) {
-      killQuestGiver(state, giver.id);
+      // The CAR's anchor, not the body's: the beat this raises is the driver's
+      // thought, and it floats over him.
+      killQuestGiver(state, giver.id, car.pos);
       return;
     }
   }

@@ -414,13 +414,6 @@ export function startJoinWords(state: GameState, companionId: string): void {
 }
 
 /**
- * Play a one-time inner monologue: put the hero's own thought on stage and
- * freeze the run in the `dialogue` phase. Silent for an empty/unknown thought
- * and it yields to any scene already up (a death gasp keeps the stage). The
- * `dialogueStarted` event lets the app cue it; the box resumes play — or a
- * pending level-up — when tapped through, like every other dialogue.
- */
-/**
  * THE EPILOGUE THIS HERO ACTUALLY GETS — the level's `outro` with whatever
  * `outroIf` he earned on the end of it.
  *
@@ -441,6 +434,13 @@ export function outroPages(state: GameState): readonly (readonly string[])[] {
   return [...base, ...earned.flatMap((entry) => entry.pages)];
 }
 
+/**
+ * Play a one-time inner monologue: put the hero's own thought on stage and
+ * freeze the run in the `dialogue` phase. Silent for an empty/unknown thought
+ * and it yields to any scene already up (a death gasp keeps the stage). The
+ * `dialogueStarted` event lets the app cue it; the box resumes play — or a
+ * pending level-up — when tapped through, like every other dialogue.
+ */
 export function startPlayerThought(state: GameState, thoughtId: string): void {
   const def = thoughtDef(thoughtId);
   if (
@@ -456,6 +456,39 @@ export function startPlayerThought(state: GameState, thoughtId: string): void {
   };
   state.phase = "dialogue";
   state.events.push({ type: "dialogueStarted", speaker: def.speaker });
+}
+
+/**
+ * THE SAME MONOLOGUE WITHOUT THE STAGE — the thought floated over `at` while
+ * the run carries on (`heroThought`, types/events.ts, which carries the whole
+ * of why the two exist).
+ *
+ * ONE PAGE, and that is what makes a thought a floatable one rather than a
+ * setting on it: a float is read out of the corner of the eye by somebody doing
+ * something else, so it holds what fits over a head. A caller with a paragraph
+ * to deliver wants the box, and a def with more pages loses everything past the
+ * first here.
+ *
+ * Muted exactly as the box is (`dialogueMuted`) — a player who turned the
+ * story text off turned this off too — but it never yields to a scene already
+ * up, because it does not take the stage and so cannot lose it.
+ */
+export function floatPlayerThought(
+  state: GameState,
+  thoughtId: string,
+  at: Vec2,
+): void {
+  const page = thoughtDef(thoughtId).pages[0];
+  // HIS OWN VOICE ONLY. A `{ them: … }` page is somebody talking AT him, and
+  // floated over his head it would read as him saying it.
+  if (!page || !Array.isArray(page) || page.length === 0) return;
+  if (state.dialogueMuted) return;
+  state.events.push({
+    type: "heroThought",
+    pos: { x: at.x, y: at.y },
+    defId: thoughtId,
+    lines: [...page],
+  });
 }
 
 /**

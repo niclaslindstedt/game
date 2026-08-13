@@ -113,12 +113,18 @@ export const GLYPHS = {
   // fast-forwards the run), a hamburger for MENU, and a STOP square for
   // STOP AUTO PILOT. Monochrome so they inherit the button's text color.
   "▶": ["#..", "##.", "###", "##.", "#.."],
-  // …and its mirror, for the screenshot gallery's PREVIOUS step. A pair of
-  // triangles is the one arrow shape a 3x5 cell can draw unambiguously — the
-  // "<" and ">" a keyboard would reach for are not in this font at all, and a
-  // missing glyph falls back to "?", which is what shipped the gallery with two
-  // question marks either side of the picture.
+  // …and its mirror, for the screenshot gallery's PREVIOUS step.
   "◀": ["..#", ".##", "###", ".##", "..#"],
+  // THE CHEVRONS, and they are here because a font that lacks a character does
+  // not leave a gap — `glyphFor` falls back to "?" (pwa/src/lib/pixel-font.ts).
+  // So every "<" and ">" anybody reached for on a keyboard came out as a
+  // QUESTION MARK, silently, in the middle of drawn copy: two of them either
+  // side of the screenshot gallery's picture, one on the high-score row, and
+  // one as the cursor on the answer the player was hovering in a conversation
+  // — where it reads as punctuation and turns "I'M GOING AFTER HER." into a
+  // line nobody could parse. Same stroke as `»`, which is this shape doubled.
+  ">": ["#..", ".#.", "..#", ".#.", "#.."],
+  "<": ["..#", ".#.", "#..", ".#.", "..#"],
   "»": ["#.#..", ".#.#.", "..#.#", ".#.#.", "#.#.."],
   "≡": ["###", "...", "###", "...", "###"],
   "■": ["...", "###", "###", "###", "..."],
