@@ -593,8 +593,17 @@ export {
   stepVehicles,
   createVehicles,
   vehicleFootprint,
+  landingClearOfVehicles,
   type CarDamage,
 } from "./game/vehicles.ts";
+// THE LIVING SCENERY on the ground plane. `FAUNA.ySweep` is the one number the
+// renderer's wander and the placement's fence share — see fauna.ts.
+export {
+  FAUNA,
+  PERCH_CYCLE_SEC,
+  fitWander,
+  scatterFauna,
+} from "./game/fauna.ts";
 // THE STAFF LOT — the night shift turning up for a shift, and the keyed
 // entrance one of them opens (see arrivals.ts). `ARRIVALS` and the door id are
 // what a test, a scenario or a mod's own lot reads; the two steps are the

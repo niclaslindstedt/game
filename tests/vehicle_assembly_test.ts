@@ -31,10 +31,8 @@ import {
 import type { GameState, LevelDef } from "@game/core";
 
 import type { Sprites } from "../pwa/src/game/assets.ts";
-import {
-  drawLightCones,
-  drawVehicles,
-} from "../pwa/src/game/render/vehicles.ts";
+import { drawLightCones } from "../pwa/src/game/render/vehicle-lights.ts";
+import { drawVehicles } from "../pwa/src/game/render/vehicles.ts";
 import {
   DEFAULT_PITCH,
   DEFAULT_YAW,
@@ -233,7 +231,15 @@ function probeAt(
   applyCamera(projection);
   const { sprites, names } = carSprites();
   const probe = drawProbe(names);
-  drawVehicles(probe.ctx, state, sprites, { x: 0, y: 0 }, () => true, 0);
+  drawVehicles(
+    probe.ctx,
+    state,
+    sprites,
+    { x: 0, y: 0 },
+    () => true,
+    0,
+    "under",
+  );
   return { blits: probe.blits, fills: probe.fills() };
 }
 
@@ -533,7 +539,15 @@ describe("the car assembly", () => {
       applyCamera(PROJECTIONS[1]!);
       const { sprites, names } = carSprites();
       const clean = drawProbe(names);
-      drawVehicles(clean.ctx, state, sprites, { x: 0, y: 0 }, () => true, 0);
+      drawVehicles(
+        clean.ctx,
+        state,
+        sprites,
+        { x: 0, y: 0 },
+        () => true,
+        0,
+        "under",
+      );
       // The same pass, with a spun wreck's dead tail lamps drawn first.
       const after = drawProbe(names);
       drawLightCones(
@@ -548,7 +562,15 @@ describe("the car assembly", () => {
         true,
         HARD_OVER,
       );
-      drawVehicles(after.ctx, state, sprites, { x: 0, y: 0 }, () => true, 0);
+      drawVehicles(
+        after.ctx,
+        state,
+        sprites,
+        { x: 0, y: 0 },
+        () => true,
+        0,
+        "under",
+      );
       expect(after.blits).toEqual(clean.blits);
     });
   });

@@ -250,7 +250,11 @@ export function drawFrame(
   // a car parked at the bay's north wall was swallowed whole by that wall's
   // face, wheels down; the hero, the horde and the loot were never at risk
   // because their passes were always down here.
-  drawVehicles(ctx, state, sprites, camera, inView, timeMs);
+  // …the half of them the hero is IN FRONT of. The machines are the one thing on
+  // the field with a depth sort (`VehicleLayer`): the rest of this pass is drawn
+  // over them, so a rocket four times a man's height had the hero painted up its
+  // hull whenever he walked round the back. The other half goes on after him.
+  drawVehicles(ctx, state, sprites, camera, inView, timeMs, "under");
   drawWells(ctx, state, sprites, camera, inView, timeMs);
   // The door on an occupied house, over the structure it is set into.
   drawLairs(ctx, state, sprites, camera, inView);
@@ -328,6 +332,11 @@ export function drawFrame(
   drawPlayer(ctx, state, assets, camera, timeMs, playerAction, heroImpact);
   drawXpBoostVeil(ctx, state, camera, timeMs, "over");
   drawLevelUpBurn(ctx, state, camera, timeMs, "over");
+  // …and the machines standing NEARER THE EYE than the hero, which is the whole
+  // of the field's depth sort (see the "under" call above). Over the ding's burn
+  // too: a car parked between the player and a hero who is levelling up is
+  // between him and the light as well.
+  drawVehicles(ctx, state, sprites, camera, inView, timeMs, "over");
 
   // Hazards sweeping the field — the storms and stampedes drawn AFTER the hero
   // so they visibly pass OVER him (he lies knocked out beneath them).

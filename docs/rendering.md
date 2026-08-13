@@ -207,10 +207,10 @@ while `drawEffects` draws everything else on top as before.
 
 The first is WHAT HAS COME TO REST (`restsOnFloor`): a corpse lies on the floor
 for seconds, a burst's gibs and a cleave's halves for the ten of GORE LINGER, an
-epic's remains for the whole level. The field is a painter's stack with no depth
-sort to appeal to (floor → furniture → loot → horde → hero), so drawn with the
-rest of the layer every one of those was painted OVER the hero the moment he
-walked across the spot. They change layers when they land, and the moment of the
+epic's remains for the whole level. The field is a painter's stack (floor →
+furniture → loot → horde → hero) with only the machines sorted inside it (see
+THE ONE DEPTH SORT below), so drawn with the rest of the layer every one of
+those was painted OVER the hero the moment he walked across the spot. They change layers when they land, and the moment of the
 handover is each one's own animation ending (`CLEAVE_MS`, `GORE_BURST_MS`, a
 corpse's keel-over or the flight of a punted one), so nothing is still moving
 when it changes sides — and a launched body stays in the air layer for its whole
@@ -1272,6 +1272,82 @@ A hero shooting left while running right is therefore mirrored left and reads as
 RUNNING BACKWARD, which is what he is doing. The near-vertical deadzone
 (`PLAYER.faceFlipMinX`) applies to all three, so a bearing within ~11° of
 straight up or down keeps the last side instead of mirror-flickering.
+
+## THE ONE DEPTH SORT — the machines, against the hero
+
+A painter's stack is the right shape for this field and it has exactly one place
+it visibly breaks: a machine four times a man's height. The ROCKET standing on
+the garage's back lawn was drawn with the furniture, under everything with a
+body, so a hero walking round the far side of it was painted up the hull like a
+decal.
+
+So the vehicle pass runs TWICE — `drawVehicles(..., "under" | "over")` — and
+each machine picks its side by its own base against the LOCAL hero's feet: a
+base further down the screen is nearer the eye and goes over him, one further up
+is behind him and stays under. Three things about that are deliberate:
+
+- **It is the LOCAL hero's feet, not every actor's.** He is the body the player
+  is watching. A joiner walking behind the same hull is one frame's worth of
+  wrong ordering on somebody else's screen, and a full y-sort of every actor
+  against every machine is a bill the rest of this field does not pay.
+- **The "over" pass sits after the ding's burn and the XP veil.** A car parked
+  between the player and a hero who is levelling up is between him and the light
+  as well.
+- **Wheel debris stays under, always.** It is floor junk, not a machine.
+
+The same sort is what decides which way a hero's landing steps off a machine
+parked on it (`landingClearOfVehicles`, engine/game/vehicles.ts): always TOWARD
+THE EYE, because a hero nudged the other way would open the run with a roof over
+his head.
+
+## A BEAM DRAWN BEFORE THE WASH HAS TO BE WOUND UP
+
+The car's headlight cone is part of the ASSEMBLY (`render/vehicle-lights.ts`) —
+drawn with the panels, in the body's own screen space — and nightfall goes down
+as one sheet over the finished picture. On a venue under a sky barely a quarter
+of the beam therefore survives to the eye, so the hub's headlights read as a
+smudge on the pavement while the minigame's, on a road with no wash over it,
+read as headlights.
+
+`drawVehicles` hands the cone `1 / nightSurvival(state)` (render/night.ts) and
+the cone caps it at `MAX_NIGHT_BOOST`. Full compensation is about 3.6× and turns
+the near half of the wedge into opaque paint, which lights nothing because there
+is nothing left to see through it. Anything else painted as light before the
+sheet owes itself the same division.
+
+**AND A HERO AT THE WHEEL CARRIES NO POOL OF HIS OWN.** `HERO_LIGHT` is the
+concession that makes a dark venue playable — a body standing on a black field
+would otherwise be a silhouette. A driving hero has no body on the field at all
+(`render/player.ts` skips his doll; the car assembly IS him), so his pool
+travelled with the car and read as the WAGON glowing: a soft blob hanging around
+a machine whose own lamps are the thing meant to be lighting the ground.
+
+## Living scenery — the fence, and the tree
+
+The FAUNA is the canopy's ground-plane twin (`render/fauna.ts`,
+`engine/game/fauna.ts`): the engine says what is alive and where each animal
+calls home, and the renderer derives where it is right now from the render
+clock, so a herd of forty costs the simulation nothing and cannot desync a
+replay. Two rules keep it honest.
+
+**THE FENCE IS THE ONLY THING THERE IS.** Nothing collides with a critter and
+nothing steps one, so a line's `within` districts are the whole of what keeps a
+sparrow off the garage's cement. Drawing the HOME inside a district is not
+enough — the lap runs `range` px either side of it — so `fitWander` fits the
+whole envelope: the animal is pulled toward the middle of its own zone until its
+box fits, and only what still does not fit comes off the range. The y sweep is
+`FAUNA.ySweep`, read by BOTH sides; a second copy that drifted would put half of
+every lap through a wall. The same fence catches the rejection sampler's misses:
+a critter the twenty tosses never landed is placed by hand rather than left
+loose.
+
+**A BIRD GOES UP.** `LevelDef.fauna[].perches` breaks the lap to sit in the
+nearest piece of furniture marked `Obstacle.perch` — inside the animal's own
+district and within `FAUNA.perchReach` — and drops back onto wherever the wander
+has got to by then, because the wander is a function of `t` and never stopped
+running underneath. The cycle is a lot longer on the ground than in the tree:
+the wander is the read, and a bird motionless in a canopy half its life is a
+bird nobody notices is alive.
 
 ## The hero doll, his kit and his weapon
 

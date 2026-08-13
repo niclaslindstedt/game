@@ -35,7 +35,7 @@ import {
   type DriveVehicleDef,
 } from "@game/core";
 
-import type { LightBody } from "../render/vehicles.ts";
+import type { LightBody } from "../render/vehicle-lights.ts";
 
 /**
  * WHAT THE ROAD IS PAINTED IN — the four inks the carriageway is made of, and

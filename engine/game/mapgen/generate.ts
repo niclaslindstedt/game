@@ -2025,6 +2025,7 @@ export function generateLevel(
       if (o.half) line.half = vec(o.half.x, o.half.y);
       else line.radius = o.radius ?? 8;
       if (o.jumpable) line.jumpable = true;
+      if (o.perch) line.perch = true;
     }
     anchored.push(line);
   }

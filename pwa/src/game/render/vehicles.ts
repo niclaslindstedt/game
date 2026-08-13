@@ -36,7 +36,9 @@ import { carriedCarCoat } from "../car-condition.ts";
 import { localHero } from "../local-seat.ts";
 import { spriteByName, type Sprites } from "../assets.ts";
 import { soaked } from "./hero-coat.ts";
+import { nightSurvival } from "./night.ts";
 import type { CoatLayer } from "./soak-ladder.ts";
+import { drawLightCones } from "./vehicle-lights.ts";
 import { drawWorldSprite } from "./plane.ts";
 import { seatX, seatY } from "./shared.ts";
 import { billboard } from "./tilt.ts";
@@ -66,14 +68,12 @@ export const VEHICLE_LANDMARK_KINDS = new Set(["car", "rocket"]);
 // furniture is furniture until somebody tells you it isn't — and a new player's
 // whole first errand is on the far side of noticing.
 //
-// IT IS A MARK, NOT A LIGHT, and that is a correction rather than a taste.
-// There used to be an amber halo under the machine, and the trouble with it was
-// structural: the game already lights this lot with real lamps, so one more
-// warm pool on the floor reads as a fitting somebody left on — it says
-// SOMETHING IS LIT HERE, when the only sentence worth saying is THIS ONE, and a
-// pool has no way to point. The rest of the game already knew that; the errand
-// givers wear a bobbing `!` (render/quests.ts) for exactly this job, and this
-// is the same idiom aimed at a machine.
+// IT IS A MARK, NOT A LIGHT, and that is a rule rather than a taste. The game
+// already lights this lot with real lamps, so one more warm pool on the floor
+// reads as a fitting somebody left on — it says SOMETHING IS LIT HERE, when the
+// only sentence worth saying is THIS ONE, and a pool has no way to point. The
+// errand givers wear a bobbing `!` (render/quests.ts) for exactly this job, and
+// this is the same idiom aimed at a machine.
 /** The mark itself — a broad gold arrow aimed down at the roof. */
 const BOARD_ARROW = "board_arrow";
 /** How far past `boardRadius` the arrow starts coming up, so it fades IN as the
@@ -178,6 +178,35 @@ function inLitRoom(state: GameState, pos: { x: number; y: number }): boolean {
   return false;
 }
 
+/**
+ * WHICH SIDE OF THE HERO A MACHINE IS DRAWN ON — the one depth sort the field
+ * has, and the only one it needs.
+ *
+ * The world is a painter's stack (floor → furniture → loot → horde → hero, see
+ * docs/rendering.md), so everything with a body used to be drawn over the
+ * machines whatever the geometry said — and the rocket standing on the garage's
+ * back lawn is where that reads as broken, because it is four times a man's
+ * height. Walking round the far side of it, the hero was painted up the hull
+ * like a decal.
+ *
+ * So the vehicle pass runs TWICE and each machine picks its side by its own base
+ * against the local hero's feet: a machine whose base is FURTHER DOWN the screen
+ * is nearer the eye, so it is drawn over him; one further up is behind him and
+ * stays under. It is the LOCAL hero the sort is against, because he is the body
+ * the player is watching — a joiner walking behind the same hull is one frame's
+ * worth of wrong ordering on somebody else's screen, and a full y-sort of every
+ * actor against every machine is a bill this field does not otherwise pay.
+ */
+export type VehicleLayer = "under" | "over";
+
+function onLayer(
+  pos: { y: number },
+  heroY: number,
+  layer: VehicleLayer,
+): boolean {
+  return (pos.y > heroY ? "over" : "under") === layer;
+}
+
 export function drawVehicles(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -185,9 +214,16 @@ export function drawVehicles(
   camera: Camera,
   inView: InView,
   timeMs: number,
+  layer: VehicleLayer,
 ): void {
+  const heroY = localHero(state).pos.y;
+  // What the night wash will take back off a beam painted here (see
+  // `drawLightCones`' `nightBoost`). One call per frame rather than one per
+  // machine: every lamp on the lot is under the same sky.
+  const boost = 1 / nightSurvival(state);
   for (const vehicle of state.vehicles) {
     if (!inView(vehicle.pos.x, vehicle.pos.y, 64)) continue;
+    if (!onLayer(vehicle.pos, heroY, layer)) continue;
     if (vehicle.kind === "car") {
       // …WEARING WHAT THE ROAD PUT ON IT. The film is the app's own carry
       // (`car-condition.ts`) rather than anything on the state, because the
@@ -209,6 +245,7 @@ export function drawVehicles(
         undefined,
         true,
         !inLitRoom(state, vehicle.pos),
+        boost,
       );
       // …and the mark OVER it. A pointer drawn under the thing it points at is
       // a pointer the thing can hide.
@@ -236,13 +273,12 @@ export function drawVehicles(
   // visitor's car is somebody else's. NO BOARDABLE ARROW: the gold "you can get
   // in this" mark belongs to the wagon the hero drove here, and three more
   // bobbing over the rank would be the lot pointing at three cars he cannot
-  // take — which is worse than the halo would have been, because an arrow makes
-  // a promise a pool of light only implies. And the
-  // ENGINE is read off the arrival's own phase rather than off a seat in the
-  // party, so the lamps and the idle shiver die when it parks.
+  // take. And the ENGINE is read off the arrival's own phase rather than off a
+  // seat in the party, so the lamps and the idle shiver die when it parks.
   for (const arrival of state.arrivals) {
     const car = arrival.car;
     if (!inView(car.pos.x, car.pos.y, 64)) continue;
+    if (!onLayer(car.pos, heroY, layer)) continue;
     const engineOn = arrival.phase === "driving" || arrival.phase === "parking";
     drawCarAssembly(
       ctx,
@@ -255,10 +291,13 @@ export function drawVehicles(
       engineOn,
       true,
       !inLitRoom(state, car.pos),
+      boost,
     );
   }
   // Wheels that came off, mid-bounce or at rest: drawn lifted by their own
-  // height, spinning from their own run-out speed (see WheelDebris).
+  // height, spinning from their own run-out speed (see WheelDebris). Floor
+  // junk, so they stay under the actors whatever the sort says.
+  if (layer === "over") return;
   for (const wheel of state.wheelDebris) {
     if (!inView(wheel.pos.x, wheel.pos.y, 32)) continue;
     const frame = Math.floor(wheel.angle / (Math.PI / 5)) % 2;
@@ -629,6 +668,10 @@ export function drawCarAssembly(
    * floor to cut.
    */
   throwsLight = true,
+  /** …and how far the beams have to be wound up to survive the night wash laid
+   * over this frame — see `drawLightCones`' own `nightBoost`. 1 is the road,
+   * which has no wash over it. */
+  nightBoost = 1,
 ): void {
   // The shell's attitude: each corner sinks by its own spring AND whatever
   // its wheel no longer holds up, and the whole body pitches between the
@@ -754,217 +797,27 @@ export function drawCarAssembly(
   // OFF would read as parked with somebody sitting in it.
   if (running) {
     if (throwsLight) {
-      drawLightCones(ctx, car.pos, camera, timeMs, rearDrop, frontDrop);
+      drawLightCones(
+        ctx,
+        car.pos,
+        camera,
+        timeMs,
+        rearDrop,
+        frontDrop,
+        false,
+        false,
+        false,
+        0,
+        undefined,
+        false,
+        nightBoost,
+      );
     }
     const lights = spriteByName(sprites, "car_lights");
     if (lights) {
       drawShellLayer(ctx, lights, car.pos, camera, rearDrop, frontDrop, fold);
     }
   }
-}
-
-/**
- * The running car's thrown light: a long warm white-gold cone fanning out
- * ahead of the nose and a short red wash behind the taillights, both faded
- * out along their length with a slow flicker so they read as burning lamps
- * rather than painted decals. Pure canvas gradients — light has no pixels.
- *
- * THE LAMPS ARE BOLTED TO THE BODY, so the cones are laid out in the car's own
- * screen space off `sx` — whole pixels along the drawn body, like the wheel
- * arches — and `CarVehicle.heading` is deliberately nowhere in here. The picture
- * never turns, so a cone that followed the steered heading would swing across a
- * car that had not moved, which is a swivelling cornering lamp rather than a
- * headlight. The night pass's beam obeys the same rule and for the same reason
- * — render/night.ts, HEADLIGHT.
- *
- * `faceLeft` is the ONE thing that mirrors, and it is not the heading: it is
- * which way the ART is drawn. Oncoming traffic on the drive's road wears the
- * same 48x26 side profile flipped (`DriveTraffic.faceLeft`), so its lamps are at
- * the other end of the same body — and a beam that did not flip with them lit
- * the road out of the boot.
- *
- * EXPORTED because the drive's traffic is lit by this and nothing else. Every
- * car in this game throws the same light, which is the rule the garage and the
- * minigame already share (docs/rendering.md); a second cone written for the
- * traffic would be a second thing to keep in step with it.
- *
- * …AND THE LAMPS ARE BOLTED TO THE BODY THAT HAS THEM, which is the half this
- * got wrong for as long as the only body was the hero's. Every offset below used
- * to be a literal measured off the wagon's own 48x26 side profile — the nose at
- * 23 px, the tail at 22, the lamp line 11 px up — and the drive's road is not
- * made of 48x26 cars. On a delivery moped, which is twenty px long and fourteen
- * tall, that put the headlight cone a body-and-a-half out in front of the bike
- * and the tail glow the same distance behind it: two loose smears of light with
- * a moped riding between them, which is exactly what a player sees and cannot
- * name. So the geometry is DERIVED from the drawn body (`LightBody`) and the
- * literals survive only as the default, which is still the wagon, to the pixel.
- */
-
-/**
- * THE BODY A SET OF LAMPS IS BOLTED TO — how far it reaches from its own centre,
- * and how high off the road its lamps burn. Two numbers, in sprite px, and they
- * are all the cones need.
- *
- * NOT THE SPRITE'S OWN SIZE, which is what this tried first and is worth
- * recording as a dead end: every vehicle on the drive's road is authored on the
- * SAME 48x26 canvas, with a bicycle drawn small in the middle of it and a bus
- * filling it. So the image says nothing about the machine, and cones derived
- * from it come out identical for a bus and a pushbike — which is the bug this
- * whole type exists to fix, moved one step along.
- */
-export type LightBody = { halfPx: number; liftPx: number };
-
-/** …and the one every caller had baked in until it was written down: the hero's
- * own wagon, 48 px long with its lamps on row 12 or so of a 26-high body. Every
- * ratio below is calibrated so this body comes out at exactly the numbers the
- * cones were hand-placed at. */
-const CAR_LIGHT_BODY: LightBody = { halfPx: 24, liftPx: 11 };
-
-export function drawLightCones(
-  ctx: CanvasRenderingContext2D,
-  at: { x: number; y: number },
-  camera: Camera,
-  timeMs: number,
-  rearDrop = 0,
-  frontDrop = 0,
-  faceLeft = false,
-  /** Lamps the road has already taken out — the END of the body, not the side
-   * of the screen (`DriveTraffic.noseOut`). A car with a dead nose still shows
-   * its tail lights, which is exactly what makes a rear-ended one read. */
-  noseOut = false,
-  tailOut = false,
-  /**
-   * HOW FAR THE BODY HAS TURNED (radians) — so the beams turn with it.
-   *
-   * They used to be drawn square to the road whatever the car was doing, which
-   * was invisible while nothing on this road could turn. A clip now spins a car
-   * out and a hard one puts it on its roof (`drive/crush.ts`), and a spun car
-   * whose lights carried on pointing down the carriageway read as the beams
-   * having come off it. Same angle and the same pivot the body uses
-   * (`drive-screen/wreck-draw.ts`), so the two cannot disagree.
-   */
-  yaw = 0,
-  /** …and WHAT is throwing them. Omitted is the hero's wagon, which is what
-   * every caller meant back when it was the only body on screen. */
-  body: LightBody = CAR_LIGHT_BODY,
-  /**
-   * THE PERSON IN IT HAS BOTH FEET ON THE BRAKE (`DriveTraffic.brakeMs`) — so
-   * the tail lamps are not a marker light any more, they are STOP lamps: full
-   * brightness, reaching further back, and steady rather than flickering.
-   *
-   * It is the picture that explains the road's most deliberate collision. Put
-   * the bumper in somebody's boot, lean on it, and the moment the wagon lifts
-   * off the car in front lights up red and stops dead in the lane — which is
-   * the whole beat, and without the lamps it reads as the car simply having
-   * given up rather than as somebody standing on the middle pedal.
-   */
-  braking = false,
-): void {
-  const flicker = 0.88 + 0.12 * (Math.floor(timeMs / 90) % 2);
-  const face = faceLeft ? -1 : 1;
-  // THE BODY'S OWN MEASUREMENTS. Each of these is the wagon's hand-placed number
-  // written as the ratio it always was, so a 48x26 body is unchanged to the
-  // pixel and a 20x14 moped is lit like a moped.
-  const nosePx = body.halfPx - 1;
-  const tailPx = body.halfPx - 2;
-  // The base anchor pins the sprite's row h-2 to `at.y`, so a lamp burning
-  // `liftPx` off the road is that many px above the seat.
-  const liftPx = body.liftPx;
-  // How far the light REACHES. It scales with the body rather than being fixed,
-  // and that is not only tidiness: a scooter's headlamp genuinely throws a
-  // shorter, narrower beam than a saloon's, and a fixed 42-px cone on a 20-px
-  // machine reads as the bike towing a searchlight.
-  const reachPx = Math.round(body.halfPx * 1.75);
-  const tailReachPx = Math.round(body.halfPx * 0.625);
-  const spread = body.liftPx / CAR_LIGHT_BODY.liftPx;
-  const up = Math.round(10 * spread);
-  const down = Math.round(14 * spread);
-  const root = Math.max(1, Math.round(2 * spread));
-  const foot = Math.max(2, Math.round(4 * spread));
-  billboard(ctx, at.x, at.y, camera.x, camera.y, () => {
-    const sx = at.x - camera.x;
-    // …each end riding its own axle's drop, so a nose-down wreck's beam dips.
-    const lampY = at.y - camera.y - liftPx;
-    // TURNED ABOUT THE BODY'S OWN SEAT, which is the pivot `drawTrafficBody`
-    // turns the sprite about — the bottom-centre of the car rather than the
-    // lamp line, or the beams would swing around a point a foot above the
-    // bonnet and part company with the car at any real angle.
-    if (yaw !== 0) {
-      ctx.save();
-      ctx.translate(sx, at.y - camera.y);
-      ctx.rotate(yaw);
-      ctx.translate(-sx, -(at.y - camera.y));
-    }
-    // The HEADLIGHT cone: out of the nose, widening as it goes.
-    const noseX = sx + nosePx * face;
-    const noseDip = Math.round(frontDrop);
-    const tailDip = Math.round(rearDrop);
-    if (!noseOut) {
-      const beam = ctx.createLinearGradient(
-        noseX,
-        0,
-        noseX + reachPx * face,
-        0,
-      );
-      beam.addColorStop(0, `rgba(255, 242, 180, ${0.38 * flicker})`);
-      beam.addColorStop(0.6, `rgba(255, 232, 150, ${0.16 * flicker})`);
-      beam.addColorStop(1, "rgba(255, 232, 150, 0)");
-      ctx.fillStyle = beam;
-      ctx.beginPath();
-      ctx.moveTo(noseX, lampY + noseDip - root);
-      // A pitched nose rakes the beam into the ground ahead of the car.
-      ctx.lineTo(noseX + reachPx * face, lampY - up + noseDip * 3);
-      ctx.lineTo(noseX + reachPx * face, lampY + down + noseDip * 3);
-      ctx.lineTo(noseX, lampY + noseDip + foot);
-      ctx.closePath();
-      ctx.fill();
-    }
-    // The TAIL glow: a short red fan behind the car, dimmer and stubbier —
-    // brake lamps, not a second pair of headlights.
-    //
-    // SKIPPED WITH AN `if`, NEVER WITH AN EARLY `return`, and that is a scar
-    // rather than a style note. A car whose tail lamps the road has taken out
-    // is very often a car something SPUN (a rear-ending does both at once), so
-    // `tailOut` and a non-zero `yaw` arrive together — and a `return` here left
-    // the yaw's `ctx.save()` on the stack with nothing to pop it. `endBillboard`
-    // then popped THAT instead of its own, so the billboard's inverse projection
-    // never came off and every body drawn after this one wore an extra one: the
-    // hero's wagon, drawn last because it is nearest, came out a third taller
-    // than it is (and two spun wrecks in one frame made it half again). The
-    // symptom was "the car stretches sometimes", three lanes away from its
-    // cause.
-    if (!tailOut) {
-      const tailX = sx - tailPx * face;
-      // A lamp on the brake is brighter, longer and STEADY — the flicker is what
-      // makes a marker light read as a filament seen through exhaust, and a stop
-      // lamp is a thing somebody is holding on.
-      const stopReachPx = braking ? Math.round(tailReachPx * 1.8) : tailReachPx;
-      const glow = ctx.createLinearGradient(
-        tailX,
-        0,
-        tailX - stopReachPx * face,
-        0,
-      );
-      const lit = braking ? 0.74 : 0.32 * flicker;
-      glow.addColorStop(0, `rgba(255, 74, 58, ${lit})`);
-      glow.addColorStop(1, "rgba(255, 74, 58, 0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.moveTo(tailX, lampY + tailDip - root);
-      ctx.lineTo(
-        tailX - stopReachPx * face,
-        lampY + tailDip - Math.round(6 * spread),
-      );
-      ctx.lineTo(
-        tailX - stopReachPx * face,
-        lampY + tailDip + Math.round(9 * spread),
-      );
-      ctx.lineTo(tailX, lampY + tailDip + foot);
-      ctx.closePath();
-      ctx.fill();
-    }
-    if (yaw !== 0) ctx.restore();
-  });
 }
 
 function drawShip(

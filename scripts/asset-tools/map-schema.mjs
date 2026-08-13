@@ -62,6 +62,7 @@ const ALLOWED_FIELDS = {
     "radius",
     "density",
     "jumpable",
+    "perch",
     "rockSizes",
     "cell",
     "loot",
@@ -93,7 +94,16 @@ const ALLOWED_FIELDS = {
     "radius",
     "jumpable",
   ],
-  critter: ["density", "areas", "space", "animated", "range", "speed", "scale"],
+  critter: [
+    "density",
+    "areas",
+    "space",
+    "animated",
+    "range",
+    "speed",
+    "scale",
+    "perches",
+  ],
   lair: ["w", "h", "door", "doorOpen", "trigger", "areas", "space"],
   // A real DOOR: a chain of `radius` circles wearing `sprite`, hung across a
   // doorway by rule — `at: spawn` across the hero's own chamber (the garage's
@@ -1126,6 +1136,8 @@ export function validateMap(bp, refs, description = "") {
       }
       if (o.wander !== undefined && (!isNum(o.wander) || o.wander < 0))
         err(`${where}: wander must be a non-negative distance`);
+      if (o.perch !== undefined && typeof o.perch !== "boolean")
+        err(`${where}: perch must be a boolean`);
       // A sized rock has no base sprite of its own — the renderer blits the
       // per-footprint `<base>_<w>x<h>`, so that is what must be in the atlas.
       // A `chest` names no sprite at all: the engine draws every reward
@@ -1249,6 +1261,14 @@ export function validateMap(bp, refs, description = "") {
         }
         if (o.animated !== undefined && typeof o.animated !== "boolean")
           err(`${where}: animated must be a boolean`);
+        if (o.perches !== undefined && typeof o.perches !== "boolean")
+          err(`${where}: perches must be a boolean`);
+        // A bird told to perch on a map with nothing to perch IN is an author
+        // asking for a beat the level cannot play — it degrades to a bird on
+        // the grass, silently, which is exactly the kind of thing nobody
+        // notices is missing.
+        if (o.perches && !(bp.objects ?? []).some((p) => p?.perch))
+          err(`${where}: perches, but no object on this map is marked "perch"`);
         // An animated critter blits `<sprite>_0`/`_1`, so THOSE are the frames
         // the atlas has to carry — the base name alone draws nothing.
         if (o.animated) {

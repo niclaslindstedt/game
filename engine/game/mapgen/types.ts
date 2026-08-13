@@ -151,6 +151,13 @@ export type MapObject = {
   /** A jumping hero clears it (the horde never jumps). Scatter types only. */
   jumpable?: boolean;
   /**
+   * A BIRD MAY SIT IN THIS — a tree, a fence, a wire. Marks every piece the
+   * line places (`Obstacle.perch`), which is what a `critter` line's `perches`
+   * goes looking for. Obstacle types only, and purely presentation: nothing
+   * about collision, sight or damage reads it.
+   */
+  perch?: boolean;
+  /**
    * WALL-HUGGING scatter (`obstacle`/`cover`/`crate` with an `areas` list):
    * placements are drawn along the borders of the district's cells instead of
    * across their floor — furniture stands against the walls of its room
@@ -213,6 +220,9 @@ export type MapObject = {
   speed?: [number, number];
   /** `critter`: scale range, so a herd has calves in it. */
   scale?: [number, number];
+  /** `critter`: this animal breaks its lap to SIT in the nearest piece marked
+   * `perch` — what tells a bird from a rodent. See `LevelDef.fauna[].perches`. */
+  perches?: boolean;
   /** `lair`: the CLOSED door sprite drawn on the structure's near face. */
   door?: string;
   /** `lair`: the same door standing open. */

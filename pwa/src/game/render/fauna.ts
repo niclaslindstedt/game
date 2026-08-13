@@ -11,7 +11,7 @@
 // whole reason this can be free:
 //
 //   x = home.x + range · sin(speed·t/range + phase.x)
-//   y = home.y + range · sin(π·speed·t/range + phase.y) · 0.7
+//   y = home.y + range · sin(π·speed·t/range + phase.y) · FAUNA.ySweep
 //
 // The two axes are driven at INCOMMENSURATE rates (one scaled by π), so the path
 // is a Lissajous figure that never closes and never repeats — it reads as an
@@ -19,10 +19,17 @@
 // the range keeps the SPEED honest: a critter with a big range takes
 // proportionally longer to cross it instead of whipping about faster.
 //
+// `FAUNA.ySweep` IS THE ENGINE'S OWN NUMBER, not a local one, because the
+// placement fences this exact box inside the animal's district (`fitWander`,
+// engine/game/fauna.ts) — nothing collides with a critter, so that fence is the
+// only thing keeping a sparrow off the garage's cement, and a second copy of the
+// sweep that drifted would put half of every lap through the wall.
+//
 // A critter is not an actor. It cannot be hurt, it collides with nothing, and it
 // never blocks a shot — so it is drawn under everything that fights, right on top
 // of the ground furniture.
 
+import { FAUNA, PERCH_CYCLE_SEC } from "@game/core";
 import type { GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
@@ -40,6 +47,37 @@ type InView = (x: number, y: number, margin: number) => boolean;
 const FAUNA_TILT = 0.055;
 const FAUNA_STEPS_PER_LAP = 9;
 
+/**
+ * HOW FAR INTO THE TREE THIS ONE IS at `t` seconds: 0 on the ground, 1 sitting,
+ * and the hop in between (`Critter.perch`, `FAUNA.perchSec`/`roamSec`/`flySec`).
+ *
+ * Phased off the animal's OWN `phase.x`, which the wander already uses for its
+ * own offset: two birds sharing a tree are almost never on it together, and the
+ * few frames a year they are read as two birds sharing a tree.
+ *
+ * SMOOTHSTEPPED, because the hop is the only part of this an eye actually
+ * follows — a linear slide between the grass and the branch reads as a sprite
+ * being dragged, where an eased one reads as taking off and landing.
+ */
+function perchedness(
+  critter: GameState["critters"][number],
+  t: number,
+): number {
+  const { perchSec, flySec } = FAUNA;
+  const offset = (critter.phase.x / (Math.PI * 2)) * PERCH_CYCLE_SEC;
+  const u =
+    (((t + offset) % PERCH_CYCLE_SEC) + PERCH_CYCLE_SEC) % PERCH_CYCLE_SEC;
+  const raw =
+    u < flySec
+      ? u / flySec
+      : u < flySec + perchSec
+        ? 1
+        : u < 2 * flySec + perchSec
+          ? 1 - (u - flySec - perchSec) / flySec
+          : 0;
+  return raw * raw * (3 - 2 * raw);
+}
+
 /** Where a critter is at `t` seconds, which way it is facing, and how far its
  * amble has it tipped. */
 function critterAt(
@@ -51,9 +89,9 @@ function critterAt(
   const x = critter.home.x + critter.range * Math.sin(ax);
   const y =
     critter.home.y +
-    // 0.7 on the y sweep: seen from above, an animal grazing a field covers more
-    // ground across the screen than up it, and an even circle reads as an orbit.
-    critter.range * 0.7 * Math.sin(Math.PI * rate * t + critter.phase.y);
+    critter.range *
+      FAUNA.ySweep *
+      Math.sin(Math.PI * rate * t + critter.phase.y);
   // The gait, in closed form like everything else here: the walk-tracker the
   // actors use measures ground covered frame to frame, and a critter's ground is
   // already a known function of `t` — so the rock comes straight off its own
@@ -62,7 +100,24 @@ function critterAt(
   const pace = Math.abs(Math.cos(ax));
   const tilt = FAUNA_TILT * pace * Math.sin(ax * FAUNA_STEPS_PER_LAP);
   // Facing follows the sign of dx/dt — the cosine of the same angle.
-  return { x, y, faceLeft: Math.cos(ax) < 0, tilt };
+  if (!critter.perch) return { x, y, faceLeft: Math.cos(ax) < 0, tilt };
+  // THE SIT. The wander never stops running underneath — it is a function of
+  // `t`, not a state — so the bird comes back DOWN to wherever its lap had got
+  // to rather than to the twig it left, which is the whole difference between an
+  // animal and a thing on a track.
+  const up = perchedness(critter, t);
+  if (up <= 0) return { x, y, faceLeft: Math.cos(ax) < 0, tilt };
+  const px = x + (critter.perch.x - x) * up;
+  const py = y + (critter.perch.y - y) * up;
+  return {
+    x: px,
+    y: py,
+    // Facing the way it is travelling while it moves; on the branch it keeps
+    // looking back over the ground it came off.
+    faceLeft: up >= 1 ? critter.perch.x > critter.home.x : critter.perch.x < x,
+    // A sitting bird does not walk, so the amble's rock fades out with the hop.
+    tilt: tilt * (1 - up),
+  };
 }
 
 /**
