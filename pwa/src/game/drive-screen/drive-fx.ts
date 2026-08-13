@@ -21,7 +21,7 @@
 // grains of grit and a van met square at 120 throws the screen about. Nobody has
 // to tune "a big hit" — the sum already knows.
 
-import { DRIVE } from "@game/core";
+import { DRIVE, type DriveTraffic } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { bodyAnchorX, bodyAnchorY, projectOffset } from "../render/tilt.ts";
@@ -172,6 +172,36 @@ type DriveFx = {
    * engine died and the wreck rolled silently out from under it.
    */
   follow?: boolean;
+  /**
+   * …AND THE SAME THING FOR SOMEBODY ELSE'S CAR — the traffic id whose body
+   * this effect is riding, re-seated on the fixed step (`carryBurns`).
+   *
+   * IT IS A SECOND MECHANISM RATHER THAN A WIDENED `follow` because the two
+   * resolve in different places. `follow` is answered at the DRAW, out of the
+   * one live position `drawDriveFx` is handed, and that position is the hero's
+   * wagon — a stranger's car is not in the draw's reach at all. This one is
+   * answered on the STEP, where the whole road is, so it costs the draw
+   * nothing and picks up the vehicle's HEIGHT (`DriveTraffic.z`) as well as
+   * its place.
+   *
+   * ONLY A BURN WANTS ONE, and the distinction is whether the effect belongs
+   * to the car or to the road. Sparks, shards, glass and dust are thrown off
+   * and LEFT BEHIND — watching them recede is most of what makes speed read —
+   * and a fuel tank goes off where the tank was, with the shell thrown out of
+   * it. A fire is on the bodywork: it is still on the bodywork when the car is
+   * cartwheeling twenty px above the tarmac, which is exactly where a burn
+   * issued at the spot and pinned there is not.
+   */
+  rider?: number;
+  /**
+   * …AND WHICH WAY THAT BODY IS LYING (radians, the vehicle's own `angle`).
+   *
+   * A burn is spread ALONG the car rather than thrown from one point on the
+   * middle of it, and that line turns with the body. Level it is invisible;
+   * on a car mid-cartwheel a horizontal spread lays the fire across the road
+   * the wreck is spinning above.
+   */
+  angle?: number;
   /**
    * WHICH WAY DOWN THE ROAD IT FALLS AWAY, as a sign (+1 world east, -1 west).
    *
@@ -565,12 +595,16 @@ export function driveWindscreenGore(
 /**
  * A CAR ALIGHT — one flame, at the vehicle, sized by how far the burn has got.
  *
- * ISSUED ON A CADENCE at the vehicle's own place rather than followed, the same
- * shape `stepWreckSmoke` uses and for the same reason: `DriveFx.follow` means
- * THE HERO'S CAR, so a burning car that set it would light a fire on the
- * player's own bonnet. A fire on a car that is being pushed up the road has to
- * travel with the car, and the only honest way is to re-issue it where the car
- * now is.
+ * ISSUED ON A CADENCE rather than once, the same shape `stepWreckSmoke` uses:
+ * a burn takes hold over seconds and is still going when the player looks in
+ * his mirror, so it is re-raised at the vehicle for as long as it lasts.
+ *
+ * …AND IT RIDES THE BODY BETWEEN ISSUES (`DriveFx.rider`). The cadence alone
+ * only puts the fire where the car WAS when the issue was raised, and one
+ * issue outlives the cadence by design, so a burning car doing 400 px/s drags
+ * a fountain a car's length behind itself and a car thrown into a cartwheel
+ * leaves the burn on the tarmac underneath it. The seat is refreshed on the
+ * fixed step (`carryBurns`), which is 16 ms of lag rather than 260.
  *
  * `force` is the burn itself (`DriveTraffic.fire`), which is what picks the
  * stage of the flame ladder — so the player watches a flicker under a wing
@@ -583,16 +617,22 @@ export function driveWindscreenGore(
  */
 export function driveVehicleFire(
   state: DriveFxState,
+  /** WHOSE CAR IT IS — the traffic id the burn is re-seated on every step. */
+  rider: number,
   x: number,
   y: number,
   nowMs: number,
   force: number,
-  /** How far off the road it burns (world px) — a bonnet, not the tarmac. */
+  /** How far off the road it burns (world px) — a bonnet, not the tarmac, plus
+   * however high the body itself currently is. */
   lift: number,
+  /** …and which way that body is lying (radians), so the fire is spread along
+   * the car rather than across the road it is spinning over. */
+  angle: number,
   lifeMs: number,
   fairy = false,
 ): void {
-  push(
+  const burn = push(
     state,
     fairy ? "starfire" : "fire",
     x,
@@ -604,6 +644,39 @@ export function driveVehicleFire(
     0,
     lift,
   );
+  burn.rider = rider;
+  burn.angle = angle;
+}
+
+/**
+ * EVERY BURN, BACK ONTO THE BODY IT IS BURNING ON — one pass on the drive's
+ * fixed step.
+ *
+ * Walked from `stepBurning`, which is what knows the base lift, and over the
+ * WHOLE fleet rather than only the cars still alight: a burn outlives its issue
+ * by a couple of hundred ms, and one whose car has drifted past the emitter's
+ * near bound is exactly the one that would otherwise be seen coming adrift.
+ *
+ * A vehicle the road has forgotten keeps its last seat and expires there, which
+ * is the honest answer — it is off the back of the world and about to be gone.
+ */
+export function carryBurns(
+  state: DriveFxState,
+  traffic: readonly DriveTraffic[],
+  /** How far off the road a car burns (world px), before its own height. */
+  lift: number,
+): void {
+  for (const fx of state.fx) {
+    if (fx.rider === undefined) continue;
+    for (const body of traffic) {
+      if (body.id !== fx.rider) continue;
+      fx.x = body.pos.x;
+      fx.y = body.pos.y;
+      fx.lift = lift + body.z;
+      fx.angle = body.angle;
+      break;
+    }
+  }
 }
 
 /**
@@ -728,8 +801,8 @@ function push(
   drift = 0,
   lift = 0,
   spread = 0,
-): void {
-  state.fx.push({
+): DriveFx {
+  const fx: DriveFx = {
     kind,
     x,
     y,
@@ -746,7 +819,9 @@ function push(
     // identical road replays with an identical picture, which is what makes a
     // filmstrip of a tuning change worth comparing.
     seed: Math.abs(Math.round(x * 7 + y * 13 + bornMs)) % 1024,
-  });
+  };
+  state.fx.push(fx);
+  return fx;
 }
 
 /**
@@ -1432,6 +1507,13 @@ function drawFire(
   nowMs: number,
 ): void {
   const lift = fx.lift ?? 0;
+  // WHICH WAY THE BODY IS LYING, so the three tongues are spread along the CAR
+  // rather than along the road. The flames themselves stay upright — fire goes
+  // up whatever the thing under it is doing — but a wreck standing on its nose
+  // has to burn from nose to tail, not from kerb to kerb.
+  const angle = fx.angle ?? 0;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
   // The stage the burn has reached — capped one short of the top until it is
   // really going, so "well alight" still has somewhere to climb to.
   const stage = Math.min(FLAME_STAGES - 1, Math.floor(fx.force * FLAME_STAGES));
@@ -1451,8 +1533,8 @@ function drawFire(
     ctx.globalAlpha = alpha * (i === 0 ? 1 : 0.7);
     ctx.drawImage(
       sprite,
-      Math.round(sx + along - sprite.width / 2),
-      Math.round(sy - lift - climb - sprite.height),
+      Math.round(sx + along * cos - sprite.width / 2),
+      Math.round(sy - lift + along * sin - climb - sprite.height),
     );
   }
   ctx.restore();

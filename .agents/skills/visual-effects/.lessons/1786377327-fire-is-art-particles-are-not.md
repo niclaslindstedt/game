@@ -21,7 +21,6 @@ the effect's seed, so two burning cars never flicker in step; and drawn
 the road. The blast's SMOKE is the exception and must NOT be additive — smoke is
 matter, and `lighter` brightens the road it is supposed to be hiding.
 
-And a burning car must be issued on a CADENCE at its own position, never with
-`DriveFx.follow` — that flag means the hero's wagon, so a fire that set it burns
-on the player's own bonnet. Same shape as `wreck-smoke.ts`, and the same for any
-state (a car being SHOVED) rather than event.
+How a burn is anchored to the car it is on — and why neither `DriveFx.follow`
+nor a cadence alone gets there — is its own lesson: see
+`an-effect-on-somebody-elses-car`.
