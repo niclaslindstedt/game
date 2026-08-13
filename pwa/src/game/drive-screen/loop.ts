@@ -278,8 +278,10 @@ export function drainDrive(
    * sparks, the debris, the smoke and the shove of the frame are what the road
    * IS, and a mode that withheld them left the player unable to see that he had
    * hit anything. What changes is what the mess is MADE of: a body peels away
-   * in pastel dust instead of throwing its insides, and everything it leaves
-   * behind is re-hued rather than withheld (`render.ts`).
+   * in pastel dust instead of throwing its insides, everything it leaves behind
+   * is re-hued rather than withheld (`render.ts`), a car alight fizzes gold
+   * stars rather than burning (`star-fire.ts`), and the road's three voices
+   * speak their SFW twins (`placards-sfw.ts`).
    */
   fairy = false,
 ): void {
@@ -352,7 +354,7 @@ export function drainDrive(
   // rather than events — a burn takes hold over seconds and travels with the car
   // it is on, and a push lasts for as long as the player keeps his foot in — so
   // both are issued on a cadence at the vehicle's own place (`burning.ts`).
-  stepBurning(fx, drive);
+  stepBurning(fx, drive, fairy);
   // WHAT THE CAR ITSELF MAKES OF THE TICK — laid under the collisions below,
   // and worked out BEFORE them so the wagon's own boom starts with the blow
   // rather than a layer late. One chassis rings once (`carAnswerSound` holds
@@ -659,7 +661,7 @@ export function drainDrive(
     // once: the ball, the shelf, the sub under it and the frame thrown as hard
     // as this road ever throws it (`driveBlast`).
     if (event.type === "trafficExploded") {
-      driveBlast(fx, event.pos.x, event.pos.y, drive.ms, event.big);
+      driveBlast(fx, event.pos.x, event.pos.y, drive.ms, event.big, fairy);
       crashDust(event.pos, event.joules);
       play(EXPLOSION_SOUND);
       // …AND THE RARE ONE THAT TAKES THE WHOLE STREET WITH IT. The tag comes in

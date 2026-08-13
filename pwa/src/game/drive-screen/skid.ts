@@ -25,6 +25,7 @@
 
 import { CAR, carSkidding, type DriveState } from "@game/core";
 
+import type { GoreRamp } from "../render/recolor.ts";
 import { seatX, seatY } from "../render/shared.ts";
 import type { Camera } from "../render/view.ts";
 import { driveTyreSmoke, type DriveFxState } from "./drive-fx.ts";
@@ -64,9 +65,41 @@ const STEP_PX = 6;
  * stretched along the ground it covered. */
 const MARK_LEN = 8;
 const MARK_WIDE = 2;
-/** How far apart the two tracks sit either side of the car's line (world px) —
- * the gauge the bloody treads already print at, because it is the same axle. */
-const GAUGE = 4;
+/**
+ * WHERE THE TWO TRACKS OF A PAIR ARE LAID, as offsets from the car's own line
+ * (world px) — and the ONE answer every pair of tracks this road draws uses.
+ *
+ * IT IS EXPORTED BECAUSE THERE ARE TWO SUCH PAIRS and they are the same axle:
+ * the rubber a handbrake scrubs off, and the tread prints a bloodied tyre lays
+ * (`layTreads`, drive-gore.ts). A stop and a drive-through that disagreed about
+ * where the back wheels are would be two different cars.
+ *
+ * THE PAIR IS NOT CENTRED ON THE CAR, AND THAT IS THE WHOLE OF WHY IT READS.
+ * The wagon is drawn as a SIDE ELEVATION on a road drawn raked, so the only
+ * wheels the player can see are the NEAR ones — the far pair is behind the
+ * bodywork. Straddling `car.pos.y` therefore put neither track under a wheel:
+ * the near one floated a few pixels clear of the tyres and the far one ran up
+ * the face of the wheel it was supposed to have come off, which is exactly the
+ * "those did not come from the car" read.
+ *
+ *   `TRACK_DROP_PX` puts the near track ON the contact patch the wheel art
+ *   actually shows. `wheelSeat` (render/vehicles.ts) sits a wheel's bottom two
+ *   SCREEN px below the car's seat, and the ground plane squashes world y by
+ *   the pitch (0.75), so three world px is that two — do not "simplify" it to
+ *   zero.
+ *   `AXLE_GAUGE_PX` then puts the far track a full gauge FURTHER IN, where the
+ *   far wheels are. Under the car it is hidden by the bodywork (the marks are
+ *   drawn beneath every body on the road) and it emerges behind the wagon, so
+ *   the trail is two tracks and the car is sitting on the near one.
+ */
+const TRACK_DROP_PX = -1;
+const AXLE_GAUGE_PX = 12;
+
+/** The pair, near track first. */
+export const TRACK_OFFSETS_PX: readonly [number, number] = [
+  TRACK_DROP_PX,
+  TRACK_DROP_PX - AXLE_GAUGE_PX,
+];
 /** …and how far back from the body's centre they are laid: the REAR wheels'
  * own column, because a handbrake locks the back axle and nothing else. */
 const REAR_ALONG = CAR.wheelOffsets[0] ?? -14;
@@ -98,6 +131,26 @@ const SMOKE_EVERY_MS = 55;
 /** What laid rubber is: near-black with the road's own blue in it, so a skid
  * reads as burnt onto this tarmac rather than as a hole cut in it. */
 const SKID_INK = "#141216";
+
+/**
+ * THE SAME RUBBER, AS A RAMP — what a TYRE-SHAPED mark is re-hued onto when the
+ * road's marks are being re-dressed (`drawRoadMarks`, drive-gore.ts).
+ *
+ * SFW puts the road's whole record on the fairy ramp, and that is right for
+ * everything a BODY left: a splash, a smear and a paste are all places somebody
+ * came apart, and in this mode somebody comes apart into glitter. A TREAD PRINT
+ * is not that. It is the shape of a tyre, and a tyre that has left a pastel
+ * picture of itself on the tarmac reads as a decal — where the same print in
+ * rubber reads as exactly what the player just did with the car. So the tread
+ * goes dark and the mess stays bright.
+ *
+ * It lives here rather than in the gore module because THIS file owns what laid
+ * rubber looks like on this tarmac, and two files each holding their own idea of
+ * black is two files that will disagree. Three stops, darkest first, as a gore
+ * family's own ramp is — a shade either side of `SKID_INK` so the print keeps
+ * the tread pattern's own shading instead of going down as a flat blob.
+ */
+export const RUBBER_RAMP: GoreRamp = ["14, 13, 17", "26, 24, 30", "46, 43, 53"];
 
 export function createSkids(): SkidState {
   return { marks: [], at: null, smokeDueMs: 0 };
@@ -162,10 +215,10 @@ export function stepSkids(
   const along = REAR_ALONG * drive.params.direction;
   for (let i = 1; i <= steps; i++) {
     const t = i / steps;
-    for (const side of [-1, 1]) {
+    for (const across of TRACK_OFFSETS_PX) {
       push(state, {
         x: at.x + dx * t + along,
-        y: at.y + dy * t + side * GAUGE,
+        y: at.y + dy * t + across,
         angle,
         alpha,
       });

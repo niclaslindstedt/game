@@ -61,6 +61,7 @@ import {
   RIDER_SPRITES,
   TRAFFIC_SPRITES,
 } from "./scenery.ts";
+import { RUBBER_RAMP, TRACK_OFFSETS_PX } from "./skid.ts";
 import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /** One mark on the tarmac: a drag streak, a tyre print, a splash, or a body
@@ -236,10 +237,6 @@ const TREAD_STEP_DRY = 24;
  * over the widening step above is roughly four hundred px of road — a couple of
  * screens at the top end, and gone before the next crossing. */
 const TREAD_COST = 0.038;
-/** How far apart the two tracks sit either side of the car's own line (world
- * px). A single line down the middle reads as something being dragged; two
- * lines a wheelbase apart read as a car, which is the whole point. */
-const TREAD_GAUGE = 4;
 /** …and how solid a print goes down, at the base and per unit of carry left. */
 const TREAD_ALPHA_BASE = 0.16;
 const TREAD_ALPHA_WET = 0.38;
@@ -477,13 +474,15 @@ function layTreads(state: DriveGoreState, drive: DriveState): void {
   if (Math.hypot(dx, dy) < step) return;
   const angle = Math.atan2(dy, dx);
   const alpha = TREAD_ALPHA_BASE + TREAD_ALPHA_WET * state.tyre;
-  // TWO TRACKS, a gauge apart. One line down the middle is something being
-  // dragged; two are a car.
-  for (const side of [-1, 1]) {
+  // TWO TRACKS, a gauge apart, and NOT centred on the car — the near one lands
+  // on the contact patch the wheel art shows and the far one is behind the
+  // bodywork (`TRACK_OFFSETS_PX`, skid.ts, which explains why at length). One
+  // line down the middle is something being dragged; two are a car.
+  for (const across of TRACK_OFFSETS_PX) {
     push(state, {
       sprite: TYRE,
       x: car.pos.x,
-      y: car.pos.y + side * TREAD_GAUGE,
+      y: car.pos.y + across,
       angle,
       alpha,
     });
@@ -569,11 +568,22 @@ export function drawRoadMarks(
   camera: Camera,
   sprites: Sprites,
   viewW: number,
-  /** WHAT THE ROAD IS WEARING, when it is not wearing blood — the three stops
+  /**
+   * WHAT THE ROAD IS WEARING, when it is not wearing blood — the three stops
    * every mark is re-hued onto (`render/recolor.ts`). The marks are the whole
    * record of where the wagon has been, so SFW re-colours them rather than
-   * sweeping the road: a smear, a splat and a tyre print still say what they
-   * always said about the last four seconds, in dust. */
+   * sweeping the road: a smear and a splat still say what they always said
+   * about the last four seconds, in dust.
+   *
+   * …EXCEPT A TREAD PRINT, WHICH GOES TO RUBBER INSTEAD (`RUBBER_RAMP`,
+   * skid.ts). Everything else on this list is a place a BODY came apart, and in
+   * this mode a body comes apart into glitter — but a tread print is the shape
+   * of a TYRE, and a pastel picture of a tyre reads as a decal somebody stuck on
+   * the road. The same print in rubber reads as the thing the player just did
+   * with the car, which is what the mark was always for. So the mess stays
+   * bright and the tread goes dark, and it goes dark in exactly the black the
+   * handbrake's own lines are laid in.
+   */
   ramp?: GoreRamp,
 ): void {
   const left = camera.x - 64;
@@ -582,7 +592,8 @@ export function drawRoadMarks(
     if (mark.x < left || mark.x > right) continue;
     const found = spriteByName(sprites, mark.sprite);
     if (!found) continue;
-    const art = ramp ? recolorSprite(found, mark.sprite, ramp) : found;
+    const wear = ramp && mark.sprite === TYRE ? RUBBER_RAMP : ramp;
+    const art = wear ? recolorSprite(found, mark.sprite, wear) : found;
     ctx.save();
     ctx.globalAlpha = mark.alpha;
     // A PLAIN CAMERA SUBTRACT, because this pass runs INSIDE the world
