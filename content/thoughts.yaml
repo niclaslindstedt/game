@@ -108,6 +108,33 @@ thoughts:
     pages:
       - - HER JACKET'S PINGING FROM GOODCO.
       - - THEY BEG HARD IN TOWN. NONE OF THEM'S ON THE WELFARE. NOT LIKE ME.
+  # …AND THE SAME OPENING FROM A MAN WHO CAME OFF HIS OWN DRIVE OVER SOMEBODY
+  # (`ruth_run_down`, below). The first page is untouched — the errand has not
+  # changed — and the second, the one where he has an opinion about people who
+  # beg, is replaced by the only subject he ever actually has: the car. He is
+  # not covering anything up. He genuinely has not joined it up, and he is
+  # already on the road where he will say nothing about anybody at all.
+  drive_out_bump:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - HER JACKET'S PINGING FROM GOODCO.
+      - - FRONT END'S PULLING. MUST'VE GONE OVER SOMETHING BACK THERE.
+  # WHAT HE SAYS WHEN THE WAGON GOES OVER ADA'S MOTHER ON HIS OWN DRIVEWAY, and
+  # it is the whole of it: three words, no answer, and the run carries on.
+  #
+  # THE DEALER GETS NOTHING AT ALL when the same car takes him, which is the
+  # bar this had to clear without going over it. A man who knows the person
+  # under his wheels cannot say nothing — the silence would read as the game
+  # not having noticed rather than as him not having — but anything he works
+  # out is a different character. So he notices something happened, does not
+  # look, and drives to GOODCO. The campaign remembers even though he does not
+  # (`QuestGiverDef.runDown.flag`).
+  ruth_run_down:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - WHAT WAS THAT?
   # …AND THE SAME ROAD GOING THE OTHER WAY, said on the outskirt between
   # GOODCO's gate and the first house — which is the stretch the leg out
   # finishes on, driven backwards.

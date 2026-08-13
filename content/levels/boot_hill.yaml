@@ -34,6 +34,16 @@ outro:
     - "THEN: 'NICE HAT.'"
   - - AFTER THAT THE MACHINES JUST STOPPED. PEOPLE STARTED GETTING CALLED BACK IN. SLOWLY.
   - - "AND ON FRIDAY: MOVIE NIGHT. CHIPS AND SODA. SHE WENT OUT FOR THEM. I WENT WITH HER."
+# …AND ONE MORE PAGE FOR A HERO WHO EARNED IT. `ruth_run_down` is set the moment
+# the wagon goes over Ada's mother on his own driveway, in the opening seconds of
+# the campaign, and it has travelled with him ever since (every run flag is
+# banked between levels). It lands LAST, after the warmest line in the game,
+# because the whole beat is that Friday happens anyway and he still has not
+# joined it up.
+outroIf:
+  - needs: ruth_run_down
+    pages:
+      - - "SHE ASKED WHERE HER MUM HAD GOT TO. SAID SHE'D BEEN RINGING ALL WEEK. I SAID I'D LOOK INTO IT."
 gravity: 700
 biome: boot_hill
 tiles:

@@ -33,18 +33,35 @@ questGivers:
     # the wagon's own lane out through the roll-up, so the car she is standing
     # near is not a car she is standing in front of.
     at: { x: 180, y: 392 }
-    # …AND SHE WALKS IN. She is not furniture that talks: she comes up the
-    # DRIVE while the hero is still pulling his boots on, the roll-up goes up
-    # for her — she has had a key to that garage for years, which is the whole
-    # reason an approach door opens for an arriving giver at all
-    # (`stepDoors`) — and she is at the engine parts about three seconds in.
+    # …AND SHE WALKS IN, WHICH IS A THING THAT CAN GO WRONG. She is not
+    # furniture that talks: she is already standing on the drive when the run
+    # opens — SQUARE IN FRONT OF THE ROLL-UP, on the doorway's own line — waits
+    # a beat, then lets herself in with the key she has had for years (an
+    # approach door opens for an arriving giver, `stepDoors`) and is at the
+    # engine parts about three seconds after the first tick.
     #
-    # It costs something, on purpose: the drive she crosses is the drive the
-    # wagon leaves by, so a player who guns it in the opening seconds can put
-    # his own errand-giver under the wheels. Three seconds is the whole of the
-    # exposure.
+    # THE SPOT IS THE POINT. The doorway's line is the line the wagon leaves
+    # by, so for those three seconds the woman who hands out this campaign's
+    # errands is standing in the exact place a player who jumps in and floors it
+    # is about to be (`runDownBystander`, engine/game/vehicles.ts). Somebody not
+    # looking WILL make that mistake, and it costs them the visit — she is back
+    # on the next one, because the hub mints its givers fresh every time.
+    #
+    # And the PAUSE is what makes it fair: a person standing still in front of a
+    # door and then walking through it is legible from anywhere on the lot,
+    # where somebody already moving on frame one is half inside before a player
+    # reading his own inventory looks up.
     arrive:
-      from: { x: 330, y: 300 }
+      from: { x: 296, y: 350 }
+      delayMs: 1100
+    # …AND WHAT THE REST OF THE GAME MAKES OF IT. Three words on the spot, and a
+    # flag that travels with the hero to the end of the campaign (see
+    # `QuestGiverDef.runDown`): it is what he mutters pulling onto the road
+    # (`drive_out_bump`) and what Ada asks about on Friday (boot_hill's
+    # `outroIf`). He never joins any of it up, which is the joke.
+    runDown:
+      thought: ruth_run_down
+      flag: ruth_run_down
     lore: >
       Ada's mother, who has a key to the garage and always has. She drove out
       on the midnight call that would not say her daughter's name, and between

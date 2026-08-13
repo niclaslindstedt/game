@@ -880,6 +880,10 @@ export type GameEvent =
    * pitch and the game does not pretend otherwise.
    */
   | { type: "merchantKilled"; pos: Vec2 }
+  /** An ERRAND GIVER run down by the car on their way in (`killQuestGiver`) —
+   * the same blow, the same blood, and every job of theirs off the table for
+   * the rest of the run. */
+  | { type: "questGiverKilled"; pos: Vec2; giverId: string }
   /**
    * The hero walked up to somebody with an errand for the first time: they are
    * pinned on the level map and their mark is now readable. `giverId` keys

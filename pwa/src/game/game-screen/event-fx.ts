@@ -1319,7 +1319,12 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   //
   // No toast, no line, no corpse: the picture on the road is the whole
   // statement, and the next visit quietly mints somebody else.
-  if (event.type === "merchantKilled") {
+  // …AND THE SAME BLOW FOR THE WOMAN WITH THE ERRANDS, run down on the drive
+  // she walks in across (`questGiverKilled`). One branch for both, because it
+  // is one event with one picture: a body under a car at speed. What separates
+  // them is nothing the renderer owns — the trader is replaced next visit and
+  // so is she, and neither gets a line over the top of it.
+  if (event.type === "merchantKilled" || event.type === "questGiverKilled") {
     const family = goreFamily("blood");
     const blow = bloodBlow(1, 1, "minion", true, family.id);
     const seed = Math.floor(Math.random() * 997);

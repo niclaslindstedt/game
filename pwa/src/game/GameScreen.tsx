@@ -1028,6 +1028,10 @@ export function GameScreen({
           difficulty,
           demo,
           wagon ? readCarDamage(wagon) : undefined,
+          // …AND WHAT THE NIGHT IS CARRYING. The road reads one flag off it —
+          // whether he came off this driveway over Ada's mother — and that
+          // decides which opening he mutters on the outskirt.
+          state.questFlags,
         );
         if (!params) return false;
         pendingTravelRef.current = { to, opts: {} };

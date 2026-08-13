@@ -39,12 +39,13 @@
 
 import { clamp, type Vec2 } from "@game/lib/vec.ts";
 
-import { MERCHANT, PLAYER } from "./config/index.ts";
+import { MERCHANT, PLAYER, QUESTS } from "./config/index.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import type { LevelDef } from "./defs/levels/types.ts";
 import { billboardBearing } from "./flags.ts";
 import { killMerchant } from "./merchant.ts";
 import { resolveObstacleBox, resolveObstacles } from "./obstacles.ts";
+import { killQuestGiver } from "./quests/index.ts";
 import { openDoor } from "./story.ts";
 import { anyZoneWithin } from "./zones.ts";
 import {
@@ -1156,7 +1157,7 @@ export function stepVehicles(
     // exists: the departure beat aims the car straight down the road the hub's
     // dealer paces, and a man standing on that tarmac is standing in front of
     // a car nobody is steering any more.
-    runDownMerchant(state, vehicle);
+    runDownBystander(state, vehicle);
     integrateCarBody(vehicle, dt);
   }
   for (const wheel of state.wheelDebris) {
@@ -1772,30 +1773,50 @@ function resolveSegmentBox(
 }
 
 /**
- * THE ONE THING ON THE LOT A CAR CAN HIT.
+ * WHAT ON THE LOT A CAR CAN HIT — the two people standing on ground it drives
+ * over, and nobody else.
  *
- * The trader is not an obstacle — the horde is pushed off his pitch and the
- * body of a car is resolved against walls and furniture, so a merchant has
- * never had to answer for anything moving. A hub whose dealer works the ROAD
- * changes that: the drive-out runs straight down his beat, and a car that
- * passed through him would be the loudest missing rule on the map.
+ * Neither is an obstacle: the horde is pushed off a trader's pitch and the body
+ * of a car is resolved against walls and furniture, so for most of this game's
+ * life nothing that walks has had to answer for anything moving. The HUB is
+ * where that stops being true, twice over — the dealer works the road the
+ * drive-out crosses, and the errand giver walks in across the drive in front of
+ * the door — and a car that passed through either of them would be the loudest
+ * missing rule on the map.
  *
- * Read against the SAME circles the body blocks the floor with
- * (`vehicleFootprint`), so what hits him is the drawn car rather than a dot at
- * its centre, and only above `CAR.roadkillSpeed` — a car being parked leans on
- * people, it does not kill them. `killMerchant` owns everything that follows.
+ * THE GIVER IS ONLY HITTABLE ON HER WAY IN, and that is the design rather than
+ * an implementation detail: the seconds she spends crossing the drive are the
+ * whole exposure, and once she is at her spot inside the bay she is furniture
+ * the car has no business reaching. A player who takes the wagon out the moment
+ * he can, without looking, will occasionally run over the woman with his
+ * errands — and then has to come back for another visit to find her again.
+ *
+ * Read against the SAME circles the body blocks the floor with, and at the
+ * car's OWN anchor rather than its lifted blockers (`alongBody`, not the
+ * chain): what hits somebody is the drawn car, not the strip of ground it can
+ * be stood against. Only above `CAR.roadkillSpeed` — a car being parked leans
+ * on people, it does not kill them.
  */
-function runDownMerchant(state: GameState, car: CarVehicle): void {
-  const merchant = state.merchant;
-  if (merchant.dead) return;
+function runDownBystander(state: GameState, car: CarVehicle): void {
   if (Math.abs(car.speed) < CAR.roadkillSpeed) return;
-  const reach = CAR.footprint.radius + MERCHANT.radius;
-  for (const along of CAR.footprint.offsets) {
-    const point = alongBody(car.pos, along);
-    if (
-      Math.hypot(point.x - merchant.pos.x, point.y - merchant.pos.y) <= reach
-    ) {
-      killMerchant(state);
+  const struck = (pos: Vec2, radius: number): boolean => {
+    const reach = CAR.footprint.radius + radius;
+    return CAR.footprint.offsets.some((along) => {
+      const point = alongBody(car.pos, along);
+      return Math.hypot(point.x - pos.x, point.y - pos.y) <= reach;
+    });
+  };
+  const merchant = state.merchant;
+  if (!merchant.dead && struck(merchant.pos, MERCHANT.radius)) {
+    killMerchant(state);
+    return;
+  }
+  for (const giver of state.questGivers) {
+    // Still ARRIVING — `to` is what says she is out on the open ground the car
+    // uses rather than standing where the level put her.
+    if (giver.dead || !giver.to) continue;
+    if (struck(giver.pos, QUESTS.radius)) {
+      killQuestGiver(state, giver.id);
       return;
     }
   }

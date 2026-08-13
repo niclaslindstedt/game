@@ -202,6 +202,20 @@ reading it._
 
 — _I'M GOING AFTER HER._
 
+**…and the player watches her do it.** She is standing on the drive when the run
+opens, square in front of the roll-up, and she waits a beat before letting
+herself in — which is the same three seconds the car leaves by. She can be run
+over on the hero's own driveway, and the game gives it three words:
+
+**Under the car** (`thoughts.yaml` → `ruth_run_down`):
+
+> WHAT WAS THAT?
+
+_And nothing else. No line, no toast, no scene — the same silence the dealer
+gets, about somebody he knows. She is standing there again on the next visit;
+what does not come back is this night, and the campaign carries it: the road out
+says something different (below), and so does Friday (the epilogue)._
+
 **Greeting:** SHE LAUGHED ABOUT THAT ZIPPER FOR A WEEK. LISTEN - COULD YOU DO SOMETHING FOR ME?
 
 **Farewell:** SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW SHE WOULD BE. GO ON.
@@ -265,6 +279,12 @@ surface. Nothing in between, ever. He must never acknowledge a single body._
 
 1. HER JACKET'S PINGING FROM GOODCO.
 2. THEY BEG HARD IN TOWN. NONE OF THEM'S ON THE WELFARE. NOT LIKE ME.
+
+_…and if he came off his own drive over Ada's mother, the second line is this
+one instead (`drive_out_bump`) — the whole of what he has to say about it, said
+about the car:_
+
+2. FRONT END'S PULLING. MUST'VE GONE OVER SOMETHING BACK THERE.
 
 ### On the same road, coming home (barked)
 
@@ -1806,6 +1826,12 @@ hurt while any of them lives._
 2. SHE WAS BEHIND THE GLASS, FURIOUS. FIRST SHE SAID: 'YOU TOOK YOUR TIME.' / THEN: 'NICE HAT.'
 3. AFTER THAT THE MACHINES JUST STOPPED. PEOPLE STARTED GETTING CALLED BACK IN. SLOWLY.
 4. AND ON FRIDAY: MOVIE NIGHT. CHIPS AND SODA. SHE WENT OUT FOR THEM. I WENT WITH HER.
+
+_One more page, and only for a hero who ran her mother over on the way out
+(`boot_hill.yaml` → `outroIf`, gated on `ruth_run_down`). It is then the last
+thing said in the game:_
+
+5. SHE ASKED WHERE HER MUM HAD GOT TO. SAID SHE'D BEEN RINGING ALL WEEK. I SAID I'D LOOK INTO IT.
 
 ### Found lore (story items)
 

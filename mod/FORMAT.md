@@ -2508,16 +2508,23 @@ questGivers:
       until: some_flag # a flag some branch of it sets
     arrive: # optional: they WALK IN rather than being found standing there
       from: { x: 900, y: 420 } # where they are on the run's first tick
+      delayMs: 1100 # …after standing there this long, optional
       speed: 55 # world px/s, optional
 ```
 
-**`arrive:` is for somebody the run should SEE turn up.** They start at `from`
-and walk to `at`, in a straight line and through anything in the way — this is a
-scripted entrance, not a body finding its way — and an approach door on that
-line opens for them, so a person with a key can let themselves in. They are not
-met, marked or talkable until they get there. Keep the walk short: the seconds
-they spend crossing open ground are seconds they can be run over in, and that is
-the whole cost of the beat.
+**`arrive:` is for somebody the run should SEE turn up.** They stand at `from`
+for `delayMs`, then walk to `at` — in a straight line and through anything in
+the way, because this is a scripted entrance rather than a body finding its way
+— and an approach door on that line opens for them, so a person with a key can
+let themselves in. They are not met, marked or talkable until they get there.
+
+**AND THEY CAN BE RUN OVER while they are still walking.** A car above
+`roadkillSpeed` that reaches an arriving giver kills them: they stop being
+drawn, their mark comes off the map, and every errand of theirs is unreachable
+for the rest of the run (they are minted again on the next visit). Nothing can
+touch them once they are standing at `at`, so the walk IS the exposure — put
+`from` somewhere a driver goes if you want that to be a real mistake, and
+somewhere they don't if you do not.
 
 **`intro:` is how somebody gets introduced before they start asking.** The first
 tap opens that conversation tree instead of the errand slate; the slate opens

@@ -275,8 +275,33 @@ export type QuestGiverDef = {
   arrive?: {
     /** Where they are on the run's first tick (world px). */
     from: { x: number; y: number };
+    /**
+     * How long they STAND there before setting off (ms, default 0).
+     *
+     * The pause is not decoration — it is what makes the beat a thing that can
+     * be missed. Somebody standing still in front of a door for a beat and
+     * then walking through it is legible from across the lot; the same person
+     * moving from the first frame is already halfway in before a player who
+     * was looking at his own inventory glances up.
+     */
+    delayMs?: number;
     /** Walking pace, world px/s. Default `QUESTS.arriveSpeed`. */
     speed?: number;
+  };
+  /**
+   * WHAT IT MEANS IF THE CAR GETS THEM ON THE WAY IN — the one thing that can
+   * happen to a giver (`killQuestGiver`), and the only place a venue says what
+   * the rest of the game should make of it.
+   *
+   * `thought` is a THOUGHT_DEFS id raised on the spot, once. `flag` is a run
+   * flag set at the same moment, and it TRAVELS: every flag is banked with the
+   * hero between levels (`bankCampaignQuests`), so a mistake made on the
+   * driveway in the first ten seconds is still readable from the last line of
+   * the campaign. Both optional — a giver with neither simply dies quietly.
+   */
+  runDown?: {
+    thought?: string;
+    flag?: string;
   };
   /**
    * Who they are, in the same dry register as an item's `description` — read

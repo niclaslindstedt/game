@@ -41,6 +41,11 @@ import {
   loadQuestGivers,
   loadQuests,
 } from "./quest-data/load-yaml.mjs";
+// The hero's own pinned beats, for the one cross-reference a GIVER makes into
+// them: `runDown.thought`, the line he mutters over somebody he has just driven
+// over. The story catalog is compiled ahead of this one (see
+// docs/content-pipeline.md), so the ids are on disk by the time this runs.
+import { loadThoughts } from "./story-data/load-yaml.mjs";
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
@@ -167,6 +172,7 @@ const refs = {
   giverLevels,
   quests: new Set(Object.keys(quests)),
   conversations: new Set(Object.keys(conversations)),
+  thoughts: new Set(Object.keys(loadThoughts().thoughts)),
   maxHeroLevel,
   levelSizes,
   hordeBreeds,

@@ -10,7 +10,7 @@ import { runLevelDef } from "../defs/levels/index.ts";
 import { introPages } from "../opening.ts";
 import { heroInPlay } from "../party.ts";
 import { isPartyRun } from "../seating.ts";
-import { advanceCutsceneChain } from "../story.ts";
+import { advanceCutsceneChain, outroPages } from "../story.ts";
 import type { GameState, Player } from "../types/index.ts";
 import { beginRespec } from "./stat-points.ts";
 
@@ -161,7 +161,7 @@ export function dismissIntro(state: GameState): void {
  */
 export function advanceOutro(state: GameState): void {
   if (state.phase !== "outro") return;
-  const pages = runLevelDef(state).outro ?? [];
+  const pages = outroPages(state);
   state.outroPage++;
   if (state.outroPage >= pages.length) {
     state.outroPage = pages.length;
@@ -206,9 +206,9 @@ export function skipCutscene(state: GameState): void {
   state.cutscene = null;
   state.cutsceneQueue = [];
   if (state.cutsceneThen === "victory") {
-    const outro = runLevelDef(state).outro;
+    const outro = outroPages(state);
     state.phase =
-      !state.dialogueMuted && outro && outro.length > 0 ? "outro" : "victory";
+      !state.dialogueMuted && outro.length > 0 ? "outro" : "victory";
     return;
   }
   state.phase = "title";

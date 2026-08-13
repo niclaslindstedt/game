@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: giver_run_down
+description: >-
+  A body goes under the car on the hero's own driveway. `merchant_run_down`'s
+  blow — the bumper arriving, the mass going down, the tyre dragging out the
+  far side — pitched DOWN and given a longer tail, because this one is somebody
+  the player has stood and talked to rather than a trader on a road.
+
+  The difference is deliberate and it is one note: the sawtooth under the boom
+  runs lower and rings on past the tyre instead of dying with it, so what is
+  left after the wheels have passed is a held low tone rather than silence. It
+  is the only cue this beat gets — there is no toast and no line — so it has to
+  be the thing that says LOOK BEHIND YOU without saying anything.
+on:
+  type: questGiverKilled
+voices:
+  # The bumper arriving: a low square knock, gone almost before it starts.
+  - call: tone
+    type: square
+    from: 170
+    to: 55
+    durationMs: 95
+    volume: 0.055
+    detuneCents: 9
+  # The mass going down — the wet, lowpassed boom every kill in this game
+  # leans on.
+  - call: noise
+    durationMs: 280
+    volume: 0.06
+    filter:
+      type: lowpass
+      frequency: 380
+  # The weight of a car not slowing down, and the note that rings on after it.
+  - call: tone
+    type: sawtooth
+    from: 104
+    to: 28
+    durationMs: 460
+    volume: 0.045
+    detuneCents: 12
+    echo: 0.26
+  # …and the tyre coming out the far side, dragging over wet tarmac.
+  - call: noise
+    durationMs: 170
+    volume: 0.03
+    delayMs: 120
+    filter:
+      type: bandpass
+      frequency: 1700
