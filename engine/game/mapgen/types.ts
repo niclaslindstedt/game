@@ -143,6 +143,18 @@ export type MapObject = {
   /** Collision radius (world px) — walls, obstacles, cover, crates. */
   radius?: number;
   /**
+   * LIFT THE BLOCKER OFF THE PICTURE by this many world px — for a piece the
+   * hero is meant to stand IN FRONT of rather than a stride short of. The art
+   * stays exactly where this object places it; only the blocker moves
+   * up-screen. See `FOOT_STANDOFF` (engine/game/obstacles.ts) for the two
+   * numbers that decide how much a given piece wants, and `Obstacle.blockLift`
+   * for what a lifted piece then does in the picture.
+   *
+   * ANCHORED obstacles only (`at:`) — a scattered line lays its pieces against
+   * clearances measured on the blocker, and a lift would quietly break them.
+   */
+  blockLift?: number;
+  /**
    * How THICK the scatter lies, as placements per 1,000,000 world px² — a
    * density rather than a count, so the dressing follows the floor it is given
    * whatever a district's cells rolled. Scatter types only.

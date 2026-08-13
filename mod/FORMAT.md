@@ -280,6 +280,29 @@ Three rules to author by:
   true on every seed and a written coordinate does not. Reach for a `prefab`
   instead when the furniture wants its own ROOM around it.
 
+- **A piece the hero should stand IN FRONT of wants a `blockLift`.** He is
+  pushed out to his own body radius from whatever stopped him and his boots are
+  drawn lower again, so a blocker laid honestly under a tree's trunk stops his
+  PICTURE a whole body-length short of it and he reads as standing a couple of
+  strides away. `blockLift` lifts the blocker up-screen off the art (world px);
+  the art does not move. Anchored obstacles only — a scattered line measures its
+  clearances on the blocker, and a lift would move the picture out from under
+  them.
+
+  ```yaml
+  - id: pad_tree
+    type: obstacle
+    sprite: lawn_tree
+    radius: 3 # the TRUNK, not the crown — that is what is in the way
+    blockLift: 8 # …and his boots land just under it rather than a stride out
+    at: goal
+    offset: { x: -52, y: -32 }
+  ```
+
+  It buys a second thing for free: a lifted piece is drawn OVER a hero standing
+  BEHIND it, so walking round the back of a tree puts him under the leaves
+  instead of on top of them.
+
 - **A place is an `enclosure`, not a wall.** `none` flows into its neighbour,
   `soft` fences it off with a wide gate, `hard` seals it behind one doorway. The
   barrier between two cells falls out of the PAIR — you never draw a wall.
@@ -2483,7 +2506,18 @@ questGivers:
     intro: # optional: a MEETING owed before any errand is offered
       conversation: some_meeting # a conversation the BASE GAME ships
       until: some_flag # a flag some branch of it sets
+    arrive: # optional: they WALK IN rather than being found standing there
+      from: { x: 900, y: 420 } # where they are on the run's first tick
+      speed: 55 # world px/s, optional
 ```
+
+**`arrive:` is for somebody the run should SEE turn up.** They start at `from`
+and walk to `at`, in a straight line and through anything in the way — this is a
+scripted entrance, not a body finding its way — and an approach door on that
+line opens for them, so a person with a key can let themselves in. They are not
+met, marked or talkable until they get there. Keep the walk short: the seconds
+they spend crossing open ground are seconds they can be run over in, and that is
+the whole cost of the beat.
 
 **`intro:` is how somebody gets introduced before they start asking.** The first
 tap opens that conversation tree instead of the errand slate; the slate opens

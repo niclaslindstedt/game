@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { rngState } from "@game/lib/rng.ts";
 import {
+  acrossBody,
   applyRunCommand,
   CAR,
   CAR_FIX,
@@ -18,6 +19,7 @@ import {
   nudgeCar,
   setCameraYaw,
   shedPart,
+  SHIP,
   type CarVehicle,
   type GameInput,
 } from "@game/core";
@@ -49,15 +51,23 @@ describe("minting", () => {
   it("parks solid footprints — collision-only blockers, the car's hoppable", () => {
     const state = startHub();
     const prints = state.obstacles.filter((o) => o.kind === "vehicle");
-    // A chain under the car — the 48px body is covered end to end rather than
-    // sampled, so how MANY is `CAR.footprint`'s to say — and one under the ship.
+    // A chain under each machine — a body is covered end to end rather than
+    // sampled, so how MANY is each `footprint`'s to say — and both chains sit
+    // `lift` px UP the picture from their own anchor, which is what lets a hero
+    // stand against them rather than a body-length short (`FOOT_STANDOFF`).
     const carCount = CAR.footprint.offsets.length;
-    expect(prints).toHaveLength(carCount + 1);
-    const carPrints = prints.filter((o) => o.pos.y === 500);
+    const shipCount = SHIP.footprint.offsets.length;
+    expect(prints).toHaveLength(carCount + shipCount);
+    const carPrints = prints.filter(
+      (o) => o.pos.y === 500 - CAR.footprint.lift,
+    );
     expect(carPrints).toHaveLength(carCount);
     for (const p of carPrints) expect(p.jumpable).toBe(true);
-    const shipPrint = prints.find((o) => o.pos.y === 300)!;
-    expect(shipPrint.jumpable).toBe(false);
+    const shipPrints = prints.filter(
+      (o) => o.pos.y === 300 - SHIP.footprint.lift,
+    );
+    expect(shipPrints).toHaveLength(shipCount);
+    for (const p of shipPrints) expect(p.jumpable).toBe(false);
   });
 
   it("mints none on a level whose carve pins no vehicle landmark", () => {
@@ -597,7 +607,11 @@ describe("the footprint", () => {
     expect(applyRunCommand(state, "exitCar")).toBe(true);
     const prints = carPrints(state);
     expect(prints).toHaveLength(CAR.footprint.offsets.length);
-    for (const print of prints) expect(print.pos.y).toBeCloseTo(car.pos.y, 6);
+    // One row, `lift` px up the picture from the anchor — square-on that is a
+    // straight step north (see `CAR.footprint.lift`).
+    for (const print of prints) {
+      expect(print.pos.y).toBeCloseTo(car.pos.y - CAR.footprint.lift, 6);
+    }
     expect(
       prints.map((p) => p.pos.x - car.pos.x).sort((a, b) => a - b),
     ).toEqual([...CAR.footprint.offsets].sort((a, b) => a - b));
@@ -610,8 +624,11 @@ describe("the footprint", () => {
     const prints = carPrints(state);
     expect(prints).toHaveLength(CAR.footprint.offsets.length);
     const offsets = [...CAR.footprint.offsets].sort((a, b) => a - b);
+    // The chain's own centre — the anchor stepped `lift` px UP the picture,
+    // which turns with the camera exactly as the along-axis does.
+    const base = acrossBody(car.pos, CAR.footprint.lift);
     const along = prints
-      .map((p) => ({ dx: p.pos.x - car.pos.x, dy: p.pos.y - car.pos.y }))
+      .map((p) => ({ dx: p.pos.x - base.x, dy: p.pos.y - base.y }))
       // A screen-horizontal chain runs NORTH-east across the floor under a
       // camera stood 45° round: the bearing is the yaw's own, backwards.
       .map(({ dx, dy }) => {
@@ -639,8 +656,10 @@ describe("the drive-out", () => {
     // The engine turned over…
     expect(state.events.some((e) => e.type === "carStarted")).toBe(true);
     // …and the car's parked footprint came off the field (the nav grid is
-    // told): only the ship's blocker remains.
-    expect(state.obstacles.filter((o) => o.kind === "vehicle")).toHaveLength(1);
+    // told): only the ship's own chain remains.
+    expect(state.obstacles.filter((o) => o.kind === "vehicle")).toHaveLength(
+      SHIP.footprint.offsets.length,
+    );
   });
 
   it("idles with an engine rumble whose cadence carries the throttle", () => {
@@ -713,9 +732,16 @@ describe("getting back out", () => {
     expect(state.events.some((e) => e.type === "carStopped")).toBe(true);
     // The car is furniture again WHERE IT NOW STANDS, and the nav grid is told.
     const prints = state.obstacles.filter((o) => o.kind === "vehicle");
-    // The car's own chain, plus the one under the ship.
-    expect(prints).toHaveLength(CAR.footprint.offsets.length + 1);
-    const reach = Math.max(...CAR.footprint.offsets.map(Math.abs));
+    // The car's own chain, plus the ship's.
+    expect(prints).toHaveLength(
+      CAR.footprint.offsets.length + SHIP.footprint.offsets.length,
+    );
+    // The chain is laid along the picture AND lifted up it, so the furthest
+    // circle from the anchor is the hypotenuse of the two.
+    const reach = Math.hypot(
+      Math.max(...CAR.footprint.offsets.map(Math.abs)),
+      CAR.footprint.lift,
+    );
     for (const print of prints.filter((o) => o.jumpable)) {
       expect(
         Math.hypot(print.pos.x - droveTo.x, print.pos.y - droveTo.y),

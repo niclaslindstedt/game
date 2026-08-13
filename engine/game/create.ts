@@ -1634,13 +1634,20 @@ export function buildPropLines(
           if (n.len === 0) break;
           continue;
         }
+        // The LINE is drawn where the author drew it; a lifted piece parks its
+        // blocker up-screen of that and the renderer puts the art back
+        // (`Obstacle.blockLift`). Everything above — the spacing, the pickup
+        // clearance — is measured on the picture, which is where the player
+        // reads it.
+        const lift = line.blockLift ?? 0;
         obstacles.push({
           id: takeId(),
           kind: line.sprite,
           sprite: line.sprite,
-          pos,
+          pos: lift ? vec(pos.x, pos.y - lift) : pos,
           radius,
           ...(half ? { half } : {}),
+          ...(lift ? { blockLift: lift } : {}),
           jumpable: line.jumpable ?? false,
           ...(line.perch ? { perch: true as const } : {}),
         });

@@ -272,6 +272,30 @@ export function validateQuestGiver(id, def, refs) {
   }
   if (!isVec(def.at)) err("at must be `{ x, y }` (world px)");
   else checkOnMap(def.at, def.level, "at", refs, err, warn);
+  // ARRIVING: where they walk in from, and how fast. Both coordinates are
+  // checked against the map, because a doorstep off the edge of the lot is a
+  // person who walks in out of the void.
+  if (def.arrive !== undefined) {
+    if (
+      !def.arrive ||
+      typeof def.arrive !== "object" ||
+      Array.isArray(def.arrive)
+    ) {
+      err("arrive must be a mapping with `from` (and optionally `speed`)");
+    } else {
+      if (!isVec(def.arrive.from)) {
+        err("arrive.from must be `{ x, y }` (world px)");
+      } else {
+        checkOnMap(def.arrive.from, def.level, "arrive.from", refs, err, warn);
+      }
+      if (
+        def.arrive.speed !== undefined &&
+        (typeof def.arrive.speed !== "number" || !(def.arrive.speed > 0))
+      ) {
+        err("arrive.speed must be a positive walking pace (world px/s)");
+      }
+    }
+  }
   checkLore(def.lore, "every giver owes a paragraph", err, warn);
   // A HELLO IS ONE LINE. It heads the slate every single time the hero walks
   // up, so it is the most re-read text this person owns — and a greeting that

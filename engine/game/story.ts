@@ -986,6 +986,24 @@ export function stepDoors(state: GameState, dtMs = 0): void {
       openDoor(state, door);
       continue;
     }
+    // …AND FOR SOMEBODY LETTING THEMSELVES IN. A giver still walking in
+    // (`QuestGiver.to`, see `QuestGiverDef.arrive`) is crossing ground with a
+    // door in it, and the whole read of the garage's beat is that Ada's mother
+    // opens the roll-up herself — she has had a key to it for years. Only while
+    // she is ARRIVING: a giver standing at her spot is not leaning on the
+    // opener, and a hub door held permanently up by the furniture would take
+    // the roll-up out of the picture entirely.
+    if (
+      !keyed &&
+      state.questGivers.some(
+        (giver) =>
+          giver.to !== undefined &&
+          distance(giver.pos, door.center) <= DOORS.openRadius,
+      )
+    ) {
+      openDoor(state, door);
+      continue;
+    }
     for (const enemy of state.enemies) {
       if (enemy.hp <= 0) continue;
       if (keyed && !enemyHoldsKeyFor(enemy, door.id)) continue;
@@ -1172,5 +1190,12 @@ function stepClosingDoor(
   // straight through, exactly as one that vanishes without it is one it keeps
   // routing around.
   state.obstaclesVersion++;
-  state.events.push({ type: "doorClosed", pos: { ...door.center } });
+  // WHICH KIND OF DOOR SHUT, told the same way the opening tells it
+  // (`garageDoorOpened` / `doorOpened` above): a roll-up coming back down is
+  // the chain drive again and a plain door is a leaf swinging to, and a sound
+  // catalog routes on the event's own type.
+  state.events.push({
+    type: door.rollUp ? "garageDoorClosed" : "doorClosed",
+    pos: { ...door.center },
+  });
 }

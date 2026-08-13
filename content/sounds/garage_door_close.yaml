@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: garage_door_close
+description: >-
+  The garage door coming back down: the same chain drive taking up, the motor
+  running the other way, and then the last of the travel — the slats landing on
+  the threshold with a flat wooden-sounding whump and the track ringing off it.
+
+  THE OTHER HALF OF `garage_door`, and it exists because a roll-up that went up
+  with a chain drive and came back down in silence was the loudest missing rule
+  on the hub: the door shuts itself behind whoever walked through it, and a
+  player who never hears it never learns that it does. It is the same machine,
+  so it is the same voices — the motor's glide runs DOWN instead of up, and
+  where the opening ends on a bright stop at the top of the travel this one ends
+  on the ground.
+on:
+  type: garageDoorClosed
+voices:
+  # The chain taking up, quieter than the opening's: the motor is lowering a
+  # weight rather than lifting one.
+  - call: noise
+    durationMs: 70
+    volume: 0.06
+    filter:
+      type: lowpass
+      frequency: 500
+  - call: noise
+    durationMs: 30
+    volume: 0.04
+    delayMs: 26
+    filter:
+      type: bandpass
+      frequency: 1800
+  # The long rattling descent.
+  - call: noise
+    durationMs: 600
+    volume: 0.05
+    delayMs: 80
+    filter:
+      type: lowpass
+      frequency: 300
+  # …and the motor running the other way.
+  - call: tone
+    type: square
+    from: 110
+    to: 70
+    durationMs: 620
+    volume: 0.045
+    delayMs: 80
+    detuneCents: 9
+  # THE LANDING. A saw dropping to the floor under a lowpass thump — the weight
+  # of the whole chain arriving on the threshold, which is what the ear is
+  # actually listening for and the only part of this that has to cut through.
+  - call: tone
+    type: sawtooth
+    from: 120
+    to: 44
+    durationMs: 190
+    volume: 0.055
+    delayMs: 660
+  - call: noise
+    durationMs: 150
+    volume: 0.06
+    delayMs: 660
+    filter:
+      type: lowpass
+      frequency: 260

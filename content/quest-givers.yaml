@@ -29,7 +29,22 @@ questGivers:
     level: garage
     name: RUTH
     sprite: qg_ruth
-    at: { x: 176, y: 176 }
+    # INSIDE THE BAY, in the south-east corner by the engine parts — clear of
+    # the wagon's own lane out through the roll-up, so the car she is standing
+    # near is not a car she is standing in front of.
+    at: { x: 180, y: 392 }
+    # …AND SHE WALKS IN. She is not furniture that talks: she comes up the
+    # DRIVE while the hero is still pulling his boots on, the roll-up goes up
+    # for her — she has had a key to that garage for years, which is the whole
+    # reason an approach door opens for an arriving giver at all
+    # (`stepDoors`) — and she is at the engine parts about three seconds in.
+    #
+    # It costs something, on purpose: the drive she crosses is the drive the
+    # wagon leaves by, so a player who guns it in the opening seconds can put
+    # his own errand-giver under the wheels. Three seconds is the whole of the
+    # exposure.
+    arrive:
+      from: { x: 330, y: 300 }
     lore: >
       Ada's mother, who has a key to the garage and always has. She drove out
       on the midnight call that would not say her daughter's name, and between

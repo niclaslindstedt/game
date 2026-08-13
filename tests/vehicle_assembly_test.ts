@@ -444,6 +444,14 @@ describe("the car assembly", () => {
   // canvas, so projected it has to land on the drawn body's own columns. Laid
   // along the heading instead it swung off the picture at the camera's angle,
   // and the hero walked through the bonnet and was stopped by bare floor.
+  //
+  // ITS ROW IS NOT THE BODY'S, AND THAT IS THE POINT OF `CAR.footprint.lift`:
+  // the chain sits a fixed number of world px UP the picture so a hero pressed
+  // against the wagon has his boots on its tyres rather than a body-length out
+  // on the floor (`FOOT_STANDOFF`, engine/game/obstacles.ts). Projected, that
+  // is the lift times the camera's own pitch — and it is the same number at
+  // every YAW, which is what says the step was taken across the picture rather
+  // than down a world axis.
   describe("the blockers under it", () => {
     for (const projection of PROJECTIONS) {
       it(`land on the drawn body's own columns — ${projection.name}`, () => {
@@ -459,7 +467,10 @@ describe("the car assembly", () => {
           // Projected, the blocker sits at its own column of the assembly, on
           // the body's own row — at every camera the two knobs can reach.
           expect(projectX(dx, dy)).toBeCloseTo(CAR.footprint.offsets[i]!, 6);
-          expect(projectY(dx, dy)).toBeCloseTo(0, 6);
+          expect(projectY(dx, dy)).toBeCloseTo(
+            -CAR.footprint.lift * projection.pitch,
+            6,
+          );
         });
         // …and the chain SPANS the drawn body rather than sampling it: the
         // outer two blockers' own edges reach the assembly's ends, which is

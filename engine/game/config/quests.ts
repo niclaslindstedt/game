@@ -38,6 +38,18 @@ export const QUESTS = {
   /** Drawn body radius, for placement collision and the app's hit test. */
   radius: 8,
   /**
+   * DEFAULT WALKING PACE for a giver with a `QuestGiverDef.arrive` block
+   * (world px/s), when the def names none of its own.
+   *
+   * Well under `PLAYER.speed`: this is somebody's mother walking up a driveway
+   * at midnight, not a jog, and the pace is what decides how long the arrival
+   * is a THING THE PLAYER CAN SEE (and, on the hub, how long she is standing
+   * in front of a car anybody could drive off in). At 55 the garage's walk is
+   * about three seconds — long enough to be watched, short enough that the
+   * player is not held at the door.
+   */
+  arriveSpeed: 55,
+  /**
    * A quest item's default drop chance off a breed that carries it.
    *
    * ROUGHLY ONE IN TWELVE, AND THE SMALLNESS IS THE POINT. A fetch piece that

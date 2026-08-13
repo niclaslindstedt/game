@@ -1,20 +1,37 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 id: garage_door
 description: >-
-  The garage door rolling up: the chain drive taking up with a clack, then
-  the long rattling climb of thirty-year-old slats on their track.
+  The garage door rolling up: the chain drive taking up with a clack, the
+  teeth biting, then the long rattling climb of thirty-year-old slats on
+  their track and the stop at the top of the travel.
+
+  LOUD FOR A WORLD SOUND, and deliberately. It is the biggest moving object
+  on the hub and the one noise that fires while the player is looking
+  somewhere else — the wagon trips it from the driveway, and Ada's mother
+  lets herself in with it before the hero has left the bay. A door that size
+  opening under the mix is a door the player never learns is theirs to walk
+  through.
 on:
   type: garageDoorOpened
 voices:
   - call: noise
     durationMs: 80
-    volume: 0.06
+    volume: 0.075
     filter:
       type: lowpass
       frequency: 500
+  # The teeth biting — the one bright layer, and what makes the clack read as
+  # a CHAIN rather than as a thud.
+  - call: noise
+    durationMs: 34
+    volume: 0.05
+    delayMs: 30
+    filter:
+      type: bandpass
+      frequency: 1800
   - call: noise
     durationMs: 620
-    volume: 0.04
+    volume: 0.055
     delayMs: 90
     filter:
       type: lowpass
@@ -24,7 +41,7 @@ voices:
     from: 70
     to: 110
     durationMs: 640
-    volume: 0.03
+    volume: 0.045
     delayMs: 90
     detuneCents: 9
   - call: tone
@@ -32,6 +49,6 @@ voices:
     from: 330
     to: 440
     durationMs: 120
-    volume: 0.035
+    volume: 0.05
     delayMs: 700
     echo: 0.2

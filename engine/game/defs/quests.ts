@@ -254,6 +254,31 @@ export type QuestGiverDef = {
   /** Where they stand (world px). */
   at: { x: number; y: number };
   /**
+   * …AND WHERE THEY WALK IN FROM, for a person the run is supposed to see
+   * ARRIVE rather than find already standing there (world px).
+   *
+   * The hub's is the case it exists for: Ada's mother lets herself into the
+   * garage with her own key while the hero is pulling his boots on, which is a
+   * thing that HAPPENS — she comes up the drive, the roll-up goes up for her
+   * (an approach door opens for a walker with a reason to cross it, see
+   * `stepDoors`) and she is at the engine parts by the time he is out of the
+   * bay. Found standing in his garage instead, she is furniture that talks.
+   *
+   * It is also the one beat on that lot with a COST attached: the drive she
+   * crosses is the drive the car leaves by, so a player who guns it in the
+   * first seconds can put his own errand-giver under the wheels. That is the
+   * point of walking her in rather than fading her in, and `speed` is what
+   * bounds it — a few seconds of exposure, not a minute of it.
+   *
+   * Absent on everybody who was simply there when the hero arrived.
+   */
+  arrive?: {
+    /** Where they are on the run's first tick (world px). */
+    from: { x: number; y: number };
+    /** Walking pace, world px/s. Default `QUESTS.arriveSpeed`. */
+    speed?: number;
+  };
+  /**
    * Who they are, in the same dry register as an item's `description` — read
    * in the offer's header and on the tracker. Story text: it may only
    * ELABORATE what `docs/story.md` establishes, never introduce a plot fact.

@@ -113,7 +113,28 @@ export const CAR = {
    * the furniture it becomes the moment its driver steps out have to occupy the
    * same ground, or parking would jump the body a foot sideways.
    */
-  footprint: { offsets: [-15, -7.5, 0, 7.5, 15], radius: 9 },
+  footprint: {
+    offsets: [-15, -7.5, 0, 7.5, 15],
+    radius: 9,
+    /**
+     * …AND THE WHOLE CHAIN IS LIFTED THIS FAR UP-SCREEN OF THE ANCHOR, because
+     * a blocker honestly under the tyres stops the hero's PICTURE a body-length
+     * short of the wagon's (`FOOT_STANDOFF`, obstacles.ts): he came to rest
+     * with clear floor between his boots and the wheel arch and read as
+     * standing several strides in front of his own car.
+     *
+     * 21 puts the chain's south edge `FOOT_STANDOFF` above the tyres' contact
+     * line, so his soles land a couple of px below them and he overlaps the
+     * body — and the far side falls out for free, because the 48×26 picture is
+     * almost exactly as tall as the blocked band is deep: walked round the
+     * back he stops with his boots on the roofline instead of inside the roof.
+     *
+     * The DRIVEN car is solved as `hull` below and never reads this — a lift
+     * is about where a man stands beside a parked wagon, not about where a
+     * moving one hits a wall.
+     */
+    lift: 21,
+  },
   /**
    * THE HULL A DRIVEN CAR IS SOLVED AS — the rectangle its picture covers,
    * half-extents ALONG the drawn body and ACROSS it, laid out as a chain of
@@ -364,17 +385,22 @@ export const WHEEL_DEBRIS = {
 
 export const SHIP = {
   /**
-   * One blocker under the hull — a rocket stands on its own pad — and it is the
-   * FEET, not the fuselage.
+   * THE BLOCKERS UNDER THE HULL — the FEET, not the fuselage, which is the one
+   * rule this footprint has ever had. A rocket is a tower a man walks UNDER;
+   * what is actually on the floor with him is the ring its landing legs stand
+   * on, and everything above that is picture.
    *
-   * The `starship` art is 24 px across at the fins and tapers to a bell and
-   * three legs about 12 px wide where it meets the ground, and only that last
-   * bit is on the floor with the hero: the rest of it is a tower he walks
-   * UNDER. So the disc is the width of the legs (6 px), which puts a man of
-   * `PLAYER.radius` shoulder to the pad — close enough to look like he is about
-   * to climb in — and still stops him walking through the thing.
+   * The hub's ship (`starship_home`) puts its three pads about 72 px apart, so
+   * four discs of 12 tile that span end to end and nothing between the legs is
+   * walkable — a gap a man could stand in the middle of would have him standing
+   * inside a rocket.
+   *
+   * `lift` is the same allowance the wagon's chain takes (`CAR.footprint.lift`
+   * and `FOOT_STANDOFF`, obstacles.ts): 27 puts the chain's south edge far
+   * enough up-screen that a hero pressed against the ship has his boots on the
+   * pads rather than a body-length out on the grass.
    */
-  footprint: { offsets: [0], radius: 6 },
+  footprint: { offsets: [-24, -8, 8, 24], radius: 12, lift: 27 },
 } as const;
 
 /** The landmark kinds that stand for a vehicle, and what each mints. */
@@ -509,10 +535,11 @@ export function applyCarDamage(car: CarVehicle, damage: CarDamage): void {
   if (typeof damage.wear === "number") car.wear = Math.max(0, damage.wear);
 }
 
-function createShip(pos: Vec2): ShipVehicle {
+function createShip(pos: Vec2, sprite: string): ShipVehicle {
   return {
     kind: "ship",
     pos: { x: pos.x, y: pos.y },
+    sprite,
     faceLeft: false,
     speed: 0,
     thrust: 0,
@@ -540,7 +567,12 @@ export function createVehicles(
           )
         : 0;
       vehicles.push(createCar(mark.pos, heading));
-    } else if (kind === "ship") vehicles.push(createShip(mark.pos));
+    } else if (kind === "ship") {
+      // A landmark's `sprite` defaults to its kind, exactly as the renderer
+      // reads it (`LevelDef.landmarks`) — a venue that names no hull gets the
+      // one the id names.
+      vehicles.push(createShip(mark.pos, mark.sprite ?? mark.kind));
+    }
   }
   return vehicles;
 }
@@ -563,6 +595,24 @@ export function alongBody(pos: Vec2, along: number): Vec2 {
 }
 
 /**
+ * …AND A STEP UP THE PICTURE, as a point on the floor — `alongBody`'s other
+ * axis, and the one a `footprint.lift` is spent on.
+ *
+ * The projection turns and then squashes, so the world bearing that comes out
+ * VERTICAL on screen is a right angle from `billboardBearing()` at every yaw.
+ * Unlike the along axis it is not unit-preserving — the squash is exactly what
+ * this axis takes — so a lift is a world distance chosen against the shipped
+ * `DEFAULT_PITCH`, the same way `PLAYER.footLift` is.
+ */
+export function acrossBody(pos: Vec2, up: number): Vec2 {
+  const bearing = billboardBearing() + Math.PI / 2;
+  return {
+    x: pos.x - Math.cos(bearing) * up,
+    y: pos.y - Math.sin(bearing) * up,
+  };
+}
+
+/**
  * The blockers a vehicle parks on `state.obstacles` (kind "vehicle" — the
  * obstacle pass skips them; the assembly is drawn by the vehicle renderer).
  *
@@ -581,13 +631,19 @@ export function alongBody(pos: Vec2, along: number): Vec2 {
  * even a PARKED car's chain stood off its own picture at the yaw's own angle. In
  * both the hero walks through the drawn bonnet and is stopped by open floor half
  * a car away, and hops onto a roof that is not there.
+ *
+ * …AND THE WHOLE CHAIN SITS `lift` PX UP THE PICTURE FROM THE ANCHOR, which is
+ * the other half of standing a man against a machine rather than a stride in
+ * front of one — see each footprint's own `lift` and `FOOT_STANDOFF`
+ * (obstacles.ts).
  */
 export function vehicleFootprint(
   vehicle: Vehicle,
 ): { pos: Vec2; radius: number }[] {
   const print = vehicle.kind === "car" ? CAR.footprint : SHIP.footprint;
+  const base = acrossBody(vehicle.pos, print.lift);
   return print.offsets.map((along) => ({
-    pos: alongBody(vehicle.pos, along),
+    pos: alongBody(base, along),
     radius: print.radius,
   }));
 }
@@ -771,6 +827,22 @@ function openDoorsForCar(state: GameState, car: CarVehicle): void {
  * own wall ahead of itself could never move), and `obstaclesVersion` bumps
  * so the autopilot's nav grid hears about the opened floor.
  */
+/**
+ * HOW FAR FROM A WAGON'S ANCHOR ITS OWN BLOCKERS CAN BE (world px, + a margin)
+ * — what `enterCar` lifts off the field when a driver takes the wheel.
+ *
+ * The chain is spread `offsets` ALONG the picture and `lift` UP it, so the
+ * furthest circle sits at the hypotenuse of the two. Both steps turn with the
+ * camera together (`alongBody` / `acrossBody`), so this distance is the same at
+ * every yaw — which is what lets one radius stand for a chain that is not
+ * centred on the anchor at all.
+ */
+const CAR_BLOCKER_REACH =
+  Math.hypot(
+    Math.max(...CAR.footprint.offsets.map(Math.abs)),
+    CAR.footprint.lift,
+  ) + 20;
+
 export function enterCar(state: GameState, hero: Player): boolean {
   if (!carIsWayOut(state)) return false;
   for (const vehicle of state.vehicles) {
@@ -786,7 +858,7 @@ export function enterCar(state: GameState, hero: Player): boolean {
       (o) =>
         o.kind !== "vehicle" ||
         Math.hypot(o.pos.x - vehicle.pos.x, o.pos.y - vehicle.pos.y) >
-          CAR.footprint.radius + 20,
+          CAR_BLOCKER_REACH,
     );
     if (state.obstacles.length !== before) state.obstaclesVersion++;
     state.events.push({

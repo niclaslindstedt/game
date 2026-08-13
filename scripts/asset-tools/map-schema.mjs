@@ -73,6 +73,7 @@ const ALLOWED_FIELDS = {
     // carved anchor plus a nudge, once, on every seed (see `MapObject.at`).
     "at",
     "offset",
+    "blockLift",
   ],
   cover: ["radius", "density", "jumpable", "areas", "space", "edge"],
   crate: ["radius", "density", "jumpable", "loot", "areas", "space", "edge"],
@@ -1138,6 +1139,17 @@ export function validateMap(bp, refs, description = "") {
         err(`${where}: wander must be a non-negative distance`);
       if (o.perch !== undefined && typeof o.perch !== "boolean")
         err(`${where}: perch must be a boolean`);
+      if (o.blockLift !== undefined) {
+        if (!isNum(o.blockLift) || o.blockLift < 0)
+          err(`${where}: blockLift must be a non-negative distance`);
+        // A SCATTERED line lays its pieces against clearances measured on the
+        // blocker (the path, the sentry beats, its own neighbours), so a lift
+        // there moves the picture out from under every one of them.
+        else if (o.at === undefined)
+          err(
+            `${where}: blockLift needs an anchored piece — give it "at", or drop the lift`,
+          );
+      }
       // A sized rock has no base sprite of its own — the renderer blits the
       // per-footprint `<base>_<w>x<h>`, so that is what must be in the atlas.
       // A `chest` names no sprite at all: the engine draws every reward

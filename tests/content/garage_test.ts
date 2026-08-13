@@ -23,6 +23,7 @@ import {
   MAP_BLUEPRINTS,
   markThoughtsSeen,
   nightAmount,
+  PLAYER,
   resolveLevelDef,
   SECRET_LEVEL_ORDER,
   skipCutscene,
@@ -110,7 +111,13 @@ describe("the venue", () => {
     // …TOWARD THE EYE, never behind the machine — the vehicle pass draws a car
     // whose base is nearer the eye OVER the actors (`VehicleLayer`), so a hero
     // nudged the other way would open the game under a roof.
-    expect(hero.pos.y).toBeGreaterThan(car!.pos.y);
+    //
+    // Read on his BOOTS, which is the comparison the renderer's own sort makes
+    // (`onLayer`, PLAYER.footLift): the chain under the wagon is laid up-screen
+    // of its anchor so he can stand right against it (`CAR.footprint.lift`), so
+    // his POSITION is now a hair north of the car's while his picture is
+    // squarely in front of it.
+    expect(hero.pos.y + PLAYER.footLift).toBeGreaterThan(car!.pos.y);
     // And still within arm's reach of it: the boardable mark is up and the tap
     // works on the first frame, with nothing to walk.
     expect(

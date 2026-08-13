@@ -227,7 +227,11 @@ export function drawFrame(
   drawCraters(ctx, state, sprites, camera, inView);
   drawLandmarks(ctx, state, sprites, camera, inView);
   drawBossCorpseRing(ctx, state, camera, inView, timeMs);
-  drawObstacles(ctx, state, sprites, camera, inView);
+  // …the half of them the hero is IN FRONT of. A piece carrying a `blockLift`
+  // is tall enough to hide a man who walks round the back of it (the lawn's
+  // trees), so the obstacle pass takes the same depth sort the machines do and
+  // the other half goes on after him.
+  drawObstacles(ctx, state, sprites, camera, inView, "under");
   // …AND EVERYTHING WITH A BODY GOES AFTER THE WALLS. A `plane: wall` obstacle
   // is no longer paint on the floor: it is EXTRUDED off its footprint
   // (render/plane.ts), so its face sweeps `rise` px UP the screen and covers
@@ -337,6 +341,10 @@ export function drawFrame(
   // too: a car parked between the player and a hero who is levelling up is
   // between him and the light as well.
   drawVehicles(ctx, state, sprites, camera, inView, timeMs, "over");
+  // …and the lifted furniture standing NEARER THE EYE than the hero, on the
+  // same footing and for the same reason: a canopy he has walked under is
+  // between him and the player.
+  drawObstacles(ctx, state, sprites, camera, inView, "over");
 
   // Hazards sweeping the field — the storms and stampedes drawn AFTER the hero
   // so they visibly pass OVER him (he lies knocked out beneath them).

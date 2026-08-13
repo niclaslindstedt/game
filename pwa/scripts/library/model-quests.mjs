@@ -79,6 +79,8 @@ export const QUEST_GIVER_FIELDS = {
   sprite: "the portrait",
   lore: "the flavor paragraph under the portrait",
   at: "not reader-facing: a world coordinate is a number the reader is standing in, not one they can use — where the person is on the map is what the mission page's map render shows",
+  arrive:
+    "not reader-facing, for `at`'s reason twice over: it is a second world coordinate, and the fact somebody WALKS IN is a thing to be watched happening rather than read about beforehand",
   greeting: "what they say, behind the reveal",
   farewell: "what they say, behind the reveal",
   intro:
