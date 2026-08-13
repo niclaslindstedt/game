@@ -9,7 +9,14 @@
 
 import { createCutscene } from "@game/lib/cutscene.ts";
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
-import { clamp, distance, normalize, vec, type Vec2 } from "@game/lib/vec.ts";
+import {
+  clamp,
+  distance,
+  normalize,
+  segmentDistanceSq,
+  vec,
+  type Vec2,
+} from "@game/lib/vec.ts";
 import { applyLoadout } from "./arrival.ts";
 import { openArrivals } from "./arrivals.ts";
 import {
@@ -1882,6 +1889,20 @@ function scatterObstacles(
           ) &&
           // Keep the intended path walkable — no furniture on the route.
           distToPath(def, playerSpawn, pos) > PATH.clearance + radius &&
+          // A SENTRY'S BEAT STAYS WALKABLE TOO. A dormant patroller sweeps
+          // `at → patrol[0]` and back with no pathfinding, so furniture strewn
+          // on the leg turns the round the room offers into a shuffle against
+          // a chair. Same lane rule as the path above.
+          def.spawns.every(
+            (s) =>
+              !("at" in s) ||
+              !s.patrol ||
+              s.patrol.every(
+                (end) =>
+                  segmentDistanceSq(s.at, end, pos) >
+                  (PATH.clearance + radius) ** 2,
+              ),
+          ) &&
           clearOf(walls, pos, radius) &&
           clearOf(scattered, pos, radius);
         if (!clear) continue;

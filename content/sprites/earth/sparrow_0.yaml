@@ -1,0 +1,27 @@
+name: sparrow_0
+family: earth
+size: [10, 8]
+description: >
+  A sparrow on the lawn, hopping between pecks — brown back, buff breast,
+  head cocked for the next seed.
+subject:
+  kind: critter — sparrow
+  build: a small round bird from above-side, head left, tail right
+  features: brown back over a buff breast, a short dark beak
+  accent: the buff breast
+  flavor: the lawn's own tenant, unbothered by the rocket
+palette:
+  O: "#1a1c2c" # outline
+  B: "#92643e" # brown back
+  E: "#5d4028" # wing shadow
+  u: "#e2c494" # buff breast
+  K: "#0c0b12" # eye and beak
+grid: |
+  ..........
+  ..OOO.....
+  .OBBBO....
+  OKuBBBOO..
+  .OuuBEBBO.
+  .OuBBEBO..
+  ..OOBBO...
+  ....OO....

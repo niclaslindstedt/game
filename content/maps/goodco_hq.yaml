@@ -546,6 +546,44 @@ objects:
     type: decor
     density: 9
     areas: [office]
+  # THE SHIFT THAT JUST STEPPED OUT. A chair pushed back mid-task, the cooler
+  # everybody gathered at, the copier still jammed, the last stand-up nobody
+  # attended — the difference between "an office" and "a floor with desks on
+  # it" is the evidence of the people who were just here.
+  - id: office_chair
+    type: obstacle
+    radius: 5
+    density: 14
+    areas: [office]
+    space: inside
+  - id: water_cooler
+    type: obstacle
+    radius: 6
+    density: 7
+    areas: [office, floor]
+    space: inside
+  - id: copier
+    type: obstacle
+    radius: 8
+    density: 6
+    areas: [office, floor]
+    space: inside
+  - id: whiteboard
+    type: obstacle
+    radius: 9
+    density: 5
+    areas: [office, lab]
+    space: inside
+  # THE ONE EMPLOYEE STILL DOING ITS JOB — the janitor's scrubber, out on its
+  # rounds all night. A critter: collides with nothing, costs nothing.
+  - id: floor_scrubber
+    type: critter
+    animated: true
+    density: 4.5
+    areas: [office, floor, lab]
+    space: inside
+    range: [60, 160]
+    speed: [6, 12]
   # THE CUPBOARD'S OWN BUCKET — no density at all: it is never scattered, it
   # stands exactly where the `janitorial` prefab puts it, which is the only
   # reason the room is a room the player can recognise.

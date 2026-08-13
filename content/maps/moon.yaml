@@ -231,6 +231,48 @@ objects:
     type: decor
     density: 5
     areas: [rille, station]
+  # THE EXPEDITION'S HARDWARE, still standing where it was deployed. The decor
+  # speckle gives the plain a SURFACE; only something knee-high and man-made
+  # makes a basin read as a PLACE somebody worked. All of it is kept thin —
+  # an obstacle is a wall to the horde, so the density here is a difficulty
+  # knob before it is a look (tests/content/balance_test.ts).
+  - id: dish_antenna
+    type: obstacle
+    radius: 8
+    density: 3.5
+    areas: [basin, station]
+  - id: solar_array
+    type: obstacle
+    radius: 11
+    density: 3
+    areas: [basin, station]
+  - id: seismometer
+    type: obstacle
+    radius: 6
+    density: 4.5
+    areas: [basin, rille]
+  - id: moon_buggy
+    type: obstacle
+    radius: 12
+    density: 2
+    areas: [basin]
+  # The buggy's own wake, pressed where the traverses ran.
+  - id: rover_tracks
+    type: decor
+    density: 10
+    areas: [basin, rille]
+  # DUST THAT MOVES WITH NO WIND TO MOVE IT — the haunting, on the ground
+  # plane. A critter collides with nothing and costs the simulation nothing;
+  # it is the difference between a dead grey plain and one that is wrong in
+  # a way you can see.
+  - id: dust_eddy
+    type: critter
+    animated: true
+    density: 5
+    areas: [basin, rille]
+    range: [60, 140]
+    speed: [3, 8]
+    scale: [0.8, 1.1]
   # The lander is where the hero put down; the flag is what he came to find, so
   # it stands wherever the boss turned out to be.
   - id: lander
@@ -374,6 +416,9 @@ parts:
         - { object: supply_crate, at: [460, 130] }
         - { object: moon_debris, at: [300, 230] }
         - { object: crate, at: [430, 350] }
+        - { object: moon_buggy, at: [180, 220] }
+        - { object: solar_array, at: [420, 250] }
+        - { object: rover_tracks, at: [260, 300] }
       spawns:
         - { at: [290, 120], slot: elite }
         - { at: [140, 330] }
@@ -391,6 +436,8 @@ parts:
       props:
         - { object: crate, at: [110, 100] }
         - { object: supply_crate, at: [320, 110] }
+        - { object: dish_antenna, at: [210, 90] }
+        - { object: seismometer, at: [320, 240] }
       spawns:
         - { at: [210, 170], slot: elite }
         - { at: [120, 250] }

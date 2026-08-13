@@ -1,0 +1,30 @@
+name: star_moth_0
+family: rift
+size: [12, 10]
+description: >
+  A star moth with wings spread wide — a thumb-sized drifter of the void,
+  translucent teal wings dusted with white points, a bright cyan body
+  glowing between them.
+subject:
+  kind: critter — star moth
+  build: a small moth from above, both wings spread full
+  features: translucent teal wings dusted with star points, thin violet trailing edges
+  accent: the glowing cyan body
+  flavor: void fauna — it navigates by lights that burned out long ago
+palette:
+  c: "#8ccdd7e1" # translucent teal wing
+  m: "#a57de1e6" # violet trailing edge
+  x: "#c5e6ebe1" # pale wing highlight
+  W: "#f4f4f4" # star dust point
+  Q: "#60f0d0" # glowing cyan body
+grid: |
+  ............
+  .cc......cc.
+  cxcc....ccxc
+  ccWcc..ccWcc
+  cccccQQccccc
+  .ccccQQcccc.
+  .mcccQQcccm.
+  ..mmccccmm..
+  ....mmmm....
+  ............

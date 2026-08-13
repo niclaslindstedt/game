@@ -1,0 +1,38 @@
+name: water_cooler
+family: goodco
+space: inside
+size: [10, 16]
+description: >
+  An office water cooler — a translucent blue bottle upended on a white
+  column with a drip tray and two taps, the one place the night shift still
+  gathers.
+subject:
+  kind: solid obstacle prop — water cooler
+  build: a tall white column under an upended translucent bottle
+  features: water line visible in the blue bottle, twin taps over a drip tray
+  accent: the translucent blue bottle
+  flavor: where the night shift still gathers
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white column
+  V: "#9095a5" # column shade
+  j: "#4054bc" # deep water blue
+  x: "#c5e6ebe1" # translucent bottle
+  b: "#3f4553" # drip tray slot
+grid: |
+  ..........
+  ..OOOOOO..
+  .OxxxxxxO.
+  .OxjjjjxO.
+  .OxjjjjxO.
+  .OOjjjjOO.
+  .OWWWWWVO.
+  .OWObbOVO.
+  .OWWWWWVO.
+  .OWWWWWVO.
+  .OWWWWWVO.
+  .OWWWWWVO.
+  .OWWWWWVO.
+  .OOWWWWOO.
+  ..OO..OO..
+  ..........

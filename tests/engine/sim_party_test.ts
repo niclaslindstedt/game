@@ -170,11 +170,14 @@ describe("a simulated party", () => {
       // Three minutes rather than one: the parts moon fields a WoW-style
       // garrison (one mob to a post) instead of the knots' streamed waves, so
       // the same walk meets fewer bodies per minute and a one-minute window
-      // stopped containing anybody's first ding.
+      // stopped containing anybody's first ding. Seed 6 rather than 5: the
+      // dressed moon re-dealt every seed, and 5 now parks a cache guardian on
+      // the landing route — a level-1 party feeds it their XP in deaths and
+      // nobody dings inside any reasonable window.
       const report = simulateLevel({
         levelId: "moon",
         difficulty: "easy",
-        seed: 5,
+        seed: 6,
         party: 3,
         maxMinutes: 3,
         realisticPacing: false,

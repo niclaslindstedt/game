@@ -1,0 +1,27 @@
+name: rat_1
+family: bunker
+size: [12, 8]
+description: >
+  A grey rat at a scurry, second beat — legs gathered under it, the tail
+  flicked to the other line.
+subject:
+  kind: critter — rat
+  build: a rat seen from above mid-stride, legs gathered, tail flicked low
+  features: grey coat, pink ears and tail, a dark bead of an eye
+  accent: the pink tail
+  flavor: the one resident the vetting missed
+palette:
+  O: "#1a1c2c" # outline
+  A: "#8d9196" # grey coat
+  v: "#60687e" # coat shadow
+  P: "#d89aa0" # pink ears and tail
+  K: "#0c0b12" # eye
+grid: |
+  ............
+  ..OO........
+  .OPAOOOO....
+  OKAAAAAAO...
+  OAAvAAvAO...
+  .OAAAAAAOPP.
+  ..OOvvOO..P.
+  ............

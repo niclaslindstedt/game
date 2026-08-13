@@ -1,0 +1,32 @@
+name: seismometer
+family: moon
+size: [12, 12]
+description: >
+  A surface experiment package — a squat instrument box on stub feet with a
+  whip antenna and one amber telemetry lamp, left out on the regolith and
+  still counting quakes.
+subject:
+  kind: small obstacle prop — surface instrument
+  build: a squat instrument box on stub feet, a whip antenna off one corner
+  features: pale casing over a slate base, one small telemetry lamp
+  accent: a single amber lamp
+  flavor: still counting moonquakes for nobody
+palette:
+  O: "#1a1c2c" # outline
+  A: "#8d9196" # grey casing shadow
+  a: "#d6dce4" # pale casing
+  v: "#60687e" # slate base
+  y: "#ffb02e" # amber telemetry lamp
+grid: |
+  .........O..
+  .........O..
+  ........O...
+  ...OOOOOO...
+  ..OaaaaaaO..
+  ..OayaaaAO..
+  ..OaaaaaAO..
+  ..OAAAAAAO..
+  ..OvvvvvvO..
+  ..OvOOOOvO..
+  ..OO....OO..
+  ............

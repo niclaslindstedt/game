@@ -1,0 +1,36 @@
+name: solar_array
+family: moon
+plane: upright
+size: [24, 14]
+description: >
+  A deployed solar wing on A-frame legs — a long panel of dark blue cells in a
+  pale frame, tilted toward a sun that circles it once a month, still feeding
+  hardware nobody is left to run.
+subject:
+  kind: solid obstacle prop — solar array
+  build: a long low solar panel on two A-frame legs, tilted slightly toward the viewer
+  features: a grid of dark blue photovoltaic cells in a pale composite frame
+  accent: the deep blue cells against pale framing
+  flavor: still charging batteries for a crew that never came back
+palette:
+  O: "#1a1c2c" # outline
+  A: "#8d9196" # grey leg
+  a: "#d6dce4" # pale composite frame
+  j: "#4054bc" # blue solar cell
+  n: "#2a3a86" # deep cell shadow
+  x: "#c5e6ebe1" # pale cell glint
+grid: |
+  ........................
+  .OOOOOOOOOOOOOOOOOOOOOO.
+  .OaaaaaaaaaaaaaaaaaaaaO.
+  .OajjnjjxjjnjjjxjjnjjaO.
+  .OajjnjjjjjnjjjjjjnjjaO.
+  .OaxjnjjjjjnjjxjjjnjjaO.
+  .OajjnjjjjjnjjjjjjnjjaO.
+  .OaaaaaaaaaaaaaaaaaaaaO.
+  .OOOOOOOOOOOOOOOOOOOOOO.
+  ...OAO...OAO...OAO......
+  ...OAO..OAAO....OAO.....
+  ..OAO...OAO......OAO....
+  ..OOO...OOO......OOO....
+  ........................

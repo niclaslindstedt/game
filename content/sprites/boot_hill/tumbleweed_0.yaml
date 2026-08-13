@@ -1,0 +1,29 @@
+name: tumbleweed_0
+family: boot_hill
+size: [12, 12]
+description: >
+  A tumbleweed mid-roll — the same ball of tangled dry brush as the parked
+  one, caught with its pale side up and a twig kicking loose at the rim.
+subject:
+  kind: critter — rolling tumbleweed
+  build: a round ball of tangled dry brush, one loose twig at the rim
+  accent: dry brown twig tones
+  flavor: crossing the flats with somewhere to be
+palette:
+  B: "#92643e" # mid brush brown
+  E: "#5d4028" # dark twig
+  O: "#1a1c2c" # gap / outline
+  S: "#b39378" # pale dry highlight
+grid: |
+  ............
+  ...OEBSO....
+  ..OBSBEBOE..
+  .OEBOBOBEO..
+  .OBOSBBOBO..
+  .OEBOBOBSO..
+  .OBOBBSOBO..
+  ..OBEBOBO...
+  ...OBEBO....
+  ............
+  ............
+  ............

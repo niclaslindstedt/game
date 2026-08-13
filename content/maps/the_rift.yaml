@@ -157,6 +157,17 @@ objects:
     areas: [cage, drift]
   - id: cache
     type: chest
+  # VOID FAUNA. The junk field is all THINGS — lost objects standing still —
+  # so the one moving light matters: star moths drifting between the shards,
+  # navigating by lights that burned out long ago. A critter: collides with
+  # nothing, costs the simulation nothing, cannot desync a replay.
+  - id: star_moth
+    type: critter
+    animated: true
+    density: 2.6
+    range: [70, 180]
+    speed: [5, 14]
+    scale: [0.8, 1.2]
   # LOOSE PHYSICS — flat texture over the nothing, so the void reads as a place
   # rather than as an unfinished level.
   - id: stardust

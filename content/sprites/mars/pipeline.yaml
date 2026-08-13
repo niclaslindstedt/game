@@ -1,0 +1,33 @@
+name: pipeline
+family: mars
+size: [24, 12]
+description: >
+  A run of surface pipeline on cradle supports — dull grey pipe with a
+  bolted collar mid-span, dusted rust on top, carrying something between
+  two places nobody visits anymore.
+subject:
+  kind: solid obstacle prop — surface pipeline segment
+  build: a long horizontal pipe resting on two cradle supports
+  features: a bolted collar at mid-span, rust dust settled along the crown
+  accent: the pale collar bolts
+  flavor: still carrying something between two dead ends
+palette:
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # pipe crown light
+  v: "#60687e" # pipe body
+  b: "#3f4553" # pipe underside
+  a: "#c98a5e" # settled rust dust
+  W: "#f4f4f4" # collar bolt
+grid: |
+  ........................
+  .OOOOOOOOOOOOOOOOOOOOOO.
+  .OVVaaVVVVOWWOVVVaaVVVO.
+  .OVVVVVVVVOWWOVVVVVVVVO.
+  .OvvvvvvvvOWWOvvvvvvvvO.
+  .OvvvvvvvvOWWOvvvvvvvvO.
+  .ObbbbbbbbObbObbbbbbbbO.
+  .OOOOOOOOOOOOOOOOOOOOOO.
+  ...ObbO..........ObbO...
+  ...ObbO..........ObbO...
+  ..OObbOO........OObbOO..
+  ........................

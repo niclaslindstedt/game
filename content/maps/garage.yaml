@@ -469,6 +469,18 @@ objects:
     type: decor
     density: 90
     areas: [bay]
+  # THE LAWN'S OWN TENANTS. A couple of sparrows working the grass — the one
+  # moving thing on a lot that is otherwise a parked car and a rocket, and
+  # what makes the home hub read as a HOME. Critters: no collision, no cost,
+  # unbothered by the launch history under the pad.
+  - id: sparrow
+    type: critter
+    animated: true
+    density: 60
+    areas: [lawn]
+    range: [40, 120]
+    speed: [10, 26]
+    scale: [0.8, 1.1]
 
   # ── THE TREES ────────────────────────────────────────────────────────────
   # THE ONES ON THE PAD ARE THE POINT. A patch of ground going black is a

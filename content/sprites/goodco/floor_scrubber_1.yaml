@@ -1,0 +1,32 @@
+name: floor_scrubber_1
+family: goodco
+space: inside
+size: [12, 10]
+description: >
+  The janitor's robot floor scrubber out on its night rounds — second beat:
+  the duty lamp blinks off-phase and the wet streak shifts under the
+  squeegee.
+subject:
+  kind: critter — robot floor scrubber
+  build: a low rounded puck seen from above-front, squeegee bar at the rear
+  features: teal shell, chrome sensor bump, a thin wet streak behind
+  accent: the duty lamp mid-blink
+  flavor: the only employee still doing its job
+palette:
+  O: "#1a1c2c" # outline
+  T: "#3aa0a0" # teal shell
+  t: "#2a7878" # teal shade
+  V: "#9095a5" # chrome sensor bump
+  y: "#ffb02e" # amber duty lamp
+  x: "#c5e6ebe1" # wet sheen
+grid: |
+  ............
+  ...OOOOO....
+  ..OTTTTTO...
+  .OTTOVOTTO..
+  .OTyOVOTtO..
+  .OTTTTTTtO..
+  .OTTTTTttO..
+  ..OOOOOOO...
+  ..xx...xx...
+  ............

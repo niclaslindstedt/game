@@ -1,0 +1,37 @@
+name: bar_cart
+family: bunker
+size: [14, 14]
+description: >
+  A brass bar cart on casters — cut-glass decanters and tumblers on the top
+  shelf, spare bottles below, abandoned mid-pour somewhere between the wine
+  cellar and the panic room.
+subject:
+  kind: solid obstacle prop — brass bar cart
+  build: a two-shelf wheeled cart, bottles and glasses on both decks
+  features: brass frame, cut-glass decanters, a red and a green bottle below
+  accent: the brass frame
+  flavor: abandoned mid-pour on the way to the panic room
+palette:
+  O: "#1a1c2c" # outline
+  h: "#e2c640" # brass frame
+  q: "#96762e" # brass shadow
+  W: "#f4f4f4" # cut glass
+  x: "#c5e6ebe1" # glass shine
+  C: "#d23c42" # red bottle
+  G: "#4a7a3e" # green bottle
+  k: "#342c26" # under-shelf shadow
+grid: |
+  ..............
+  ..OOOOOOOOOO..
+  .OhWxOWOxWqO..
+  .OhWWOWOWWqO..
+  .OhhhhhhhhqO..
+  .OhOkkkkkOqO..
+  .OhOCkGkkOqO..
+  .OhOCkGkkOqO..
+  .OhOCkGkkOqO..
+  .OhhhhhhhhqO..
+  .OhO.....OqO..
+  .OqO.....OqO..
+  ..OO......OO..
+  ..............

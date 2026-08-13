@@ -334,7 +334,7 @@ describe("a session and its client", () => {
     let seenTick = rig.client.tick;
     // A whole number of publish periods, so the two streams end together
     // rather than the server holding a partial batch the client cannot have.
-    for (let i = 0; i < 450; i++) {
+    for (let i = 0; i < 900; i++) {
       rig.client.sendInput(input);
       // A pinned first-sight thought stops the world the moment a wisp drifts
       // into view, and a frozen run emits nothing at all — so the walk taps
@@ -347,12 +347,14 @@ describe("a session and its client", () => {
         fromClient.push(...rig.client.state!.events.map(canonicalJson));
       }
     }
-    // Not vacuous: seven seconds of walking into the nearest knot on the moon
-    // produces a stream, and the equality below is only meaningful if it does.
+    // Not vacuous: fourteen seconds of walking into the nearest post on the
+    // moon produces a stream, and the equality below is only meaningful if it
+    // does. (Fourteen rather than seven: the dressed moon stands its posts —
+    // and the furniture between them — farther from some landings.)
     expect(fromServer.length).toBeGreaterThan(5);
     expect(fromClient.join("\n")).toBe(fromServer.join("\n"));
-    // Seven seconds of a real fight on a real map, stepped twice (the session's
-    // and the client's), is more than the suite's default patience.
+    // Fourteen seconds of a real fight on a real map, stepped twice (the
+    // session's and the client's), is more than the suite's default patience.
   }, 20_000);
 
   it("tells the client when the session ends, and why", () => {

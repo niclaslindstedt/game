@@ -1,0 +1,36 @@
+name: whiteboard
+family: goodco
+space: inside
+size: [18, 14]
+description: >
+  A rolling whiteboard still carrying the last stand-up nobody attended —
+  red and blue marker scrawl, one box circled hard, an arrow trailing off
+  the edge of the board.
+subject:
+  kind: solid obstacle prop — rolling whiteboard
+  build: a wide whiteboard on a rolling A-frame stand
+  features: marker scrawl across the face, a tray of markers below
+  accent: red and blue scrawl on white
+  flavor: the last stand-up, adjourned indefinitely
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # board face
+  V: "#9095a5" # frame
+  r: "#d83a3a" # red marker scrawl
+  j: "#4054bc" # blue marker scrawl
+  b: "#3f4553" # tray shadow
+grid: |
+  ..................
+  .OOOOOOOOOOOOOOO..
+  .OWWWWWWWWWWWWWO..
+  .OWjjjWWrrrWWWWO..
+  .OWWWWWrWWWrWWWO..
+  .OWjjWWrWrWrWjWO..
+  .OWWWWWrrrrWWjWO..
+  .OWjjjjWWWWWjWWO..
+  .OWWWWWWWjjjWWWO..
+  .OOOOOOOOOOOOOOO..
+  ..OVObbbbbbbOVO...
+  ..OVO.......OVO...
+  .OVVO.......OVVO..
+  ..................

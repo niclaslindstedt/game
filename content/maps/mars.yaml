@@ -299,6 +299,42 @@ objects:
     areas: [terrarium]
   - id: cache
     type: chest
+  # THE MINE THE COLONY RAN — bore rigs, their tailings, the pipeline between
+  # them and the relay chain that reported the yield. Thin on purpose: an
+  # obstacle is a wall to the horde before it is a look
+  # (tests/content/balance_test.ts), and a plain is still a plain — it is just
+  # a plain somebody WORKED once.
+  - id: drill_rig
+    type: obstacle
+    radius: 11
+    density: 2.6
+    areas: [plain, outcrop]
+  - id: pipeline
+    type: obstacle
+    radius: 11
+    density: 3
+    areas: [plain, outcrop]
+  - id: ore_pile
+    type: cover
+    radius: 8
+    density: 4
+    areas: [plain, outcrop]
+  - id: relay_mast
+    type: obstacle
+    radius: 6
+    density: 2.5
+    areas: [plain]
+  # THE ONLY WEATHER MARS STILL GETS. A critter collides with nothing, costs
+  # the simulation nothing, and cannot desync a replay — and a dust devil
+  # walking the horizon is the difference between a dead plain and a live one.
+  - id: dust_devil
+    type: critter
+    animated: true
+    density: 3
+    areas: [plain, outcrop]
+    range: [120, 260]
+    speed: [8, 18]
+    scale: [0.9, 1.3]
   # GROUND TEXTURE — flat marks the hero walks straight over. A bare oxide plain
   # reads as an unfinished level however good the props on it are; pebbles, grit,
   # rover tracks and drag scars are what make the same plain read as a SURFACE.

@@ -462,6 +462,18 @@ objects:
     areas: [hardpan, prairie]
     range: [90, 190]
     speed: [16, 34]
+  # The parked tumbleweed above is decor; these are the ones still going
+  # somewhere. Long range, quick — a flat with one crossing it is a desert,
+  # a flat without is a beige rectangle.
+  - id: tumbleweed_roll
+    type: critter
+    sprite: tumbleweed
+    animated: true
+    density: 1.6
+    areas: [hardpan]
+    range: [150, 320]
+    speed: [14, 30]
+    scale: [0.8, 1.2]
 
   # THE CONTROL ROOM, seventy feet down. It is a SMALL room on purpose — the
   # finale is a fight in somebody's operations centre, not a march across a
