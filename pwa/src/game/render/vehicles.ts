@@ -25,6 +25,7 @@ import {
   CAR,
   CAR_FIX,
   carIsWayOut,
+  PLAYER,
   runLevelDef,
   type CarDetachable,
   type CarPanelId,
@@ -196,15 +197,22 @@ function inLitRoom(state: GameState, pos: { x: number; y: number }): boolean {
  * the player is watching — a joiner walking behind the same hull is one frame's
  * worth of wrong ordering on somebody else's screen, and a full y-sort of every
  * actor against every machine is a bill this field does not otherwise pay.
+ *
+ * HIS BOOTS, NOT HIS POSITION (`PLAYER.footLift`). A machine is anchored at the
+ * ground its wheels stand on and the hero is anchored at his midriff, so
+ * comparing the two raw puts the crossover a body-length up the screen from
+ * where the pictures actually cross — and with the parked blockers lifted so he
+ * can stand right against a wagon (`CAR.footprint.lift`), that is exactly where
+ * he now stands: in front of the car by the picture and behind it by the sort.
  */
 export type VehicleLayer = "under" | "over";
 
 function onLayer(
   pos: { y: number },
-  heroY: number,
+  heroFeetY: number,
   layer: VehicleLayer,
 ): boolean {
-  return (pos.y > heroY ? "over" : "under") === layer;
+  return (pos.y > heroFeetY ? "over" : "under") === layer;
 }
 
 export function drawVehicles(
@@ -216,7 +224,7 @@ export function drawVehicles(
   timeMs: number,
   layer: VehicleLayer,
 ): void {
-  const heroY = localHero(state).pos.y;
+  const heroY = localHero(state).pos.y + PLAYER.footLift;
   // What the night wash will take back off a beam painted here (see
   // `drawLightCones`' `nightBoost`). One call per frame rather than one per
   // machine: every lamp on the lot is under the same sky.
@@ -839,8 +847,11 @@ function drawShip(
       );
     }
   }
-  const hull = spriteByName(sprites, "starship");
+  // The venue picks the hull (`ShipVehicle.sprite`) — the hub's is the one he
+  // built in the garage and it fills the frame; Mars's is the same ship across
+  // a landing site.
+  const hull = spriteByName(sprites, ship.sprite);
   if (hull) {
-    drawWorldSprite(ctx, "starship", hull, ship.pos, camera, "base");
+    drawWorldSprite(ctx, ship.sprite, hull, ship.pos, camera, "base");
   }
 }

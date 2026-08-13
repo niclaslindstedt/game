@@ -33,7 +33,7 @@
 //    flavour for one visit to a map, not a persistent account the roster has
 //    to carry across a content update.
 
-import { distance, type Vec2 } from "@game/lib/vec.ts";
+import { direction, distance, type Vec2 } from "@game/lib/vec.ts";
 import { resolveCacheLine } from "../cache.ts";
 
 import { QUESTS } from "../config/index.ts";
@@ -95,12 +95,57 @@ export function createQuestGivers(
   levelId: string,
   blocked?: (pos: Vec2, radius: number) => boolean,
 ): QuestGiver[] {
-  return giversForLevel(levelId).map((def) => ({
-    id: def.id,
-    pos: clearSpot({ ...def.at }, blocked),
-    faceLeft: false,
-    discovered: false,
-  }));
+  return giversForLevel(levelId).map((def) => {
+    const spot = clearSpot({ ...def.at }, blocked);
+    // A giver who ARRIVES starts out where they walked in from and keeps the
+    // authored spot as the place they are heading (`QuestGiverDef.arrive`).
+    // The clearance check is spent on the DESTINATION, which is the one that
+    // has to be standable — the doorstep they set off from is theirs for a few
+    // seconds and nothing else wants it.
+    if (!def.arrive) {
+      return { id: def.id, pos: spot, faceLeft: false, discovered: false };
+    }
+    return {
+      id: def.id,
+      pos: { ...def.arrive.from },
+      faceLeft: spot.x < def.arrive.from.x,
+      discovered: false,
+      to: spot,
+      speed: def.arrive.speed ?? QUESTS.arriveSpeed,
+    };
+  });
+}
+
+/**
+ * Walk the givers who are still arriving one tick (see `QuestGiverDef.arrive`).
+ *
+ * A STRAIGHT LINE, AND NO COLLISION. This is a scripted entrance across ground
+ * the level author picked, not a body finding its way: pushing her out of the
+ * furniture would have her arrive somewhere the errand was not written for, and
+ * routing her round it needs a pathfinder for one walk in the whole game. What
+ * the line DOES respect is the door — `stepDoors` opens an approach door for a
+ * giver on the move, which is how the garage's roll-up goes up for the woman
+ * with her own key.
+ */
+function stepArrivingGivers(state: GameState, dt: number): void {
+  for (const giver of state.questGivers) {
+    const to = giver.to;
+    if (!to) continue;
+    const step = (giver.speed ?? QUESTS.arriveSpeed) * dt;
+    const left = distance(giver.pos, to);
+    if (left <= step) {
+      giver.pos = { ...to };
+      delete giver.to;
+      delete giver.speed;
+      continue;
+    }
+    const dir = direction(giver.pos, to);
+    giver.pos = {
+      x: giver.pos.x + dir.x * step,
+      y: giver.pos.y + dir.y * step,
+    };
+    giver.faceLeft = dir.x < 0;
+  }
 }
 
 /** The authored spot, or the nearest clear ground when terrain refuses it. */
@@ -139,8 +184,13 @@ export function stepQuests(state: GameState, dt: number, dtMs: number): void {
   }
 
   if (state.questGivers.length === 0) return;
+  stepArrivingGivers(state, dt);
 
   for (const giver of state.questGivers) {
+    // A giver still walking in has not met anybody: she is crossing the drive
+    // with her back to him, and latching the meeting here would pin a map
+    // marker on a spot she is about to leave.
+    if (giver.to) continue;
     // ANY hero meets a giver (the party rule): whoever walks up
     // discovers them for everybody, and the giver turns to face that hero.
     const meeter = state.players.find(

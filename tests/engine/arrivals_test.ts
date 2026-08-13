@@ -21,6 +21,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   ARRIVALS,
+  CAR,
   createGame,
   dismissIntro,
   muteDialogue,
@@ -379,13 +380,16 @@ describe("the staff lot", () => {
     expect(first.car.pos.x).toBeCloseTo(first.bay.x, 0);
     expect(first.bay.x).not.toBeCloseTo(state.arrivalPlan?.entryX ?? 0, 0);
     // A parked visitor's car is FURNITURE: its blockers are on the field, so
-    // the hero has something to walk round rather than through.
+    // the hero has something to walk round rather than through. They sit
+    // `CAR.footprint.lift` px UP the picture from the machine's own anchor —
+    // the allowance that lets a man stand against a wagon rather than a
+    // body-length in front of it (`FOOT_STANDOFF`).
     expect(first.parked).toBe(true);
     expect(
       state.obstacles.some(
         (o) =>
           o.kind === "vehicle" &&
-          Math.abs(o.pos.y - first.car.pos.y) < 12 &&
+          Math.abs(o.pos.y - (first.car.pos.y - CAR.footprint.lift)) < 12 &&
           Math.abs(o.pos.x - first.car.pos.x) < 40,
       ),
     ).toBe(true);

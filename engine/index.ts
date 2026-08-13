@@ -593,6 +593,8 @@ export {
   stepVehicles,
   createVehicles,
   vehicleFootprint,
+  alongBody,
+  acrossBody,
   landingClearOfVehicles,
   type CarDamage,
 } from "./game/vehicles.ts";

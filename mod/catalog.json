@@ -2775,6 +2775,7 @@
     "stars_a",
     "stars_b",
     "starship",
+    "starship_home",
     "steamer_trunk",
     "stone_well",
     "storefront",
@@ -3944,6 +3945,7 @@
     "front_door_closed",
     "front_door_opened",
     "garage_door",
+    "garage_door_close",
     "gate_entered",
     "gate_opened",
     "gear_repaired",
@@ -4690,7 +4692,13 @@
       "on": {
         "type": "garageDoorOpened"
       },
-      "what": "The garage door rolling up: the chain drive taking up with a clack, then the long rattling climb of thirty-year-old slats on their track."
+      "what": "The garage door rolling up: the chain drive taking up with a clack, the teeth biting, then the long rattling climb of thirty-year-old slats on their track and the stop at the top of the travel. LOUD FOR A WORLD SOUND, and deliberately. It is the biggest moving object on the hub and the one noise that fires while the player is looking somewhere else — the wagon trips it from the driveway, and Ada's mother lets herself in with it before the hero has left the bay. A door that size opening under the mix is a door the player never learns is theirs to walk through."
+    },
+    "garage_door_close": {
+      "on": {
+        "type": "garageDoorClosed"
+      },
+      "what": "The garage door coming back down: the same chain drive taking up, the motor running the other way, and then the last of the travel — the slats landing on the threshold with a flat wooden-sounding whump and the track ringing off it. THE OTHER HALF OF `garage_door`, and it exists because a roll-up that went up with a chain drive and came back down in silence was the loudest missing rule on the hub: the door shuts itself behind whoever walked through it, and a player who never hears it never learns that it does. It is the same machine, so it is the same voices — the motor's glide runs DOWN instead of up, and where the opening ends on a bright stop at the top of the travel this one ends on the ground."
     },
     "gate_entered": {
       "on": {
@@ -5427,6 +5435,7 @@
     "escortArrived",
     "escortDied",
     "escortHurt",
+    "garageDoorClosed",
     "garageDoorOpened",
     "gateEntered",
     "gateOpened",

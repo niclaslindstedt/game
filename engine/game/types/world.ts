@@ -282,6 +282,24 @@ export type Obstacle = {
    * obstacle is the plain circle of `radius`.
    */
   half?: Vec2;
+  /**
+   * HOW FAR THIS PIECE'S BLOCKER IS LIFTED OFF ITS OWN PICTURE (world px).
+   *
+   * `pos` is the BLOCKER — every collision, sight and shot query reads it and
+   * knows nothing about this field — and the piece's ART is drawn `blockLift`
+   * px SOUTH of it. A piece that blocks where it stands leaves it off, which
+   * is nearly all of them.
+   *
+   * It buys the one thing a blocker under a standing piece's own feet cannot:
+   * a hero pressed against it whose BOOTS land on the piece's ground line
+   * instead of a body-length short of it (`FOOT_STANDOFF`, obstacles.ts).
+   * Authored as `MapObject.blockLift`.
+   *
+   * A lifted piece also DRAWS OVER a hero standing behind it (render/world.ts)
+   * — the same fact said in paint: a thing tall enough to need the lift is
+   * tall enough to hide a man who walks round the back of it.
+   */
+  blockLift?: number;
   /** True when a jumping player sails over it. */
   jumpable: boolean;
   /**
@@ -818,6 +836,13 @@ export type WheelDebris = {
 
 export type ShipVehicle = VehicleBase & {
   kind: "ship";
+  /**
+   * THE HULL'S OWN ART — taken from the `rocket` landmark that minted it, so a
+   * venue decides which ship is standing on it. The hub's is the thing he
+   * WELDED TOGETHER IN THE GARAGE and it dwarfs the garage (`starship_home`);
+   * the Mars level's is the same ship seen from across a landing site.
+   */
+  sprite: string;
   /** Engine output 0..1 — 0 parked and cold, above it the renderer lights
    * the flame. The flying minigame's throttle. */
   thrust: number;

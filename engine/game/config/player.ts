@@ -30,6 +30,22 @@ export const PLAYER = {
   /** Collision radius. */
   radius: 10,
   /**
+   * HOW FAR SOUTH OF HIS OWN POSITION THE HERO'S BOOTS ARE DRAWN (world px).
+   *
+   * He collides as a disc centred on `pos`, and his PICTURE stands up out of
+   * that disc: the doll is 16 px of sprite hung around the same point, so the
+   * sole of the boot — and the shadow the renderer seats on it (render/
+   * player.ts) — lands about 6 screen px lower, which across a ground plane
+   * squashed to `DEFAULT_PITCH` is these 8 world px.
+   *
+   * It matters wherever the PICTURE has to line up with something else's
+   * picture rather than the simulation with the simulation: what stops him is
+   * `pos`, what the player sees stop him is his boots (see `FOOT_STANDOFF` in
+   * obstacles.ts), and which side of a machine he is drawn on is a question
+   * about his boots too (render/vehicles.ts).
+   */
+  footLift: 8,
+  /**
    * Contact-damage reach as a fraction of the touching distance (the sum of
    * the attacker's and the hero's collision radii). At 1 a blow lands the
    * instant the two bodies' circles graze; below 1 the enemy must press

@@ -7,8 +7,10 @@ description: |-
   mid-floor, the ROLL-UP DOOR on its east wall, the rift seam humming beside
   the car once it exists at all); the clean PAVED DRIVE out front of the
   door (swept pavement, no garbage — the house stands just south of it, off
-  the map's edge); THE LAWN behind the garage to the north, grass with the
-  rocket standing on its burnt patch at the west end of it; and — down the whole east edge, the
+  the map's edge); THE LAWN behind the garage to the north — a DEEP back
+  garden, because the rocket standing on its burnt patch at the west end of it
+  is a hundred feet of home-welded booster and the player has to be able to
+  walk back far enough to look up at it; and — down the whole east edge, the
   one piece of the lot that is not the household's — THE ROAD, two lanes of
   dark tarmac with a painted centre line, running off both ends of the map.
   The road is where the driveway leads and where a driven car is finally
@@ -180,15 +182,15 @@ plan:
     # walkable between the garage door and the road, which is the stretch the
     # player actually crosses on every errand.
     - area: lawn
-      rect: { x: 0, y: 0, width: 400, height: 44 }
+      rect: { x: 0, y: 140, width: 400, height: 44 }
     - area: pad
-      rect: { x: 0, y: 44, width: 160, height: 96 }
+      rect: { x: 0, y: 184, width: 160, height: 96 }
     - area: lawn
-      rect: { x: 160, y: 44, width: 240, height: 96 }
+      rect: { x: 160, y: 184, width: 240, height: 96 }
     - area: bay
-      rect: { x: 0, y: 140, width: 224, height: 140 }
+      rect: { x: 0, y: 280, width: 224, height: 140 }
     - area: drive
-      rect: { x: 224, y: 140, width: 176, height: 140 }
+      rect: { x: 224, y: 280, width: 176, height: 140 }
     # THE ROAD, kept last in the list: a chamber's id is its position here, so a
     # room appended at the end leaves every id above it alone. Three rooms, all
     # TILE-ALIGNED (16 px): an open district's floor is emitted as a ragged patch
@@ -196,13 +198,24 @@ plan:
     # on it comes out crisp and full height, which is what a painted line needs
     # and what a kerbside wants anyway.
     - area: road
-      rect: { x: 400, y: 0, width: 32, height: 280 }
+      rect: { x: 400, y: 0, width: 32, height: 420 }
     - area: road_line
-      rect: { x: 432, y: 0, width: 16, height: 280 }
+      rect: { x: 432, y: 0, width: 16, height: 420 }
     - area: road
-      rect: { x: 448, y: 0, width: 32, height: 280 }
+      rect: { x: 448, y: 0, width: 32, height: 420 }
     - area: verge
-      rect: { x: 480, y: 0, width: 32, height: 280 }
+      rect: { x: 480, y: 0, width: 32, height: 420 }
+    # THE BACK OF THE GARDEN — 140 px of plain lawn north of everything above,
+    # and it is the ROCKET'S ROOM. A billboard is drawn straight up the screen
+    # and the map's own edge dither takes the last of it, so a ship this tall
+    # standing on a lot with 92 px of ground above it was a ship the player only
+    # ever saw the pads of. The deep end of the garden is what lets him walk back
+    # far enough to look UP at the thing, which is the whole joke.
+    #
+    # Appended rather than inserted, for the reason the road block above gives:
+    # a room added at the end leaves every chamber id before it alone.
+    - area: lawn
+      rect: { x: 0, y: 0, width: 400, height: 140 }
   doors:
     - between: [bay, drive]
   # The rocket stands on its own burnt patch. No `stall:` — the trader is not standing
@@ -214,11 +227,13 @@ plan:
 # One look, every visit. A LOT smaller than the rest of the game's venues,
 # because it is a garage, not a level. The lot itself is still 400 wide; the
 # extra 112 is the ROAD and its far VERGE, which belong to the county rather
-# than to the house. `rooms` is ignored under a plan.
+# than to the house. It is DEEP rather than wide — most of the 420 is back
+# garden, and that is the rocket's doing (see the last plan room). `rooms` is
+# ignored under a plan.
 size:
   width: 512
-  height: 280
-  rooms: 7
+  height: 420
+  rooms: 8
 
 layout:
   minRoom: 128
@@ -311,9 +326,16 @@ objects:
     # map, because the carve is PINNED (`carveSeed`): the doorway lands on the
     # same 64 px every visit forever.
     offset: { x: 0, y: 12 }
+  # THE SHIP HE BUILT IN THE BAY — and the joke is the SIZE of it. A man spent
+  # ten years of weekends welding a hundred-foot booster together in a suburban
+  # garage, so the thing standing on his back lawn has to dwarf the building it
+  # came out of: `starship_home` is the bottom of it and nothing else, its skirt,
+  # its bells and its three landing legs, running off the top of the frame.
+  # (Mars keeps the small `starship` — that one is the same ship seen from
+  # across a landing site.)
   - id: rocket
     type: landmark
-    sprite: starship
+    sprite: starship_home
     at: goal
   # ── THE CACHE ────────────────────────────────────────────────────────────
   # THE ANTIQUE CHEST against the bay's NORTH WALL — the game's one stash
@@ -511,6 +533,15 @@ objects:
   # them is `perch`: a crown is where the lot's sparrows go to sit, which is the
   # half of "birds" that is not walking about (see the `sparrow` line above).
   #
+  # …AND SOLID AT THE TRUNK, NOT ACROSS THE CROWN. `lawn_tree` is a canopy seen
+  # from above with the trunk showing at its south edge, so what is actually in
+  # the way is a few px of wood: `radius: 3` is the trunk, and `blockLift: 8`
+  # lifts the blocker off the picture so the hero's BOOTS land just under that
+  # trunk rather than a stride out on the grass (`FOOT_STANDOFF`,
+  # engine/game/obstacles.ts). The lift buys the other half of it for free — a
+  # lifted piece is drawn OVER a hero standing behind it, so walking round the
+  # back of a tree now puts him UNDER the leaves instead of on top of them.
+  #
   # PLACED, NOT SCATTERED, for the reason the workbench world below is (see its
   # note): this is the STATIC map and the player is meant to learn it. The four
   # stand at the pad's own corners, off the `goal` the ship holds, so they RING
@@ -519,7 +550,8 @@ objects:
   - id: pad_tree_nw
     type: obstacle
     sprite: lawn_tree
-    radius: 7
+    radius: 3
+    blockLift: 8
     perch: true
     at: goal
     offset: { x: -52, y: -32 }
@@ -531,7 +563,8 @@ objects:
   - id: pad_tree_ne
     type: obstacle
     sprite: lawn_tree
-    radius: 7
+    radius: 3
+    blockLift: 8
     perch: true
     at: goal
     offset: { x: 50, y: -36 }
@@ -543,7 +576,8 @@ objects:
   - id: pad_tree_sw
     type: obstacle
     sprite: lawn_tree
-    radius: 7
+    radius: 3
+    blockLift: 8
     perch: true
     at: goal
     offset: { x: -54, y: 30 }
@@ -555,7 +589,8 @@ objects:
   - id: pad_tree_se
     type: obstacle
     sprite: lawn_tree
-    radius: 7
+    radius: 3
+    blockLift: 8
     perch: true
     at: goal
     offset: { x: 48, y: 32 }
@@ -573,21 +608,24 @@ objects:
   - id: lawn_tree_far_east
     type: obstacle
     sprite: lawn_tree
-    radius: 7
+    radius: 3
+    blockLift: 8
     perch: true
     at: goal
     offset: { x: 250, y: -14 }
   - id: lawn_tree_east
     type: obstacle
     sprite: lawn_tree
-    radius: 7
+    radius: 3
+    blockLift: 8
     perch: true
     at: goal
     offset: { x: 110, y: 10 }
   - id: lawn_tree_north
     type: obstacle
     sprite: lawn_tree
-    radius: 7
+    radius: 3
+    blockLift: 8
     perch: true
     at: goal
     offset: { x: -8, y: -70 }

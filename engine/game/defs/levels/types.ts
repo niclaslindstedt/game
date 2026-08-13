@@ -1036,6 +1036,12 @@ export type LevelDef = {
     radius?: number;
     /** Colliding: a jumping hero clears it (default false). */
     jumpable?: boolean;
+    /**
+     * Colliding: lift the blocker this far up-screen off the drawn piece
+     * (world px) — see `Obstacle.blockLift`. `from`/`to` stay the piece's
+     * DRAWN line; the blocker is what moves.
+     */
+    blockLift?: number;
     /** A bird may SIT on this piece — see `Obstacle.perch` and the fauna's own
      * `perches`. */
     perch?: boolean;

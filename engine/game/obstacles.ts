@@ -25,7 +25,7 @@ import {
   segmentIntersectsBox,
   type Vec2,
 } from "@game/lib/vec.ts";
-import { OBSTACLES } from "./config/index.ts";
+import { OBSTACLES, PLAYER } from "./config/index.ts";
 import type { GameState, Obstacle } from "./types/index.ts";
 
 // ---- Spatial index --------------------------------------------------------
@@ -247,6 +247,34 @@ function sightBlockers(obstacles: Obstacle[]): Obstacle[] {
   }
   return obstacles.filter((_, i) => blocks[i] === 1);
 }
+
+// ---- Where a blocker goes, versus where the piece is DRAWN ----------------
+/**
+ * HOW FAR SOUTH OF A BLOCKER'S NEAR EDGE THE HERO'S BOOTS COME TO REST (world
+ * px) — and therefore how far NORTH of a standing piece's own ground line its
+ * blocker has to be laid for the two PICTURES to meet.
+ *
+ * Two facts add up here and neither is negotiable on its own. He is pushed out
+ * to `PLAYER.radius` from whatever stopped him, and his boots are drawn
+ * `PLAYER.footLift` further down again — so a blocker laid honestly under a
+ * car's wheels stops him with a whole body-length of floor between his soles
+ * and the tyre, and he reads as standing several strides in front of the thing
+ * he is pressed against rather than beside it.
+ *
+ * So a piece the player is meant to stand IN FRONT of lays its blocker's south
+ * edge this far up-screen of the ground line it wants his boots to stop on:
+ * the parked machines through `CAR.footprint.lift` / `SHIP.footprint.lift`
+ * (vehicles.ts) and the authored furniture through `MapObject.blockLift`,
+ * which lifts the blocker off the piece's own picture and leaves the art
+ * where it was drawn (`Obstacle.blockLift`).
+ *
+ * NOT A FIX FOR THE FAR SIDE, and that is arithmetic rather than an oversight:
+ * the blocked band is `2 · PLAYER.radius` deep before the piece's own radius is
+ * counted, so there is always about a body-length between where he stops in
+ * front of a piece and where he stops behind it. A lift spends that gap on the
+ * side the player is looking at.
+ */
+export const FOOT_STANDOFF = PLAYER.radius + PLAYER.footLift;
 
 /** The obstacles that can matter to a point query at `pos` (radius ≤
  * MAX_QUERY_RADIUS): the one cell containing it. */

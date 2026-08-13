@@ -64,6 +64,18 @@ export type QuestGiver = {
   /** Sprite mirror, so they turn to face the hero they are talking to. */
   faceLeft: boolean;
   /**
+   * WHERE THEY ARE STILL WALKING TO (world px) — set only while a giver with a
+   * `QuestGiverDef.arrive` block is on its way in, cleared the moment it gets
+   * there, and absent for good on everybody else.
+   *
+   * It is the ARRIVING flag as much as the destination: a giver with a `to` is
+   * crossing open ground, so the doors open for them (`stepDoors`) and they are
+   * drawn walking rather than standing.
+   */
+  to?: Vec2;
+  /** Walking pace while `to` is set (world px/s). */
+  speed?: number;
+  /**
    * Latched the first time the hero comes near — pins them on the level map,
    * and is the gate on `talkToQuestGiver`. Meeting somebody is all approach
    * does: a conversation never opens itself, it waits for a tap.

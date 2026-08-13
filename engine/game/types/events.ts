@@ -773,6 +773,10 @@ export type GameEvent =
    * a moment.
    */
   | { type: "doorClosed"; pos: Vec2 }
+  /** A ROLL-UP coming back down — the chain drive again, and the slats
+   * landing. Split from `doorClosed` for the reason `garageDoorOpened` is
+   * split from `doorOpened`: a sound is routed on the event's own type. */
+  | { type: "garageDoorClosed"; pos: Vec2 }
   /** THE GARAGE DOOR rolled up — an approach door opened for a hero (or the
    * driven car) pulling up to it. The app draws the roll-up and rattles the
    * chain drive; the obstacles are already gone when this fires. */

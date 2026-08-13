@@ -10,9 +10,11 @@ import {
   cacheStanding,
   type GameState,
   type Obstacle,
+  PLAYER,
 } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
+import { localHero } from "../local-seat.ts";
 import {
   DECOR_FRAME_MS,
   decorFrames,
@@ -355,19 +357,56 @@ export function drawBossCorpseRing(
  */
 const wallQueue: { obstacle: Obstacle; depth: number }[] = [];
 
+/**
+ * WHERE A PIECE'S ART GOES, which is not always where its blocker is: a piece
+ * carrying a `blockLift` parks the blocker up-screen so the hero can stand in
+ * front of it rather than a stride short (see `Obstacle.blockLift`), and this
+ * is where the picture is put back.
+ *
+ * A module-scope point rather than a fresh one per piece — this runs over the
+ * whole visible field at 60 Hz, and `drawWorldSprite` only ever reads it.
+ */
+const artAt = { x: 0, y: 0 };
+function drawnPos(obstacle: Obstacle): { x: number; y: number } {
+  if (!obstacle.blockLift) return obstacle.pos;
+  artAt.x = obstacle.pos.x;
+  artAt.y = obstacle.pos.y + obstacle.blockLift;
+  return artAt;
+}
+
+/**
+ * WHICH SIDE OF THE HERO A LIFTED PIECE IS DRAWN ON — the same depth sort the
+ * machines take (render/vehicles.ts), for the same reason and on the same
+ * terms. A piece tall enough to want its blocker lifted is tall enough to hide
+ * a man who walks round the back of it, and the lawn's trees are where a
+ * ground-plane-only obstacle pass reads as broken: the hero stepped under a
+ * canopy and was painted on top of the leaves.
+ *
+ * It is his BOOTS that decide, not his position — `PLAYER.footLift` — because
+ * the question is about two PICTURES and the sole of the boot is where his
+ * stands on the floor. The blocked band around a lifted piece is deep enough
+ * that he can never come to rest on the crossover itself, so nothing pops.
+ */
+export type ObstacleLayer = "under" | "over";
+
 export function drawObstacles(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   sprites: Sprites,
   camera: Camera,
   inView: InView,
+  layer: ObstacleLayer = "under",
 ): void {
+  const feet = localHero(state).pos.y + PLAYER.footLift;
   wallQueue.length = 0;
   for (const obstacle of state.obstacles) {
     if (!inView(obstacle.pos.x, obstacle.pos.y, 32)) continue;
     // A vehicle's footprint blockers are collision only — the machine over
     // them is ./vehicles.ts's to draw.
     if (obstacle.kind === "vehicle") continue;
+    const lift = obstacle.blockLift ?? 0;
+    const over = lift > 0 && obstacle.pos.y + lift > feet;
+    if ((over ? "over" : "under") !== layer) continue;
     if (drawnWallRise(obstacle.sprite) > 0) {
       wallQueue.push({
         obstacle,
@@ -376,12 +415,12 @@ export function drawObstacles(
       continue;
     }
     const sprite = spriteByName(sprites, obstacle.sprite) ?? sprites.rock;
-    drawWorldSprite(ctx, obstacle.sprite, sprite, obstacle.pos, camera);
+    drawWorldSprite(ctx, obstacle.sprite, sprite, drawnPos(obstacle), camera);
   }
   wallQueue.sort((a, b) => a.depth - b.depth);
   for (const { obstacle } of wallQueue) {
     const sprite = spriteByName(sprites, obstacle.sprite) ?? sprites.rock;
-    drawWorldSprite(ctx, obstacle.sprite, sprite, obstacle.pos, camera);
+    drawWorldSprite(ctx, obstacle.sprite, sprite, drawnPos(obstacle), camera);
   }
 }
 
