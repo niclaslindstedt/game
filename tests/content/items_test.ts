@@ -58,6 +58,12 @@ function killTheBoss(state: GameState): void {
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
   state.enemies = [boss];
   boss.hp = 1;
+  // The parking spot is a fixed offset, and on a generated map the ground
+  // 200 px out can hold a wall that eats the shot — the claim here is about
+  // the LOOT, not the geometry, so the furniture goes (story_test's
+  // `placeElite` sets the precedent).
+  state.obstacles = [];
+  state.obstaclesVersion++;
   // Parked at the blaster's reach: the kill lands, but the scattered loot
   // (±45 px) can never fall inside the player's pickup radius.
   boss.pos = { x: state.players[0].pos.x + 200, y: state.players[0].pos.y };
