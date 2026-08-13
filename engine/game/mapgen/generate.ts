@@ -539,22 +539,61 @@ function buildMobSpawns(
         }
       }
     }
-    const post: MobSpawnSpec = {
-      id: `m${i}`,
-      enemy,
-      at: marker.at,
-      mobLevels: ramps[rampIndex],
-    };
-    // A marker that walks gets the same derived beat a patrolling set piece
-    // gets: down the long axis of its own room, inset off the walls.
-    if (marker.spawn.patrol) {
-      const room = grid.chambers[marker.cell] as Chamber;
-      post.patrol = [patrolBeat(room, marker.at)];
+    // A CAMP (`pack`) is this one marker expanded into N individual posts
+    // scattered around the anchor, clamped to the room — each its own
+    // MobSpawnSpec with its own respawn clock, so a half-cleared camp refills
+    // member by member. The breed was rolled ONCE above, for the whole camp.
+    const room = grid.chambers[marker.cell] as Chamber;
+    const size = Math.max(1, Math.round(marker.spawn.pack ?? 1));
+    const spread = marker.spawn.radius ?? 60;
+    for (let k = 0; k < size; k++) {
+      const at =
+        k === 0
+          ? marker.at
+          : (() => {
+              // A jittered ring rather than a uniform disc: members stand
+              // AROUND their camp instead of piling on the anchor.
+              const angle = ((k + rng()) / size) * Math.PI * 2;
+              const dist = spread * (0.5 + 0.5 * rng());
+              return vec(
+                Math.round(
+                  clamp(
+                    marker.at.x + Math.cos(angle) * dist,
+                    room.x + CAMP_WALL_INSET,
+                    room.x + room.w - CAMP_WALL_INSET,
+                  ),
+                ),
+                Math.round(
+                  clamp(
+                    marker.at.y + Math.sin(angle) * dist,
+                    room.y + CAMP_WALL_INSET,
+                    room.y + room.h - CAMP_WALL_INSET,
+                  ),
+                ),
+              );
+            })();
+      const post: MobSpawnSpec = {
+        id: size > 1 ? `m${i}_${k}` : `m${i}`,
+        enemy,
+        at,
+        mobLevels: ramps[rampIndex],
+      };
+      // A marker that walks gets the same derived beat a patrolling set piece
+      // gets: down the long axis of its own room, inset off the walls. A CAMP
+      // fields ONE walker — its anchor member — so the round reads as the
+      // camp's sentry rather than a room of pacers.
+      if (marker.spawn.patrol && k === 0) {
+        post.patrol = [patrolBeat(room, at)];
+      }
+      out.push(post);
     }
-    out.push(post);
   });
   return out;
 }
+
+/** How far a camp member is held off its room's walls (world px) — a body's
+ * clearance, not a doorway's. */
+const CAMP_WALL_INSET = 36;
 
 /**
  * HELLGATES laced across the grid (config HELLGATES): rampage-only points, shut

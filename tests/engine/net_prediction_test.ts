@@ -193,10 +193,23 @@ describe("the predicted local hero", () => {
     // a mob brushing the hero applies server-side contact the client never
     // predicts. The parts moon GARRISONS its landing (one mob to a post, a
     // patroller among them), so the field is cleared outright: no bodies, and
-    // no posts to stand replacements back up mid-walk.
+    // no posts to stand replacements back up mid-walk. The SKY is stayed for
+    // the same reason: an asteroid strike's knockback is the server's alone,
+    // and whether one lands inside the 120-tick window is a fact about the
+    // deal, not about prediction.
     rig.session.state.enemies = [];
     rig.session.state.mobSpawns = [];
+    rig.session.state.asteroids = [];
+    rig.session.state.asteroidTimerMs = Number.MAX_SAFE_INTEGER;
     rig.session.advance(TICK_MS);
+    // A first-sight thought is already up at the landing. It must be tapped
+    // through BEFORE the measured walk: the freeze is the server's, so an
+    // unfreeze mid-walk costs the client a one-tick disagreement and the
+    // easing reconcile that follows — a fact about dialogue, not prediction.
+    for (let i = 0; i < 40 && rig.session.state.dialogue; i++) {
+      a.client.sendCommand("advanceDialogue");
+      rig.session.advance(TICK_MS);
+    }
     const state = a.client.state!;
     const spawn = { ...state.players[0].pos };
     // Due east from the moon's landing is open ground for hundreds of units —
@@ -212,9 +225,6 @@ describe("the predicted local hero", () => {
       // have arrived — so this displacement is prediction's own.
       const after = state.players[0].pos;
       const stepped = Math.hypot(after.x - before.x, after.y - before.y);
-      // A first-sight thought freezes the world for everybody; tap through it
-      // exactly as a player would.
-      if (rig.session.state.dialogue) a.client.sendCommand("advanceDialogue");
       rig.session.advance(TICK_MS);
       if (a.client.tick !== lastTick) {
         lastTick = a.client.tick;

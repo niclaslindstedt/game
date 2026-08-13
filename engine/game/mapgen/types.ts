@@ -486,11 +486,25 @@ export type PartSpawn = {
    */
   enemy?: string;
   /**
+   * A CAMP: this one marker expands into this many INDIVIDUAL posts scattered
+   * around the anchor — each with its own respawn clock, so a camp half
+   * cleared refills member by member as each one's own timer runs out. The
+   * camp shares one breed (the authored `enemy`, else one depth-roll for the
+   * whole camp — a camp of one breed reads as a camp, a grab-bag reads as a
+   * bug), and a `patrol: true` camp fields ONE walker, its first member.
+   * Authoring ergonomics is the whole point: one marker per camp instead of
+   * hand-placing every body. Omitted = a single post.
+   */
+  pack?: number;
+  /** `pack`: scatter radius around the anchor (world px, default 60), clamped
+   * inside the room. */
+  radius?: number;
+  /**
    * AN ELITE STAND: this marker is a candidate post for one of the blueprint's
    * `elites` instead of an ambient mob. When the assembly places more stands
    * than there are elites, WHICH stands are manned is rolled at generation —
    * a player who learned where the keycard carrier stood last run knows
-   * nothing about this one. An unmanned stand spawns nothing.
+   * nothing about this one. An unmanned stand spawns nothing. Never a `pack`.
    */
   slot?: "elite";
   /** This one walks its room while dormant (see `MapSetPiece.patrol`). */
@@ -531,10 +545,11 @@ export type MapPart = {
   start?: boolean;
   /**
    * THE BOSS'S OWN ROOM — a throne, a bridge, an altar. The boss stands at
-   * `at` (part-local). The assembly attaches this part at the socket FARTHEST
-   * from the landing, so the search stays as long as the deal allows; when
-   * several placed parts carry a boss anchor, WHICH one holds the boss is
-   * rolled at generation.
+   * `at` (part-local). The assembly sews this part onto a socket ROLLED from
+   * the deep end of the deal — never simply the farthest, which a player
+   * could learn — so the search is long AND unguessable; when several placed
+   * parts carry a boss anchor, WHICH one holds the boss is rolled at
+   * generation too.
    */
   boss?: { at: [number, number] };
   /** Fixed furniture: a palette object stamped at an offset from the part's

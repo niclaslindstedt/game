@@ -278,9 +278,15 @@ export function createGame(
   const blocked = (pos: Vec2, radius: number) =>
     obstacles.some((o) => distance(pos, o.pos) < o.radius + radius);
   // A procedural placement must dodge both flavors of design zone: no mobs,
-  // obstacles or decor spawn inside a safe or quiet region (see zones.ts).
+  // obstacles or decor spawn inside a safe or quiet region (see zones.ts) —
+  // and never the ARRIVAL LOT, whose whole cast is NEUTRAL by rule (the hero
+  // walks it holstered, watching the night shift badge in; see arrivals.ts).
+  // The lot is bigger than the landing's quiet circle, so without its own
+  // entry a banded mission spawn could scatter a fighter onto the tarmac.
   const inNoSpawnZone = (pos: Vec2) =>
-    anyZoneContains(def.safeZones, pos) || anyZoneContains(def.quietZones, pos);
+    anyZoneContains(def.safeZones, pos) ||
+    anyZoneContains(def.quietZones, pos) ||
+    anyZoneContains(def.arrivalLot, pos);
 
   // A spareable unique the hero already SPARED walks the campaign at his side
   // (carried in the loadout's party), so its ENEMY twin must not spawn to be
@@ -377,6 +383,7 @@ export function createGame(
       let pos = vec(0, 0);
       // Rejection sampling is fine at this scale; the attempt cap keeps
       // pathological seeds from looping forever.
+      let placed = false;
       for (let attempts = 0; attempts < 40; attempts++) {
         pos = vec(
           randomRange(rng, margin, def.width - margin),
@@ -390,9 +397,16 @@ export function createGame(
           !blocked(pos, margin) &&
           !inNoSpawnZone(pos)
         ) {
+          placed = true;
           break;
         }
       }
+      // Exhaustion used to place the LAST roll regardless, which is how a
+      // fighter ended up standing on GOODCO's neutral staff lot: on a venue
+      // whose band ring mostly overlaps design zones, forty misses are the
+      // normal case, not a pathological one. A design zone is a promise —
+      // better one fewer scatter mob than a body where none may stand.
+      if (!placed && inNoSpawnZone(pos)) continue;
       const s = scaleRegular();
       enemies.push(
         spawnEnemy(
@@ -440,7 +454,10 @@ export function createGame(
     def,
     playerSpawn,
     bandReach,
-    blocked,
+    // The design zones are as solid as the furniture to a rolled encounter:
+    // a rare is still a FIGHTER, and one rolled onto the trader's pocket or
+    // GOODCO's neutral staff lot breaks the ground's whole promise.
+    (pos, radius) => blocked(pos, radius) || inNoSpawnZone(pos),
     enemies,
     () => nextId++,
     mobHp,

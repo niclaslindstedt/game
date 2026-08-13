@@ -501,6 +501,20 @@ export function validateMap(bp, refs, description = "") {
             err(`${at}: unknown enemy "${s.enemy}"`);
           if (s?.slot !== undefined && s.slot !== "elite")
             err(`${at}: slot must be "elite"`);
+          if (s?.pack !== undefined) {
+            if (!Number.isInteger(s.pack) || s.pack < 2 || s.pack > 8)
+              err(
+                `${at}: pack must be an integer 2..8 (a single post omits it)`,
+              );
+            if (s?.slot !== undefined)
+              err(`${at}: an elite stand is a single — it cannot be a pack`);
+          }
+          if (s?.radius !== undefined) {
+            if (s?.pack === undefined)
+              err(`${at}: radius says how a PACK scatters — it needs pack`);
+            else if (!isPosNum(s.radius) || s.radius > 200)
+              err(`${at}: radius must be a positive number of world px (≤200)`);
+          }
           if (s?.slot !== undefined && s?.enemy !== undefined)
             err(
               `${at}: an elite stand is manned by the blueprint's own elites — ` +
@@ -509,7 +523,9 @@ export function validateMap(bp, refs, description = "") {
           if (s?.patrol !== undefined && typeof s.patrol !== "boolean")
             err(`${at}: patrol must be a boolean`);
           for (const key of Object.keys(s ?? {}))
-            if (!["at", "enemy", "slot", "patrol"].includes(key))
+            if (
+              !["at", "enemy", "slot", "patrol", "pack", "radius"].includes(key)
+            )
               err(`${at}: unknown field "${key}"`);
         }
         for (const key of Object.keys(p))

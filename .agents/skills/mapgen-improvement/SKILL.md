@@ -16,7 +16,7 @@ on the other several thousand.
 is the blueprint's own choice.** A blueprint that authors a **STATIC PARTS
 deck** (`parts:` — see `MapPart` in `types.ts` and `engine/game/mapgen/parts.ts`)
 is SEWN: hand-drawn rectangular rooms joined at their authored door sockets,
-mirrored to fit (`flip`), the boss's own room dealt farthest from the landing —
+mirrored to fit (`flip`), the boss's own room dealt into a rolled deep corner —
 and its horde is ONE-MOB SPAWN POSTS (`LevelDef.mobSpawns`,
 `engine/game/mob-spawns.ts`: dormant individuals, respawning on a
 difficulty-scaled clock once killed or dragged off their leash) instead of knot

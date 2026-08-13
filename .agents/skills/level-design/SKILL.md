@@ -97,9 +97,9 @@ The shipping generator is the PARTS assembler (`engine/game/mapgen/parts.ts`):
 the blueprint's `parts:` block is a deck of hand-drawn rooms — each a rectangle
 with door sockets on its edges, fixed props, and ONE-MOB SPAWN MARKERS — sewn
 into the whole floor plan per run. Exactly one part is the landing
-(`start: true`); a `boss: { at }` part is the throne room, sewn farthest from
-the landing (never authored on a venue whose ending is an `annex`, which
-outranks it); `min`/`max`/`weight`/`flip` shape the deal. The horde is the
+(`start: true`); a `boss: { at }` part is the throne room, sewn onto a deep
+socket rolled per run — far, never predictably the farthest (and never
+authored on a venue whose ending is an `annex`, which outranks it); `min`/`max`/`weight`/`flip` shape the deal. The horde is the
 deck's own markers (`LevelDef.mobSpawns` — a dormant individual per post,
 respawning on the difficulty's clock once killed or dragged off; `slot: elite`
 markers are the STANDS the blueprint's `elites` are dealt onto; `patrol: true`

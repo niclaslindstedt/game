@@ -409,7 +409,11 @@ parts:
         - { object: crate, at: [610, 130] }
         - { object: moon_debris, at: [360, 400] }
       spawns:
-        - { at: [150, 260] }
+        # THE SUCCESSOR stands the flag's own guard EXPLICITLY: the sight-beat
+        # `moon_successor` waits on the breed, and a depth-rolled honor guard
+        # missed it on real seeds. Pinning one here keeps the read on every
+        # deal — and the flag is exactly where a SUCCESSOR belongs.
+        - { at: [150, 260], enemy: successor }
         - { at: [570, 260] }
         - { at: [220, 450] }
         - { at: [500, 450] }

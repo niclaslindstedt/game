@@ -24,11 +24,13 @@
 // has instances to give (weighted, required-first), mirror it if its author
 // allowed (`flip`), and sew one of its opposite-edge sockets onto the open one
 // — rejecting any placement that overlaps a dealt room or grows the plan past
-// the blueprint's `size`. The BOSS part is sewn LAST, onto the open socket
-// farthest from the landing by door count, so the search stays as long as the
-// deal allows. A deal that cannot satisfy its requirements is thrown away and
-// redealt (the stream keeps moving, so the retry is a different deal), which
-// keeps a rare cramped deal from shipping without its throne room.
+// the blueprint's `size`. The BOSS part is sewn LAST, onto a socket ROLLED
+// from the deep end of the deal (the deepest fifth by door count) — far
+// enough that the search is real, rolled so the player can never learn which
+// far corner is the one. A deal that cannot satisfy its requirements is
+// thrown away and redealt (the stream keeps moving, so the retry is a
+// different deal), which keeps a rare cramped deal from shipping without its
+// throne room.
 
 import type { Rng } from "@game/lib/rng.ts";
 import { vec, type Vec2 } from "@game/lib/vec.ts";
@@ -88,8 +90,12 @@ export type PartsAssembly = {
  * so district floor zones keep snapping cleanly. */
 const MAP_MARGIN = 48;
 
-/** How many fresh deals a cramped seed gets before the assembly gives up. */
-const DEAL_ATTEMPTS = 24;
+/** How many fresh deals a cramped seed gets before the assembly gives up. A
+ * deal costs about a millisecond, requirement-failing decks burn several per
+ * seed, and the SEARCH-FLOOR redeals below spend from the same budget — so
+ * the allowance is generous rather than tight. (24 was enough until the boss
+ * socket became a roll; the churn that buys took one mars seed past it.) */
+const DEAL_ATTEMPTS = 64;
 
 /**
  * THE SEARCH FLOOR (world px): how far the hero's WORST possible landing spot
@@ -399,14 +405,19 @@ function deal(
   const bossPart = deck.list.find(
     (p) => p.boss !== undefined && p.start !== true,
   );
+  // The LANDING's own mirror is rolled too (when its author allows one): the
+  // plan grows outward from this room, so a landing that always faced the same
+  // way would teach the player which way the map opens before a step is taken.
+  const startFlipX = start.flip === true && rng() < 0.5;
+  const startFlipY = start.flip === true && rng() < 0.5;
   const rooms: Placed[] = [
     {
       part: start,
       x: 0,
       y: 0,
-      flipX: false,
-      flipY: false,
-      sockets: orientSockets(start, false, false),
+      flipX: startFlipX,
+      flipY: startFlipY,
+      sockets: orientSockets(start, startFlipX, startFlipY),
       used: new Set(),
       dist: 0,
     },
@@ -446,14 +457,35 @@ function deal(
     commit(out, socket, next, areas, doorWidth);
     counts.set(part.id, (counts.get(part.id) ?? 0) + 1);
   }
-  // The BOSS room goes down LAST, on the open socket farthest from the landing
-  // by door count — the deal's own longest walk.
+  // The BOSS room goes down LAST, somewhere in the DEEP END — rolled, never
+  // computed. "The farthest socket" was the first cut, and it is guessable:
+  // ten runs in, the player knows the throne caps the longest arm, and the
+  // search is a walk down whichever corridor keeps going. So the candidates
+  // are every socket in the deepest fifth of the deal's door-count range, in
+  // an order the stream shuffles — the D2 read, where any far corner could be
+  // the one and every one of them has to be checked. The shallower sockets
+  // stand behind them only as a fallback, so a cramped deal still seats its
+  // boss (and the SEARCH FLOOR below redeals anything that came out short).
   if (bossPart) {
-    const open = openSockets(rooms).sort(
-      (a, b) => (rooms[b.room] as Placed).dist - (rooms[a.room] as Placed).dist,
-    );
+    const open = openSockets(rooms);
+    if (open.length === 0) return null;
+    const distOf = (s: { room: number }) => (rooms[s.room] as Placed).dist;
+    const dmax = Math.max(...open.map(distOf));
+    const dmin = Math.min(...open.map(distOf));
+    const floor = dmin + (dmax - dmin) * 0.8;
+    const deep = open.filter((s) => distOf(s) >= floor);
+    for (let i = deep.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [deep[i], deep[j]] = [
+        deep[j] as (typeof deep)[number],
+        deep[i] as (typeof deep)[number],
+      ];
+    }
+    const shallow = open
+      .filter((s) => distOf(s) < floor)
+      .sort((a, b) => distOf(b) - distOf(a));
     let placed = false;
-    for (const socket of open) {
+    for (const socket of [...deep, ...shallow]) {
       const room = rooms[socket.room] as Placed;
       const next = trySew(
         rooms,

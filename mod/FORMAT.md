@@ -468,8 +468,9 @@ together per run into the whole floor plan. Every instance of a room is that
 room, furniture and all; the run's variety is which rooms are dealt, how they
 join, and which way each is mirrored (`flip: true`). Exactly one part carries
 `start: true` (the hero lands in it); a part carrying `boss: { at: [x, y] }` is
-the boss's own room, sewn farthest from the landing (and never authored on a
-venue whose ending is an `annex` — the annex outranks it). `min`/`max`/`weight`
+the boss's own room, sewn onto a deep socket rolled per run — far, but never
+predictably the farthest (and never authored on a venue whose ending is an
+`annex` — the annex outranks it). `min`/`max`/`weight`
 shape the deal; `count: [min, max]` prices how many parts are dealt beyond the
 required ones.
 
@@ -477,10 +478,14 @@ required ones.
 single mob standing that spot (`{ at: [x, y] }` — breed rolled by DEPTH from
 the blueprint's own `horde.members`, or named with `enemy:`), dormant until
 aggro wakes it, and refilled on a difficulty-scaled respawn clock once killed
-or dragged away. `patrol: true` walks it its room; `slot: elite` makes the
-marker a STAND one of the blueprint's `elites` is dealt onto instead (which
-stands are manned is rolled per run). `props:` stamps palette objects at fixed
-offsets, exactly as a prefab does.
+or dragged away. `pack: N` (2–8) expands the one marker into a CAMP of N
+individual posts scattered `radius:` (default 60) around the anchor — same
+breed, each with its own respawn clock, so a half-cleared camp refills member
+by member; one marker per camp is the ergonomic way to author a garrison.
+`patrol: true` walks it its room (a camp fields one walker); `slot: elite`
+makes the marker a STAND one of the blueprint's `elites` is dealt onto instead
+(which stands are manned is rolled per run — never a pack). `props:` stamps
+palette objects at fixed offsets, exactly as a prefab does.
 
 Two rules the schema enforces: a socket's opening must leave a 24px wall stub
 each side of its edge, and the deal must be able to satisfy its own

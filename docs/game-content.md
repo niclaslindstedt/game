@@ -24,8 +24,10 @@ story, ladder rung, hazards, merchant, loot pools, thought pins, music. Its MAP
 the run's own seed**, by one of two generators. A blueprint that authors a
 **STATIC PARTS deck** (`parts:`) is SEWN: hand-drawn rooms — a kitchen, an
 engine room, a great hall — joined at their door sockets, mirrored to fit, the
-boss's own room dealt farthest from the landing; every room is the same room
-every run, and the variety is which rooms are dealt and how they join. A
+boss's own room dealt into a ROLLED deep corner (never simply the farthest,
+which a player could learn — the D2 read: every far corner has to be checked);
+every room is the same room every run, and the variety is which rooms are
+dealt and how they join. A
 blueprint without one is CARVED by the legacy BSP (kept, behind the developer
 LEGACY MAP GENERATOR switch, while the two are judged side by side). Either
 way the caches and the boss's hiding place are rolled fresh, no two runs are

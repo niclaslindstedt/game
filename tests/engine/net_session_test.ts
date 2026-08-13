@@ -117,10 +117,14 @@ function connect(
   return rig;
 }
 
-/** Run the simulation for `ticks`, feeding the client's input each frame. */
+/** Run the simulation for `ticks`, feeding the client's input each frame. A
+ * speaking elite dealt near the landing can open its scene mid-walk (the
+ * parts moon does, on some seeds) and a scene freezes the world — tap through
+ * it exactly as a player would, the same way net_prediction_test does. */
 function play(rig: Rig, ticks: number, input?: GameInput): void {
   for (let i = 0; i < ticks; i++) {
     if (input) rig.client.sendInput(input);
+    if (rig.session.state.dialogue) rig.client.sendCommand("advanceDialogue");
     rig.session.advance(TICK_MS);
   }
 }

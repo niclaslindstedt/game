@@ -582,9 +582,7 @@ parts:
         - { object: cow_skull, at: [150, 430] }
         - { object: tumbleweed, at: [400, 150] }
       spawns:
-        - { at: [320, 250], enemy: cowbot }
-        - { at: [370, 280] }
-        - { at: [330, 310] }
+        - { at: [340, 280], enemy: cowbot, pack: 3, radius: 60 }
         - { at: [530, 140], patrol: true }
     # A WAGON ROAD — the corridor piece, repeatable, flippable to serve either
     # hand of the plan, with a spur socket south so the country branches
@@ -606,9 +604,7 @@ parts:
         - { object: dry_shrub, at: [290, 150] }
       spawns:
         - { at: [140, 150], patrol: true }
-        - { at: [310, 110] }
-        - { at: [360, 150] }
-        - { at: [310, 190] }
+        - { at: [335, 150], pack: 3, radius: 60 }
         - { at: [480, 220] }
     # THE GRAZING RANGE — fenced grass, cattle standing in it (the critters
     # price themselves over the prairie), a trough and a hay camp. Four sockets:
@@ -630,9 +626,7 @@ parts:
         - { object: sage_bush, at: [130, 120] }
         - { object: haystack, at: [550, 430] }
       spawns:
-        - { at: [310, 260] }
-        - { at: [360, 290] }
-        - { at: [310, 320] }
+        - { at: [330, 290], pack: 3, radius: 60 }
         - { at: [530, 150], patrol: true }
         - { at: [160, 430] }
     # MAIN STREET — the one town, promised once and dealt once. The street
@@ -661,11 +655,8 @@ parts:
         - { object: horseshoe, at: [400, 330] }
       spawns:
         - { at: [450, 240], slot: elite }
-        - { at: [300, 280] }
-        - { at: [350, 310] }
-        - { at: [300, 340] }
-        - { at: [620, 300] }
-        - { at: [660, 340] }
+        - { at: [315, 310], pack: 3, radius: 60 }
+        - { at: [640, 320], pack: 2, radius: 50 }
         - { at: [750, 300], patrol: true }
     # A HOMESTEAD — one family's place: the garden rows, the well, the wash
     # line (the house and barn are the scatter's own). Promised once so the
@@ -691,9 +682,7 @@ parts:
         - { object: scarecrow, at: [430, 420] }
       spawns:
         - { at: [320, 170], slot: elite }
-        - { at: [190, 280] }
-        - { at: [230, 320] }
-        - { at: [190, 360] }
+        - { at: [205, 320], pack: 3, radius: 70 }
         - { at: [490, 330] }
     # THE CORRAL — the fenced pen, the herd's own heavy standing in it: one
     # LONGHORN post is explicit, so the breed the wardrobe errand asks for is
