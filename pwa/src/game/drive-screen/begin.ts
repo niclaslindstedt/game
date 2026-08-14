@@ -42,7 +42,11 @@ import {
   type DriveParams,
 } from "@game/core";
 
-import { dismemberAllowed, goreAmount } from "../game-screen/gore-gate.ts";
+import {
+  dismemberAllowed,
+  goreAmount,
+  sfwModeEnabled,
+} from "../game-screen/gore-gate.ts";
 
 /** The two ends of the one road there is. */
 const GARAGE = "garage";
@@ -106,6 +110,11 @@ export function driveParamsFor(
     // and half of it in the gutter.
     gib: goreAmount("blood") !== null && dismemberAllowed("gib"),
     split: goreAmount("blood") !== null && dismemberAllowed("cleave"),
+    // …AND THE MODE'S OWN ANSWER TO WHAT IS LEFT. It is the SAME question
+    // `DriveScreen` asks to pick the dressing (`fairy`), asked here because the
+    // sim has to settle it before the first tick: the road draws the whole of
+    // somebody as a shower of pastel dust, so the road may not keep them.
+    dust: sfwModeEnabled(),
   };
 }
 
@@ -146,6 +155,7 @@ export function arcadeDriveParams(
     difficulty,
     gib: goreAmount("blood") !== null && dismemberAllowed("gib"),
     split: goreAmount("blood") !== null && dismemberAllowed("cleave"),
+    dust: sfwModeEnabled(),
   };
 }
 

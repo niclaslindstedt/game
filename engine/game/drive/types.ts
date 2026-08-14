@@ -1244,9 +1244,31 @@ export type DriveParams = {
    * a player who turned CLEAVES off did not mean "only when a sword does it".
    * Either one on is enough for a body to come apart at all; with both off
    * nobody does, and the road falls back to the tumble
-   * (see `PedestrianMode`).
+   * (see `PedestrianMode`) — unless `dust` says the body leaves instead.
    */
   split: boolean;
+  /**
+   * …AND WHETHER A STRUCK BODY LEAVES THE ROAD ALTOGETHER, in one piece and all
+   * at once, instead of tumbling into the gutter and staying there.
+   *
+   * IT IS THE THIRD ANSWER TO ONE COLLISION, not a second reading of the two
+   * above. `gib`/`split` decide whether a person comes APART; this decides
+   * whether there is anybody left lying there when the wagon has gone past. Off
+   * (the default, and every road with the gore on) the sim keeps the body,
+   * because a person knocked down is a person in the road. On, the collision
+   * still books its hit, its energy and its body count — and then the crowd is
+   * one shorter.
+   *
+   * It exists for the app's SFW presentation, which draws the whole of what is
+   * left of somebody as a shower of pastel dust over the contact point. A body
+   * still in the gutter a second later contradicts the picture the collision
+   * just showed, so the two have to be set together: the road's `dust` is
+   * exactly the dressing's `fairy`.
+   *
+   * The engine knows nothing about what replaces them, which is why this is a
+   * plain boolean about the SIM — the same fence `gib` and `split` sit behind.
+   */
+  dust?: boolean;
   /**
    * THE WAGON AS IT STANDS — the dents, the ruined wheels and the parts working
    * free that the last leg (and the level at either end of it) left on it.

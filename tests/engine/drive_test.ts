@@ -1297,6 +1297,37 @@ describe("the gore switch", () => {
     expect(tumbled).toBeGreaterThan(0);
   });
 
+  it("leaves nobody in the road at all when the body peels away", () => {
+    // `dust` is the third answer to the same collision: nothing comes apart AND
+    // nothing is left lying there, which is what the app's SFW dressing draws —
+    // a shower over the contact point and an empty road behind it.
+    const drive = createDrive({
+      ...PARAMS,
+      gib: false,
+      split: false,
+      dust: true,
+    });
+    skipDriveOpening(drive);
+    let strikes = 0;
+    let tumbled = 0;
+    for (let t = 0; t < 40000; t += 16) {
+      stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+      strikes += drive.strikes.length;
+      tumbled = Math.max(
+        tumbled,
+        drive.pedestrians.filter((p) => p.mode === "tumbling").length,
+      );
+    }
+    // The collisions still happened and are still counted — what changed is
+    // what the road KEEPS, not what happened on it.
+    expect(drive.bodies).toBeGreaterThan(0);
+    expect(tumbled).toBe(0);
+    // …and neither half of the gore path was taken on the way there.
+    const MACHINE = new Set(["machine", "machine_front", "machine_rear"]);
+    expect(strikes).toBe(0);
+    expect(drive.remains.filter((r) => !MACHINE.has(r.part))).toHaveLength(0);
+  });
+
   it("splits bodies with CLEAVES on and merely drags them with it off", () => {
     // THE WHOLE LEG, ON THE RUNG WHERE A BODY WEIGHS THE MOST — and both halves
     // of that are what keep this from being a coin toss rather than a test.

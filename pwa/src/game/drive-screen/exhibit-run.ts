@@ -139,6 +139,9 @@ export function runDriveExhibit(deps: {
     // half of what this shelf is for.
     gib: exhibit.sfw ? false : (exhibit.gib ?? true),
     split: exhibit.sfw ? false : (exhibit.split ?? exhibit.gib ?? true),
+    // An SFW card shows a body peeling away, so the sim must not keep one —
+    // `dust` is the road's half of the same switch the dressing reads below.
+    dust: exhibit.sfw === true,
   };
   const showMs = exhibit.showMs ?? DEFAULT_SHOW_MS;
 

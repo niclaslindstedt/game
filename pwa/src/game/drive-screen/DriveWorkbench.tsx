@@ -39,6 +39,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { loadGameAssets, peekGameAssets, type GameAssets } from "../assets.ts";
 import { synth } from "../audio.ts";
+import { sfwModeEnabled } from "../game-screen/gore-gate.ts";
 import { captureScreen } from "../screenshots.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { DriveScreen } from "./DriveScreen.tsx";
@@ -84,6 +85,7 @@ export function driveFromParams(params: URLSearchParams): {
   to: string;
   gib: boolean;
   split: boolean;
+  dust: boolean;
   difficulty: Difficulty;
   bot: boolean;
   coursePx?: number;
@@ -112,6 +114,11 @@ export function driveFromParams(params: URLSearchParams): {
     to: home ? GARAGE : GOODCO,
     gib: (params.get("gore") ?? "").toLowerCase() !== "off",
     split: (params.get("gore") ?? "").toLowerCase() !== "off",
+    // NOT A QUERY FLAG, because the thing it has to agree with is not one
+    // either: `DriveScreen` picks the SFW dressing off the settings page, so
+    // the sim reads the same switch. `&gore=off` is a road with the blood
+    // turned off and bodies still in it, which is a different picture.
+    dust: sfwModeEnabled(),
     difficulty,
     // Bare `&bot` counts, like every other flag in the query string; only an
     // explicit "0"/"off" turns it back off.

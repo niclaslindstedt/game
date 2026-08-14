@@ -248,7 +248,11 @@ picture is a fine cloud with things catching the light in it.
 
 Two sizes, and the distinction is the mode's whole grammar: a BODY gets the
 heavy shower (`burst`) — which is the whole of what is left of them, since
-nothing comes apart in this mode — and any other collision — steel on steel, a
+nothing comes apart in this mode, and the SIM agrees with that picture:
+`DriveParams.dust` takes the struck body off the road outright (the bumper's, and
+anybody thrown out of a vehicle), so nothing is lying in the gutter behind a
+cloud that has just shown the player the whole of somebody — and any other
+collision — steel on steel, a
 panel folding, a lamp coming down — gets a puff about a third of it at the
 contact point, over the smash and the sparks rather than instead of them. Both
 are short (800 ms and 520 ms): at road speed a cloud that lingers is left behind
