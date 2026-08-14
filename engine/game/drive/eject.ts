@@ -263,6 +263,14 @@ function throwBody(
     }
     return pieces;
   }
+  // …AND THEY PEEL AWAY INSTEAD OF LANDING, on a road that asked for it
+  // (`DriveParams.dust`). Somebody who has just left a windscreen is the same
+  // question the bumper answers in `collide.ts`: the burst over the spot is the
+  // whole of what is left of them, so the body may not also be lying in the
+  // road behind it. The throw is still BOOKED — the event above, and the body
+  // count with it — because what changes is what the road keeps, not what
+  // happened on it.
+  if (drive.params.dust) return [];
   drive.pedestrians.push(ped);
   return [];
 }

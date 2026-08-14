@@ -495,6 +495,27 @@ describe("people leaving vehicles", () => {
     expect(saidBy(state)).toContain("occupantThrown");
   });
 
+  it("peels the rider away instead of landing them, on a `dust` road", () => {
+    // Somebody who has just left a saddle is the same question the bumper
+    // answers: with `dust` on, the burst over the spot is the whole of what is
+    // left of them, so nothing may be lying in the road behind it either.
+    const state = drive({ gib: false, split: false, dust: true });
+    hold(state, 5000);
+    const moped = plant(state, indexOf("traffic_motorcycle"), 0.24);
+    hold(state, 100);
+    expect(moped.rider).toBe(false);
+    // The throw is still BOOKED and still counted — what changes is what the
+    // road keeps.
+    expect(saidBy(state)).toContain("occupantThrown");
+    expect(state.bodies).toBeGreaterThan(0);
+    expect(state.pedestrians.filter((p) => p.kind === "rider")).toHaveLength(0);
+    // The MACHINE still comes to pieces: a switch about what is left of a
+    // person has nothing to say about a wheel.
+    expect(state.remains.filter((p) => !p.part.startsWith("machine"))).toEqual(
+      [],
+    );
+  });
+
   it("tears the heaviest machine in the fleet in half at the top end", () => {
     // THE COMPLAINT THIS ANSWERS, IN ONE ASSERTION. `snapForce` was 2.2 wrecks
     // and a 210 kg motorcycle met DEAD SQUARE AT THE FULL 120 comes out at

@@ -72,6 +72,7 @@ function play(exhibit: DriveExhibit): { event: DriveEvent; atMs: number }[] {
     to: "goodco_hq",
     gib: exhibit.sfw ? false : (exhibit.gib ?? true),
     split: exhibit.sfw ? false : (exhibit.split ?? exhibit.gib ?? true),
+    dust: exhibit.sfw === true,
   });
   exhibit.road?.(drive);
   const out: { event: DriveEvent; atMs: number }[] = [];

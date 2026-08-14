@@ -138,13 +138,28 @@ function burningRoad(): DriveState {
 
 describe("the SFW DRIVE", () => {
   it("disables the engine's split and gib outcomes for both cabinet variants", () => {
+    // …and asks for the body to LEAVE. `dust` is the sim's half of the picture
+    // the dressing draws: the shower over the contact point is the whole of
+    // what is left of somebody, so the road may not also keep them.
     expect(arcadeDriveParams(7, "medium", "goodco_hq")).toMatchObject({
       gib: false,
       split: false,
+      dust: true,
     });
     expect(arcadeDriveParams(7, "medium", "garage")).toMatchObject({
       gib: false,
       split: false,
+      dust: true,
+    });
+  });
+
+  it("keeps the body in the road once the mode is off again", () => {
+    // The other half of the pair, and the one that says `dust` is the MODE's
+    // rather than the gore page's: a player who turned GIBS and CLEAVES off has
+    // asked for nobody to come apart, not for nobody to be there.
+    updateSettings({ ...ALL_GORE_ON, sfwMode: "off", blood: 1, knockback: 1 });
+    expect(arcadeDriveParams(7, "medium", "goodco_hq")).toMatchObject({
+      dust: false,
     });
   });
 

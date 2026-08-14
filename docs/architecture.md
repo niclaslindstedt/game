@@ -1158,8 +1158,11 @@ escort.ts` walks the people an escort errand puts on the field, and
   as the hero's bootprints are. Both gore-page switches ride in on
   `DriveParams` (`gib` for the lumps torn off, `split` for the bumper going
   through somebody), asked once by `driveParamsFor` and fixed for the whole
-  road. **SFW MODE RE-DRESSES that presentation without changing the
-  collision, and without hiding it:** both params arrive false, `DriveScreen`
+  road. **SFW MODE RE-DRESSES that presentation without softening the
+  collision, and without hiding it:** both params arrive false and a third one
+  (`dust`) arrives true — the one thing the mode does change about the sim,
+  because the shower it draws IS the whole of what is left of somebody, so the
+  road may not also keep a body lying in it. `DriveScreen`
   latches the setting for the leg, and `drainDrive` turns each body-hit event
   into a deterministic, wind-borne shower of fairy dust — and lays a puff a
   third the size over every other impact it books, folded together when several

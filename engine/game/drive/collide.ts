@@ -134,7 +134,7 @@ export function collide(drive: DriveState, heroSafe = false): void {
       kind: ped.kind,
       variant: ped.variant,
     });
-    const { gib, split } = drive.params;
+    const { gib, split, dust } = drive.params;
     if (gib || split) {
       // THE BODY COMES APART, so the person leaves the crowd — but not the
       // road. What replaces them is `remains`: the pieces, with physics of
@@ -177,10 +177,19 @@ export function collide(drive: DriveState, heroSafe = false): void {
       }
       ped.mode = "tumbling";
       ped.z = -1; // flagged for removal below — it is gone, not lying there
+    } else if (dust) {
+      // THE BODY PEELS AWAY — `DriveParams.dust`. Nothing comes apart and
+      // nothing is left behind either: the burst the app draws over the
+      // contact point IS the whole of what is left of them, so a body still
+      // lying in the gutter afterwards contradicts the picture the collision
+      // just showed.
+      ped.mode = "tumbling";
+      ped.z = -1; // flagged for removal below — it is gone, not lying there
     } else {
-      // GORE OFF: nobody comes apart. They are knocked off their feet and
-      // tumble to the side of the road, which is a genuinely different physical
-      // outcome rather than the same one drawn quietly — see `PedestrianMode`.
+      // NOBODY COMES APART AND NOBODY LEAVES: they are knocked off their feet
+      // and tumble to the side of the road, where they stay. A genuinely
+      // different physical outcome rather than the same one drawn quietly —
+      // see `PedestrianMode`.
       ped.mode = "tumbling";
       ped.vel.x = hit.launch.x;
       ped.vel.y = hit.launch.y;
