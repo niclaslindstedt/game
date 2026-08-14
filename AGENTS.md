@@ -746,15 +746,15 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | The campaign ladder / the autopilot's knobs                   | `content/ladder.yaml`, `content/bot.yaml`                                                                                                 | `level-design`, `bot-improvement`       |
 | A GORE piece, organ or family                                 | `content/sprites/effects/gib_*` + the pools in `gore-burst.ts` / `gore.ts`                                                                | `gore-system`                           |
 
-| Presentation                                      | Goes in                                                                        | Reference             |
-| ------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------- |
-| A HUD element (a bar, a slot, a readout, a dial)  | `content/hud/elements/<id>.yaml` — never a component                           | `ui-review`           |
-| A row on an in-game window, or a modal            | `content/menus/` — never a component                                           | `ui-review`           |
-| A transient visual effect                         | `pwa/src/game/render/effects.ts` or a CSS overlay driver                       | `visual-effects`      |
-| Blood, a cleave, a gib, a gore family             | `pwa/src/game/game-screen/` + `render/blood*`                                  | `gore-system`         |
-| A weapon's signature slash/muzzle                 | `fx:` on the item + `pwa/src/game/weapon-elements.ts`                          | `weapon-system`       |
-| The projection, the postfx, a gait, the loot aura | `pwa/src/game/render/`                                                         | `docs/rendering.md`   |
-| A library page's content or look                  | `pwa/scripts/library/…` — the pages are build output and are NEVER hand-edited | `library-improvement` |
+| Presentation                                      | Goes in                                                                        | Reference                     |
+| ------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------- |
+| A HUD element (a bar, a slot, a readout, a dial)  | `content/hud/elements/<id>.yaml` — never a component                           | `ui-review`                   |
+| A row on an in-game window, or a modal            | `content/menus/` — never a component                                           | `ui-review`                   |
+| A transient visual effect                         | `pwa/src/game/render/effects.ts` or a CSS overlay driver                       | `visual-effects`              |
+| Blood, a cleave, a gib, a gore family             | `pwa/src/game/game-screen/` + `render/blood*`                                  | `docs/gore.md`, `gore-system` |
+| A weapon's signature slash/muzzle                 | `fx:` on the item + `pwa/src/game/weapon-elements.ts`                          | `weapon-system`               |
+| The projection, the postfx, a gait, the loot aura | `pwa/src/game/render/`                                                         | `docs/rendering.md`           |
+| A library page's content or look                  | `pwa/scripts/library/…` — the pages are build output and are NEVER hand-edited | `library-improvement`         |
 
 | Multiplayer                                       | Goes in                                                                                                                                                                                                             |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -849,6 +849,7 @@ that tag's own lockfile.
 | the HUD (an element, where it sits, what it says or sounds like)       | `content/hud/` only; a new BINDING/ACTION/WIDGET owes the schema a row    |
 | an IN-GAME WINDOW (the pause menu, a modal, a row on either)           | `content/menus/` only; a new WIDGET or SCREEN owes the schema a row       |
 | how the picture is drawn (projection, postfx, gait, loot presentation) | `docs/rendering.md`                                                       |
+| the gore system (a family, the overkill ladder, the soak, the gate)    | `docs/gore.md`                                                            |
 | a catalog's compile pipeline, or a parity rule                         | `docs/content-pipeline.md`                                                |
 | a RULE the catalogs sit inside (a carry-over, an economy, a gate)      | `docs/game-content.md` — never a per-item or per-venue entry              |
 | a plot beat / the story as a whole                                     | `docs/story.md`, then push down — load `update-story`                     |
@@ -942,6 +943,7 @@ skill is the source of truth — load that, not a search of the tree.
 | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | The module map, the shells, the platform seams, the library, deployment                                               | `docs/architecture.md`                                                              |
 | The projection, postfx, the canvas and its scale tiers, gaits, jumps, the loot toss and rarity aura, the hero doll    | `docs/rendering.md`                                                                 |
+| Blood and what it soaks, a body coming apart, the four gore families, the mature-content gate                         | `docs/gore.md`                                                                      |
 | Every catalog's compile pipeline, the generator order, the parity rules                                               | `docs/content-pipeline.md`                                                          |
 | Naming anything                                                                                                       | `docs/naming.md`                                                                    |
 | Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md`                                                               |

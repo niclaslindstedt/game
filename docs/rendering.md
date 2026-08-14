@@ -9,6 +9,9 @@ under.) It is the reference half of the renderer — the projection, the post
 effects, the canvas and its scale tiers, how bodies carry themselves, and how
 loot announces itself.
 
+Blood and everything a landed blow leaves behind is its own reference —
+[`docs/gore.md`](gore.md).
+
 Task-shaped rendering work has its own skills, and they own their subject:
 `visual-effects` (a transient effect), `gore-system` (blood, cleaves, gibs),
 `talent-fx` (the always-on talent looks), `weapon-system` (a weapon's signature
