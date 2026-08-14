@@ -298,6 +298,7 @@ How a mod is compiled, loaded and resolved — the design behind all of the abov
 - [The content pipeline](docs/content-pipeline.md) — how every catalog compiles
 - [Scripting](docs/scripting.md) — the rules a mod can change, and the sandbox they run in
 - [Rendering](docs/rendering.md) — the projection, the post effects, the canvas
+- [Gore](docs/gore.md) — what a landed blow leaves behind, and the gate it all hangs off
 - [Game content](docs/game-content.md) — the rules the catalogs sit inside (what a catalog holds is the YAML, and the generated `/library/`)
 - [Story](docs/story.md) · [Manuscript](docs/manuscript.md) — the plot, and every spoken line
 - [Art style](docs/art-style.md) · [Naming](docs/naming.md)
