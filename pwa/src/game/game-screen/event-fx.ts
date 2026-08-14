@@ -96,6 +96,12 @@ const XP_MERGE_SLACK_PX = 16;
 const XP_MERGE_MIN_SCALE = 1.4;
 const XP_MERGE_MAX_SCALE = 4;
 
+// How far above its speaker a SPOKEN float sits, in world px — a boss naming a
+// move, the hero thinking at somebody. Clear of the head at every scale tier,
+// and clear of the health bar a boss wears. The floats' own lane allocator
+// stacks upward from here.
+const SPEECH_HEIGHT_PX = 30;
+
 // XP-bar kill heat. Every kill that grants XP lights the top XP strip a
 // brighter blue as it grows; a kill-chain keeps it lit, and once no XP has
 // landed for this long the fill eases back to its resting color (the CSS
@@ -1689,7 +1695,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       const line = lines[i];
       if (!line) continue;
       pushFloat(effects, state.stats.timeMs, {
-        pos: { x: event.pos.x, y: event.pos.y - 30 },
+        pos: { x: event.pos.x, y: event.pos.y - SPEECH_HEIGHT_PX },
         untilMs: state.stats.timeMs + 1500 + i * 120,
         durationMs: 1500 + i * 120,
         text: line,
@@ -1704,17 +1710,27 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // colour is the thought box's own parchment rather than the bosses' cold
   // blue, because it is the character thinking rather than somebody shouting
   // at him.
+  //
+  // …AND IT RIDES HIM (`follow`, re-anchored each tick by `trackFloats`). A
+  // bark comes off a boss standing its ground; this one is as often as not said
+  // at the wheel — the three words on the way off his own driveway are the
+  // whole reason the field exists — and words left on the tarmac while the car
+  // pulls away belong to nobody.
   if (event.type === "heroThought") {
     const lines = event.lines;
+    const seat = event.seat;
     for (let i = lines.length - 1; i >= 0; i--) {
       const line = lines[i];
       if (!line) continue;
       pushFloat(effects, state.stats.timeMs, {
-        pos: { x: event.pos.x, y: event.pos.y - 30 },
+        pos: { x: event.pos.x, y: event.pos.y - SPEECH_HEIGHT_PX },
         untilMs: state.stats.timeMs + 1800 + i * 120,
         durationMs: 1800 + i * 120,
         text: line,
         color: "#f6e3b0",
+        ...(seat === undefined
+          ? {}
+          : { follow: { seat, dy: SPEECH_HEIGHT_PX } }),
       });
     }
   }

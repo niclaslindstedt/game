@@ -186,3 +186,37 @@ export function pushDamage(
     ),
   });
 }
+
+/**
+ * A FLOAT THAT BELONGS TO A BODY GOES WHERE THE BODY GOES — run once a tick,
+ * beside `expireEffects`.
+ *
+ * Almost nothing needs this: combat text belongs to the BLOW, and the blow
+ * happened at a spot no amount of walking moves. A HERO'S OWN LINE is the
+ * exception, because the man saying it is the thing that moves — three words
+ * thought pulling off a driveway (`heroThought`, engine/game/story.ts) live
+ * nearly two seconds, which at driving speed is most of a street. Left pinned,
+ * the wagon drives out from under them and the words read as belonging to the
+ * tarmac rather than to the driver.
+ *
+ * The lane the float was given at spawn (`lift`) is NOT recomputed: it was the
+ * free row over a spot the float has now left, and re-allocating it every tick
+ * would make a word that is already moving jitter between rows as it went.
+ *
+ * `bodies` is the seat list — `state.players`. A seat that is not there (a
+ * client holding fewer, a hero gone from the world) simply leaves the float
+ * where it was, which is the old behaviour and a fine one.
+ */
+export function trackFloats(
+  effects: readonly Effect[],
+  bodies: readonly { pos: Vec2 }[],
+): void {
+  for (const effect of effects) {
+    const follow = effect.follow;
+    if (!follow) continue;
+    const body = bodies[follow.seat];
+    if (!body) continue;
+    effect.pos.x = body.pos.x;
+    effect.pos.y = body.pos.y - follow.dy;
+  }
+}

@@ -223,6 +223,10 @@ describe("the arrival", () => {
     expect(state.phase).toBe("playing");
     expect(thought!.pos.x).toBeCloseTo(car.pos.x, 5);
     expect(thought!.pos.y).toBeCloseTo(car.pos.y, 5);
+    // …AND THE WORDS GO WITH HIM. `seat` is the driver, so the app floats them
+    // over his body for their whole life instead of leaving them on the drive
+    // for a wagon at speed to pull away from.
+    expect(thought!.seat).toBe(state.players.indexOf(hero));
     // …and the fact itself, banked on the run's flags so it travels the rest of
     // the campaign: it is what he mutters pulling onto the road, and what Ada
     // asks about on Friday.
