@@ -472,11 +472,17 @@ export function startPlayerThought(state: GameState, thoughtId: string): void {
  * Muted exactly as the box is (`dialogueMuted`) — a player who turned the
  * story text off turned this off too — but it never yields to a scene already
  * up, because it does not take the stage and so cannot lose it.
+ *
+ * `seat` is the hero the words BELONG to, and passing it is what makes them
+ * travel with him: a float is read out of the corner of the eye over a second
+ * or two, which is long enough for a man at the wheel to leave a fixed one
+ * behind on the tarmac. Omit it only for a thought nobody is standing at.
  */
 export function floatPlayerThought(
   state: GameState,
   thoughtId: string,
   at: Vec2,
+  seat?: number,
 ): void {
   const page = thoughtDef(thoughtId).pages[0];
   // HIS OWN VOICE ONLY. A `{ them: … }` page is somebody talking AT him, and
@@ -488,6 +494,7 @@ export function floatPlayerThought(
     pos: { x: at.x, y: at.y },
     defId: thoughtId,
     lines: [...page],
+    ...(seat === undefined ? {} : { seat }),
   });
 }
 

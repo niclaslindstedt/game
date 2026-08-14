@@ -110,6 +110,7 @@ import {
   mergePackKillXp,
   trackXpHeat,
 } from "./game-screen/event-fx.ts";
+import { trackFloats } from "./game-screen/float-lane.ts";
 import { flushGoldPickups } from "./game-screen/gold-float.ts";
 import { HeroAvatar } from "./game-screen/HeroAvatar.tsx";
 import { hudBindings, voiceBindings } from "./hud/bindings.ts";
@@ -1429,6 +1430,10 @@ export function GameScreen({
         // moment the piles stop arriving, which needs a tick of its own rather
         // than an event (the last pile of a handful is still an event too early).
         flushGoldPickups(shared, state, feed.push);
+        // …and a float that belongs to a BODY rather than to a spot rides it
+        // for the rest of its life: the hero's own thought, said with a car
+        // under him and outliving the stretch of road he said it on.
+        trackFloats(shared.effects, state.players);
         expireEffects(shared, state);
         // The sustained powerup auras track the run's live power list — a
         // spectral wash, a hot rim, a gilded frame — and can never outlive

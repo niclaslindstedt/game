@@ -1013,12 +1013,14 @@ export function giverMark(state: GameState, giverId: string): QuestMark {
  * `by` is WHERE THE BLOW CAME FROM — the car's own anchor, which while somebody
  * is driving is also the hero's. The `runDown` beat below is floated over it
  * rather than over the body, because it is the driver's thought and he never
- * looks back.
+ * looks back. `seat` is that driver, so the words go with him rather than
+ * staying on the driveway he is leaving.
  */
 export function killQuestGiver(
   state: GameState,
   giverId: string,
   by?: Vec2,
+  seat?: number,
 ): boolean {
   const giver = state.questGivers.find((g) => g.id === giverId);
   if (!giver || giver.dead) return false;
@@ -1049,12 +1051,13 @@ export function killQuestGiver(
   // mid-driveway and holds it there for a tap, which turns three words the
   // character does not think twice about into a scene the game clearly does.
   // Floated over the car instead, he says it and keeps driving — which is the
-  // line (`thoughts.yaml` → `ruth_run_down`). Falls back to the body when
-  // nothing said where the blow came from.
+  // line (`thoughts.yaml` → `ruth_run_down`) — and it RIDES the driver, or the
+  // wagon would pull out from under three words left standing on the drive.
+  // Falls back to the body when nothing said where the blow came from.
   const runDown = questGiverDef(giverId).runDown;
   if (runDown?.flag) state.questFlags[runDown.flag] = true;
   if (runDown?.thought) {
-    floatPlayerThought(state, runDown.thought, by ?? giver.pos);
+    floatPlayerThought(state, runDown.thought, by ?? giver.pos, seat);
   }
   return true;
 }

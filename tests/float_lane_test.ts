@@ -14,6 +14,7 @@ import {
   floatLift,
   pushDamage,
   pushFloat,
+  trackFloats,
 } from "../pwa/src/game/game-screen/float-lane.ts";
 import type { Effect } from "../pwa/src/game/render.ts";
 
@@ -175,5 +176,43 @@ describe("floatLift under the world projection", () => {
   it("steps over a stack rather than landing between two rows", () => {
     const stacked = [float({ lift: 0 }), float({ lift: 6 })];
     expect(floatLift(stacked, SPOT, NOW, "+42 XP")).toBe(12);
+  });
+});
+
+describe("trackFloats", () => {
+  it("keeps a hero's thought over his head while he drives away from it", () => {
+    const hero = { pos: { ...SPOT } };
+    const words = float({
+      pos: { x: SPOT.x, y: SPOT.y - 30 },
+      follow: { seat: 0, dy: 30 },
+    });
+    // The car pulls out of the drive with the words still in his head.
+    hero.pos.x += 400;
+    hero.pos.y += 25;
+    trackFloats([words], [hero]);
+    expect(words.pos.x).toBe(hero.pos.x);
+    expect(words.pos.y).toBe(hero.pos.y - 30);
+  });
+
+  it("leaves the lane it was given alone, so a moving word doesn't jitter", () => {
+    const hero = { pos: { ...SPOT } };
+    const words = float({ lift: 12, follow: { seat: 0, dy: 30 } });
+    hero.pos.x += 200;
+    trackFloats([words], [hero]);
+    expect(words.lift).toBe(12);
+  });
+
+  it("leaves a combat number on the spot the blow landed", () => {
+    const hero = { pos: { ...SPOT } };
+    const number = damage();
+    hero.pos.x += 200;
+    trackFloats([number], [hero]);
+    expect(number.pos).toEqual(SPOT);
+  });
+
+  it("leaves a float alone when its seat isn't in this world", () => {
+    const words = float({ follow: { seat: 3, dy: 30 } });
+    trackFloats([words], [{ pos: { ...SPOT } }]);
+    expect(words.pos).toEqual(SPOT);
   });
 });

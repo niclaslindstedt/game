@@ -140,6 +140,13 @@ export type Effect = {
    * purse is the everyday case: the hit's number, its blue "+N XP" and the gold
    * "+N" are one spot and three messages. Default 0 — the spot was free. */
   lift?: number;
+  /** Text float: the BODY these words ride instead of the spot they were spawned
+   * on — `seat` indexes `state.players`, `dy` is how far above it the word
+   * floats in world px. Re-anchored once a tick by `trackFloats`
+   * (game-screen/float-lane.ts). A combat number leaves this off: it belongs to
+   * the blow, and the blow happened where it happened. A line thought at the
+   * wheel does not — see `heroThought`. */
+  follow?: { seat: number; dy: number };
   /** Text float: glyph scale (default 1). A golden-arrow XP popup doubles it,
    * and a merged pack-kill float grows it with the pack (≈count/10 — 20 mobs →
    * 2×, 30 → 3×), so a bigger gain reads as a bigger number. */

@@ -898,8 +898,22 @@ export type GameEvent =
    *
    * `defId` is the thought it came from; `lines` are that thought's first page,
    * resolved here so the app floats text rather than looking a catalog up.
+   *
+   * `seat` is WHOSE THOUGHT IT IS, and it is there because the thinker moves.
+   * That same driveway line is said at speed with a car under him, and a word
+   * pinned to the spot it was thought at is a driver pulling away from his own
+   * thought — the words have to ride him. `pos` is still where it STARTS (a
+   * client that never saw the seat, a hero who is gone by the time it lands),
+   * so the app anchors to the seat when it has one and to `pos` when it does
+   * not.
    */
-  | { type: "heroThought"; pos: Vec2; defId: string; lines: string[] }
+  | {
+      type: "heroThought";
+      pos: Vec2;
+      defId: string;
+      lines: string[];
+      seat?: number;
+    }
   /**
    * The hero walked up to somebody with an errand for the first time: they are
    * pinned on the level map and their mark is now readable. `giverId` keys
