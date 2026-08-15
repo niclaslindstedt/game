@@ -74,13 +74,13 @@ ONE string. A second string is an **explicit line break** and has to earn
 itself; the whole campaign spends five, tabled below. Past ~120 characters a page
 costs the player another tap, and the build warns.
 
-| Where                        | The break                                             |
-| ---------------------------- | ----------------------------------------------------- |
-| Prelude, caption             | SHE TOOK HER JACKET. / THE ONE I FIXED THE ZIPPER ON. |
-| BOOT HILL, opening monologue | HANG ON, ADA. I'M COMING. / YEE-HAW, I GUESS.         |
-| BOOT HILL, closing monologue | …'YOU TOOK YOUR TIME.' / THEN: 'NICE HAT.'            |
-| MOON POST-MORTEM, lore       | …RECOMMEND MARS.' / 'AND NEVER DIG AGAIN.'            |
-| ENGAGEMENT REPORT, lore      | THAT'S MY GIRL. / …ALL OF IT. THAT'S MY GIRL.         |
+| Where                        | The break                                       |
+| ---------------------------- | ----------------------------------------------- |
+| Prelude, caption             | SHE TOOK HER JACKET. / I PUT A TRACKING BEACON… |
+| BOOT HILL, opening monologue | HANG ON, ADA. I'M COMING. / YEE-HAW, I GUESS.   |
+| BOOT HILL, closing monologue | …'YOU TOOK YOUR TIME.' / THEN: 'NICE HAT.'      |
+| MOON POST-MORTEM, lore       | …RECOMMEND MARS.' / 'AND NEVER DIG AGAIN.'      |
+| ENGAGEMENT REPORT, lore      | THAT'S MY GIRL. / …ALL OF IT. THAT'S MY GIRL.   |
 
 **An arrival scene is three pages, or five for a boss.** The mob hooks, the hero
 answers with ONE line (transcribed **ME:**), the mob lands the reveal. A boss
@@ -121,9 +121,19 @@ differs per difficulty (`content/cutscenes/prelude.yaml` → `variants:`)._
 
 **ADA:** FIVE MINUTES. KEEP MY SPOT WARM.
 
+_(She gets up off the couch, in the tee she has been watching the film in, and
+crosses the room.)_
+
+**ME:** TAKE YOUR JACKET. IT'S COLD OUT.
+
+_(She lifts the red jacket off the hall tree by the door and puts it on. The
+pegs are bare behind her for the rest of the scene.)_
+
+**ADA:** ALREADY GOT IT.
+
 _(She goes out. The door shuts.)_
 
-> **CAPTION:** SHE TOOK HER JACKET. / THE ONE I FIXED THE ZIPPER ON.
+> **CAPTION:** SHE TOOK HER JACKET. / I PUT A TRACKING BEACON IN THE LINING WHEN I FIXED THAT ZIPPER. SHE LOSES THINGS.
 >
 > **CAPTION:** TWO HOURS LATER.
 
@@ -1077,7 +1087,8 @@ no new lines.)_
 ### Opening monologue (hero, black screen)
 
 1. ADA'S TRACKER WENT QUIET NEAR THE OLD APOLLO FLAG. THAT'S WHERE I'M HEADED.
-2. AND SOMETHING IS MOVING OUT THERE IN THE DUST. THIS PLACE IS SUPPOSED TO BE EMPTY.
+2. IT RUNS ON GOODCO'S OWN RELAYS, AND THEY PUT THOSE WHEREVER THEY SHIP - THE ONE FAVOUR THEY'VE EVER DONE ME.
+3. AND SOMETHING IS MOVING OUT THERE IN THE DUST. THIS PLACE IS SUPPOSED TO BE EMPTY.
 
 ### Pinned beats
 

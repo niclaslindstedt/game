@@ -129,8 +129,32 @@ stage:
     # THE PLANT beside the front door, where a plant by a door is — and BACK
     # AGAINST THE WALL on the bookcase's own line (82), which also puts it well
     # clear of the two walks to that door: both cross this x at y≈96, so they
-    # pass in FRONT of it rather than through it.
-    - { sprite: houseplant, at: { x: 178, y: 82 } }
+    # pass in FRONT of it rather than through it. It sits at 168 rather than
+    # tight to the door because the HALL TREE below has the door's own elbow now,
+    # and the run of wall between the window (which ends at 160) and the door
+    # (which starts at 193) carries exactly the two of them.
+    - { sprite: houseplant, at: { x: 168, y: 82 } }
+    # THE HALL TREE, and ADA'S JACKET ON IT — one thing in two states on one
+    # mark, the same trick the front door is drawn with. She is on the couch in
+    # her tee; the jacket is over here by the door the whole first half of the
+    # scene, in the one colour nothing else in this room wears, and the `prop`
+    # pair below swaps the hung stand for the bare one on the frame she lifts it
+    # off. That swap is the WHOLE point of the prop: the closing caption is about
+    # a jacket, and a jacket nobody ever saw her put on is a caption about
+    # nothing.
+    #
+    # It stands where a coat stand stands — at the door's own elbow (the door
+    # runs 193…211, this runs 180…192) and on the furniture's wall line. The
+    # jacket's hem lands at y 73, which is a standing woman's head at the mark
+    # she takes it from (88), so she REACHES for it rather than climbing: the
+    # leap is the hero's beat later and this one must not rhyme with it.
+    - { label: hung_stand, sprite: coat_stand, at: { x: 186, y: 82 } }
+    - {
+        label: bare_stand,
+        sprite: coat_stand_bare,
+        at: { x: 186, y: 82 },
+        hidden: true,
+      }
 # Both of them on the sofa for movie night, watching the TV off to the left —
 # the hero never gets up, which is the whole joke. Their `at.y` sits a hair below
 # the couch's floor anchor so they paint just in front of the backrest; the
@@ -144,8 +168,11 @@ actors:
       at: { x: 96, y: 97 },
       faceLeft: true,
     }
-  # Seated beside him in her red jacket; a `pose` beat stands her up (swapping
-  # to the walking `ada` sprite) when she heads for the store.
+  # Seated beside him in the tee she is watching the film in — NOT in the
+  # jacket, which is on the hall tree by the door where a jacket is. A `pose`
+  # beat stands her up (swapping to the walking `ada` sprite) when she heads for
+  # the store, and a second one puts her in `ada_jacket` on the frame she takes
+  # it off the pegs.
   - {
       id: ada,
       name: ADA,
@@ -171,9 +198,33 @@ beats:
     actor: ada
     text:
       - FIVE MINUTES. KEEP MY SPOT WARM.
-  # Up off the couch (swap to the standing/walking sprite), out the door.
+  # Up off the couch (swap to the standing/walking sprite) and out across the
+  # room, downstage of the table so the whole of her is in frame.
   - { kind: pose, actor: ada, sprite: ada }
   - { kind: move, actor: ada, to: { x: 150, y: 112 }, speed: 42 }
+  # THE ONLY THING HE GETS UP FOR IS NOT GETTING UP. He does not follow her to
+  # the door, he calls after her about her coat — which is the whole of what he
+  # is, and it is also how the jacket gets named out loud before it matters.
+  - kind: say
+    actor: hero
+    text:
+      - TAKE YOUR JACKET. IT'S COLD OUT.
+  # SHE ACTUALLY TAKES IT. Up to the hall tree, a beat of reaching, and then the
+  # jacket leaves the pegs and lands on her in a single frame — the hung stand
+  # goes, the bare one comes, she re-poses — the same three-in-one instant the
+  # hero's grab off the wall is built on. She stops SHORT of the stand (173
+  # against its 180…192) so she is beside the jacket rather than in front of it:
+  # a swap the player cannot see happen is a swap that did not happen.
+  - { kind: move, actor: ada, to: { x: 173, y: 88 }, speed: 42 }
+  - { kind: wait, ms: 320 }
+  - { kind: prop, prop: hung_stand, hidden: true }
+  - { kind: prop, prop: bare_stand, hidden: false }
+  - { kind: pose, actor: ada, sprite: ada_jacket }
+  - { kind: wait, ms: 260 }
+  - kind: say
+    actor: ada
+    text:
+      - ALREADY GOT IT.
   - { kind: move, actor: ada, to: { x: 201, y: 88 }, speed: 42 }
   # She opens it, and the room is briefly not the only place in the world: the
   # step, the lawn and the road are all right there, five minutes away.
@@ -190,10 +241,22 @@ beats:
   - { kind: wait, ms: 900 }
   - kind: caption
     text:
-      # EXPLICIT BREAK: the second clause is the detail the whole first level
-      # turns on (he did not fix a zipper), and it only lands if it is held.
+      # THE ONE FACT THE WHOLE CAMPAIGN IS BUILT ON, AND IT IS SAID HERE OR
+      # NOWHERE. Everything downstream — the garage's "her jacket's still
+      # answering", GOODCO's "it's coming from INSIDE there", the beacon he ends
+      # up wearing as a trinket — is a machine reporting a position, and none of
+      # it parses unless the player has been told there IS a machine. The scene
+      # used to hold up "THE ONE I FIXED THE ZIPPER ON" as if it were the reveal;
+      # a mended zipper is a fact about a boyfriend, not about a signal, so the
+      # first level opened on a jacket that had started talking for no reason.
+      #
+      # EXPLICIT BREAK: he notices the jacket, and only then remembers what is
+      # in it. The zipper survives as the SUBORDINATE clause it always was — the
+      # reason he had the lining open — and the third sentence is the whole of
+      # his justification for a tracking beacon, which he does not think needs
+      # one. It is also the last laugh before the scene stops being funny.
       - SHE TOOK HER JACKET.
-      - THE ONE I FIXED THE ZIPPER ON.
+      - I PUT A TRACKING BEACON IN THE LINING WHEN I FIXED THAT ZIPPER. SHE LOSES THINGS.
   - { kind: fade, to: 0.85, ms: 700 }
   - kind: caption
     text:

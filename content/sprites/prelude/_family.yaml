@@ -7,5 +7,6 @@ palette:
   N: "#303444"
 animations:
   ada_walk: { frames: [ada_0, ada_1], delayMs: 220 }
+  ada_jacket_walk: { frames: [ada_jacket_0, ada_jacket_1], delayMs: 220 }
   ada_couch_idle: { frames: [ada_couch_0, ada_couch_1], delayMs: 600 }
   hero_couch_idle: { frames: [hero_couch_0, hero_couch_1], delayMs: 600 }

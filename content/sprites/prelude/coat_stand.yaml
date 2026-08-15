@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: coat_stand
+family: prelude
+size: [13, 24]
+description: >
+  The hall tree by the front door with Ada's red jacket hanging on it - the
+  state the prelude opens in, swapped for `coat_stand_bare` on the frame she
+  lifts it off.
+subject:
+  kind: "floor prop (hall tree, hung)"
+  build: "a slim post on a splayed foot, a peg bar across the top, one jacket hung off it"
+  features: "a red jacket squared on the pegs - collar, hard shoulder line, sleeves down both flanks, a pale zip up the front"
+  accent: "the red of the jacket against a dark hallway"
+  flavor: "the jacket she takes out for five minutes and never brings back"
+palette:
+  O: "#1a1c2c" # outline
+  R: "#a02c2c" # the shaded flank of the red, away from the lamp
+  n: "#5d4028" # stained wood post and foot
+  r: "#d83a3a" # red jacket
+  z: "#8f8fa0" # the zip he fixed, dull metal up the front
+grid: |
+  ......OO.....
+  .....OnnO....
+  ..OOOOnnOOOO.
+  ..O.OrrrO..O.
+  ...OrrrrrO...
+  OrrrrrrrrrRRO
+  OrrOrrzrrORRO
+  OrrOrrzrrORRO
+  OrrOrrzrrORRO
+  OrrOrrzrrORRO
+  .OOOrrzrrOOO.
+  ...OrrzrrO...
+  ...OrrzrrO...
+  ...OrrzrrO...
+  ..OrrrzrrrO..
+  ..OOOOOOOOO..
+  .....OnnO....
+  .....OnnO....
+  .....OnnO....
+  .....OnnO....
+  .....OnnO....
+  ....OOnnOO...
+  ..OOnnnnnnOO.
+  ..OOOOOOOOOO.

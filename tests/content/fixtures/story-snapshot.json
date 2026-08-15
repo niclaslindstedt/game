@@ -759,6 +759,48 @@
           }
         },
         {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["TAKE YOUR JACKET. IT'S COLD OUT."]
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 173,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 320
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "hung_stand"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "bare_stand"
+        },
+        {
+          "actor": "ada",
+          "kind": "pose",
+          "sprite": "ada_jacket"
+        },
+        {
+          "kind": "wait",
+          "ms": 260
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["ALREADY GOT IT."]
+        },
+        {
           "actor": "ada",
           "kind": "move",
           "speed": 42,
@@ -813,7 +855,10 @@
         },
         {
           "kind": "caption",
-          "text": ["SHE TOOK HER JACKET.", "THE ONE I FIXED THE ZIPPER ON."]
+          "text": [
+            "SHE TOOK HER JACKET.",
+            "I PUT A TRACKING BEACON IN THE LINING WHEN I FIXED THAT ZIPPER. SHE LOSES THINGS."
+          ]
         },
         {
           "kind": "fade",
@@ -1103,7 +1148,24 @@
           {
             "kind": "houseplant",
             "pos": {
-              "x": 178,
+              "x": 168,
+              "y": 82
+            }
+          },
+          {
+            "id": "hung_stand",
+            "kind": "coat_stand",
+            "pos": {
+              "x": 186,
+              "y": 82
+            }
+          },
+          {
+            "hidden": true,
+            "id": "bare_stand",
+            "kind": "coat_stand_bare",
+            "pos": {
+              "x": 186,
               "y": 82
             }
           }
@@ -1179,6 +1241,48 @@
           }
         },
         {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["TAKE YOUR JACKET. IT'S COLD OUT."]
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 173,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 320
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "hung_stand"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "bare_stand"
+        },
+        {
+          "actor": "ada",
+          "kind": "pose",
+          "sprite": "ada_jacket"
+        },
+        {
+          "kind": "wait",
+          "ms": 260
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["ALREADY GOT IT."]
+        },
+        {
           "actor": "ada",
           "kind": "move",
           "speed": 42,
@@ -1233,7 +1337,10 @@
         },
         {
           "kind": "caption",
-          "text": ["SHE TOOK HER JACKET.", "THE ONE I FIXED THE ZIPPER ON."]
+          "text": [
+            "SHE TOOK HER JACKET.",
+            "I PUT A TRACKING BEACON IN THE LINING WHEN I FIXED THAT ZIPPER. SHE LOSES THINGS."
+          ]
         },
         {
           "kind": "fade",
@@ -1523,7 +1630,24 @@
           {
             "kind": "houseplant",
             "pos": {
-              "x": 178,
+              "x": 168,
+              "y": 82
+            }
+          },
+          {
+            "id": "hung_stand",
+            "kind": "coat_stand",
+            "pos": {
+              "x": 186,
+              "y": 82
+            }
+          },
+          {
+            "hidden": true,
+            "id": "bare_stand",
+            "kind": "coat_stand_bare",
+            "pos": {
+              "x": 186,
               "y": 82
             }
           }
@@ -1599,6 +1723,48 @@
           }
         },
         {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["TAKE YOUR JACKET. IT'S COLD OUT."]
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 173,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 320
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "hung_stand"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "bare_stand"
+        },
+        {
+          "actor": "ada",
+          "kind": "pose",
+          "sprite": "ada_jacket"
+        },
+        {
+          "kind": "wait",
+          "ms": 260
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["ALREADY GOT IT."]
+        },
+        {
           "actor": "ada",
           "kind": "move",
           "speed": 42,
@@ -1653,7 +1819,10 @@
         },
         {
           "kind": "caption",
-          "text": ["SHE TOOK HER JACKET.", "THE ONE I FIXED THE ZIPPER ON."]
+          "text": [
+            "SHE TOOK HER JACKET.",
+            "I PUT A TRACKING BEACON IN THE LINING WHEN I FIXED THAT ZIPPER. SHE LOSES THINGS."
+          ]
         },
         {
           "kind": "fade",
@@ -1943,7 +2112,24 @@
           {
             "kind": "houseplant",
             "pos": {
-              "x": 178,
+              "x": 168,
+              "y": 82
+            }
+          },
+          {
+            "id": "hung_stand",
+            "kind": "coat_stand",
+            "pos": {
+              "x": 186,
+              "y": 82
+            }
+          },
+          {
+            "hidden": true,
+            "id": "bare_stand",
+            "kind": "coat_stand_bare",
+            "pos": {
+              "x": 186,
               "y": 82
             }
           }
@@ -2019,6 +2205,48 @@
           }
         },
         {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["TAKE YOUR JACKET. IT'S COLD OUT."]
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 173,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 320
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "hung_stand"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "bare_stand"
+        },
+        {
+          "actor": "ada",
+          "kind": "pose",
+          "sprite": "ada_jacket"
+        },
+        {
+          "kind": "wait",
+          "ms": 260
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["ALREADY GOT IT."]
+        },
+        {
           "actor": "ada",
           "kind": "move",
           "speed": 42,
@@ -2073,7 +2301,10 @@
         },
         {
           "kind": "caption",
-          "text": ["SHE TOOK HER JACKET.", "THE ONE I FIXED THE ZIPPER ON."]
+          "text": [
+            "SHE TOOK HER JACKET.",
+            "I PUT A TRACKING BEACON IN THE LINING WHEN I FIXED THAT ZIPPER. SHE LOSES THINGS."
+          ]
         },
         {
           "kind": "fade",
@@ -2363,7 +2594,24 @@
           {
             "kind": "houseplant",
             "pos": {
-              "x": 178,
+              "x": 168,
+              "y": 82
+            }
+          },
+          {
+            "id": "hung_stand",
+            "kind": "coat_stand",
+            "pos": {
+              "x": 186,
+              "y": 82
+            }
+          },
+          {
+            "hidden": true,
+            "id": "bare_stand",
+            "kind": "coat_stand_bare",
+            "pos": {
+              "x": 186,
               "y": 82
             }
           }
@@ -2439,6 +2687,48 @@
           }
         },
         {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["TAKE YOUR JACKET. IT'S COLD OUT."]
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 173,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 320
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "hung_stand"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "bare_stand"
+        },
+        {
+          "actor": "ada",
+          "kind": "pose",
+          "sprite": "ada_jacket"
+        },
+        {
+          "kind": "wait",
+          "ms": 260
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["ALREADY GOT IT."]
+        },
+        {
           "actor": "ada",
           "kind": "move",
           "speed": 42,
@@ -2493,7 +2783,10 @@
         },
         {
           "kind": "caption",
-          "text": ["SHE TOOK HER JACKET.", "THE ONE I FIXED THE ZIPPER ON."]
+          "text": [
+            "SHE TOOK HER JACKET.",
+            "I PUT A TRACKING BEACON IN THE LINING WHEN I FIXED THAT ZIPPER. SHE LOSES THINGS."
+          ]
         },
         {
           "kind": "fade",
@@ -2783,7 +3076,24 @@
           {
             "kind": "houseplant",
             "pos": {
-              "x": 178,
+              "x": 168,
+              "y": 82
+            }
+          },
+          {
+            "id": "hung_stand",
+            "kind": "coat_stand",
+            "pos": {
+              "x": 186,
+              "y": 82
+            }
+          },
+          {
+            "hidden": true,
+            "id": "bare_stand",
+            "kind": "coat_stand_bare",
+            "pos": {
+              "x": 186,
               "y": 82
             }
           }
