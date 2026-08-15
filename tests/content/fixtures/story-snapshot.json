@@ -1104,13 +1104,6 @@
             "kind": "houseplant",
             "pos": {
               "x": 178,
-              "y": 92
-            }
-          },
-          {
-            "kind": "flowers",
-            "pos": {
-              "x": 142,
               "y": 82
             }
           }
@@ -1531,13 +1524,6 @@
             "kind": "houseplant",
             "pos": {
               "x": 178,
-              "y": 92
-            }
-          },
-          {
-            "kind": "flowers",
-            "pos": {
-              "x": 142,
               "y": 82
             }
           }
@@ -1958,13 +1944,6 @@
             "kind": "houseplant",
             "pos": {
               "x": 178,
-              "y": 92
-            }
-          },
-          {
-            "kind": "flowers",
-            "pos": {
-              "x": 142,
               "y": 82
             }
           }
@@ -2385,13 +2364,6 @@
             "kind": "houseplant",
             "pos": {
               "x": 178,
-              "y": 92
-            }
-          },
-          {
-            "kind": "flowers",
-            "pos": {
-              "x": 142,
               "y": 82
             }
           }
@@ -2812,13 +2784,6 @@
             "kind": "houseplant",
             "pos": {
               "x": 178,
-              "y": 92
-            }
-          },
-          {
-            "kind": "flowers",
-            "pos": {
-              "x": 142,
               "y": 82
             }
           }

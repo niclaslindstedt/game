@@ -108,16 +108,11 @@ stage:
     # THE BOOKCASE, pushed BACK AGAINST THE WALL — a base of 82 stands it on the
     # wall line rather than out in the room with the furniture.
     - { sprite: bookshelf, at: { x: 16, y: 82 } }
-    # THE PLANT beside the front door, where a plant by a door is. Anchored at 92
-    # rather than out on the floor: both walks to that door cross this x at y≈96
-    # (Ada's and, at the end, his), so a step further up the room is what keeps
-    # them passing in FRONT of it instead of through it.
-    - { sprite: houseplant, at: { x: 178, y: 92 } }
-    # HER FLOWERS, at the end of the couch and BACK AGAINST THE WALL (a base of
-    # 82 stands them on the wall line, the same mark the bookcase takes) — out on
-    # the floor, and worse on the coffee table, they sat between the camera and
-    # the two people the scene is about.
-    - { sprite: flowers, at: { x: 142, y: 82 } }
+    # THE PLANT beside the front door, where a plant by a door is — and BACK
+    # AGAINST THE WALL on the bookcase's own line (82), which also puts it well
+    # clear of the two walks to that door: both cross this x at y≈96, so they
+    # pass in FRONT of it rather than through it.
+    - { sprite: houseplant, at: { x: 178, y: 82 } }
 # Both of them on the sofa for movie night, watching the TV off to the left —
 # the hero never gets up, which is the whole joke. Their `at.y` sits a hair below
 # the couch's floor anchor so they paint just in front of the backrest; the
