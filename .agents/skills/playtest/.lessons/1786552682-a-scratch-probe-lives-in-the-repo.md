@@ -2,7 +2,7 @@
 title: A scratch Playwright probe must live IN the repo, and stage its subject with `?scenario=`
 date: 2026-08-12
 scope: pwa/scripts/
-concepts: [playwright, screenshots, staging, scenario, transient-fx]
+concepts: [playwright, screenshots, staging, scenario, transient-fx, menus]
 ---
 
 Two things cost a round trip each when writing a one-off probe beside
@@ -25,6 +25,16 @@ a browser. Write it as `<repo>/probe.tmp.mjs` and delete it after.
 the first tick and parks the run in `dialogue`, which freezes every effect you
 came to look at. The scenario still needs the full `playtest.mjs` menu walk
 (new-game → name → CREATE → difficulty → level) before `window.__game` exists.
+
+**An in-game WINDOW is a click, and `playtest.mjs` never makes it** — its
+screenshots are all HUD. After the menu walk, open the one you came for by its
+aria-label (`open-character` for the character sheet, from
+`game-screen/HeroAvatar.tsx`) and shoot that.
+
+**A staged hero cannot show PROGRESS.** `?scenario={"level":N}` zeroes `xp` and
+re-derives the bar, so anything reading a part-filled meter has to let the bot
+play until `window.__game.players[0].xp` is a useful fraction of `xpToNext`
+(~40 s at `&speed=4` on the moon), then open the window.
 
 Then use the freeze-frame watcher (see the transient-frame lesson):
 `page.waitForFunction(fn, null, { timeout, polling })` — the ARG SHAPE is

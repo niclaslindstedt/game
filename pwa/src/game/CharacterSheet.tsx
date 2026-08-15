@@ -17,7 +17,7 @@
 // row in that model, never markup here.
 
 import { localHero } from "./local-seat.ts";
-import { xpToLevelUp, type Difficulty, type GameState } from "@game/core";
+import { type Difficulty, type GameState } from "@game/core";
 
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { InfoTip } from "@ui/lib/InfoTip.tsx";
@@ -29,6 +29,7 @@ import { synth } from "./audio.ts";
 import { characterStatGroups, type StatReadout } from "./char-stats.ts";
 import { InfoNote } from "./InfoNote.tsx";
 import { heroSoak } from "./game-screen/hero-soak.ts";
+import { heroXpBar } from "./hero-xp-bar.ts";
 import { dollDataUrl } from "./paper-doll.ts";
 import { playerDollLayers } from "./paper-doll-live.ts";
 import { playUiSound } from "./sfx/ui.ts";
@@ -128,8 +129,7 @@ export function CharacterSheet({
 }) {
   const player = localHero(state);
   const groups = characterStatGroups(state);
-  const toNext = xpToLevelUp(player.level, difficulty);
-  const into = Math.max(0, toNext - player.xpToNext);
+  const xpBar = heroXpBar(player);
   const avatar =
     dollDataUrl(
       sprites,
@@ -182,12 +182,14 @@ export function CharacterSheet({
             <div className="char-xp">
               <div
                 className="char-xp-fill"
-                style={{ width: `${Math.min(100, (100 * into) / toNext)}%` }}
+                style={{ width: `${100 * xpBar.frac}%` }}
               />
             </div>
             <PixelText
               font={font}
-              text={`${formatCompact(into)} / ${formatCompact(toNext)} XP`}
+              text={`${formatCompact(xpBar.into)} / ${formatCompact(
+                xpBar.toNext,
+              )} XP`}
               scale={SHEET_SCALE}
               color={LABEL}
             />

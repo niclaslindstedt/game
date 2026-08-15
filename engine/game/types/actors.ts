@@ -247,8 +247,14 @@ export type Player = {
   knockMs: number;
   knockVel: Vec2;
   level: number;
+  /** XP banked INTO the current level — counts up from 0 toward `xpToNext`. */
   xp: number;
-  /** XP still needed to reach the next level. */
+  /**
+   * The WHOLE cost of the level the hero is on (`xpToLevelUp`), i.e. the size
+   * of his bar rather than what is left of it: a ding subtracts this from `xp`
+   * and re-derives it for the new level. The remainder is `xpToNext - xp`, and
+   * at the level cap `xp` is pinned equal to it.
+   */
   xpToNext: number;
   /**
    * FOES THIS HERO FELLED THIS RUN — the frag count the party scoreboard
