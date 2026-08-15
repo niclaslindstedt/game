@@ -64,8 +64,18 @@ stage:
     # level with each other. Left rather than either side of it: the mount is
     # centred on the couch and the couch is the middle of the frame, so anything
     # flanking it competes with the one thing the scene is about.
-    - { sprite: painting_shore, at: { x: 62, y: 60 } }
-    - { sprite: painting_orchard, at: { x: 84, y: 60 } }
+    #
+    # HUNG OFF THE DOOR'S HEAD. A room's pictures line up with something, and the
+    # only horizontal this wall has is the top of the front door (y 50) — so the
+    # frames' own top edge picks it up, which for 14-tall art bottom-anchored is
+    # a mark of 64.
+    #
+    # AND SPACED EVENLY ACROSS THE RUN, bookcase to mount: the case ends at x 27
+    # and the widest thing the mount ever holds starts at 96 (the sawed-off — the
+    # scene is built five times, once per rung, and the spacing has to hold for
+    # all of them), so 69 px of wall carry 2×18 of frame and three 11 px gaps.
+    - { sprite: painting_shore, at: { x: 47, y: 64 } }
+    - { sprite: painting_orchard, at: { x: 76, y: 64 } }
     # The starting weapon, mounted on the back wall until he leaps for it — the
     # one thing the hero owns worth taking, and what he fights with until the
     # run yields better (DifficultyDef.startingWeapon). Its `label:` is also the
@@ -75,11 +85,11 @@ stage:
     # whole scene, rather than parked in the corner by the door.
     #
     # A MAN'S REACH ABOVE THE SOFA, not up by the ceiling. The couch's back tops
-    # out at 76 and the seated pair's heads at 73, so a mount at 66 clears both
-    # and still reads as something taken down rather than climbed for — and the
-    # `jump` beat below is sized to it (`lift: 22`), which is the pair that has
-    # to move together.
-    - { label: arm, sprite: wall_medieval_sword, at: { x: 104, y: 66 } }
+    # out at 76 and the seated pair's heads at 73, so a mount at 70 clears both
+    # by a hair and reads as something taken down rather than climbed for — and
+    # the `jump` beat below is sized to it (`lift: 18`), which is the pair that
+    # has to move together.
+    - { label: arm, sprite: wall_medieval_sword, at: { x: 104, y: 70 } }
     # THE FRONT DOOR, SHUT AND OPEN — one thing in two states, stacked on the
     # same mark and swapped by the `prop` beats below (the open one starts off
     # the stage). What shows through the opening is the lot the game already
@@ -217,7 +227,7 @@ beats:
   # `hold.at` is the paper doll's own grip anchor (HELD_DX/HELD_DY in
   # pwa/src/game/paper-doll.ts) on the 16×16 body, so he carries it out of the
   # room at exactly the angle he carries it through the run.
-  - { kind: jump, actor: hero, lift: 22, ms: 380 }
+  - { kind: jump, actor: hero, lift: 18, ms: 380 }
   - { kind: prop, prop: arm, hidden: true }
   - label: grip
     kind: hold

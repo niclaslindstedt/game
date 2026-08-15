@@ -881,7 +881,7 @@
         {
           "actor": "hero",
           "kind": "jump",
-          "lift": 22,
+          "lift": 18,
           "ms": 380
         },
         {
@@ -1029,15 +1029,15 @@
           {
             "kind": "painting_shore",
             "pos": {
-              "x": 62,
-              "y": 60
+              "x": 47,
+              "y": 64
             }
           },
           {
             "kind": "painting_orchard",
             "pos": {
-              "x": 84,
-              "y": 60
+              "x": 76,
+              "y": 64
             }
           },
           {
@@ -1045,7 +1045,7 @@
             "kind": "wall_medieval_sword",
             "pos": {
               "x": 104,
-              "y": 66
+              "y": 70
             }
           },
           {
@@ -1301,7 +1301,7 @@
         {
           "actor": "hero",
           "kind": "jump",
-          "lift": 22,
+          "lift": 18,
           "ms": 380
         },
         {
@@ -1449,15 +1449,15 @@
           {
             "kind": "painting_shore",
             "pos": {
-              "x": 62,
-              "y": 60
+              "x": 47,
+              "y": 64
             }
           },
           {
             "kind": "painting_orchard",
             "pos": {
-              "x": 84,
-              "y": 60
+              "x": 76,
+              "y": 64
             }
           },
           {
@@ -1465,7 +1465,7 @@
             "kind": "wall_sawed_off_shotgun",
             "pos": {
               "x": 104,
-              "y": 66
+              "y": 70
             }
           },
           {
@@ -1721,7 +1721,7 @@
         {
           "actor": "hero",
           "kind": "jump",
-          "lift": 22,
+          "lift": 18,
           "ms": 380
         },
         {
@@ -1869,15 +1869,15 @@
           {
             "kind": "painting_shore",
             "pos": {
-              "x": 62,
-              "y": 60
+              "x": 47,
+              "y": 64
             }
           },
           {
             "kind": "painting_orchard",
             "pos": {
-              "x": 84,
-              "y": 60
+              "x": 76,
+              "y": 64
             }
           },
           {
@@ -1885,7 +1885,7 @@
             "kind": "wall_combat_knife",
             "pos": {
               "x": 104,
-              "y": 66
+              "y": 70
             }
           },
           {
@@ -2141,7 +2141,7 @@
         {
           "actor": "hero",
           "kind": "jump",
-          "lift": 22,
+          "lift": 18,
           "ms": 380
         },
         {
@@ -2289,15 +2289,15 @@
           {
             "kind": "painting_shore",
             "pos": {
-              "x": 62,
-              "y": 60
+              "x": 47,
+              "y": 64
             }
           },
           {
             "kind": "painting_orchard",
             "pos": {
-              "x": 84,
-              "y": 60
+              "x": 76,
+              "y": 64
             }
           },
           {
@@ -2305,7 +2305,7 @@
             "kind": "wall_stick",
             "pos": {
               "x": 104,
-              "y": 66
+              "y": 70
             }
           },
           {
@@ -2561,7 +2561,7 @@
         {
           "actor": "hero",
           "kind": "jump",
-          "lift": 22,
+          "lift": 18,
           "ms": 380
         },
         {
@@ -2709,15 +2709,15 @@
           {
             "kind": "painting_shore",
             "pos": {
-              "x": 62,
-              "y": 60
+              "x": 47,
+              "y": 64
             }
           },
           {
             "kind": "painting_orchard",
             "pos": {
-              "x": 84,
-              "y": 60
+              "x": 76,
+              "y": 64
             }
           },
           {
@@ -2725,7 +2725,7 @@
             "kind": "wall_brass_knuckles",
             "pos": {
               "x": 104,
-              "y": 66
+              "y": 70
             }
           },
           {
