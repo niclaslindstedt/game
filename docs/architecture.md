@@ -945,7 +945,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   somebody riding it in the weather) is not shunted at all: it goes DOWN, and
   past `snapForce` it stops being a vehicle and becomes two large halves of its
   own picture — with a second line past that (`obliterateForce`) where the
-  halves are joined by a cloud of the machine's own steel. The delivery trade
+  halves are joined by a cloud of the machine's own steel. GOING DOWN AND LOSING
+  THE RIDER ARE ONE EVENT, because nothing holds a rider on and nothing holds
+  the machine up: the blow that takes one off has taken the other over, and it
+  is THROWN rather than dropped — the collision's own Δv punts it up the road,
+  turns it over and lifts it off the tarmac, each scaled by how hard it was hit.
+  What is under the seat may then find the sparks it is making
+  (`igniteDowned`), which is a fact about the machine rather than about the
+  blow: a scooter carries five litres and a pushbike carries nothing
+  (`DriveVehicleDef.burns`). The delivery trade
   rides the PAVEMENT and weaves across the kerb, which is the one change that
   alters the shape of the minigame rather than its furniture — the gutter used
   to be the safe line.

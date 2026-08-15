@@ -51,7 +51,12 @@ import {
   unparkCar,
 } from "./traffic.ts";
 import { vehicleDef } from "./fleet.ts";
-import { smashEnd, turnedRound, wreckTotally } from "./wreckage.ts";
+import {
+  igniteDowned,
+  smashEnd,
+  turnedRound,
+  wreckTotally,
+} from "./wreckage.ts";
 import {
   ejectOccupants,
   ejectRider,
@@ -279,7 +284,16 @@ export function collide(drive: DriveState, heroSafe = false): void {
       // version of this that is a shove — so the machine goes down and starts
       // shedding itself, and the person on it leaves by an entirely different
       // door.
+      const hadRider = other.rider;
       drive.remains.push(...ejectRider(drive, other, hit));
+      // …AND THE TWO ARE ONE EVENT. Nothing holds a rider on and nothing holds
+      // the machine up, so the blow that took one off has taken the other over —
+      // there is no contact in life that removes the person and leaves the moped
+      // riding. The two thresholds sit a long way apart (`eject.riderScale` is a
+      // hundredth of a wreck, `downWear` an eighth), so without this the whole
+      // band between them is a delivery moped carrying on down the carriageway
+      // upright, at cruise, with nobody on it.
+      const threw = hadRider && !other.rider;
       if (force >= DRIVE.traffic.snapForce) {
         // …AND PAST A LINE IT STOPS BEING A VEHICLE AT ALL. The spine goes, the
         // two ends go their own ways, and the machine leaves `traffic`
@@ -305,14 +319,16 @@ export function collide(drive: DriveState, heroSafe = false): void {
           ),
         );
         snapped.add(other.id);
-      } else if (!other.downed && force >= DRIVE.traffic.downWear) {
-        knockDown(other, hit.dv.y, hit.liftZ, car.pos.y);
+      } else if (!other.downed && (threw || force >= DRIVE.traffic.downWear)) {
+        knockDown(other, hit, car.pos.y);
         drive.remains.push(...tearMachine(drive, other, hit, force));
         drive.events.push({
           type: "machineDown",
           pos: { x: hit.contact.x, y: hit.contact.y },
           joules: hit.joules,
         });
+        // …AND WHAT IT IS CARRYING MAY FIND THE SPARKS IT IS MAKING.
+        igniteDowned(drive, other, hit.contact, force);
       }
     } else {
       // ANYTHING WITH A ROOF — and the SAME function the kerb's parked cars go

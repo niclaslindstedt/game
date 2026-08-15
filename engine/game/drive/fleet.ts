@@ -183,6 +183,25 @@ export type DriveVehicleDef = {
    */
   lights: boolean;
   /**
+   * IS THERE ANYTHING ABOARD THAT CAN CATCH FIRE — a tank, or a pack.
+   *
+   * Almost everything on this road has one, which is why it is worth writing
+   * down for the two that do not: a BICYCLE and a SKATEBOARD are steel, rubber
+   * and maple, and the road's own comment already said so
+   * (`wreckTotally`: "a bicycle with a fuel tank would be the one lie on this
+   * road"). It was a comment rather than a rule, and the ignition roll a stove-
+   * in end runs (`smashEnd` → `igniteFrom`) never asked anybody — so a pushbike
+   * folded round a bumper could go up like a saloon. It is a rule now, and the
+   * roll asks this.
+   *
+   * A FACT ABOUT THE VEHICLE rather than about its class, for the reason
+   * `lights` is: the class says how a hit is ANSWERED, and this says what is
+   * bolted to the thing. The `open` machines are exactly where the two
+   * disagree — a delivery moped and a pushbike take the identical collision and
+   * only one of them has five litres of petrol under the seat.
+   */
+  burns: boolean;
+  /**
    * HOW EASILY IT GOES OVER — 1 is an ordinary saloon, above 1 tips sooner,
    * below 1 slides instead.
    *
@@ -230,6 +249,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 1,
   },
   {
@@ -245,6 +265,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 1,
   },
   {
@@ -260,6 +281,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 1.05,
   },
   {
@@ -275,6 +297,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 0.8,
   },
   {
@@ -290,6 +313,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 0.65,
   },
   {
@@ -309,6 +333,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 0.75,
   },
   {
@@ -324,6 +349,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 1.45,
   },
   {
@@ -339,6 +365,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 1.35,
   },
   {
@@ -354,6 +381,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 1.4,
   },
   {
@@ -369,6 +397,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 1,
   },
   {
@@ -384,6 +413,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 0.95,
   },
   {
@@ -399,6 +429,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 0.7,
   },
 
@@ -416,6 +447,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 1,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 1.5,
   },
   {
@@ -431,6 +463,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 2,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 1.6,
   },
   {
@@ -446,6 +479,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 1,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 1.7,
   },
   {
@@ -472,6 +506,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 6,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 1.75,
   },
 
@@ -489,6 +524,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 0,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 0,
   },
   {
@@ -504,6 +540,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 0,
     pavement: false,
     lights: true,
+    burns: true,
     topHeavy: 0,
   },
   {
@@ -519,6 +556,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 0,
     pavement: true,
     lights: true,
+    burns: true,
     topHeavy: 0,
   },
   {
@@ -541,6 +579,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 0,
     pavement: false,
     lights: true,
+    // Steel, rubber and a dynamo. There is nothing on a pushbike to light.
+    burns: false,
     topHeavy: 0,
   },
   {
@@ -564,6 +604,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     // field exists for — before it, a skateboard threw a saloon's headlight
     // beam down the pavement in front of it.
     lights: false,
+    // Nor anything to burn: three kilos of maple and two trucks.
+    burns: false,
     topHeavy: 0,
   },
   {
@@ -583,6 +625,10 @@ export const FLEET: readonly DriveVehicleDef[] = [
     exits: 0,
     pavement: true,
     lights: true,
+    // Five litres under the seat and a hot exhaust beside it — which is why a
+    // moped put down on the tarmac is the one `open` machine the road expects
+    // to see burning (`igniteDowned`).
+    burns: true,
     topHeavy: 0,
   },
 ] as const;

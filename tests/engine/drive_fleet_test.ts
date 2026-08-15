@@ -605,6 +605,141 @@ describe("people leaving vehicles", () => {
     );
   });
 
+  it("never leaves a machine riding on with its rider gone", () => {
+    // THE ONE STATE THIS ROAD MAY NOT PRODUCE, and the one it used to. Nothing
+    // holds a rider on and nothing holds the machine up, so the blow that takes
+    // one off has taken the other over — there is no contact in life that
+    // removes the person and leaves the moped travelling upright at cruise.
+    //
+    // It was two thresholds a long way apart: the rider leaves at
+    // `eject.joules * eject.riderScale` (a hundredth of a wreck) and the machine
+    // went down at `traffic.downWear` (an eighth), and every blow that landed in
+    // the gap produced exactly that picture. Swept rather than sampled, because
+    // the gap was a BAND and one share either side of it passes on its own.
+    for (const share of [0.08, 0.1, 0.12, 0.15, 0.2, 0.24]) {
+      const state = drive();
+      hold(state, 5000);
+      const moped = plant(state, indexOf("traffic_delivery_moped"), share);
+      hold(state, 100);
+      if (!state.traffic.includes(moped)) continue; // snapped: no machine left
+      expect(
+        moped.rider || moped.downed,
+        `share ${share}: riderless and still upright`,
+      ).toBe(true);
+    }
+  });
+
+  it("throws a knocked-down machine up the road, turning and off the ground", () => {
+    // DEPENDING ON SPEED, which is the whole claim and was the whole gap: the
+    // blow's along-road Δv was solved and then discarded, so a moped met square
+    // from behind — the commonest collision in the minigame, and the one that
+    // carries almost all of its Δv along the road — lay down on the spot the
+    // bumper found it and was driven over.
+    //
+    // Read as a LADDER rather than against three magic numbers: what the harder
+    // blow has to do is more of all three.
+    const rungs = [0.1, 0.16, 0.24].map((share) => {
+      const state = drive();
+      hold(state, 5000);
+      const moped = plant(state, indexOf("traffic_delivery_moped"), share);
+      let punt = 0;
+      let spin = 0;
+      let air = 0;
+      for (let t = 0; t < 400; t += 16) {
+        hold(state, 16);
+        if (!moped.downed) continue;
+        if (punt === 0) {
+          punt = moped.speed;
+          spin = Math.abs(moped.spin);
+        }
+        air = Math.max(air, moped.z);
+      }
+      return { share, punt, spin, air };
+    });
+    for (const rung of rungs) {
+      // It leaves along the road it was hit down, it is turning, and it is off
+      // the tarmac — none of which a machine that was merely dropped does.
+      expect(rung.punt, `punt at ${rung.share}`).toBeGreaterThan(0);
+      expect(rung.spin, `spin at ${rung.share}`).toBeGreaterThan(0);
+      expect(rung.air, `air at ${rung.share}`).toBeGreaterThan(0);
+      expect(rung.spin).toBeLessThanOrEqual(DRIVE.traffic.downMaxSpin);
+    }
+    for (let i = 1; i < rungs.length; i++) {
+      const harder = rungs[i]!;
+      const softer = rungs[i - 1]!;
+      expect(harder.punt, "a harder blow throws it further").toBeGreaterThan(
+        softer.punt,
+      );
+      expect(harder.spin, "…turns it faster").toBeGreaterThan(softer.spin);
+      expect(harder.air, "…and gets it higher").toBeGreaterThan(softer.air);
+    }
+  });
+
+  it("cartwheels a machine that was not moving at all", () => {
+    // THE READING THE OWN-SPEED TERM COULD NOT GIVE. The spin used to be
+    // `wasPx * downSpinPerSpeed` and nothing else, which says the turn is a fact
+    // about how fast the VICTIM was going — so a machine standing still was
+    // knocked flat without rotating a degree, however hard it was hit. The speed
+    // that matters is the CLOSING speed, and the victim's own is only part of it.
+    const state = drive();
+    hold(state, 5000);
+    const moped = plant(state, indexOf("traffic_delivery_moped"), 0.2);
+    expect(moped.speed).toBe(0);
+    hold(state, 100);
+    expect(moped.downed).toBe(true);
+    expect(Math.abs(moped.spin)).toBeGreaterThan(1);
+  });
+
+  it("sets a downed moped alight, and never a pushbike", () => {
+    // A SCOOTER HAS FIVE LITRES UNDER THE SEAT and is grinding its own tank
+    // along the tarmac throwing the sparks to light it with; a pushbike is
+    // steel, rubber and a dynamo. That is `DriveVehicleDef.burns`, and it is the
+    // rule the road's own comment had been asserting in prose while the ignition
+    // roll asked nobody (`igniteFrom`).
+    //
+    // OVER A RANGE OF IDS, because the roll is hashed off the machine's own id
+    // rather than drawn from the road's seeded stream — so one id proves the
+    // wiring and a spread proves the odds.
+    //
+    // A SHARE EACH, and it is load-bearing rather than tidy: the ignition door
+    // is only reached by a machine that GOES DOWN, and these two go down at
+    // completely different speeds because `wreckForce` divides by their own
+    // mass. At the moped's share a fourteen-kilo bicycle is already in two
+    // pieces and off the traffic list, so asking whether it caught fire would be
+    // asking about something that no longer exists — an assertion that passes
+    // for the wrong reason. Each is met at a speed that leaves it lying there.
+    const lit = (
+      vehicle: string,
+      share: number,
+      id: number,
+    ): { downed: boolean; fire: boolean } => {
+      const state = drive();
+      hold(state, 5000);
+      const machine = plant(state, indexOf(vehicle), share);
+      machine.id = id;
+      hold(state, 200);
+      return {
+        downed: state.traffic.includes(machine) && machine.downed,
+        fire: machine.fire > 0,
+      };
+    };
+    const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13];
+    const mopeds = ids.map((id) => lit("traffic_delivery_moped", 0.14, id));
+    expect(mopeds.every((one) => one.downed)).toBe(true);
+    // The promised share is `downFireChance`, and the sample is small enough
+    // that what is worth pinning is that BOTH outcomes happen: a road where
+    // every moped burns is a texture, and one where none does is the bug.
+    const burning = mopeds.filter((one) => one.fire).length;
+    expect(burning).toBeGreaterThan(0);
+    expect(burning).toBeLessThan(ids.length);
+    // …and nothing on a bicycle can catch, at any id — each of them lying in the
+    // road having been through the same door, which is what makes this a
+    // statement about `burns` rather than about the bike having been deleted.
+    const bikes = ids.map((id) => lit("traffic_bicycle", 0.08, id));
+    expect(bikes.every((one) => one.downed)).toBe(true);
+    expect(bikes.filter((one) => one.fire)).toEqual([]);
+  });
+
   it("cuts a thrown rider out of the RIDER art, not the crowd's", () => {
     // THE GIB ENGINE HAS TO WORK ON THESE TOO, and the whole of making it work
     // is that a thrown body carries `kind: "rider"` — everything downstream is

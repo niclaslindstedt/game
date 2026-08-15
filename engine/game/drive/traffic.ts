@@ -1053,33 +1053,69 @@ export function unparkCar(
  * has two wheels and weighs less than the person who was on it.
  *
  * It is a different verb on purpose. A shunted car is still a car doing its
- * best; a bike that has been touched by a car is scrap sliding down the tarmac,
- * and drawing that as "a shove that settles" was the one part of the old
- * collision that read as the road pretending nothing had happened.
+ * best; a bike that has been touched by a car is scrap sliding down the tarmac.
+ *
+ * IT IS THROWN RATHER THAN DROPPED, and every term of the throw is the blow's
+ * own Δv — the same momentum sum a shunted car takes up the road (`shunt`,
+ * `hit.dv.x`) and a rolled one takes across it (`tipVehicle`, `hit.dv.y`).
+ * Spending only the lateral half would leave the commonest collision in the
+ * minigame — a moped met square from behind, which carries almost all of its Δv
+ * ALONG the road — with no shove, no lift, and its own speed cut in half: a
+ * machine lying down on the spot the bumper found it, to be driven over.
+ *
+ * SO THE CARTWHEEL READS OFF THE BLOW, not only off what the machine was
+ * doing. The victim's own speed is one term of two, and it has to be: on its own
+ * it says a PARKED moped hit at a hundred and twenty does not turn at all, when
+ * the speed anybody means by "it spins depending on speed" is the CLOSING speed.
+ *
+ * Nothing below spends a draw of the road's rng, for the reason nothing in the
+ * drive's presentation does — every term is the collision's own answer.
  */
 export function knockDown(
   other: DriveTraffic,
-  lateralPx: number,
-  liftZ: number,
+  hit: Impact,
   awayFrom: number,
 ): void {
+  const { traffic: cfg } = DRIVE;
   const side = other.pos.y >= awayFrom ? 1 : -1;
   other.downed = true;
-  other.slew = side * Math.abs(lateralPx) * 0.6;
-  other.vz = liftZ * 0.5;
-  other.z = Math.max(other.z, 1);
-  // The spin is read off the speed it HAD, and then that speed is paid for
-  // going down — the same trade a rolling car makes (`tipVehicle`), and read in
-  // this order so a machine dropped hard still cartwheels hard.
-  const wasPx = Math.abs(other.speed);
-  other.speed *= DRIVE.traffic.downSpeedKeep;
-  // How hard it cartwheels is how fast it was going — derived, never drawn for:
-  // the road's stream lays the crowd down, and a cosmetic draw spent here would
-  // move every body after it (the same rule the gore obeys).
-  other.spin = side * wasPx * DRIVE.traffic.downSpinPerSpeed;
-  other.hitCooldownMs = DRIVE.shuntImmuneMs;
+  // ACROSS THE ROAD: the blow's lateral Δv, always away from whatever hit it —
+  // a machine sliding back UNDER the bumper is the one outcome nobody reads as
+  // having been sent there, which is the rule `shunt` states.
+  other.slew = side * Math.abs(hit.dv.y) * cfg.downSlewKeep;
   // …and it slides clear under its own steam rather than being placed clear —
   // see `separationPx`. A machine going down in front of the bumper is the one
   // case where the eye is definitely watching.
   other.slew += side * DRIVE.separationPx * 0.5;
+  other.slew = Math.max(
+    -DRIVE.shuntMaxPx,
+    Math.min(DRIVE.shuntMaxPx, other.slew),
+  );
+  // HOW HARD THE BLOW WAS, in real m/s of the Δv this machine took — the same
+  // currency `tipVehicle` puts a car over in, so the two answers to "a vehicle
+  // has left its wheels" are read off one scale rather than two. WHOLE Δv, not
+  // the lateral half: a car goes over sideways, and a bike is scooped off its
+  // wheels by whatever direction the bumper came from.
+  const blowMs = Math.hypot(hit.dv.x, hit.dv.y) * DRIVE_UNITS.mPerPx;
+  // UP: whatever the contact kicked, and never less than the blow itself is
+  // worth. A bumper meeting a bike square has almost no vertical component in
+  // its geometry and still puts the thing in the air, because what lifts it is
+  // being scooped off its own wheels rather than struck upward.
+  other.vz = Math.min(
+    cfg.downMaxLiftPx,
+    Math.max(hit.liftZ * 0.5, blowMs * cfg.downLiftPerMs),
+  );
+  other.z = Math.max(other.z, 1);
+  // ALONG THE ROAD. The spin is read off the speed it HAD before that speed is
+  // paid for going over — the same trade a rolling car makes (`tipVehicle`),
+  // and read in this order so a machine dropped hard still cartwheels hard.
+  const wasPx = Math.abs(other.speed);
+  other.speed = other.speed * cfg.downSpeedKeep + hit.dv.x * cfg.downPunt;
+  other.spin =
+    side *
+    Math.min(
+      cfg.downMaxSpin,
+      wasPx * cfg.downSpinPerSpeed + blowMs * cfg.downSpinPerMs,
+    );
+  other.hitCooldownMs = DRIVE.shuntImmuneMs;
 }

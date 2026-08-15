@@ -246,6 +246,10 @@ export function collisionCombustion(id: number): CollisionCombustion {
 
 function igniteFrom(drive: DriveState, other: DriveTraffic, hit: Impact): void {
   if (other.fire > 0 || other.blown) return;
+  // NOTHING BURNS THAT HAS NOTHING TO BURN. A stove-in end runs this lottery on
+  // whatever it is attached to, and the fleet has a pushbike and a skateboard in
+  // it — so the def is asked (`DriveVehicleDef.burns`) rather than assumed.
+  if (!vehicleDef(other.variant).burns) return;
   const outcome = collisionCombustion(other.id);
   if (outcome === "explosion") {
     explodeVehicle(drive, other);
@@ -340,6 +344,40 @@ export function catchFire(
     pos: { x: at.x, y: at.y },
     joules: 0,
   });
+}
+
+/**
+ * …AND LIGHT ONE THAT IS LYING DOWN — a machine on its side, leaking, grinding
+ * its own tank along the tarmac and throwing the sparks to light it with.
+ *
+ * IT IS A SEPARATE DOOR FROM `igniteFrom` BECAUSE IT IS A DIFFERENT EVENT, and
+ * the difference is worth the function. A stove-in end is a fold: the roll it
+ * runs may take a car's tank out entirely, which is right for a car and absurd
+ * for a scooter — five litres of petrol under a seat does not remove a street.
+ * So a downed machine BURNS and never blows, and how big the fire starts is the
+ * force that put it down rather than a second lottery.
+ *
+ * ROLLED RATHER THAN CERTAIN, because a moped alight every single time is a
+ * texture rather than an event — and rolled off the machine's own id on a salt
+ * of its own, so it costs the road's seeded stream nothing and a replayed seed
+ * lights the same one.
+ */
+export function igniteDowned(
+  drive: DriveState,
+  other: DriveTraffic,
+  at: { x: number; y: number },
+  force: number,
+): void {
+  const { wreckage } = DRIVE;
+  if (other.fire > 0 || other.blown) return;
+  if (!vehicleDef(other.variant).burns) return;
+  if (hash(other.id, 61) >= wreckage.downFireChance) return;
+  catchFire(
+    drive,
+    other,
+    at,
+    force >= wreckage.downFireForce ? "large" : "small",
+  );
 }
 
 /**

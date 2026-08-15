@@ -313,6 +313,20 @@ function plantCar(
   seats?: number,
   /** Stable id for an exhibit whose subject is a deterministic per-car roll. */
   forcedId?: number,
+  /**
+   * STAGE A FOOTWAY RIDER IN THE CARRIAGEWAY — the delivery trade only, and it
+   * is where one genuinely is at the moment it is hit.
+   *
+   * A moped lives on the paving and DRIFTS off it (`DRIVE.pavementRiders`:
+   * `cutInPx` past the kerb, wherever the tarmac reaches the paving), which is
+   * the whole of how the hero ever meets one. Staging it out on its own line and
+   * waiting for the weave would make the exhibit a test of the weave's phase —
+   * it would show a different frame every time the shelf was opened, and most of
+   * those frames are a moped riding past unharmed. So the rider is placed where
+   * the drift puts it and told it is on the road, which is the state the
+   * collision it is about actually happens in.
+   */
+  onRoad = false,
 ): void {
   const dir = drive.params.direction;
   const id = forcedId ?? 10;
@@ -326,6 +340,7 @@ function plantCar(
     (towardHero ? -dir : dir) * pace,
   );
   if (seats !== undefined) one.occupants = seats;
+  if (onRoad) one.footway = false;
   drive.traffic.push(one);
 }
 
@@ -918,6 +933,65 @@ export function driveExhibits(): DriveExhibit[] {
           drive.car.pos.y - 9,
           0,
           FLEET.findIndex((def) => def.id === "traffic_suv"),
+        );
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-moped",
+      icon: "traffic_delivery_moped",
+      label: "THE DELIVERY GOES DOWN",
+      blurb: "THE RIDER LEAVES, THE BIKE CARTWHEELS UP THE ROAD AND CATCHES",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "moped",
+        "scooter",
+        "rider",
+        "two-wheeler",
+        "crash",
+        "tumble",
+        "fire",
+      ],
+      // Long, because this one is a SEQUENCE rather than an instant: the rider
+      // goes, the machine is thrown, it turns over in the air, and it lands and
+      // slides with what was under the seat alight.
+      showMs: 2400,
+      shows: "machineDown",
+      // A THIRD OF A THROTTLE, and it is the exhibit's whole subject rather
+      // than a convenience. The `open` ladder is knocked over, snapped in half,
+      // obliterated — and every rung is the same energy over the machine's own
+      // mass, so a moped met at the top of the dial is a cloud of itself and
+      // there is no machine left to watch. This is the bottom rung, which is
+      // the one with something lying in the road at the end of it.
+      input: throttle(THIRD),
+      road: (drive) => {
+        silence(drive);
+        const speed = openAt(drive, THIRD);
+        // ON THE HERO'S OWN LINE rather than out at the kerb, and the reason is
+        // the STREET: the paving's edge is where the council's lamp posts stand,
+        // so a wagon put on the kerb line to meet a rider there ploughs a lamp
+        // post first and the shelf shows a burning car and a moped riding away.
+        // A cut-in rider crossing the lane in front of him is the same meeting
+        // with nothing else in the frame.
+        plantCar(
+          drive,
+          leadPx(speed) + 26,
+          drive.car.pos.y,
+          // DAWDLING, because the two speeds subtract. A rider doing its own
+          // cruise while the wagon is on a third of a throttle closes at about
+          // sixty px a second, and the shelf spends a second and a half of a
+          // two-second show watching a moped from behind. Slow it and the blow
+          // lands early enough to leave the whole tumble on screen — and the
+          // closing speed is still inside the rung that puts a machine DOWN
+          // rather than snapping it in half, which is what this exhibit is of.
+          DRIVE.trafficSpeedPx.min * 0.4,
+          FLEET.findIndex((def) => def.id === "traffic_delivery_moped"),
+          false,
+          undefined,
+          undefined,
+          true,
         );
       },
     },

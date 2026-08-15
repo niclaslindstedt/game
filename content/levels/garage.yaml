@@ -54,12 +54,20 @@ biome: goodco
 # `daylight` like any other session parameter.
 sky: earth
 tiles:
-  # Poured cement, not tiles — the bay's own floor (the map's lawn override
-  # hands the outside back to grass).
+  # THE LOT IS A LAWN, and the bay's poured cement is a DISTRICT laid on top of
+  # it (`content/maps/garage.yaml` → the `bay` area's own `ground`).
+  #
+  # It is the other way round from how it reads, and which way round it goes is
+  # load-bearing: a mission's ground is what every tile NO district claims falls
+  # through to, and a carved district's floor is emitted per chamber and grown
+  # out to the 16 px tile grid — so any seam a chamber leaves open shows THIS
+  # ground. The bay's cement here would put a slab of garage floor out on the
+  # grass at every one of them; the lawn here makes them lawn, which is what is
+  # around them.
   ground:
-    common: cement_0
-    rare: cement_1
-    rareEvery: 5
+    common: grass_0
+    rare: grass_1
+    rareEvery: 9
 heroSuited: false
 foes: TROUBLE
 objective:

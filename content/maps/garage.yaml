@@ -59,6 +59,14 @@ areas:
     spawn: false
     label: THE DRIVEWAY
     ground: { common: pavement_0, rare: pavement_1, rareEvery: 4 }
+    # LAID TO THE INCH, like the road it runs onto. A driveway is a BUILT open
+    # surface: it has no wall along it and its edge is still a kerb, poured in
+    # one straight pour from the roll-up door to the tarmac. The default for open
+    # ground is a torn hem, which is right for the grass either side of it and
+    # wrong here — a bitten slab stops one column short of the road, steps the
+    # next up into the lawn, and shows the mission's own ground through the gaps
+    # between them.
+    ragged: false
   - id: lawn
     enclosure: none
     weight: 2
@@ -136,6 +144,8 @@ areas:
     beat: true
     label: THE ROAD
     ground: { common: asphalt_0, rare: asphalt_1, rareEvery: 11 }
+    # Tarmac, so the same as the driveway above: laid to the inch, not torn.
+    ragged: false
   - id: road_line
     enclosure: none
     weight: 1
@@ -146,6 +156,8 @@ areas:
     beat: true
     label: THE ROAD
     ground: { common: road_dash, rare: road_dash, rareEvery: 1 }
+    # A PAINTED line is the last thing on the lot that may be torn.
+    ragged: false
   # THE VERGE — grass on the far side of the road, and the reason it is here is
   # the MAP'S OWN EDGE: the renderer dithers the last ~20 units of every map out
   # to black, and with the tarmac laid flush against the boundary that band ate
@@ -181,22 +193,34 @@ plan:
     # the fence. Standing it there also leaves the whole east half of the lawn
     # walkable between the garage door and the road, which is the stretch the
     # player actually crosses on every errand.
+    #
+    # THE ROW THE BUILDINGS STAND ON IS ON THE 16 px TILE GRID — y 288, and it
+    # is the one row here that has to be. A district's floor is emitted per
+    # chamber and then GROWN OUT to the tile grid, so a boundary landing
+    # mid-tile is claimed by BOTH sides and settled by whichever chamber is
+    # drawn first — the lawn's torn hem 8 px down over the driveway's kerb, or
+    # the driveway's slab 8 px up into the grass, and neither is a thing this
+    # file said. On the grid a bite can only ever snap back to the boundary it
+    # was taken from, so the seam is the seam.
+    #
+    # THE ROWS ABOVE IT ARE DELIBERATELY NOT, which is the other half of it: the
+    # tear IS the look out on the open ground (see `raggedRects`), and a bite
+    # smaller than a tile snapped back is no tear at all. The burnt pad in
+    # particular has to keep a frayed edge — a fire that stopped in a ruled line
+    # reads as a rug — so it keeps its unaligned top and only its bottom, which
+    # runs under the garage's own north wall, is pinned.
     - area: lawn
       rect: { x: 0, y: 140, width: 400, height: 44 }
     - area: pad
-      rect: { x: 0, y: 184, width: 160, height: 96 }
+      rect: { x: 0, y: 184, width: 160, height: 104 }
     - area: lawn
-      rect: { x: 160, y: 184, width: 240, height: 96 }
+      rect: { x: 160, y: 184, width: 240, height: 104 }
     - area: bay
-      rect: { x: 0, y: 280, width: 224, height: 140 }
+      rect: { x: 0, y: 288, width: 224, height: 132 }
     - area: drive
-      rect: { x: 224, y: 280, width: 176, height: 140 }
+      rect: { x: 224, y: 288, width: 176, height: 132 }
     # THE ROAD, kept last in the list: a chamber's id is its position here, so a
-    # room appended at the end leaves every id above it alone. Three rooms, all
-    # TILE-ALIGNED (16 px): an open district's floor is emitted as a ragged patch
-    # and then grown back out to the tile grid, so a strip whose edges already sit
-    # on it comes out crisp and full height, which is what a painted line needs
-    # and what a kerbside wants anyway.
+    # room appended at the end leaves every id above it alone.
     - area: road
       rect: { x: 400, y: 0, width: 32, height: 420 }
     - area: road_line
@@ -291,12 +315,11 @@ objects:
     # THIS DOORWAY RUNS DOWN THE PICTURE, so the carve spends the lift as a
     # symmetric step ALONG the wall rather than as a height (see
     # `MapObject.lamps.lift`) — on this axis the two are the same screen move,
-    # and spent as a height it put one lamp 52 px above the opening and the
-    # other 20 px below its centre, hanging in the hole over the car. Spent
-    # outward, the pair sits at 158 and 262 with the opening's centre at 210:
-    # evenly flanking the roll-up, both on plain brickwork, each pool on the
-    # pavement under its own fitting, which is where a barn light and its light
-    # actually are.
+    # and spent as a height it would put one lamp clear above the opening and
+    # the other inside it, hanging in the hole over the car. Spent outward, the
+    # pair sits at 302 and 406 with the opening's centre at 354: evenly flanking
+    # the roll-up, both on plain brickwork, each pool on the pavement under its
+    # own fitting, which is where a barn light and its light actually are.
     lamps:
       sprite: wall_lamp
       lift: 16
@@ -318,13 +341,13 @@ objects:
     sprite: car_doors_0
     at: spawn
     # …PARKED ON THE DOORWAY'S OWN LINE, which the hero's landing is not: the
-    # roll-up is punched at y 178–242 and he lands at 198, so a wagon left on his
-    # spot pulled out 12 px north of centre and spent the whole drive-out with
-    # its roof inside the north jamb's stones. The car is 48 px long and 26 tall
-    # and the hole is 64 wide — there is room to go through the middle of it, and
-    # nothing but this was stopping it. Authored, like every other offset on this
-    # map, because the carve is PINNED (`carveSeed`): the doorway lands on the
-    # same 64 px every visit forever.
+    # roll-up is punched at y 322–386 and he lands at 342, so a wagon left on his
+    # spot sits 12 px north of centre and spends the whole drive-out with its
+    # roof inside the north jamb's stones. The car is 48 px long and 26 tall and
+    # the hole is 64 wide — there is room to go through the middle of it, and
+    # nothing but this offset puts it there. Authored, like every other offset on
+    # this map, because the carve is PINNED (`carveSeed`): the doorway lands on
+    # the same 64 px every visit forever.
     offset: { x: 0, y: 12 }
   # THE SHIP HE BUILT IN THE BAY — and the joke is the SIZE of it. A man spent
   # ten years of weekends welding a hundred-foot booster together in a suburban
