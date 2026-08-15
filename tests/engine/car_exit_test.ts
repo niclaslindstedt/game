@@ -2,11 +2,15 @@
 // THE VENUE WHOSE WAY OUT IS THE CAR (`LevelDef.exitByCar` — GOODCO's staff
 // lot, and here its synthetic twin `test_car_exit_level`).
 //
-// Four rules, and every one of them is a thing a player would notice going
-// wrong: the boss falling must not raise a LEVEL CLEAR splash, it must still
-// BANK the win (the `victory` event is what the app hangs the whole clear on),
-// the wagon must be shut until then and open afterwards, and boarding it must
-// be the departure rather than the start of a drive around a car park.
+// The venue ends like every other one — objective, loot window, `victory`, the
+// LEVEL CLEAR splash — and what it authors is what MOVING ON then does: the
+// picture cuts to the lot, the hero walks the last paces to his own wagon, gets
+// in, and the road picks him up (`engine/game/boarding.ts`). So the rules under
+// test are the ones a player would notice going wrong: the splash must actually
+// appear, the win must bank on the same tick it always did, the wagon must not
+// be tappable at any other moment, the walk must ALWAYS end with him in the
+// car, and where the night goes must be the level the player chose rather than
+// the far end of the road.
 //
 // Plus the condition the wagon carries between all of that: `readCarDamage` /
 // `applyCarDamage`, which is how one car survives four objects that each hold
@@ -17,6 +21,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   applyCarDamage,
   applyRunCommand,
+  BOARDING,
   CAR,
   CAR_FIX,
   carIsWayOut,
@@ -30,12 +35,7 @@ import {
   type GameState,
 } from "@game/core";
 
-import { createBot } from "@game/core";
-
-import { exitCar, hubTapCommand } from "../../engine/game/bot/hub.ts";
-import { macroTarget } from "../../engine/game/bot/macro.ts";
-import { botTuningFor } from "../../engine/game/bot/state.ts";
-import { clearStage, idle, run, startGame } from "./helpers.ts";
+import { idle, run, startGame } from "./helpers.ts";
 
 // The one line these fixtures speak. Registered HERE rather than in
 // `installFixtures`, because `registerDefs` replaces the whole thought catalog
@@ -67,29 +67,37 @@ function winObjective(state: GameState): void {
   step(state, idle, 16);
 }
 
-/** …and burn the loot-grab window down, which is when the beat lands. */
+/** …and burn the loot-grab window down, which is when the splash lands. */
 function winAndSettle(state: GameState): void {
   winObjective(state);
   run(state, idle, Math.ceil(RUN.victoryDelayMs / 16) + 2);
 }
 
-/** Stand the hero at the wagon, which is what `enterCar` measures. */
-function walkToCar(state: GameState): CarVehicle {
-  const car = carOf(state);
-  state.players[0].pos = { x: car.pos.x, y: car.pos.y };
-  return car;
+/** Every tick the beat can possibly take, plus a margin. */
+const BEAT_TICKS = Math.ceil(BOARDING.giveUpMs / 16) + 4;
+
+/**
+ * Press NEXT LEVEL, bound for `to`, and read his line — which is raised on the
+ * spot and holds the run until it is tapped through, so nothing below moves
+ * until this has.
+ */
+function moveOn(state: GameState, to = "test_level_2"): boolean {
+  const took = applyRunCommand(state, "departByCar", [to], state.players[0]);
+  state.dialogue = null;
+  state.phase = "playing";
+  return took === true;
+}
+
+/** …and let the beat play out, stopping the moment he is in the car. */
+function walkToTheCar(state: GameState): void {
+  for (let i = 0; i < BEAT_TICKS && state.boarding; i++) step(state, idle, 16);
 }
 
 describe("clearing an exitByCar venue", () => {
-  it("never reaches the victory phase — the field is left live", () => {
+  it("raises the LEVEL CLEAR splash like anywhere else", () => {
     const state = startLot();
     winAndSettle(state);
-    // A dialogue box is up (his line), and behind it the run is still PLAYING.
-    // What matters is what it is NOT: `victory`, and `outro` on the way to it.
-    expect(state.phase).not.toBe("victory");
-    expect(state.phase).not.toBe("outro");
-    expect(state.staying).toBe(true);
-    expect(state.victoryCountdownMs).toBeNull();
+    expect(state.phase).toBe("victory");
   });
 
   it("still fires the victory event, which is what banks the clear", () => {
@@ -103,51 +111,49 @@ describe("clearing an exitByCar venue", () => {
     expect(won).toBe(true);
   });
 
-  it("says where to go", () => {
+  it("says where he is going the moment the player commits", () => {
     const state = startLot();
     winAndSettle(state);
+    applyRunCommand(state, "departByCar", ["test_level_2"], state.players[0]);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
       defId: "test_back_to_car",
     });
-  });
-
-  it("refuses to conjure the splash off the boss corpse", () => {
-    const state = startLot();
-    winAndSettle(state);
-    // Whatever `staying` normally licenses, it does not license this: there is
-    // no LEVEL CLEAR menu on this venue to re-open.
-    state.bossCorpse = { pos: { x: 100, y: 100 }, sprite: "test_boss" };
-    state.dialogue = null;
-    state.phase = "playing";
-    expect(reopenVictoryChoice(state)).toBe(false);
-    expect(state.phase).toBe("playing");
-  });
-
-  it("does not re-arm the countdown once the win is banked", () => {
-    const state = startLot();
-    winAndSettle(state);
-    run(state, idle, 60);
-    expect(state.victoryCountdownMs).toBeNull();
-    expect(state.phase).not.toBe("victory");
+    // …and it HOLDS the beat: the words are read over the room he is still
+    // standing in, and the cut waits for the tap.
+    run(state, idle, 30);
+    expect(state.boarding?.ms).toBe(0);
   });
 });
 
 describe("the car as a door", () => {
-  it("is shut for the whole mission and opens when the venue is over", () => {
+  it("is nobody's to tap — not during the mission, not after it", () => {
     const state = startLot();
     expect(carIsWayOut(state)).toBe(false);
     winAndSettle(state);
-    expect(carIsWayOut(state)).toBe(true);
+    expect(carIsWayOut(state)).toBe(false);
   });
 
-  it("cannot be boarded before the objective clears", () => {
+  it("cannot be boarded by hand at any point", () => {
     const state = startLot();
-    walkToCar(state);
+    const car = carOf(state);
+    state.players[0].pos = { x: car.pos.x, y: car.pos.y };
     expect(applyRunCommand(state, "enterCar", [], state.players[0])).toBe(
       false,
     );
-    expect(carOf(state).driver).toBeNull();
+    winAndSettle(state);
+    state.phase = "playing";
+    expect(applyRunCommand(state, "enterCar", [], state.players[0])).toBe(
+      false,
+    );
+    expect(car.driver).toBeNull();
+  });
+
+  it("opens for exactly the length of the walk, so the mark shows the way", () => {
+    const state = startLot();
+    winAndSettle(state);
+    moveOn(state);
+    expect(carIsWayOut(state)).toBe(true);
   });
 
   it("a hub's car is always the way out", () => {
@@ -156,32 +162,115 @@ describe("the car as a door", () => {
   });
 });
 
+describe("moving on walks him to the wagon", () => {
+  it("cuts to the lot and puts him within a short walk of it", () => {
+    const state = startLot();
+    winAndSettle(state);
+    const car = carOf(state);
+    const before = { ...state.players[0].pos };
+    expect(moveOn(state)).toBe(true);
+    // The cut has not happened yet: the picture is still going dark on the
+    // room he is standing in.
+    expect(state.players[0].pos).toEqual(before);
+    run(state, idle, Math.ceil(BOARDING.cutMs / 16) + 2);
+    const d = Math.hypot(
+      state.players[0].pos.x - car.pos.x,
+      state.players[0].pos.y - car.pos.y,
+    );
+    expect(d).toBeLessThanOrEqual(BOARDING.standOffPx + 1);
+    expect(d).toBeGreaterThan(CAR.boardRadius);
+  });
+
+  it("ends with him in the car, every time", () => {
+    const state = startLot();
+    winAndSettle(state);
+    moveOn(state);
+    walkToTheCar(state);
+    expect(state.boarding).toBeNull();
+    expect(carOf(state).driver).toBe(0);
+  });
+
+  it("gets him in even with the walk blocked, rather than stranding the run", () => {
+    const state = startLot();
+    winAndSettle(state);
+    moveOn(state);
+    run(
+      state,
+      idle,
+      Math.ceil((BOARDING.cutMs + BOARDING.holdMs + BOARDING.liftMs) / 16) + 2,
+    );
+    // Something holds him where he stands for the rest of the beat — the case
+    // `giveUpMs` exists for. He still leaves.
+    const stuck = { ...state.players[0].pos };
+    for (let i = 0; i < BEAT_TICKS; i++) {
+      state.players[0].pos.x = stuck.x;
+      state.players[0].pos.y = stuck.y;
+      step(state, idle, 16);
+      if (state.boarding === null) break;
+    }
+    expect(carOf(state).driver).toBe(0);
+  });
+
+  it("refuses on a venue that leaves any other way", () => {
+    const state = startGame(42, "test_hub_level");
+    expect(moveOn(state)).toBe(false);
+    expect(state.boarding).toBeNull();
+  });
+
+  it("refuses while the boss is still standing", () => {
+    // The verb books a trip to a named level, so it is only ever the splash's
+    // button — a run that has not won one cannot press it off the wire either.
+    const state = startLot();
+    expect(moveOn(state)).toBe(false);
+    expect(state.boarding).toBeNull();
+    expect(state.staying).toBe(false);
+  });
+
+  it("does not raise the splash back over its own beat", () => {
+    const state = startLot();
+    winAndSettle(state);
+    state.bossCorpse = { pos: { x: 100, y: 100 }, sprite: "test_boss" };
+    moveOn(state);
+    expect(reopenVictoryChoice(state)).toBe(false);
+    expect(state.phase).toBe("playing");
+  });
+});
+
 describe("boarding IS the departure", () => {
   it("books the dim on the seat rather than on a lap of the car park", () => {
     const state = startLot();
     winAndSettle(state);
-    state.dialogue = null;
-    state.phase = "playing";
-    const car = walkToCar(state);
-    expect(applyRunCommand(state, "enterCar", [], state.players[0])).toBe(true);
+    const car = carOf(state);
+    moveOn(state);
+    walkToTheCar(state);
     expect(car.departed).toBe(true);
     expect(state.departure).not.toBeNull();
-    expect(state.departure?.to).toBe("test_level_2");
     // …and it pulls away under the dim rather than standing still through it,
     // gently enough that it can never run anybody over on the way past.
-    expect(car.speed).toBe(CAR.pullAwayPx);
+    // Close to, not equal: the tick that boarded it has already shed a frame
+    // of handbrake-off drag by the time the beat clears.
+    expect(car.speed).toBeCloseTo(CAR.pullAwayPx, 0);
     expect(CAR.pullAwayPx).toBeLessThan(CAR.roadkillSpeed);
+  });
+
+  it("books WHERE THE PLAYER CHOSE, not the far end of the road", () => {
+    // The `car` travel door names the wagon's own road (`test_level_2`); the
+    // campaign's next venue is a different question, and it is the one the
+    // trip is booked to.
+    const state = startLot();
+    winAndSettle(state);
+    moveOn(state, "test_level_3");
+    walkToTheCar(state);
+    expect(state.departure?.to).toBe("test_level_3");
   });
 
   it("hands the trip over when the dim runs out", () => {
     const state = startLot();
     winAndSettle(state);
-    state.dialogue = null;
-    state.phase = "playing";
-    walkToCar(state);
-    applyRunCommand(state, "enterCar", [], state.players[0]);
+    moveOn(state);
     let to: string | null = null;
-    for (let i = 0; i < Math.ceil(DEPARTURE.durationMs / 16) + 2; i++) {
+    const ticks = BEAT_TICKS + Math.ceil(DEPARTURE.durationMs / 16) + 2;
+    for (let i = 0; i < ticks; i++) {
       step(state, idle, 16);
       for (const event of state.events) {
         if (event.type === "carDeparted") to = event.to;
@@ -197,46 +286,6 @@ describe("boarding IS the departure", () => {
     expect(applyRunCommand(state, "enterCar", [], state.players[0])).toBe(true);
     expect(car.departed).toBe(false);
     expect(state.departure).toBeNull();
-  });
-});
-
-describe("the autopilot leaves too", () => {
-  // WITHOUT A RUNG HERE, NOTHING ENDS THE RUN. There is no LEVEL CLEAR button
-  // on this venue, so a botted or headlessly SIMULATED campaign would clear the
-  // floor and then stand on it until the clock ran out — which is what this
-  // asserts against rather than any opinion about how to play.
-  it("makes the wagon the travel plan once the venue is over, and not before", () => {
-    const state = startLot();
-    const bot = createBot("balanced");
-    const tune = botTuningFor(state.level.id);
-    const car = carOf(state);
-    clearStage(state);
-    // Before the boss falls the car is not a destination at all.
-    expect(macroTarget(bot, state, state.players[0], tune)).not.toEqual(
-      car.pos,
-    );
-    winAndSettle(state);
-    state.dialogue = null;
-    state.phase = "playing";
-    expect(exitCar(state)?.pos).toEqual(car.pos);
-    expect(macroTarget(bot, state, state.players[0], tune)).toEqual(car.pos);
-  });
-
-  it("presses the seat once it is standing at it", () => {
-    const state = startLot();
-    const bot = createBot("balanced");
-    clearStage(state);
-    winAndSettle(state);
-    state.dialogue = null;
-    state.phase = "playing";
-    const hero = state.players[0];
-    // Across the map: nothing to press yet, the walk is the macro plan's.
-    expect(hubTapCommand(bot, state, hero, false)).toBeNull();
-    walkToCar(state);
-    expect(hubTapCommand(bot, state, hero, false)).toEqual({
-      name: "enterCar",
-      args: [],
-    });
   });
 });
 

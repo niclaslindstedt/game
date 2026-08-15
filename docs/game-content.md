@@ -135,28 +135,57 @@ doorway cell on the doorway the map already knows is there (`buildNavGrid`).
 ## …and a venue you leave the way you arrived
 
 The lot is also where the hero's **own car** is standing, because he drove here
-(the trip in is the DRIVE minigame). One venue in the campaign therefore has no
-LEVEL CLEAR button at all: `LevelDef.exitByCar`, and GOODCO is the case it exists
-for. The part he came for is no use in the building it came out of and the ship
-it goes into is on his own lawn, so what the story says happens after PAYLOAD-1
-stops moving is that he walks the floor back out through the gate, crosses the
-tarmac to the wagon and drives.
+(the trip in is the DRIVE minigame). One venue in the campaign therefore leaves
+by that car rather than by a crossing: `LevelDef.exitByCar`, and GOODCO is the
+case it exists for. The part he came for is no use in the building it came out of
+and the ship it goes into is on his own lawn, so what the story says happens
+after PAYLOAD-1 stops moving is that he walks the floor back out through the
+gate, crosses the tarmac to the wagon and drives.
 
-What the field changes is the END of the victory countdown and nothing else. The
-objective clears, the loot window runs, and the `victory` event still fires on
-the same tick — which is what banks the clear, unlocks the next venue and books
-the campaign score. What does not happen is the phase change: the run stays
-`playing` with the win banked (which is exactly `GameState.staying`), the level's
-authored line is raised so the player is told where to go, and the car becomes a
-door. A level authoring it owes itself a `car` travel door, because that is where
-the destination comes from.
+**The venue still ends like every other one.** The objective clears, the loot
+window runs, the `victory` event fires — banking the clear, unlocking the next
+venue, booking the campaign score — and the LEVEL CLEAR splash comes up with
+NEXT LEVEL on it. It did not always: the venue used to end with no splash at all,
+the field left live and one authored line telling the player to go and find his
+car, and what that produced in playtests was a cleared factory floor and a player
+who did not know the run was still on. What the field changes is what the button
+DOES.
 
-**The car is a door only while it IS one**, and that is one predicate every
-surface reads: `carIsWayOut` (`engine/game/vehicles.ts`). A hub's car always
-answers yes — home is a place you leave — and an `exitByCar` venue's answers no
-until the venue is over. The gold "you can get in this" mark over the roof, the
-tap that boards it and `enterCar` itself all ask it, so the mark is up exactly
-when the press works.
+**Moving on is a beat rather than a cut** (`engine/game/boarding.ts`). The
+picture goes dark on the boss room, the hero is put down a short walk off his own
+bumper, the picture comes back on the lot, and he walks the last few paces and
+gets in — about two seconds, and the whole of why he is not simply dropped into
+the driver's seat: a cut straight to a car already pulling away is a loading
+screen with a car in it, while a man crossing tarmac to a wagon with his own
+dents in it is the trip home starting. The beat is engine-owned, clock and all,
+so what the player sees and where the simulation has put him cannot come apart —
+and it spends nothing off `state.rng`, like everything else on that lot. His
+authored line (`exitByCar.thought`) is raised the moment he commits, and holds
+the beat until it is tapped through: the words are read over the room he is still
+standing in, and the cut begins when he is done reading them.
+
+**The car is not a door the player presses.** `carIsWayOut`
+(`engine/game/vehicles.ts`) is the one predicate every surface reads: a hub's car
+always answers yes — home is a place you leave — and an `exitByCar` venue's
+answers yes for exactly the length of that walk. So the gold "you can get in
+this" mark over the roof is the beat saying where he is going rather than a
+control, and the venue has one way out: the splash.
+
+**The road and the destination are two questions.** The `car` travel door names
+where the WAGON goes (`carRoad`) — home, the same entry the garage carries at the
+other end of the same tarmac — while NEXT LEVEL means the campaign's next venue.
+On GOODCO those differ: the leg is planned against the road home and the trip is
+booked to the moon, so what plays is the drive, then the launch, then the voyage,
+and home is where the launch is filmed rather than a stop the player is put down
+at. A level authoring `exitByCar` owes itself a `car` travel door for that
+reason.
+
+**And there is a straight cut behind all of it.** Whether the road is played is
+the same four questions any leg asks (`driveIsPlayed`: the MINIGAMES setting, a
+party aboard, nobody's hands on the run, and whether a road exists between the
+two ends at all). With no road to walk out to there is no walk either — NEXT
+LEVEL cuts to the next venue exactly as it does everywhere else, which on GOODCO
+means opening on the launch.
 
 **And boarding presses the opener.** The roll-up has real travel to do
 (`DOORS.rollUpMs`) and a bay is short: tripped only when the wagon set off, the
@@ -185,10 +214,11 @@ the way there, and the leg home starts from it rather than from a replacement.
 The ARCADE cabinet is deliberately outside all of this: it plays the same road
 for a score, so every attempt gets a clean car.
 
-The autopilot has a rung for this too (`bot/hub.ts` `exitCar`), placed BELOW the
-loot and the errands: the ride finishes the job, then walks to the wagon and
-leaves. Without it a botted or headlessly simulated campaign clears GOODCO and
-stands on a swept factory floor until the clock runs out.
+The autopilot needs nothing of its own here, and that is a consequence of the
+splash rather than an omission: a botted or headlessly simulated run reaches
+`victory` on this venue exactly as it does on every other, and moves on from
+there. The road is never played for it either way — a minigame is a thing to
+PLAY, and an unattended run handed the wheel coasts to a stop.
 
 ## Home knows what time it is
 

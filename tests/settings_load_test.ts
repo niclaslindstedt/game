@@ -94,6 +94,42 @@ describe("a saved settings blob", () => {
   });
 });
 
+describe("a fresh install", () => {
+  // THE SHIPPED PRESENTATION IS THE WHOLE GAME, and every one of these rows is
+  // a thing a player would have to go looking for a switch to lose. They are
+  // pinned together rather than one at a time because the failure is always the
+  // same shape: somebody adds a row, defaults it `off` while testing it, and
+  // ships a game whose first-run experience is missing a feature nobody
+  // remembers is optional.
+  it("plays every optional beat", async () => {
+    const settings = await settingsFrom({});
+    expect(settings.minigames).toBe("on");
+    expect(settings.cutscenes).toBe("on");
+    expect(settings.dialogue).toBe("on");
+    expect(settings.deathScenes).toBe("on");
+  });
+
+  it("shows the gore as it is authored", async () => {
+    const settings = await settingsFrom({});
+    expect(settings.sfwMode).toBe("off");
+    for (const key of GORE_SWITCHES) {
+      expect(settings[key], `${key} ships off`).toBe("on");
+    }
+  });
+
+  // The engine holds its own copies of four of these (`engine/game/flags.ts`),
+  // applied at startup from the settings above — so a flag that defaulted the
+  // other way would leave a run muted until the settings screen was opened.
+  it("hands the engine the same answers", async () => {
+    await settingsFrom({});
+    const flags = await import("../engine/game/flags.ts");
+    expect(flags.areMinigamesEnabled()).toBe(true);
+    expect(flags.areCutscenesEnabled()).toBe(true);
+    expect(flags.isDialogueEnabled()).toBe(true);
+    expect(flags.areDeathScenesEnabled()).toBe(true);
+  });
+});
+
 describe("a save from before the GORE page", () => {
   it("arrives with every kind of gore off when EXTRA GORE was off", async () => {
     const settings = await settingsFrom({ extraGore: "off" });

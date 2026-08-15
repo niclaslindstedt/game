@@ -15,6 +15,7 @@ import type {
 
 import {
   abilityDef,
+  BOARDING,
   DEPARTURE,
   PLAYER,
   type Bot,
@@ -394,7 +395,20 @@ export function createRenderFrame(deps: {
         0,
         1,
       );
-      const prog = Math.max(going, coming);
+      // THE CUT TO THE LOT — the same curtain doing a scene change instead of a
+      // handover (`GameState.boarding`, engine/game/boarding.ts). It closes
+      // over the room the boss fell in, HOLDS while the hero is moved under it,
+      // and opens again on the tarmac with his own wagon a short walk off.
+      // Every stretch is the beat's own clock, so what the player sees and
+      // where the simulation has put him can never come apart.
+      const beat = state.boarding;
+      const held = BOARDING.cutMs + BOARDING.holdMs;
+      const cutting = beat
+        ? beat.ms < BOARDING.cutMs
+          ? beat.ms / BOARDING.cutMs
+          : clamp(1 - (beat.ms - held) / BOARDING.liftMs, 0, 1)
+        : 0;
+      const prog = Math.max(going, coming, cutting);
       departureNode.style.opacity = (prog * prog * (3 - 2 * prog)).toFixed(3);
     }
 

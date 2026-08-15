@@ -21,6 +21,7 @@
 import { stepCutscene } from "@game/lib/cutscene.ts";
 
 import { stepAutopilot } from "../autopilot.ts";
+import { stepBoarding } from "../boarding.ts";
 import { stepBossDeath } from "../boss-death.ts";
 import { enterDeathScene, stepDeathScene } from "../death-scene.ts";
 import { downHero, stepCorpseRecovery } from "../downed.ts";
@@ -72,7 +73,6 @@ import {
   stepOpeningStrike,
   stepPlaceThoughts,
   stepSightThoughts,
-  startPlayerThought,
   outroPages,
 } from "../story.ts";
 import type { GameInput, GameState, Player, ViewRect } from "../types/index.ts";
@@ -264,6 +264,12 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   const exemptDamageBefore = state.menaceExemptDamage;
   const exemptKillsBefore = state.menaceExemptKills;
 
+  // THE WALK TO THE WAGON, on a venue you leave by car (`boarding.ts`) — the
+  // beat between the victory splash and the road. Ahead of the party's tick so
+  // the fog lifts wherever the cut has just put him down, and so his feet are
+  // settled before anything reads where he is standing.
+  stepBoarding(state, dtMs);
+
   // ── THE PARTY'S OWN TICK ────────────────────────────────────────────────
   //
   // Every pass in this block is about ONE hero, so it runs once per SEAT with
@@ -312,8 +318,15 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
     // weapon auto-fires at whatever comes close (the character acts
     // autonomously; standing in the horde with the bag open is survivable,
     // not safe), regen runs, and the horde still reaches them.
+    //
+    // …and neither does a hero WALKING TO HIS CAR: the beat owns his feet
+    // (`stepBoarding`, which has already moved him this tick), so a thumb
+    // still on the screen from the button press must not drag him off the
+    // line. Everything else about him ticks exactly as a bag-open hero's does.
     const seatInput =
-      player.screen === undefined ? inputFor(input, seat) : IDLE_INPUT;
+      player.screen === undefined && state.boarding?.seat !== seat
+        ? inputFor(input, seat)
+        : IDLE_INPUT;
     stepPlayer(state, player, seatInput, dt, dtMs);
     // Playing lifts the fog of war as a CIRCLE sweeping the hero's path
     // (Warcraft-style, no re-fogging): a `MAP.revealRadius` disc around him is
@@ -555,26 +568,6 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
       // splash behind it) sit on steady ground.
       state.quakeMs = 0;
       state.events.push({ type: "victory" });
-      // …AND ON A VENUE WHOSE WAY OUT IS THE CAR, THAT EVENT IS THE WHOLE OF
-      // THE ENDING (`LevelDef.exitByCar`). Everything the win owes has just
-      // happened — the clear is banked off this event, the next venue unlocks,
-      // the campaign total accrues — and there is deliberately no phase change
-      // behind it: the field stays live with the objective cleared, which is
-      // precisely `staying` (the same latch the victory menu's STAY sets, so
-      // the countdown cannot re-arm and the boss corpse is left standing). What
-      // the player gets instead of a splash is a LINE telling him where to go,
-      // and a car that has just become a door (`carIsWayOut`).
-      //
-      // AHEAD OF THE FAREWELL AND THE EPILOGUE, because both of those are
-      // black-screen scenes that hand over to the splash this venue does not
-      // have — a level cannot sensibly author an outro AND leave by the car.
-      const exit = runLevelDef(state).exitByCar;
-      if (exit) {
-        state.staying = true;
-        state.victoryCountdownMs = null;
-        if (exit.thought) startPlayerThought(state, exit.thought);
-        return;
-      }
       // A level that ships an outro reads its epilogue before the splash:
       // the `outro` phase mirrors the intro's black-screen pages
       // (advanceOutro turns them; past the last page comes `victory`). A

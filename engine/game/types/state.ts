@@ -342,6 +342,43 @@ export type DepartureState = {
 };
 
 /**
+ * THE WALK TO THE WAGON — the beat a venue you leave BY CAR plays between the
+ * player choosing to move on and the road picking the car up
+ * (`LevelDef.exitByCar`; `departByCar` / `stepBoarding`, engine/game/vehicles.ts).
+ * Null every other tick of the run.
+ *
+ * IT IS A CUT, NOT A WALK ACROSS THE LEVEL. The wagon is parked where the hero
+ * arrived and the boss falls wherever the carve put him, so "now go and find
+ * your car" is a minute of backtracking across a floor with nothing left on it
+ * — which is exactly what playtesters read as "the game has stopped and I do
+ * not know what it wants". So the picture goes dark on the boss room, the hero
+ * is put down a short walk off his own wagon, the picture comes back, and he
+ * walks the last few paces and gets in.
+ *
+ * Engine-owned for `DepartureState`'s reason, one beat earlier: the simulation
+ * is what knows where the car is standing and when the man reaches it, so the
+ * whole thing stays deterministic, replicable and headless-testable, and the
+ * app only paints what the clock says.
+ */
+export type BoardingState = {
+  /** The seat walking to the wagon — whoever pressed the button. */
+  seat: number;
+  /**
+   * WHERE THE NIGHT GOES once the wagon has pulled away, which is NOT where
+   * the road ends. The car drives one road (home); the level the player chose
+   * off the victory splash is the campaign's business, and it travels here so
+   * `leaveByCar` can book it onto the departure the beat hands over to.
+   */
+  to: string;
+  /** The beat's own clock (ms), advanced each playing tick. The app paints the
+   * cut against it — down over `BOARDING.cutMs`, up again over `liftMs`. */
+  ms: number;
+  /** Latched once the hero has been put down beside the wagon, so the move
+   * happens on exactly one tick however long the black hangs. */
+  staged: boolean;
+};
+
+/**
  * The running BOSS DEATH RITE while `phase === "bossDeath"` — the scripted
  * send-off a boss gets instead of toppling over (see `boss-death.ts`). Null in
  * every other phase. The mirror of `DeathSceneState` above, and shaped the same
@@ -1087,6 +1124,12 @@ export type GameState = {
    * `vehicles.ts`). Null every other tick.
    */
   departure: DepartureState | null;
+  /**
+   * THE WALK TO THE WAGON on a venue you leave by car — the cut to the lot and
+   * the last few paces to the driver's door (see `BoardingState`). Null every
+   * other tick.
+   */
+  boarding: BoardingState | null;
   /**
    * The running BOSS DEATH RITE while `phase === "bossDeath"` — the scripted
    * send-off played over the boss the moment it falls, before its last words

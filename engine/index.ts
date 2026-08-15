@@ -584,6 +584,7 @@ export {
   nudgeCar,
   carSkidding,
   carIsWayOut,
+  carRoad,
   enterCar,
   exitCar,
   readCarDamage,
@@ -598,6 +599,11 @@ export {
   landingClearOfVehicles,
   type CarDamage,
 } from "./game/vehicles.ts";
+// THE WALK TO THE WAGON — the beat between the victory splash and the road, on
+// a venue you leave by car (`LevelDef.exitByCar`). The app paints the cut off
+// `BOARDING`'s own clock; the beat itself is booked through `departByCar`, the
+// run command.
+export { BOARDING } from "./game/boarding.ts";
 // THE LIVING SCENERY on the ground plane. `FAUNA.ySweep` is the one number the
 // renderer's wander and the placement's fence share — see fauna.ts.
 export {

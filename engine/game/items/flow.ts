@@ -342,13 +342,13 @@ export function reopenVictoryChoice(state: GameState): boolean {
   if (!state.staying || state.phase !== "playing" || !state.bossCorpse) {
     return false;
   }
-  // …EXCEPT WHERE THERE IS NO MENU TO RE-OPEN. On a venue whose way out is the
-  // car (`LevelDef.exitByCar`) `staying` is not a choice the player made — it
-  // is the objective having cleared with the field left live on purpose
-  // (step/index.ts) — so a tap on the boss corpse would conjure the LEVEL CLEAR
-  // splash that venue exists to not have. He leaves in the car or he does not
-  // leave.
-  if (runLevelDef(state).exitByCar) return false;
+  // …BUT NOT OUT FROM UNDER A DEPARTURE ALREADY UNDER WAY. On a venue you leave
+  // by car, choosing to move on drops the run back onto its own field to walk
+  // to the wagon (`boarding.ts`), which is `staying` and `playing` and a boss
+  // corpse — the exact three this reads. Without the guard a tap on the corpse
+  // during the walk would raise the splash over a beat that is going to hand
+  // the run to the road anyway.
+  if (state.boarding) return false;
   state.phase = "victory";
   return true;
 }

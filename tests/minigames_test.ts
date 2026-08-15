@@ -23,6 +23,7 @@ import {
 } from "../pwa/src/game/minigames.ts";
 import {
   arcadeDriveParams,
+  driveIsPlayed,
   driveParamsFor,
 } from "../pwa/src/game/drive-screen/begin.ts";
 import { setMinigamesEnabled } from "../engine/menu.ts";
@@ -116,5 +117,47 @@ describe("a cabinet's own road", () => {
 
   it("carries the rung the shelf was set to", () => {
     expect(arcadeDriveParams(1, "jesus").difficulty).toBe("jesus");
+  });
+});
+
+describe("whether a leg is played at all", () => {
+  // The four gates, read WITHOUT building a leg — which is what a venue you
+  // leave by car asks before it stages a walk out to the wagon
+  // (`LevelDef.exitByCar`). The two answers must never disagree, so both are
+  // asserted against the same four cases.
+  const cases: [string, boolean, boolean, boolean][] = [
+    ["the trip to work", true, false, true],
+    ["…and the trip home", true, false, true],
+    ["a party aboard", false, false, false],
+    ["nobody's hands on the run", true, true, false],
+  ];
+  for (const [name, solo, autoplayed, played] of cases) {
+    it(name, () => {
+      const [from, to] =
+        name === "…and the trip home"
+          ? ["goodco_hq", "garage"]
+          : ["garage", "goodco_hq"];
+      expect(driveIsPlayed(from!, to!, solo, autoplayed)).toBe(played);
+      expect(
+        driveParamsFor(to!, from!, solo, autoplayed, 7, "medium") !== null,
+      ).toBe(played);
+    });
+  }
+
+  it("says no with the MINIGAMES setting off", () => {
+    try {
+      setMinigamesEnabled(false);
+      expect(driveIsPlayed("goodco_hq", "garage", true, false)).toBe(false);
+    } finally {
+      setMinigamesEnabled(true);
+    }
+  });
+
+  it("says no where the game has no road", () => {
+    // The campaign's next venue after GOODCO is the MOON, and there is no
+    // tarmac to it — which is why the leg is planned against the wagon's own
+    // road (`carRoad`) and the trip booked separately.
+    expect(driveIsPlayed("goodco_hq", "moon", true, false)).toBe(false);
+    expect(driveIsPlayed("moon", "mars", true, false)).toBe(false);
   });
 });

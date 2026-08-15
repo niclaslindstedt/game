@@ -100,14 +100,15 @@ const BOARD_BOB_MS = 900;
  * the player to board a car he is sitting in. (Tapping a car you are IN still
  * gets you out; that gesture is discovered by having just used it.)
  *
- * AND ZERO FOR A CAR THAT IS NOT A WAY OUT YET (`carIsWayOut`), which is the
- * half GOODCO's staff lot needs. The wagon he parked there is the same object
- * the garage's is, so without the ask it wore the same mark — a gold arrow
- * bobbing over the roof from the first frame of the mission, pointing at the
- * one thing on the map the player must NOT get back into, on a venue whose
- * opening beat is walking away from it and into the building. It is the same
- * mark and the same rule; what changed is that the rule now asks the LEVEL
- * whether the door is open, and on that lot it opens when PAYLOAD-1 goes down.
+ * AND ZERO FOR A CAR THAT IS NOT A WAY OUT (`carIsWayOut`), which is the half
+ * GOODCO's staff lot needs. The wagon he parked there is the same object the
+ * garage's is, so without the ask it wore the same mark — a gold arrow bobbing
+ * over the roof from the first frame of the mission, pointing at the one thing
+ * on the map the player must NOT get back into, on a venue whose opening beat
+ * is walking away from it and into the building. The rule asks the LEVEL, and
+ * on that lot the answer is yes for exactly the length of the walk-out beat
+ * (`engine/game/boarding.ts`) — so there the mark is not an invitation to press
+ * anything: it is the beat saying where the man crossing the tarmac is headed.
  */
 function boardablePrompt(
   state: GameState,

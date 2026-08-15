@@ -188,6 +188,7 @@ export const COMMANDS = [
   "resumeGame",
   "stayOnField",
   "reopenVictoryChoice",
+  "departByCar",
   "respawn",
   "equipFromInventory",
   "swapHand",

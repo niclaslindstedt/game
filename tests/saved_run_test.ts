@@ -256,6 +256,11 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "autopilot",
       "bagFullHintCooldownMs",
       "baits",
+      // THE WALK TO THE WAGON (engine/game/boarding.ts) — `departure`'s rule
+      // one beat earlier: additive, null on every tick but the beat's own, and
+      // every reader tests it for truth, so an older snapshot thawing without
+      // it behaves exactly as one that has it null. No version bump.
+      "boarding",
       "bossCorpse",
       "bossDeath",
       // v28: THE CACHE — where the garage chest stands on this map, and how

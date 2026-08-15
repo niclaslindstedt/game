@@ -27,6 +27,7 @@ import {
   runLevelDef,
   canOpenInventory,
   canPauseGame,
+  carRoad,
   debugDetonateNuke,
   debugLevelUpFx,
   error,
@@ -44,7 +45,7 @@ import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
 import { loadGameAssets, spriteCursor, type GameAssets } from "./assets.ts";
 import { DriveScreen } from "./drive-screen/DriveScreen.tsx";
-import { driveParamsFor } from "./drive-screen/begin.ts";
+import { driveIsPlayed, driveParamsFor } from "./drive-screen/begin.ts";
 import { recordRunStarted } from "./achievements.ts";
 import { AchievementsScreen } from "./achievements-shelf.ts";
 import { AchievementToast } from "./AchievementToast.tsx";
@@ -378,6 +379,18 @@ export function GameScreen({
    * saying "a person" until a run installs the real reading.
    */
   const autoplayedRef = useRef<() => boolean>(() => false);
+  /**
+   * MOVING ON FROM A VENUE YOU LEAVE BY CAR — the victory splash's NEXT LEVEL,
+   * which on such a venue walks the hero out to his wagon instead of crossing
+   * (`LevelDef.exitByCar`; the beat is `engine/game/boarding.ts`). Answers
+   * false whenever there is no road to walk out to, and then the splash makes
+   * the straight cut it always did.
+   *
+   * A ref for `autoplayedRef`'s reason inverted: this is called from the SPLASH,
+   * which renders outside the effect that knows the session's shape and the
+   * level the run is on. Left refusing until a run installs the real reading.
+   */
+  const departByCarRef = useRef<(to: string) => boolean>(() => false);
   /** Set as the drive HOME hands the trip back, consumed by the next run's
    * build (run-setup.ts): he pulls onto his own drive at the wheel. */
   const arriveInCarRef = useRef(false);
@@ -1020,8 +1033,15 @@ export function GameScreen({
         // assembly, so without this the wagon that just pulled out of the bay
         // with a hanging bumper would arrive on the tarmac showroom-fresh.
         const wagon = state.vehicles.find((v) => v.kind === "car");
+        // THE ROAD AND THE DESTINATION ARE TWO QUESTIONS, and on a venue you
+        // leave by car they have come apart. The wagon drives ONE road — the
+        // `car` travel door's own far end, which is home — while `to` is where
+        // the night goes, off the victory splash. So the LEG is planned against
+        // the road and the TRIP is booked to `to`. At the garage the two are
+        // the same level and this reads as it always did.
+        const road = carRoad(state) ?? to;
         const params = driveParamsFor(
-          to,
+          road,
           runLevelId,
           solo,
           autoplayedRef.current(),
@@ -1037,6 +1057,11 @@ export function GameScreen({
         if (!params) return false;
         pendingTravelRef.current = { to, opts: {} };
         driveRef.current = params;
+        // WHETHER HE IS STILL SITTING IN IT WHEN HE GETS THERE. Homeward he
+        // arrives at the wheel — unless the road's far end is not where he is
+        // going, in which case the wagon is parked at home and the next venue
+        // is somewhere he flew to.
+        arriveInCarRef.current = params.direction === -1 && road === to;
         setDrive(params);
         return true;
       },
@@ -1046,6 +1071,25 @@ export function GameScreen({
       setNewRecord,
     });
     progressRef.current = progress;
+    // …AND THE SPLASH'S HALF OF THE SAME SEAM. On a venue you leave by car,
+    // NEXT LEVEL books the walk out to the wagon rather than a crossing — and
+    // only when there is a road on the far side of it to play, which is the
+    // same four questions the leg itself asks (`driveIsPlayed`). With MINIGAMES
+    // off, a party aboard or nobody's hands on the run, this answers false and
+    // the splash makes the straight cut it always did: on GOODCO that lands on
+    // the moon, whose prelude is the launch.
+    departByCarRef.current = (to) => {
+      const road = carRoad(state);
+      if (!runLevelDef(state).exitByCar || road === null) return false;
+      const solo = !(
+        Boolean(driver.session) &&
+        (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1)
+      );
+      if (!driveIsPlayed(runLevelId, road, solo, autoplayedRef.current())) {
+        return false;
+      }
+      return runCommandOk(state, "departByCar", to);
+    };
     // IS THIS RUN THE ONE STORAGE'S `current-run` BELONGS TO? Only the
     // player's own campaign parks itself there: the demo and BOT VIEW fly a
     // synthetic hero, and a joined session's run belongs to its host. Read
@@ -1974,9 +2018,15 @@ export function GameScreen({
             // The crossing that was waiting on the road, made exactly as it
             // would have been a minute ago — the drive changed how long the
             // trip took, not what it was.
-            // Homeward, he arrives sitting in it — the whole point of having
-            // driven. Outbound he gets out at GOODCO like anybody parking.
-            arriveInCarRef.current = drive.direction === -1;
+            //
+            // WHERE HE IS GOING IS THE TRIP'S, NOT THE ROAD'S. `to` here is the
+            // far end of the tarmac the leg was planned against, which on a
+            // venue you leave by car is home rather than the venue the player
+            // chose — so the crossing reads the trip that was booked when the
+            // leg began, and falls back to the road for every leg where the two
+            // are the same place.
+            // Whether he is still sitting in the wagon was settled with the
+            // trip, for the same reason (`beginDrive`).
             // WHAT HE MADE OF THE TRIP DOES NOT CROSS. It was said at the wheel
             // on the run-in, folded into the front of the place's own line
             // ("ROUGH RIDE. THERE'S GOODCO." — `arrivalLine`), so the venue on
@@ -1994,7 +2044,11 @@ export function GameScreen({
             pendingTravelRef.current = null;
             if (state) {
               arrivalFadeRef.current = performance.now() + ARRIVAL_FADE_MS;
-              progressRef.current?.travelTo(state, to, pending?.opts ?? {});
+              progressRef.current?.travelTo(
+                state,
+                pending?.to ?? to,
+                pending?.opts ?? {},
+              );
             }
           }}
         />
@@ -2310,16 +2364,26 @@ export function GameScreen({
           // nobody has to rejoin); a local run takes the app-side road this
           // splash has always taken.
           //
-          // NO ROAD IS EVER PLAYED FROM HERE, and that is a thing this button
-          // used to do. The one drive in the game runs between the garage and
-          // GOODCO, and BOTH its legs are now booked by a car actually being
-          // driven or boarded (`carDeparted` → `beginDrive`): the trip out
-          // leaves the bay, and the trip home leaves the staff lot, because
-          // GOODCO stopped having this splash at all (`LevelDef.exitByCar`). A
-          // fork here for a leg that can no longer reach it was a branch that
-          // read as an option and was dead code.
+          // …EXCEPT ON A VENUE YOU LEAVE BY CAR (`LevelDef.exitByCar`), where
+          // it is a DRIVE rather than a crossing: the picture cuts to the lot,
+          // the hero walks to his own wagon and gets in, and the road takes it
+          // from there (`departByCar` → the beat → `carDeparted` →
+          // `beginDrive`). The fork is HERE, at the press, rather than inside
+          // `travelTo`, for the reason the `carDeparted` one is: the drive is a
+          // thing that happens between two levels, not a way of getting to one.
+          //
+          // AND IT IS ASKED OF THE ROAD, not of the venue. With MINIGAMES off —
+          // or a party aboard, or nobody's hands on the run — there is no road
+          // to walk out to, and the honest answer is the straight cut this
+          // button has always made: on GOODCO that lands on the moon, whose
+          // prelude is the launch. `driveIsPlayed` is the same four questions
+          // the leg itself would ask, so the two can never disagree.
           onAdvance={(next) => {
             if (!state) return;
+            if (departByCarRef.current(next)) {
+              setHud(null);
+              return;
+            }
             progressRef.current?.travelTo(state, next, {
               // The hero went onto the character when the level was WON.
               // …unless the player took STAY afterwards, in which case what
