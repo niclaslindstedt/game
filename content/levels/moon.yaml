@@ -38,6 +38,14 @@ farewell:
 music: regolith_ride
 intro:
   - - ADA'S TRACKER WENT QUIET NEAR THE OLD APOLLO FLAG. THAT'S WHERE I'M HEADED.
+  # HOW A JACKET IS HEARD FROM ANOTHER WORLD, ANSWERED ONCE AND NEVER RAISED
+  # AGAIN. The beacon is a GOODCO part off his own bench, so it talks on GOODCO's
+  # own relays — and a company that ships everywhere has hung relays everywhere,
+  # which is the only reason the trail did not end at the atmosphere. Said flat,
+  # in passing, as one more thing about his old employer: the joke is that the
+  # firm which took her is the infrastructure he is following her on. Nothing
+  # later leans on it, and nothing later may explain it again.
+  - - IT RUNS ON GOODCO'S OWN RELAYS, AND THEY PUT THOSE WHEREVER THEY SHIP - THE ONE FAVOUR THEY'VE EVER DONE ME.
   - - AND SOMETHING IS MOVING OUT THERE IN THE DUST. THIS PLACE IS SUPPOSED TO BE EMPTY.
 gravity: 340
 biome: moon

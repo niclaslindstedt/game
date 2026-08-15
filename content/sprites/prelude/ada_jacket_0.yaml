@@ -1,17 +1,17 @@
-name: ada_0
+name: ada_jacket_0
 family: prelude
 size: [16, 16]
 description: >
-  Ada, the hero's girlfriend, standing off the couch in the tee she was
-  watching the film in - the walking sprite she crosses the room in, before
-  she takes her jacket off the hall tree.
+  Ada in the red jacket she has just lifted off the hall tree, worn open over
+  her tee - what she is wearing from the front door onward, and the last the
+  hero sees of her.
 subject:
   kind: prelude figure
   name: Ada
   build: a slight everywoman
-  attire: a soft teal tee, blue jeans
+  attire: unzipped red jacket over a teal tee, blue jeans
   features: short dark-brown hair over a pale face
-  accent: the teal tee, the one thing she is wearing indoors
+  accent: red jacket, the one whose zipper he fixed and whose lining he put a beacon in
   pose: standing upright, arms at her sides
   flavor: the girlfriend who steps out for five minutes on movie night and never comes back
 palette:
@@ -19,18 +19,19 @@ palette:
   j: "#4054bc" # blue jeans
   k: "#342c26" # dark-brown hair
   p: "#deaa86" # skin
-  t: "#4f9d92" # teal tee
+  r: "#d83a3a" # red jacket
+  t: "#4f9d92" # teal tee, showing through the open front
 grid: |
   ................
   .....OOOOO......
   ....OkkkkkkO....
   ....OpOppOpO....
   ....OkppppkO....
-  ...OttttttttO...
-  ..OttttttttttO..
-  ..OttttttttttO..
-  ..OpOttttttOpO..
-  ...OttttttttO...
+  ...OrrrrrrrrO...
+  ..OrrrrttrrrrO..
+  ..OrrrrttrrrrO..
+  ..OpOrrttrrOpO..
+  ...OrrrttrrrO...
   ...OjjO..OjjO...
   ...OjjO..OjjO...
   ...OOOO..OOOO...

@@ -62,8 +62,13 @@ prints the name.
 
 ## Prelude (cutscene)
 
-Movie night. Ada announces they are out of chips and soda, takes the jacket he
-fixed the zipper on, and steps out for five minutes. Two hours later the man who
+Movie night. Ada announces they are out of chips and soda; he calls after her —
+without getting up — to take her jacket, and she lifts it off the hall tree by
+the front door and steps out for five minutes. Alone in the quiet after the door
+shuts, he mentions the jacket, and then mentions what is sewn into its lining:
+he put a tracking beacon in there the winter he fixed its zipper, because she
+loses things. He does not think this needs explaining, and the game never brings
+it up again as anything but a bearing. Two hours later the man who
 never gets up gets up, leaps for the weapon mounted over the couch — which one
 depends on the difficulty, from grandpa's sawed-off down to a stick — weighs it
 in one line, and says the only thing he will say about the plan: he is taking
@@ -259,7 +264,10 @@ says so** — that omission is the same joke as the road and the house.
 
 Ada's tracker went quiet near the old Apollo flag, and the dead walk the
 regolith — laced through with the SUCCESSOR robots GOODCO shipped up as a
-garrison. The **MISSION SPECIALIST** says the flag was planted on a grave: there
+garrison. The beacon reached him this far because it is a GOODCO part talking on
+GOODCO's own relays, and a company that ships everywhere has hung relays
+everywhere; he says so once, flat, as the only favour they ever did him, and the
+game never raises it again. The **MISSION SPECIALIST** says the flag was planted on a grave: there
 is a wreck under the Sea of Tranquility older than the dust. **THE PROSPECTOR**
 dug GOODCO's secret tunnels at Site T and quit when the crates started
 breathing. The **QUARANTINE MEDIC** had two identical charts for the first man
