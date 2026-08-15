@@ -2524,15 +2524,10 @@ export const DRIVE = {
      * picture to be thinking it. (`entryPx / closePx` at `entrySpeedPx`, plus a
      * beat.)
      *
-     * IT IS ALSO THE START OF A BUDGET, and the budget is the reason the
-     * approach is as long as it is. Both pages of `drive_out_welfare` have to be
-     * read out between this mark and `dashAtPx` — the moment the instruments
-     * slide in and the wheel comes back — because a line still being read while
-     * the dashboard arrives is a line the player chose the dashboard over. The
-     * app sizes each page against its own crawl (`bark.ts`), and
-     * `tests/drive_bark_test.ts` holds the sum of the two against the road this
-     * file lays out, so shortening the approach or lengthening a line fails
-     * there rather than in front of a player.
+     * IT IS ALSO WHERE THE ROAD STARTS WAITING ON HIM. From this mark until the
+     * player turns the last page, the gate is held out of reach
+     * (`holdLeadPx`) — so this is the last distance on the approach that is
+     * fixed, and everything after it is as long as the speech turns out to be.
      */
     sayAtPx: 640,
     /**
@@ -2551,14 +2546,14 @@ export const DRIVE = {
      * wanted to skip and started being too tight for what is actually on it, and
      * eight was still a page short.
      *
-     * IT IS ADDED UP FROM WHAT IS ON IT rather than picked: two seconds for the
-     * wagon to slide into frame (`entryPx / closePx`), then both pages of
-     * `drive_out_welfare` read out end to end (about seven — each page is its own
-     * crawl plus a beat to read it back, `bark.ts`), and then the second the
-     * hand-over owns (`dashAtPx`), which the speech must be off the screen for.
-     * Ten is that sum with a little air in it, and it is the shortest the road
-     * can be without the second line — the sourest thing he says in the game —
-     * being read over the instruments arriving.
+     * IT IS THE FLOOR RATHER THAN THE ANSWER. A leg a player reads slowly is
+     * longer than this and a leg he taps through is shorter: the road is held
+     * open for as long as the hero is talking and the gate is planted a taper in
+     * front of him when he stops (`holdLeadPx`). What this number still owns is
+     * the road a drive that says NOTHING gets — the attract loop, an exhibit, a
+     * bench — and the stretch in front of the first line, which is two seconds
+     * for the wagon to slide into frame (`entryPx / closePx`) and a beat before
+     * he speaks (`sayAtPx`).
      *
      * IT LENGTHENS THE LEG AND NOT THE MINIGAME. `coursePx` carries this on top
      * rather than taking it out of the far end, so the TOWN — the stretch the
@@ -2628,9 +2623,9 @@ export const DRIVE = {
      * different frame from the wheel would be the game telling the player two
      * different things about when the minigame starts.
      *
-     * IT IS ALSO THE SPEECH'S DEADLINE. The hero has to be finished talking by
-     * here — see `sayAtPx` — because this is the frame the screen stops being a
-     * road with a man on it and starts being an instrument panel.
+     * IT IS NOT THE SPEECH'S DEADLINE, because the speech no longer has one:
+     * the town is held away for as long as the hero is talking (`holdLeadPx`),
+     * so this mark arrives after the last line rather than in the middle of it.
      */
     dashAtPx: 300,
     /**
@@ -2647,8 +2642,35 @@ export const DRIVE = {
      * are arriving" — so the words land on a picture that is saying the same
      * thing, and the caption lasts as long as the taper does. Move this and the
      * countdown moves with it, which is the point.
+     *
+     * IT IS ALSO WHERE THE TOWN IS PUT once the hero has finished talking
+     * (`holdDriveOpening`): the gate lands exactly this far in front of whatever
+     * pixel he stopped speaking on, so the taper — and the words over it — start
+     * on the frame the last line clears.
      */
     widenPx: 520,
+    /**
+     * HOW FAR AHEAD THE TOWN IS HELD WHILE HE IS STILL TALKING (world px).
+     *
+     * THE APPROACH IS AS LONG AS THE SPEECH IS, AND THAT IS THE WHOLE POINT.
+     * The hero's opening thought is turned by the PLAYER (a tap a page, like
+     * every other line in the game), so nobody can know in advance how much road
+     * it needs — and a fixed approach makes every added page a re-tune of
+     * `cityPx`, the taper, the hand-over and the two suites holding them
+     * together. So the road grows instead: while a line is up, the gate is
+     * pushed to stay this far in front of the car, and it is planted at
+     * `widenPx` the moment the last page goes.
+     *
+     * THE NUMBER IS THE SPAWNERS' REACH, not a look. Everything the town is made
+     * of is laid down `spawnAheadPx` ahead of the car — 1.6× that for the far
+     * lanes and the footway, which close on the wagon rather than being caught
+     * up with — and a spawner asks the LIVE gate whether the mark it is about to
+     * fill is town or outskirt. Held any closer than that reach, the road would
+     * lay four lanes of the town's traffic onto a two-lane country road the gate
+     * then slides away from. Held further costs nothing, so this is the reach
+     * with a margin on it rather than the reach exactly.
+     */
+    holdLeadPx: 1400,
   },
   /**
    * …AND THE RUN-IN AT THE OTHER END — everything past the finish line.

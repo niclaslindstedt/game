@@ -31,6 +31,8 @@ import {
   driveDashUp,
   driveHandsOff,
   driveReadyUp,
+  holdDriveOpening,
+  IDLE_DRIVE_INPUT,
   roadWideningAt,
   CROWD_THOUGHTS,
   crossingsBetween,
@@ -1072,6 +1074,141 @@ describe("a drive", () => {
     // And the far outskirt's taper is NOT a second countdown — that stretch is
     // the leg playing itself out, and the opening is long over.
     expect(readyAt(cityEndPx(PARAMS) - 1)).toBe(false);
+  });
+
+  // ── THE ROAD WAITING ON HIS OPENING LINE ──────────────────────────────────
+  // The whole point of the seam: the hero's opening thought is turned by the
+  // PLAYER, so the approach is as long as reading it takes and a page added to
+  // it costs a re-tune of nothing.
+  describe("the town held out of reach while he talks", () => {
+    /** Hold the road at the opening's own speed for `ms`, as `stepDrive` does
+     * out there — the pedal reaches nothing on the approach (`handsOff`). */
+    const rollOn = (drive: DriveState, ms: number): void => {
+      for (let t = 0; t < ms; t += 16) stepDrive(drive, 16, IDLE_DRIVE_INPUT);
+    };
+
+    it("leaves the authored road alone for a leg that says nothing", () => {
+      // Every headless caller is this leg — an exhibit, a bench, the attract
+      // loop, a `?bot=` road. None of them has a speech box, none calls in, and
+      // all of them get the road `DRIVE.opening` writes down.
+      const drive = createDrive(PARAMS);
+      rollOn(drive, 20_000);
+      expect(drive.speech).toBe("quiet");
+      expect(cityStartPx(drive.params)).toBe(cityStartPx(PARAMS));
+      expect(courseLength(drive.params)).toBe(courseLength(PARAMS));
+      expect(drive.cityDone).toBe(true);
+    });
+
+    it("pushes the gate along in front of the car for as long as he is talking", () => {
+      const drive = createDrive(PARAMS);
+      holdDriveOpening(drive, true);
+      // A minute of reading — six times the authored approach, and nowhere near
+      // the town.
+      rollOn(drive, 60_000);
+      expect(drive.distance).toBeGreaterThan(cityStartPx(PARAMS));
+      expect(drive.cityDone).toBe(false);
+      expect(driveHandsOff(drive)).toBe(true);
+      // …and the words are NOT up. GET READY is the answer to his last page,
+      // not a caption held over the whole of a wait.
+      expect(driveReadyUp(drive)).toBe(false);
+      // THE TOWN IS FURTHER AWAY THAN ANYTHING IS LAID DOWN. A spawner asks the
+      // live gate whether the mark it is filling is town or outskirt, so a gate
+      // held inside that reach would put four lanes of the town's traffic on a
+      // two-lane country road the gate then slides away from.
+      const ahead = cityStartPx(drive.params) - drive.distance;
+      expect(ahead).toBeGreaterThan(DRIVE.spawnAheadPx * 1.6);
+      expect(drive.traffic.every((car) => car.footway)).toBe(true);
+    });
+
+    it("plants the town a taper ahead the moment the last page goes", () => {
+      const drive = createDrive(PARAMS);
+      holdDriveOpening(drive, true);
+      rollOn(drive, 30_000);
+
+      holdDriveOpening(drive, false);
+      expect(drive.speech).toBe("said");
+      // THE TAPER STARTS ON THAT TAP — the gate is planted exactly a widening
+      // away, which is the far edge of the taper, so the carriageway is opening
+      // out and GET READY is up on the very next tick.
+      expect(cityStartPx(drive.params) - drive.distance).toBe(
+        DRIVE.opening.widenPx,
+      );
+      rollOn(drive, 16);
+      expect(driveReadyUp(drive)).toBe(true);
+      // …and the flag really does drop a taper later.
+      rollOn(drive, 4000);
+      expect(drive.cityDone).toBe(true);
+    });
+
+    it("keeps the town the same length however long the wait was", () => {
+      // THE CLOCK RUNS OVER THE TOWN AND THE BOARD RANKS IT, so a leg read
+      // slowly must not be a shorter or a longer course than one tapped
+      // through: the approach grows, the raced stretch does not. Both outskirts
+      // move together too — the stretch this leg opens over is the one the leg
+      // home finishes on.
+      const drive = createDrive(PARAMS);
+      holdDriveOpening(drive, true);
+      rollOn(drive, 25_000);
+      holdDriveOpening(drive, false);
+
+      // To the pixel, give or take the float dust of a gate walked forward a
+      // frame at a time for twenty-five seconds.
+      expect(cityLength(drive.params)).toBeCloseTo(cityLength(PARAMS), 3);
+      expect(courseLength(drive.params) - cityEndPx(drive.params)).toBeCloseTo(
+        cityStartPx(drive.params),
+        3,
+      );
+    });
+
+    it("only ever answers the first tap and the last", () => {
+      // EDGE-TRIGGERED, and it has to be: a gate planted on every call after the
+      // speech would be a taper walking away from the car for the rest of the
+      // night, and a minigame that never starts.
+      const drive = createDrive(PARAMS);
+      holdDriveOpening(drive, true);
+      rollOn(drive, 12_000);
+      holdDriveOpening(drive, false);
+      const gate = cityStartPx(drive.params);
+
+      holdDriveOpening(drive, false);
+      holdDriveOpening(drive, true);
+      rollOn(drive, 1000);
+      expect(drive.speech).toBe("said");
+      expect(cityStartPx(drive.params)).toBe(gate);
+    });
+
+    it("hands a restart the road the wait built, not the authored one", () => {
+      // The seed is kept so the stretch that killed him is the stretch he gets
+      // to learn — which means the LENGTHS have to be kept too, or the second
+      // attempt is a different town.
+      const drive = createDrive(PARAMS);
+      holdDriveOpening(drive, true);
+      rollOn(drive, 20_000);
+      holdDriveOpening(drive, false);
+      const gate = cityStartPx(drive.params);
+      expect(gate).toBeGreaterThan(cityStartPx(PARAMS));
+
+      const again = restartDrive(drive);
+      expect(cityStartPx(again.params)).toBe(gate);
+      expect(again.distance).toBe(gate - DRIVE.opening.widenPx);
+      // …and it does not wait a second time. He has already had that thought.
+      expect(again.speech).toBe("said");
+    });
+
+    it("does not grow a road under the parameters it was handed", () => {
+      // A drive owns its own copy: the cabinet, the app and an exhibit all build
+      // one from an object they keep, and a leg somebody read slowly must not
+      // lengthen the next one.
+      const params: DriveParams = { ...PARAMS };
+      const drive = createDrive(params);
+      holdDriveOpening(drive, true);
+      rollOn(drive, 20_000);
+      holdDriveOpening(drive, false);
+
+      expect(params.cityPx).toBeUndefined();
+      expect(params.coursePx).toBeUndefined();
+      expect(cityStartPx(drive.params)).toBeGreaterThan(cityStartPx(params));
+    });
   });
 
   it("puts people on the road, and they get hit", () => {

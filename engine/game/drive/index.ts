@@ -53,9 +53,11 @@
 //                   trade and the cyclists on the one pavement there is. The
 //                   camera opens carried ahead of the car (`DriveState.entryPx`)
 //                   so the leg begins on an empty road and the wagon slides into
-//                   it from behind; the wheel is the player's the moment it
-//                   lands, the pedal is capped (`opening.cruisePx`) until the
-//                   town, and he says what he has to say.
+//                   it from behind; the whole stretch is HELD (`handsOff`) and he
+//                   says what he has to say over it. Its length is the SPEECH's
+//                   rather than the road's — the gate is pushed along in front of
+//                   the car until the player turns his last page and is planted a
+//                   taper ahead when he does (`holdDriveOpening`).
 //   THE TOWN        `cityStartPx` → `cityEndPx`. The minigame. Everything
 //                   arrives at once — the houses, the far pavement, the crowd,
 //                   the lane traffic — and the CLOCK starts, which is the
@@ -65,9 +67,9 @@
 //                   the clock stops, the road closes back to two lanes, and what
 //                   is left is a country road the player still drives but is no
 //                   longer scored on. It exists so that THE LEG DRIVEN THE OTHER
-//                   WAY HAS AN OPENING — the wagon sliding into frame, the two
-//                   lines said over an empty road, the town arriving in front of
-//                   the player — because the stretch one leg opens over is the
+//                   WAY HAS AN OPENING — the wagon sliding into frame, his own
+//                   thought read over an empty road, the town arriving in front
+//                   of the player — because the stretch one leg opens over is the
 //                   stretch the other leg finishes on.
 //   THE RUN-IN      past the finish. The wheel comes off the player and the car
 //                   rolls in on its own, past whatever is at this end of the
@@ -324,6 +326,7 @@ export type {
   DriveProp,
   DrivePropKind,
   DriveRemain,
+  DriveSpeech,
   DriveState,
   DriveStrike,
   DriveTraffic,
@@ -372,7 +375,11 @@ export function createDrive(params: DriveParams): DriveState {
   car.driver = 0;
   const trafficMarks = resetTrafficMarks(params);
   return {
-    params,
+    // ITS OWN COPY. The approach grows and shrinks under the hero's opening line
+    // (`holdDriveOpening`), which moves `cityPx` and `coursePx` — and the object
+    // handed in belongs to whoever built it, who may well build a second road
+    // from it (`restartDrive` does exactly that).
+    params: { ...params },
     rng,
     car,
     distance: 0,
@@ -413,6 +420,7 @@ export function createDrive(params: DriveParams): DriveState {
     nextWitnessMs: 0,
     nextPropSlot: firstPropSlot(car.pos.x, params.direction),
     monologueDone: false,
+    speech: "quiet",
     blockadeDone: false,
     entryPx: DRIVE.opening.entryPx,
     clockMs: 0,
@@ -504,10 +512,13 @@ export function driveSteerOnly(drive: DriveState): boolean {
  * IT IS THE WIDENING (`roadWideningAt`), NOT A CLOCK. The road opens out from
  * two lanes to four over the last stretch before the first house
  * (`DRIVE.opening.widenPx`), and that taper is the first thing the player can
- * SEE of the town arriving — so it is the honest frame to say the words on. The
- * caption used to be up for the WHOLE approach, which is ten seconds of a car
- * on an empty road being told to get ready for nothing, over the top of the two
- * lines the hero is trying to say. Now it arrives with the thing it is about.
+ * SEE of the town arriving — so it is the honest frame to say the words on: the
+ * caption lasts exactly as long as the taper does, and arrives with the thing it
+ * is about rather than over ten seconds of empty outskirt.
+ *
+ * AND ON A ROAD THAT SPEAKS, THE TAPER IS WHERE THE LAST LINE LEFT IT. The gate
+ * is planted a `widenPx` in front of the car the moment the player turns the
+ * final page (`holdDriveOpening`), so these words are the answer to that tap.
  *
  * The beats it sits between are both already named here: the widening starts it,
  * `driveSteerOnly` hands back the wheel a second out, and the gate takes the
@@ -519,6 +530,69 @@ export function driveSteerOnly(drive: DriveState): boolean {
  */
 export function driveReadyUp(drive: DriveState): boolean {
   return driveHandsOff(drive) && roadWideningAt(drive.distance, drive.params);
+}
+
+/**
+ * MOVE THE TOWN — the one place the gate is allowed to be somewhere other than
+ * where the parameters put it.
+ *
+ * BOTH LENGTHS MOVE, AND NOT BY THE SAME AMOUNT, because the leg is symmetric:
+ * the town is bracketed by an outskirt of `cityStartPx` at each end
+ * (`cityEndPx` is `courseLength - cityStartPx`), so a gate pushed out by one
+ * delta needs TWO of them on the course or the town itself — the stretch the
+ * clock runs over, the one the board ranks, the one every measured table in
+ * `config.ts` was taken against — shortens by exactly what the approach gained.
+ * With both moved, `cityLength` is untouched and a slow reader's score is still
+ * a score.
+ *
+ * THE THOUGHTS TRAVEL WITH IT. `nextThoughtAt` is the first mark of a stream
+ * that is about people the hero drives PAST, so it is the town's rather than the
+ * road's — left where it was it would fire the crowd's first thought out on an
+ * approach with nobody on it.
+ *
+ * Nothing else needs telling: the spawners, the taper, the blockade, the
+ * district gradient, the sites and the renderer all ask `cityStartPx` /
+ * `cityEndPx` / `courseLength` afresh, so moving the two numbers moves the
+ * whole road at once.
+ */
+function moveTownTo(drive: DriveState, gate: number): void {
+  const delta = gate - cityStartPx(drive.params);
+  if (delta === 0) return;
+  drive.params.cityPx = gate;
+  drive.params.coursePx = courseLength(drive.params) + 2 * delta;
+  drive.nextThoughtAt += delta;
+}
+
+/**
+ * THE ROAD WAITS ON HIM — the app's one call into the opening, and what makes
+ * the approach as long as the speech and no longer.
+ *
+ * `on` goes true as the opening's first page is raised and false as the player
+ * turns the last one away. While it is true the town is held out of reach
+ * (`stepDrive`); the falling edge PLANTS the gate a taper in front of the car,
+ * which is the frame the road starts opening out and GET READY goes up.
+ *
+ * IT IS EDGE-TRIGGERED, and it has to be: planting the gate every tick after the
+ * speech would be a taper that walks away from the car for the rest of the night
+ * and a minigame that never starts. `DriveSpeech` only moves forwards, so the
+ * second call is the one that counts and every one after it is nothing.
+ *
+ * A CALLER THAT NEVER SPEAKS NEVER CALLS. The attract loop, an exhibit and a
+ * bench drive the authored road, which is what `DRIVE.opening.cityPx` still is.
+ */
+export function holdDriveOpening(drive: DriveState, on: boolean): void {
+  if (on) {
+    if (drive.speech === "quiet") drive.speech = "talking";
+    return;
+  }
+  if (drive.speech !== "talking") return;
+  drive.speech = "said";
+  // NOT `Math.max` AGAINST THE AUTHORED GATE, on purpose. A player who taps
+  // through both pages in three seconds has said he is ready, and eight more
+  // seconds of empty outskirt to reach a mark written for somebody reading at
+  // their own pace is the exact wait this whole seam exists to delete.
+  if (!drive.cityDone)
+    moveTownTo(drive, drive.distance + DRIVE.opening.widenPx);
 }
 
 /**
@@ -569,6 +643,11 @@ export function skipDriveOpening(drive: DriveState, beforeGatePx = 0): void {
     : DRIVE.opening.entrySpeedPx;
   drive.entryPx = 0;
   drive.monologueDone = true;
+  // …AND HE HAS ALREADY SAID IT, which is what stops the road waiting on a line
+  // this leg is never going to raise: a restart or a headless caller that landed
+  // here with `speech` left at `quiet` would hold its gate the first time
+  // anything spoke, on a road whose opening is behind it.
+  drive.speech = "said";
   drive.cityDone = arrived;
   drive.nextPropSlot = firstPropSlot(drive.car.pos.x, dir);
 }
@@ -888,6 +967,16 @@ function openingBeats(drive: DriveState, dtMs: number): void {
   if (!drive.monologueDone && drive.distance >= DRIVE.opening.sayAtPx) {
     drive.monologueDone = true;
     drive.events.push({ type: "monologue" });
+  }
+  // …AND THE TOWN KEPT OUT OF REACH WHILE HE IS SAYING IT. The gate walks along
+  // in front of the car for as long as a page of the opening is up, so the road
+  // is exactly as long as the speech is (`DRIVE.opening.holdLeadPx`, and
+  // `holdDriveOpening` for where it is finally planted). It only ever pushes
+  // FORWARD out here: a car that has already driven past the authored gate is
+  // not entitled to have it come back to meet him.
+  if (drive.speech === "talking" && !drive.cityDone) {
+    const lead = drive.distance + DRIVE.opening.holdLeadPx;
+    if (lead > cityStartPx(drive.params)) moveTownTo(drive, lead);
   }
   // THE TOWN, ARRIVING — the one beat on this road that changes what the road
   // IS. Everything that makes the minigame a minigame starts at this mark: the

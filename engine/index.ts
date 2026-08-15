@@ -1023,6 +1023,10 @@ export {
   driveHandsOff,
   driveReadyUp,
   driveSteerOnly,
+  // …AND THE ONE THING THE APP TELLS THE ROAD BACK: that the hero is still
+  // talking, so the town is held out of reach until the player turns his last
+  // page — which is what lets a line be added without re-measuring the approach.
+  holdDriveOpening,
   driveInCity,
   createDriveDriver,
   crossingsBetween,
@@ -1141,6 +1145,7 @@ export type {
   DriveRemain,
   DriveScorecard,
   DriveSiteId,
+  DriveSpeech,
   DriveState,
   DriveStrike,
   DriveTraffic,

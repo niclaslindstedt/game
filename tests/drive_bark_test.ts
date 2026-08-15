@@ -5,19 +5,16 @@
 //
 // The drive opens on a stretch of empty outskirt with one thing on it: the hero
 // saying where he is going, and then what he thinks of the people he is about
-// to drive through. Both pages have to be READ in that window, and the window
-// has two walls that live in two different files — the road is laid out in
-// `DRIVE.opening` (engine) and the pages are timed by `bark.ts` (app), so
-// nothing but a test can hold them against each other. It has already come
-// apart once in each direction: an approach cut to five seconds left the second
-// page landing over the crowd it is only funny said BEFORE, and a barked page
-// sized off a character count sat there long enough to still be up when the
-// instruments arrived.
+// to drive through. THAT one has no wall in front of it — it is turned by the
+// player and the road is held for it (`holdDriveOpening`) — so what is pinned
+// here is that every page is up long enough to have been PRINTED, which is a
+// claim about `bark.ts` alone.
 //
-// THE FAR WALL IS `dashAtPx`, NOT THE GATE. The hand-over is the frame the
-// screen stops being a road with a man on it and becomes an instrument panel;
-// a line still being read across it is a line the player chose the dashboard
-// over, and the town is a whole second behind that.
+// THE RUN-IN'S LINE IS THE ONE UNDER A CLOCK, and it is under a hard one: it is
+// printed over a rolling car between the sight of the place and the black, its
+// halves are a CROSS PRODUCT (every verdict against every destination), and the
+// two ends of the constraint live in different trees — the beat in `engine/`,
+// the page clock in the app — so nothing but a test can hold them together.
 
 import { describe, expect, it } from "vitest";
 
@@ -25,7 +22,13 @@ import { DRIVE, thoughtDef } from "@game/core";
 
 import { arrivalLine, driveVoice } from "../pwa/src/game/drive-screen/voice.ts";
 
-import { barkMs, crawlMs } from "../pwa/src/game/drive-screen/bark.ts";
+import {
+  ageBark,
+  barkMs,
+  crawlMs,
+  openBark,
+  turnBark,
+} from "../pwa/src/game/drive-screen/bark.ts";
 
 /** The pages of a thought as the drive screen builds them — plain string rows;
  * none of the road's lines carries a `{ them: [...] }` block, because he is
@@ -38,43 +41,29 @@ function pagesOf(id: string): string[][] {
   );
 }
 
-/** Drive-clock ms at a world x on the approach — the whole of which is held at
- * `entrySpeedPx`, which is what makes every distance out there a duration. */
-function msAt(px: number): number {
-  return (px / DRIVE.opening.entrySpeedPx) * 1000;
-}
-
 describe("the drive's opening thought", () => {
-  // BOTH LEGS SAY SOMETHING OUT THERE and both are pressed against the same
-  // wall. The road is symmetric — the outskirt the trip out opens over is the
-  // one the trip home finishes on and vice versa — so the deadline below is the
-  // same deadline whichever way the leg runs, and a homeward page that overran
-  // it would be read over the instruments arriving exactly as an outbound one
-  // would.
+  // BOTH LEGS SAY SOMETHING OUT THERE, and neither is measured against the road
+  // any more. The approach is as long as the reading takes: the town is pushed
+  // along in front of the car while a page is up and planted a taper ahead when
+  // the last one is turned away — which is why a THIRD page is a line in
+  // `content/thoughts.yaml` and nothing else.
   it.each(["drive_out_welfare", "drive_home_errand"])(
-    "reads %s out between the car settling and the wheel coming back",
+    "is a thought the road can be held for, however many pages it grows",
     (id) => {
-      const { opening } = DRIVE;
       const pages = pagesOf(id);
-      expect(pages).toHaveLength(2);
-
-      // He starts as the car settles into frame…
-      const startMs = msAt(opening.sayAtPx);
-      // …and the deadline is the hand-over: the instruments slide in and the
-      // wheel becomes his one second before the town (`dashAtPx` back from the
-      // gate).
-      const deadlineMs = msAt(opening.cityPx - opening.dashAtPx);
-
-      const spokenMs = pages.reduce((ms, page) => ms + barkMs(page), 0);
-      expect(startMs + spokenMs).toBeLessThanOrEqual(deadlineMs);
+      expect(pages.length).toBeGreaterThan(0);
+      // Every page is its own beat the player turns, so the one thing that
+      // matters about the set is that each of them is a page with words on it —
+      // an empty one would be a tap that looked like nothing happening.
+      for (const page of pages) expect(page.join("").length).toBeGreaterThan(0);
     },
   );
 
   it("gives every page more time than its own crawl needs", () => {
-    // The wall the pages are pressed against above is only worth having if a
-    // page that fits it is a page that was actually printed: a bark is never
-    // dismissed and never waits, so a hold shorter than the crawl would retire
-    // a line mid-word.
+    // A BARK IS NEVER DISMISSED AND NEVER WAITS — the road drives out from
+    // under it on the clock below — so a hold shorter than the page's own crawl
+    // would retire the line mid-word. (The opening's thought is the exception
+    // and is safe either way: nothing but a thumb turns that one.)
     for (const id of [
       "drive_out_welfare",
       "drive_home_errand",
@@ -97,6 +86,36 @@ describe("the drive's opening thought", () => {
     const beats = ["A LINE. THAT JUST. KEEPS GOING. ON AND ON"];
     expect(plain[0]?.length).toBe(beats[0]?.length);
     expect(crawlMs(beats)).toBeGreaterThan(crawlMs(plain));
+  });
+});
+
+// ── WHICH LINES THE CLOCK OWNS, AND WHICH ONE THE THUMB DOES ────────────────
+// The two kinds of line the road has, held apart by one flag. Worth pinning
+// because the failure modes are opposite and both are silent: a bark that
+// waited would strand an unattended road on a line nobody is there to dismiss,
+// and an opening thought that did not wait would be a held town nothing ever
+// releases — a car driving out of town forever.
+describe("a line the road waits for", () => {
+  const PAGES = [["FIRST."], ["SECOND."]];
+
+  it("is never retired by the clock, however long the road runs", () => {
+    const live = openBark("held", PAGES, 0, true);
+    expect(ageBark(live, 10_000_000)).toBe(live);
+  });
+
+  it("turns page by page on the thumb, and then goes", () => {
+    const first = openBark("held", PAGES, 0, true);
+    const second = turnBark(first, 1000);
+    expect(second?.page).toBe(1);
+    expect(second?.waits).toBe(true);
+    expect(turnBark(second!, 2000)).toBeNull();
+  });
+
+  it("leaves an ordinary bark on its own clock", () => {
+    const live = openBark("bark", PAGES, 0);
+    expect(live.waits).toBe(false);
+    expect(ageBark(live, live.untilMs - 1)).toBe(live);
+    expect(ageBark(live, live.untilMs)?.page).toBe(1);
   });
 });
 

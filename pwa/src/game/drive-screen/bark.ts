@@ -2,23 +2,21 @@
 // THE ROAD'S VOICE, AND ITS CLOCK — how long one of the hero's lines stays on
 // the screen, and how a two-page thought turns itself over.
 //
-// IT IS A BARK, NOT A SCENE, and that is the whole design of the drive's voice.
-// The first cut froze the world for it — the same freeze the run's own dialogue
-// is — and it was wrong for a reason that only shows up at speed: the hero's
-// line about minding how you go is funny BECAUSE he says it while driving, and a
-// box that stops the car to deliver it turns a man talking to himself at the
-// wheel into a cutscene about talking to himself. So it prints over the moving
-// road, holds long enough to read, and gets out of the way on its own. Nothing
-// on this screen ever waits for the player to dismiss a line.
+// A LINE SAID AT SPEED IS A BARK, NOT A SCENE, and that is the design of nearly
+// all of the drive's voice. The hero's remark about minding how you go is funny
+// BECAUSE he says it while driving, and a box that stopped the car to deliver it
+// would turn a man talking to himself at the wheel into a cutscene about talking
+// to himself. So a bark prints over the moving road, holds long enough to read,
+// and gets out of the way on its own — which is also what leaves an unattended
+// road (the attract loop, a playtest) nothing to be stuck on.
 //
-// WHICH MEANS THE CLOCK IN HERE IS THE ONLY THING THAT DECIDES WHETHER A LINE
-// WAS READ, and on this road it is a clock with a deadline on the other end:
-// both pages of the opening thought have to be off the screen by the time the
-// instruments slide in and the wheel comes back (`DRIVE.opening.dashAtPx`).
-// That is why this is its own module rather than two helpers inside the screen
-// component — `tests/drive_bark_test.ts` holds the sum of the pages against the
-// road `DRIVE.opening` lays out, so a longer line or a shorter approach fails
-// there instead of in front of a player.
+// THE OPENING IS THE EXCEPTION, and it is the opposite in every respect
+// (`Speech.waits`). Out on the approach the car is held, nothing is scored and
+// there is nothing else to be doing, so that one is turned by the PLAYER and the
+// ROAD waits for it (`holdDriveOpening`, engine) — the town is kept out of reach
+// until the last page goes. Which is what makes the clock below a floor on how
+// long a line is up rather than a budget it has to fit: a page added to the
+// opening thought lengthens the approach instead of overrunning it.
 
 import { pauseAfter } from "@ui/lib/typewriter.ts";
 
@@ -31,8 +29,23 @@ export type Speech = {
   pages: string[][];
   page: number;
   /** Drive-clock ms this page is retired at — the drive's clock rather than
-   * the wall's, so a paused road holds the line where it was. */
+   * the wall's, so a paused road holds the line where it was. Ignored while
+   * `waits` holds, which is the one line nothing but a thumb turns. */
   untilMs: number;
+  /**
+   * DOES THIS ONE WAIT FOR A THUMB — true for the OPENING thought and nothing
+   * else on the road.
+   *
+   * The opening is the one line said while the car is being held, with no clock
+   * running and nothing the player could be doing instead, and the road waits
+   * for it (`holdDriveOpening`) — so it is read at a person's own pace and a
+   * third page costs a re-tune of nothing. Every other line is a BARK over a
+   * road at speed and retires itself: a box that stopped the car to deliver a
+   * remark about the suspension would turn a man muttering at the wheel into a
+   * cutscene about muttering at the wheel, and would strand an unattended road
+   * on a line nobody is there to dismiss.
+   */
+  waits: boolean;
 };
 
 /**
@@ -64,8 +77,8 @@ export function crawlMs(page: readonly string[]): number {
  *
  * The beat the player actually reads in: the crawl only guarantees the words
  * arrived. Long enough for a phone-sized box of capitals to be taken in without
- * effort, short enough that a two-page thought fits the ten seconds of road it
- * is said over (`DRIVE.opening`) with the last page clear of the hand-over.
+ * effort, short enough that a remark thrown out at 120 mph is behind him by the
+ * time the next thing happens.
  */
 const DWELL_MS = 1600;
 
@@ -81,18 +94,44 @@ export function barkMs(page: readonly string[]): number {
   return Math.max(MIN_MS, crawlMs(page) + DWELL_MS);
 }
 
-/** Raise a thought's first page at `nowMs` on the drive's clock. */
-export function openBark(id: string, pages: string[][], nowMs: number): Speech {
-  return { id, pages, page: 0, untilMs: nowMs + barkMs(pages[0] ?? []) };
+/** Raise a thought's first page at `nowMs` on the drive's clock. `waits` is the
+ * opening's line and only ever that — see `Speech`. */
+export function openBark(
+  id: string,
+  pages: string[][],
+  nowMs: number,
+  waits = false,
+): Speech {
+  return {
+    id,
+    pages,
+    page: 0,
+    untilMs: nowMs + barkMs(pages[0] ?? []),
+    waits,
+  };
 }
 
 /**
  * The bark's own clock: what `live` should be at `nowMs`. `live` itself while
  * this page still has time, the next page once it does not, and null after the
  * last one — which is the box taking itself away.
+ *
+ * A WAITING LINE HAS NO CLOCK. It sits there until the player turns it
+ * (`turnBark`), because the road it is said over is being held for it.
  */
 export function ageBark(live: Speech, nowMs: number): Speech | null {
-  if (nowMs < live.untilMs) return live;
+  if (live.waits || nowMs < live.untilMs) return live;
+  return turnBark(live, nowMs);
+}
+
+/**
+ * TURN THE PAGE — the next one, or null after the last, which is the box going.
+ *
+ * The clock above and the thumb both come through here, so a line that is turned
+ * by a tap and one that turns itself can never disagree about what "the next
+ * page" is or about when the speech is over.
+ */
+export function turnBark(live: Speech, nowMs: number): Speech | null {
   const page = live.page + 1;
   if (page >= live.pages.length) return null;
   return { ...live, page, untilMs: nowMs + barkMs(live.pages[page] ?? []) };
