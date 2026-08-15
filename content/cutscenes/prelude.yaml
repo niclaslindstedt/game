@@ -48,7 +48,10 @@ stage:
     # come out in front of the couch standing on it and of the pair walking
     # across it.
     - { sprite: rug, at: { x: 104, y: 114 }, ground: true }
-    - { sprite: doormat, at: { x: 198, y: 92 }, ground: true }
+    # …and the MAT square under the front door: the door's own x, with its far
+    # edge picking up at the threshold the door stands on (y 80), so it reads as
+    # the thing you wipe your feet on rather than a rug parked near a door.
+    - { sprite: doormat, at: { x: 202, y: 88 }, ground: true }
     # ── ON THE WALL ───────────────────────────────────────────────────────
     # The window hangs at a REAL height: its head under the front door's (the
     # door is 30 tall off a floor mark of 80, so its frame tops out at y 50)
