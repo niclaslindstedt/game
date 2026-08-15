@@ -94,6 +94,14 @@ const CUTSCENE_TEXT_REM = 33;
 const SKY_BACKDROPS: ReadonlySet<string> = new Set(["garageNight"]);
 
 /**
+ * PLANK WIDTH on a `grain: "boards"` floor, in stage px. Fourteen puts sixteen
+ * boards across the 224-wide stage the scenes are authored at — a floor rather
+ * than a fence, and wide enough that the seams still read as seams at the 3×
+ * the stage is drawn at.
+ */
+const BOARD_W = 14;
+
+/**
  * The rocket on this stage — where it is standing, and how long its engine has
  * been lit (0 while it is parked cold).
  *
@@ -197,6 +205,20 @@ function drawStage(
       cameraY: shift.y,
     });
   }
+  // THE CEILING, if the scene has one (`CutsceneBackdrop.ceiling*`). It rides
+  // the camera shift like the floor does and is ruled off with the same trim
+  // line, because it is the same thing at the other end: the edge that says how
+  // big the room is. An exterior authors neither and the wall runs to the top
+  // of the frame exactly as it always did.
+  if (backdrop?.ceiling !== undefined && backdrop.ceilingY !== undefined) {
+    const ceilingY = Math.round(backdrop.ceilingY + shift.y);
+    if (ceilingY > 0) {
+      ctx.fillStyle = backdrop.ceiling;
+      ctx.fillRect(0, 0, width, ceilingY);
+      ctx.fillStyle = paint.trim;
+      ctx.fillRect(0, ceilingY - 2, width, 2);
+    }
+  }
   // WHAT IS BURNING ON THIS STAGE, if anything: the lit rocket's mark and how
   // long it has been lit. Found once, before anything is placed, because the
   // ground and every prop standing on it have to be asked how close they are.
@@ -207,9 +229,25 @@ function drawStage(
     ctx.fillRect(0, Math.max(0, floorY), width, height - Math.max(0, floorY));
     ctx.fillStyle = paint.trim;
     ctx.fillRect(0, floorY, width, 2);
-    // Faint floorboards give the room depth without a tile pass.
-    for (let y = floorY + 14; y < height; y += 14) {
-      if (y >= 0) ctx.fillRect(0, y, width, 1);
+    // THE FLOOR'S OWN HATCHING, and which way it runs is the scene's call
+    // (`CutsceneBackdrop.grain`). BANDS rule across the frame and give an open
+    // ground plane its depth for the price of two fills. BOARDS rule the other
+    // way — a plank is laid away from the eye, so a window's light falls ALONG
+    // the run rather than across it, and horizontal ruling on a wooden floor
+    // reads as a flight of steps. The seams ride the camera's own x so they pan
+    // with the room instead of standing still under it.
+    if (backdrop?.grain === "boards") {
+      // Half-strength: at full trim a seam every 14 px stops being a joint
+      // between two boards and becomes a rail in front of the floor.
+      ctx.globalAlpha = 0.5;
+      for (let x = Math.round(shift.x) % BOARD_W; x < width; x += BOARD_W) {
+        if (x >= 0) ctx.fillRect(x, floorY + 2, 1, height - floorY - 2);
+      }
+      ctx.globalAlpha = 1;
+    } else {
+      for (let y = floorY + 14; y < height; y += 14) {
+        if (y >= 0) ctx.fillRect(0, y, width, 1);
+      }
     }
     // …AND THE GROUND IS BURNT IN TWO PASSES, because two different things
     // burnt it. The SCAR is the tight dead patch a ship that has flown before

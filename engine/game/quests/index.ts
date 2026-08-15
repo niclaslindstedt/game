@@ -106,12 +106,18 @@ export function createQuestGivers(
     if (!def.arrive) {
       return { id: def.id, pos: spot, faceLeft: false, discovered: false };
     }
+    // The walk's corners (`QuestGiverDef.arrive.via`) become the legs ahead of
+    // the authored spot; the first of them is where she is heading right now.
+    const corners = (def.arrive.via ?? []).map((at) => ({ ...at }));
+    const legs = [...corners, spot];
+    const first = legs[0] as Vec2;
     return {
       id: def.id,
       pos: { ...def.arrive.from },
-      faceLeft: spot.x < def.arrive.from.x,
+      faceLeft: first.x < def.arrive.from.x,
       discovered: false,
-      to: spot,
+      to: first,
+      ...(legs.length > 1 ? { path: legs.slice(1) } : {}),
       ...(def.arrive.delayMs ? { waitMs: def.arrive.delayMs } : {}),
       speed: def.arrive.speed ?? QUESTS.arriveSpeed,
     };
@@ -121,13 +127,15 @@ export function createQuestGivers(
 /**
  * Walk the givers who are still arriving one tick (see `QuestGiverDef.arrive`).
  *
- * A STRAIGHT LINE, AND NO COLLISION. This is a scripted entrance across ground
+ * STRAIGHT LEGS, AND NO COLLISION. This is a scripted entrance across ground
  * the level author picked, not a body finding its way: pushing her out of the
  * furniture would have her arrive somewhere the errand was not written for, and
- * routing her round it needs a pathfinder for one walk in the whole game. What
- * the line DOES respect is the door — `stepDoors` opens an approach door for a
- * giver on the move, which is how the garage's roll-up goes up for the woman
- * with her own key.
+ * routing her round it needs a pathfinder for one walk in the whole game. Where
+ * the straight line would cross something, the AUTHOR turns the corner
+ * (`QuestGiverDef.arrive.via`) and the walk becomes two legs of the same kind.
+ * What every leg DOES respect is the door — `stepDoors` opens an approach door
+ * for a giver on the move, which is how the garage's roll-up goes up for the
+ * woman with her own key.
  */
 function stepArrivingGivers(state: GameState, dt: number, dtMs: number): void {
   for (const giver of state.questGivers) {
@@ -145,7 +153,14 @@ function stepArrivingGivers(state: GameState, dt: number, dtMs: number): void {
     const left = distance(giver.pos, to);
     if (left <= step) {
       giver.pos = { ...to };
+      const next = giver.path?.shift();
+      if (next) {
+        giver.to = next;
+        if (giver.path?.length === 0) delete giver.path;
+        continue;
+      }
       delete giver.to;
+      delete giver.path;
       delete giver.speed;
       continue;
     }

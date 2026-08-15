@@ -345,6 +345,11 @@ export function drawFrame(
   // same footing and for the same reason: a canopy he has walked under is
   // between him and the player.
   drawObstacles(ctx, state, sprites, camera, inView, "over");
+  // …and the UPRIGHT decor and the standing lamp fittings on that side of him:
+  // washing pegged out on a line and the yard light's post are things a man
+  // walks behind, not stickers on the floor. What lies flat never gets here.
+  drawDecor(ctx, state, sprites, camera, inView, timeMs, "over");
+  drawLamps(ctx, state, sprites, camera, inView, "over");
   // …and LAST of the world's furniture, the towers: a hull too tall for the
   // depth sort to mean anything (render/vehicles.ts, `HULL_LOOMS_PX`). The
   // garage's booster stands on one point of grass and runs sixty feet up the

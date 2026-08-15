@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: painting_shore
+family: prelude
+size: [18, 14]
+description: >
+  A small framed painting of a low sun over water, its track running back
+  across the swell toward the viewer.
+subject:
+  kind: "wall art prop (framed painting)"
+  build: "a small landscape canvas in a plain wooden frame"
+  features: "a pale sky, a hazy horizon line, a low sun and its track on the water"
+  accent: "warm sun-gold against cool blue water"
+  flavor: "it came with the house, and neither of them ever got round to taking it down"
+palette:
+  O: "#1a1c2c" # outline
+  B: "#92643e" # frame
+  E: "#5d4028" # frame shadow
+  S: "#8fa2b8" # pale sky
+  s: "#6f8299" # horizon haze
+  A: "#3d5a78" # water
+  a: "#2c435c" # water, deep
+  Y: "#ffb02e" # the sun and its track
+grid: |
+  OOOOOOOOOOOOOOOOOO
+  OEEEEEEEEEEEEEEEEO
+  OESSSSSSSSSSSSSSEO
+  OESSSYYYSSSSSSSSEO
+  OESSYYYYYSSSSSSSEO
+  OESSSYYYSSSSSSSSEO
+  OEssssYsssssssssEO
+  OEAAAAYAAAAAAAAAEO
+  OEAAAAYAAaaaaAAAEO
+  OEaaaAYAAAAAAAAAEO
+  OEAAAAYAAAAaaaaAEO
+  OEEEEEEEEEEEEEEEEO
+  OOOOOOOOOOOOOOOOOO
+  ..................

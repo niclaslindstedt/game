@@ -51,8 +51,18 @@ questGivers:
     # door and then walking through it is legible from anywhere on the lot,
     # where somebody already moving on frame one is half inside before a player
     # reading his own inventory looks up.
+    #
+    # SHE GOES IN THROUGH THE DOOR — `via`, one corner, and it is not a nicety.
+    # The walk is straight legs (`stepArrivingGivers`), and the single line from
+    # the doorstep to the engine parts crosses the bay's south wall a few px
+    # below the opening: a woman with her own key let herself in THROUGH THE
+    # BRICKWORK beside it. The corner is a step INSIDE the bay on the doorway's
+    # own line (the roll-up is punched at y 326–374), so she crosses the
+    # threshold square-on under the door she just opened and only then turns for
+    # the corner she waits in.
     arrive:
       from: { x: 296, y: 350 }
+      via: [{ x: 196, y: 350 }]
       delayMs: 1100
     # …AND WHAT THE REST OF THE GAME MAKES OF IT. Three words on the spot, and a
     # flag that travels with the hero to the end of the campaign (see

@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: doormat
+family: prelude
+size: [16, 7]
+description: >
+  A small bristled doormat lying inside the front door.
+subject:
+  kind: "cutscene ground art (doormat)"
+  build: "a small rectangular mat lying flat on the floor just inside the front door"
+  features: "a plain border round a ribbed bristle field"
+  accent: "dull brown against the boards"
+  flavor: "the last thing she stood on"
+palette:
+  O: "#1a1c2c" # outline
+  B: "#92643e" # bristle
+  E: "#5d4028" # ribbing and border
+grid: |
+  OOOOOOOOOOOOOOOO
+  OBBBBBBBBBBBBBBO
+  OBEBEBEBEBEBEBBO
+  OBEBEBEBEBEBEBBO
+  OBEBEBEBEBEBEBBO
+  OBBBBBBBBBBBBBBO
+  OOOOOOOOOOOOOOOO

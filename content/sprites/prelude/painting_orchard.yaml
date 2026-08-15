@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: painting_orchard
+family: prelude
+size: [18, 14]
+description: >
+  A small framed painting of three trees on a green ridge under an open
+  sky — the companion piece to the shoreline beside it.
+subject:
+  kind: "wall art prop (framed painting)"
+  build: "a small landscape canvas in a plain wooden frame"
+  features: "a pale sky over a green field, three round trees standing along the ridge line"
+  accent: "deep green against a pale sky"
+  flavor: "the pair of them have hung either side of that mount for years"
+palette:
+  O: "#1a1c2c" # outline
+  B: "#92643e" # frame
+  E: "#5d4028" # frame shadow and trunks
+  S: "#8fa2b8" # pale sky
+  N: "#4a6b3c" # the field
+  n: "#3a5530" # the ridge line and furrows
+  T: "#2f5a2c" # tree crowns
+grid: |
+  OOOOOOOOOOOOOOOOOO
+  OEEEEEEEEEEEEEEEEO
+  OESSSSSSSSSSSSSSEO
+  OESSTSSSSTSSSTSSEO
+  OESTTTSSTTTSTTTSEO
+  OESTTTSSTTTSTTTSEO
+  OESTTTSSTTTSTTTSEO
+  OESSESSSSESSSESSEO
+  OEnnnnnnnnnnnnnnEO
+  OENNNNNNNNNNNNNNEO
+  OEnnnnnnnnnnnnnnEO
+  OEEEEEEEEEEEEEEEEO
+  OOOOOOOOOOOOOOOOOO
+  ..................

@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rug
+family: prelude
+size: [72, 18]
+description: >
+  A long patterned rug laid across the living-room floor in front of the
+  couch, a run of pale diamonds down a deep red field, fringed at both ends.
+subject:
+  kind: "cutscene ground art (rug)"
+  build: "a long straight-sided rug lying flat on the floor, seen from the same side-on view as the room"
+  features: "a deep red field inside a darker border, a row of pale diamonds down its length, knotted fringe at each end"
+  accent: "warm red against the brown boards"
+  flavor: "the one thing in the room they picked together"
+palette:
+  O: "#1a1c2c" # outline
+  R: "#5e2a2e" # rug border
+  r: "#7d3a3c" # rug field
+  C: "#c9b48a" # pale pattern and fringe
+grid: |
+  ........................................................................
+  ..OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO..
+  ..ORRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRO..
+  CCORrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrROCC
+  ..ORrCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCrRO..
+  CCORrCrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrCrROCC
+  ..ORrCrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrCrRO..
+  CCORrCrrrrCrrrrrrrrCrrrrrrrrCrrrrrrrrCrrrrrrrrCrrrrrrrrCrrrrrrrrCrCrROCC
+  ..ORrCrrrCCCrrrrrrCCCrrrrrrCCCrrrrrrCCCrrrrrrCCCrrrrrrCCCrrrrrrCCCCrRO..
+  CCORrCrrCCCCCrrrrCCCCCrrrrCCCCCrrrrCCCCCrrrrCCCCCrrrrCCCCCrrrrCCCCCrROCC
+  ..ORrCrrrCCCrrrrrrCCCrrrrrrCCCrrrrrrCCCrrrrrrCCCrrrrrrCCCrrrrrrCCCCrRO..
+  CCORrCrrrrCrrrrrrrrCrrrrrrrrCrrrrrrrrCrrrrrrrrCrrrrrrrrCrrrrrrrrCrCrROCC
+  ..ORrCrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrCrRO..
+  CCORrCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCrROCC
+  ..ORrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrRO..
+  ..ORRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRO..
+  ..OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO..
+  ........................................................................

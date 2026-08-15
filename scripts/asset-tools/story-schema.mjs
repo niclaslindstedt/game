@@ -46,6 +46,9 @@ const BEAT_SPECS = {
 /** The colour channels a stage palette paints with. */
 const PALETTE_COLORS = ["wall", "floor", "trim"];
 
+/** Which way the renderer rules the floor — see `CutsceneBackdrop.grain`. */
+const FLOOR_GRAINS = ["bands", "boards"];
+
 /**
  * THE LENGTH BUDGET IS PER PAGE, NOT PER LINE. An authored line is a
  * PARAGRAPH: the overlay flows it into the column the box really has on the
@@ -179,8 +182,40 @@ export function validateCutscene(doc, refs) {
       ) {
         err("stage.palette.floorY must be an integer (world px from the top)");
       }
+      if (
+        stage.palette.grain !== undefined &&
+        !FLOOR_GRAINS.includes(stage.palette.grain)
+      ) {
+        err(`stage.palette.grain must be one of ${FLOOR_GRAINS.join(", ")}`);
+      }
+      // A CEILING IS BOTH FIELDS OR NEITHER — a height with no colour paints
+      // nothing and a colour with no height has nowhere to stop, and either
+      // half alone is a room the author thinks they closed and did not.
+      if (
+        stage.palette.ceiling !== undefined &&
+        !isHex(stage.palette.ceiling)
+      ) {
+        err("stage.palette.ceiling must be a #rrggbb colour");
+      }
+      if (
+        stage.palette.ceilingY !== undefined &&
+        !Number.isInteger(stage.palette.ceilingY)
+      ) {
+        err(
+          "stage.palette.ceilingY must be an integer (world px from the top)",
+        );
+      }
+      if (
+        (stage.palette.ceiling === undefined) !==
+        (stage.palette.ceilingY === undefined)
+      ) {
+        err("stage.palette needs both `ceiling` and `ceilingY`, or neither");
+      }
       for (const key of Object.keys(stage.palette)) {
-        if (!PALETTE_COLORS.includes(key) && key !== "floorY") {
+        if (
+          !PALETTE_COLORS.includes(key) &&
+          !["floorY", "grain", "ceiling", "ceilingY"].includes(key)
+        ) {
           err(`unknown field "stage.palette.${key}"`);
         }
       }

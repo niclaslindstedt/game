@@ -276,6 +276,22 @@ export type QuestGiverDef = {
     /** Where they are on the run's first tick (world px). */
     from: { x: number; y: number };
     /**
+     * THE CORNERS OF THE WALK, in order, between `from` and the authored spot
+     * (world px). Empty or absent walks the straight line.
+     *
+     * It exists because the walk is scripted rather than pathfound (see
+     * `stepArrivingGivers`), and a straight line between two points a level
+     * author picked crosses whatever happens to lie between them. Ada's mother
+     * is the case: her doorstep is on the roll-up's own line and her spot is
+     * over at the engine parts, and the line joining those two clips the bay's
+     * south jamb — so a woman with a key to the place walked in THROUGH THE
+     * WALL beside her own door. One corner INSIDE the bay is the whole fix.
+     *
+     * A leg is walked exactly like the last one, so the doors still open
+     * (`stepDoors`) and the car can still hit her on any of them.
+     */
+    via?: readonly { x: number; y: number }[];
+    /**
      * How long they STAND there before setting off (ms, default 0).
      *
      * The pause is not decoration — it is what makes the beat a thing that can

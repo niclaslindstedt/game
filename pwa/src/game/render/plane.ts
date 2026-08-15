@@ -75,8 +75,13 @@ export function drawnWallRise(name: string): number {
  * same footprint on the same floor, taking the projection whole. Falling through
  * to the upright branch instead would stand a plan view up, which is the exact
  * mistake `plane:` exists to stop.
+ *
+ * Exported because it is also the DEPTH-SORT question. A piece that lies down is
+ * under everything that walks and always was; a piece that STANDS UP takes a
+ * side against the hero like any other body, which is what a laundry line and a
+ * lamp post owe him (render/world.ts's decor pass, render/night.ts's lamps).
  */
-function laidFlat(name: string): boolean {
+export function laidFlat(name: string): boolean {
   return isFloorPlaneSprite(name) || wallPlaneRise(name) > 0;
 }
 

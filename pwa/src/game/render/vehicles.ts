@@ -37,6 +37,7 @@ import {
 import { carriedCarCoat } from "../car-condition.ts";
 import { localHero } from "../local-seat.ts";
 import { spriteByName, type Sprites } from "../assets.ts";
+import { baseProfile } from "./caches.ts";
 import { soaked } from "./hero-coat.ts";
 import { nightSurvival } from "./night.ts";
 import type { CoatLayer } from "./soak-ladder.ts";
@@ -182,8 +183,9 @@ function inLitRoom(state: GameState, pos: { x: number; y: number }): boolean {
 }
 
 /**
- * WHICH SIDE OF THE HERO A MACHINE IS DRAWN ON — the one depth sort the field
- * has, and the only one it needs.
+ * WHICH SIDE OF THE HERO A MACHINE IS DRAWN ON — the field's depth sort, and
+ * the terms the lifted furniture, the upright decor and the lamp fittings all
+ * take their own side on.
  *
  * The world is a painter's stack (floor → furniture → loot → horde → hero, see
  * docs/rendering.md), so everything with a body used to be drawn over the
@@ -210,11 +212,41 @@ function inLitRoom(state: GameState, pos: { x: number; y: number }): boolean {
 export type VehicleLayer = "under" | "over";
 
 function onLayer(
-  pos: { y: number },
+  footY: number,
   heroFeetY: number,
   layer: VehicleLayer,
 ): boolean {
-  return (pos.y > heroFeetY ? "over" : "under") === layer;
+  return (footY > heroFeetY ? "over" : "under") === layer;
+}
+
+/**
+ * WHERE A SHIP'S ART MEETS THE GROUND IN THE HERO'S OWN COLUMN — the y the
+ * depth sort above measures a hull against, and the reason it is not simply
+ * `pos.y`.
+ *
+ * A ship stands on SPLAYED LEGS, and the garage's booster puts its three foot
+ * pads eight px apart down the screen: the front one is the art's bottom row
+ * (which is what the anchor marks) and the two rear ones are half a body length
+ * behind it. Sorted on the anchor alone, that eight-px band is ground the hero
+ * is standing in FRONT of a rear pad on and was painted behind sixty feet of
+ * rocket for, leg across his chest.
+ *
+ * So the hull is asked where its own silhouette ends in the column the hero is
+ * standing in (`baseProfile`, one cached scan per bitmap) and sorted against
+ * that. Standing under the FRONT leg still puts him behind it, which is right;
+ * standing beside it, level with the rear pads, now puts him in front of them,
+ * which is what the picture shows. A column the art never touches falls back to
+ * the anchor — nothing is overlapping there for the sort to get wrong.
+ */
+function shipFootY(ship: ShipVehicle, sprites: Sprites, heroX: number): number {
+  const hull = spriteByName(sprites, ship.sprite);
+  if (!hull) return ship.pos.y;
+  const profile = baseProfile(hull);
+  const col = Math.round(heroX - ship.pos.x + hull.width / 2);
+  const row = profile[col] ?? -1;
+  // `drawWorldSprite`'s "base" anchor seats the sprite's last two rows BELOW
+  // the mark, so the bottom row of art lands on `pos.y + 1`.
+  return row < 0 ? ship.pos.y : ship.pos.y - (hull.height - 2) + row;
 }
 
 /**
@@ -255,14 +287,19 @@ export function drawVehicles(
   timeMs: number,
   layer: VehicleLayer,
 ): void {
-  const heroY = localHero(state).pos.y + PLAYER.footLift;
+  const hero = localHero(state);
+  const heroY = hero.pos.y + PLAYER.footLift;
   // What the night wash will take back off a beam painted here (see
   // `drawLightCones`' `nightBoost`). One call per frame rather than one per
   // machine: every lamp on the lot is under the same sky.
   const boost = 1 / nightSurvival(state);
   for (const vehicle of state.vehicles) {
     if (!inView(vehicle.pos.x, vehicle.pos.y, 64)) continue;
-    if (!onLayer(vehicle.pos, heroY, layer)) continue;
+    const footY =
+      vehicle.kind === "ship"
+        ? shipFootY(vehicle, sprites, hero.pos.x)
+        : vehicle.pos.y;
+    if (!onLayer(footY, heroY, layer)) continue;
     if (vehicle.kind === "car") {
       // …WEARING WHAT THE ROAD PUT ON IT. The film is the app's own carry
       // (`car-condition.ts`) rather than anything on the state, because the
@@ -321,7 +358,7 @@ export function drawVehicles(
   for (const arrival of state.arrivals) {
     const car = arrival.car;
     if (!inView(car.pos.x, car.pos.y, 64)) continue;
-    if (!onLayer(car.pos, heroY, layer)) continue;
+    if (!onLayer(car.pos.y, heroY, layer)) continue;
     const engineOn = arrival.phase === "driving" || arrival.phase === "parking";
     drawCarAssembly(
       ctx,
@@ -386,10 +423,12 @@ export function drawLoomingShips(
   inView: InView,
   timeMs: number,
 ): void {
-  const heroY = localHero(state).pos.y + PLAYER.footLift;
+  const hero = localHero(state);
+  const heroY = hero.pos.y + PLAYER.footLift;
   for (const vehicle of state.vehicles) {
     if (vehicle.kind !== "ship") continue;
-    if (!onLayer(vehicle.pos, heroY, "over")) continue;
+    if (!onLayer(shipFootY(vehicle, sprites, hero.pos.x), heroY, "over"))
+      continue;
     const hull = loomingHull(vehicle, sprites);
     if (!hull) continue;
     if (!inView(vehicle.pos.x, vehicle.pos.y, hull.height)) continue;

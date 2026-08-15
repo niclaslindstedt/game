@@ -28,10 +28,11 @@
 // under the same nearest-neighbour upscale as the pixels it is lighting. A CSS
 // layer would have to be re-laid every frame against a projection it cannot see.
 
-import { heroInPlay, nightAmount, runLevelDef } from "@game/core";
+import { heroInPlay, nightAmount, PLAYER, runLevelDef } from "@game/core";
 import type { GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
+import { localHero } from "../local-seat.ts";
 import { glowSprite } from "./caches.ts";
 import { drawWorldSprite } from "./plane.ts";
 import { type ViewSize } from "./shared.ts";
@@ -194,17 +195,31 @@ type InView = (x: number, y: number, margin: number) => boolean;
  * with a lamp on it at midnight and nothing at noon is a wall that grows
  * hardware at dusk. Only its LIGHT is a night thing.
  *
- * Call inside the tilted world, with the other upright props.
+ * …AND A FITTING THAT STANDS ON THE GROUND TAKES A SIDE AGAINST THE HERO, which
+ * is the same depth sort the lifted furniture and the machines take. A barn
+ * light is bolted to masonry and nobody can walk behind it, but the yard light
+ * on the back lawn is a POST planted in grass the hero walks all the way round
+ * — and painted only ahead of him he stood in front of a post he was demonstrably
+ * behind. Sorted on the fitting's OWN foot (`LevelLight.pos`, not the lifted art
+ * above it), because that is the point the picture stands on.
+ *
+ * Call inside the tilted world, with the other upright props — the "over" half
+ * after the actors.
  */
+export type LampLayer = "under" | "over";
+
 export function drawLamps(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   sprites: Sprites,
   camera: Camera,
   inView: InView,
+  layer: LampLayer = "under",
 ): void {
+  const feet = localHero(state).pos.y + PLAYER.footLift;
   for (const light of runLevelDef(state).lights ?? []) {
     if (!light.sprite) continue;
+    if ((light.pos.y > feet ? "over" : "under") !== layer) continue;
     if (!inView(light.pos.x, light.pos.y, 32)) continue;
     const sprite = spriteByName(sprites, light.sprite);
     if (!sprite) continue;

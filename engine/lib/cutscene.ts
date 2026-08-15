@@ -76,6 +76,33 @@ export type CutsceneBackdrop = {
   trim: string;
   /** Floor line in world-px from the top; omitted = 65% of stage height. */
   floorY?: number;
+  /**
+   * A CEILING, and where it stops (world px from the top of the stage).
+   *
+   * Omitted, the wall runs to the top edge, which is what an exterior wants —
+   * there is nothing above a lot but sky. A ROOM is the other case and the
+   * absence of this was loud: a living room whose wall never ends reads as a
+   * hangar somebody put a sofa in, and no amount of dressing fixes it, because
+   * the thing that says how big a room is is where the top of it is.
+   *
+   * `ceiling` is what the band is painted in and is required with it; the
+   * scene's `trim` rules the line under it, exactly as it rules the floor's.
+   */
+  ceiling?: string;
+  ceilingY?: number;
+  /**
+   * WHAT THE FLOOR IS MADE OF, as far as the renderer's own hatching goes.
+   *
+   * `bands` (the default) is the faint horizontal ruling that gives an open
+   * ground plane its depth — a lawn, a deck, a corridor floor.
+   *
+   * `boards` is a floor of PLANKS, and its seams run the other way: away from
+   * the eye, down the room, because that is how boards are laid and it is what
+   * makes a window's light fall ALONG them. Ruled horizontally, a wooden floor
+   * comes out as a flight of steps — the same trap ground art in a side view
+   * falls into.
+   */
+  grain?: "bands" | "boards";
 };
 
 /** The fixed backdrop and dressing a scene plays out on. */
