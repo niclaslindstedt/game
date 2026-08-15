@@ -296,10 +296,10 @@ function thoughtsOn(level) {
         door: door.name,
       })),
     // …the beat the venue's OWN ENDING raises (`LevelDef.exitByCar`): the
-    // objective clears and the hero says where he is going, because there is no
-    // LEVEL CLEAR button here to say it for him. A trigger rather than a mob or
-    // a door, so it needs its own entry — a beat fired by anything this list
-    // does not name is authored, shipped, playable and published nowhere.
+    // player takes LEVEL CLEAR and the hero says where he is going before the
+    // picture cuts to the lot. A trigger rather than a mob or a door, so it
+    // needs its own entry — a beat fired by anything this list does not name is
+    // authored, shipped, playable and published nowhere.
     ...(level.exitByCar?.thought
       ? [{ thought: level.exitByCar.thought, when: "exit" }]
       : []),

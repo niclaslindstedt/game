@@ -487,13 +487,23 @@ describe("the doors", () => {
   });
 
   it("comes home from every earthside victory (the town loop)", () => {
-    expect(LEVELS.goodco_hq!.exitTo).toBe("garage");
     expect(LEVELS.moon!.exitTo).toBe("garage");
     expect(LEVELS.boot_hill!.exitTo).toBe("garage");
     // Mars presses INTO THE RIFT — no way home from the void, which is what
     // the rift creator exists to change.
     expect(LEVELS.mars!.exitTo).toBeUndefined();
     expect(LEVELS.the_rift!.exitTo).toBeUndefined();
+    // GOODCO COMES HOME BY ROAD INSTEAD (`LevelDef.exitByCar`), which is a
+    // different thing from an `exitTo` and would be the wrong one here: the
+    // drive home IS the town leg, it ends on the lawn the launch is filmed on,
+    // and putting the player down in the hub afterwards would be an errand run
+    // in front of a rocket he is standing next to. The car door is what names
+    // the road (`carRoad`).
+    expect(LEVELS.goodco_hq!.exitTo).toBeUndefined();
+    expect(LEVELS.goodco_hq!.exitByCar).toBeDefined();
+    expect(
+      LEVELS.goodco_hq!.travelDoors?.find((d) => d.id === "car")?.to,
+    ).toEqual(["garage"]);
   });
 });
 

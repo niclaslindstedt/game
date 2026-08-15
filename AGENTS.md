@@ -573,22 +573,25 @@ A doorway that narrow is below what the autopilot's 40px nav grid finds by
 sampling, which is why `buildNavGrid` anchors a doorway cell ON the doorway.
 → `docs/game-content.md`
 
-**AND ITS BACK DOOR IS THE CAR HE PARKED ON THAT LOT — GOODCO HAS NO LEVEL
-CLEAR BUTTON (`LevelDef.exitByCar`).** The objective clearing is a BEAT, not an
-ending: the `victory` event still fires on the same tick (it is what banks the
-clear and unlocks the next venue), and then the run deliberately stays `playing`
-with the win banked — which is exactly `state.staying` — the level's line is
-raised, and the wagon becomes a door. Four things follow and each is a silent
-regression if missed: **`carIsWayOut` is the ONE predicate** the boardable mark,
-the tap and `enterCar` all read (a hub's car always answers yes, this one only
-once the boss is down); **BOARDING IS THE DEPARTURE** here (a hub's car is driven
-out to a `driveOut` road, a car park has none, so getting in hands straight to
-the DIM); **the corpse tap must not conjure the splash** (`reopenVictoryChoice`
-refuses on such a venue); and **the autopilot needs its own rung**
-(`bot/hub.ts` `exitCar`, below the loot) or a botted or SIMULATED campaign stands
-on a cleared floor forever — which is also why `engine/sim/simulate.ts` reads
-`staying` as the clear on these venues rather than waiting for a phase that never
-comes.
+**AND ITS BACK DOOR IS THE CAR HE PARKED ON THAT LOT — GOODCO'S LEVEL CLEAR
+BUTTON IS A DRIVE (`LevelDef.exitByCar`).** The venue ENDS like every other one —
+objective, loot window, `victory`, the splash with NEXT LEVEL on it — and the
+field changes what that button DOES: the picture cuts to the lot, the hero walks
+the last paces to his own wagon, gets in, and the road takes it from there
+(`engine/game/boarding.ts` → `carDeparted` → `beginDrive`). It used to end with
+NO splash at all, and what that produced was a cleared floor and a player who did
+not know the run was still on. Four things follow and each is a silent
+regression if missed: **`carIsWayOut` is the ONE predicate** the boardable mark
+and `enterCar` read, and on such a venue it answers yes for exactly the length of
+the beat — the mark shows where he is GOING, and the car is never the player's to
+press; **THE ROAD AND THE DESTINATION ARE TWO QUESTIONS** (`carRoad` is the
+wagon's own far end — home — while NEXT LEVEL is the campaign's next venue, so
+the leg is planned against one and the trip booked to the other); **THE BEAT MAY
+NEVER STOP HAPPENING** (`BOARDING.giveUpMs` — he gets in from wherever he has got
+to, or a cleared run is stranded on a floor with no other way off it); and
+**THERE IS A STRAIGHT CUT BEHIND IT** — `driveIsPlayed` asks the same four gates
+the leg does, and with MINIGAMES off, a party aboard or nobody's hands on the run
+the splash crosses exactly as it does everywhere else.
 
 **THE WAGON IS ONE OBJECT ACROSS THE WHOLE NIGHT, AND ITS CONDITION IS A
 PARAMETER AT EVERY SEAM.** Garage → road → staff lot → road → garage is four

@@ -895,13 +895,14 @@ export function enterCar(state: GameState, hero: Player): boolean {
  *   A HUB'S CAR IS ALWAYS THE WAY OUT. Home is a place you leave; the wagon
  *   sits in the bay with its door unlocked from the first frame and taking it
  *   IS the campaign's first move.
- *   AN `exitByCar` VENUE'S OPENS WHEN THE VENUE IS OVER. GOODCO's lot is where
- *   he parked, not where he is going: for the whole mission that car is a piece
- *   of the scenery he happens to own, and it becomes a door the moment
- *   PAYLOAD-1 stops moving. `staying` is the fact behind that — on this venue
- *   it is not the player's STAY choice but the objective having cleared with
- *   the field deliberately left live (`step/index.ts`), which is the same
- *   sentence: the win is banked and he is still standing on the floor.
+ *   AN `exitByCar` VENUE'S IS NOBODY'S TO TAP. GOODCO's lot is where he parked,
+ *   not where he is going, and the way off the venue is the victory splash like
+ *   everywhere else — what the field authors is what the splash's NEXT LEVEL
+ *   then DOES, which is the walk to the wagon (`boarding.ts`). So the car
+ *   answers yes for exactly the length of that beat: the gold mark comes up
+ *   over the roof while he is walking to it, which is the beat telling the
+ *   player where he is going, and `enterCar` is called by the beat rather than
+ *   by a press.
  *
  * Either way a level with no `car` travel door has no destination to name, and
  * a car nobody can leave in is furniture.
@@ -910,7 +911,24 @@ export function carIsWayOut(state: GameState): boolean {
   const def = runLevelDef(state);
   const door = (def.travelDoors ?? []).find((d) => d.id === "car");
   if (!door || door.to.length === 0) return false;
-  return def.exitByCar ? state.staying : true;
+  return def.exitByCar ? state.boarding !== null : true;
+}
+
+/**
+ * WHERE THE WAGON'S OWN ROAD ENDS — the `car` travel door's first destination,
+ * and null on a venue with no car door at all.
+ *
+ * It is NOT "where the run goes next", and on a venue you leave by car the two
+ * have come apart: the wagon drives home whatever the campaign has lined up
+ * after that. The app reads this to plan the LEG (the road home is the road
+ * home whichever venue the player is bound for) and books the TRIP separately —
+ * see `pwa/src/game/drive-screen/begin.ts`.
+ */
+export function carRoad(state: GameState): string | null {
+  const door = (runLevelDef(state).travelDoors ?? []).find(
+    (d) => d.id === "car",
+  );
+  return door?.to[0] ?? null;
 }
 
 /**
@@ -929,11 +947,17 @@ export function carIsWayOut(state: GameState): boolean {
  * (`GameState.departure` — the picture goes dark over the car, and the trip
  * books when the clock runs out), with a car pulling away under it rather than
  * standing still, because a departure nothing moves during reads as a freeze.
+ *
+ * WHERE IT BOOKS IS THE BEAT'S CALL, NOT THE DOOR'S. The `car` travel door
+ * names the far end of the WAGON'S ROAD — home — and the campaign's next venue
+ * is a different question, answered off the victory splash and carried here on
+ * `GameState.boarding`. The door is the fallback for a run that got into the
+ * car some other way.
  */
 function leaveByCar(state: GameState, car: CarVehicle): void {
   const def = runLevelDef(state);
   if (!def.exitByCar || car.departed) return;
-  const to = def.travelDoors?.find((d) => d.id === "car")?.to[0];
+  const to = state.boarding?.to ?? carRoad(state);
   if (!to) return;
   car.departed = true;
   car.speed = CAR.pullAwayPx;

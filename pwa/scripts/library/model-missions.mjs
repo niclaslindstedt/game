@@ -84,7 +84,7 @@ export const LEVEL_FIELDS = {
   gates: "the secret-gate note",
   exitTo: "the RETURNS TO row",
   exitByCar:
-    "the prose — that this venue has no LEVEL CLEAR at all and is left by driving",
+    "the prose — that this venue's LEVEL CLEAR hands over to a drive rather than to the next map",
   riftExit: "the prose — that the way onward from here is a tear",
   travelDoors: "the DOORS list — the hub's standing doors and their roads",
   driveOut: "the DOORS list — that the car door is driven out to a real road",
@@ -364,9 +364,9 @@ function missionModel(level, order) {
     // THE WAY ONWARD IS A TEAR rather than a road (`LevelDef.riftExit`), which
     // is why the seam back home grows a branch the first time it is walked.
     riftExit: level.riftExit === true,
-    // THERE IS NO BUTTON HERE (`LevelDef.exitByCar`): the objective clearing is
-    // a beat rather than an ending, and the venue is left the way it was
-    // arrived at. Reader-facing because it is the one venue where "I have
+    // MOVING ON HERE IS A DRIVE (`LevelDef.exitByCar`): the venue is left the
+    // way it was arrived at, so LEVEL CLEAR hands over to the road rather than
+    // to the next map. Reader-facing because it is the one venue where "I have
     // killed the boss, now what" has an answer nothing else on the page gives.
     exitByCar: level.exitByCar !== undefined,
     gates: (level.gates ?? []).map((gate) => ({

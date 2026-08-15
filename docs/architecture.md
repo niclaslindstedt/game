@@ -1296,7 +1296,13 @@ escort.ts` walks the people an escort errand puts on the field, and
   step breaks on it, exactly as it does on the pause card and the board) so the
   leg's first crowd is not walked into during a title. A tap or any key takes
   it, and an `auto` road never raises it at all — the attract loop and every
-  shot recipe want the road in their first frame. **The road answers the run's own binds itself**, because while a
+  shot recipe want the road in their first frame.
+  THE LEG HOME OPENS ONE BEAT EARLIER, because GOODCO's lot has no tarmac to
+  drive out onto: the victory splash's NEXT LEVEL cuts to the lot, walks the
+  hero to his own wagon and puts him in it (`engine/game/boarding.ts`), and the
+  same DIM takes over from there. Its far end differs too — the road ends at
+  home, and the TRIP the leg was holding up is booked to the campaign's next
+  venue, so the launch cutscene plays where the drive left him. **The road answers the run's own binds itself**, because while a
   drive is up the run's control layer is not listening (there is no live
   `GameState` under an interlude for it to be built around): PAUSE (and ESCAPE,
   whatever the bind says), SCREENSHOT, and the auto-pause a LOST WINDOW is —

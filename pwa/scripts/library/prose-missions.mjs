@@ -83,7 +83,7 @@ export function missionLead(mission) {
 
   if (mission.exitByCar) {
     lines.push(
-      "Killing its boss does not end the mission: there is no LEVEL CLEAR here at all. The floor stays open, and the way out is the car parked where the drive in left it — walk back to it, get in, and the road home starts.",
+      "Killing its boss clears the mission the way it does anywhere else, but the way onward is the car parked where the drive in left it: taking NEXT LEVEL walks the hero back out to the wagon, and the road home starts from there.",
     );
   }
 

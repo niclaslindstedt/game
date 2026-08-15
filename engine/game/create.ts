@@ -944,6 +944,7 @@ export function createGame(
     staminaRegenLockMs: 0,
     deathScene: null,
     departure: null,
+    boarding: null,
     victoryCountdownMs: null,
     bossCorpse: null,
     bossDeath: null,

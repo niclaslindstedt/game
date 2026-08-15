@@ -58,7 +58,7 @@ import {
 import { pushBoss, survive } from "./fight.ts";
 import { wantsMerchantVisit } from "./economy.ts";
 import { errandGiver, trackErrandAbandon } from "./errands.ts";
-import { atHub, driveOutInput, exitCar, hubGoal, trackHubShop } from "./hub.ts";
+import { atHub, driveOutInput, hubGoal, trackHubShop } from "./hub.ts";
 import { entranceGoal } from "./entrance.ts";
 import { macroSteer, trackEngagement, unstuckInput } from "./macro.ts";
 import { applyPartySpacing } from "./party-play.ts";
@@ -234,14 +234,7 @@ function decideAct(bot: Bot, state: GameState, hero: Player): GameInput {
     // over their head is worth walking to on any map, cleared or not: an
     // errand handed in on swept ground is the level's last payout
     // (`errands.ts`). Standing easy is what is left when neither answers.
-    // …and a CLEARED venue whose way out is the car is the same case one level
-    // along: the horde is gone precisely because the mission is over, and the
-    // thing left to do is walk to the wagon and leave (`hub.ts` `exitCar`).
-    if (
-      errandGiver(bot, state, hero) ||
-      hubGoal(bot, state, hero, homeShop) ||
-      exitCar(state)
-    ) {
+    if (errandGiver(bot, state, hero) || hubGoal(bot, state, hero, homeShop)) {
       return macroSteer(bot, state, hero, tune);
     }
     think(bot, "IDLE");

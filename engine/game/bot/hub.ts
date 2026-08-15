@@ -35,7 +35,7 @@
 import { distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
-import { CAR, carIsWayOut } from "../vehicles.ts";
+import { CAR } from "../vehicles.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
 import { giverTopics } from "../quests/index.ts";
 import { talkChoices } from "../conversation.ts";
@@ -85,28 +85,6 @@ export function hubCar(state: GameState): CarVehicle | null {
     return vehicle;
   }
   return null;
-}
-
-/**
- * THE WAGON, WHEN IT IS THE WAY OFF A VENUE THAT IS NOT HOME — GOODCO's staff
- * lot once PAYLOAD-1 is down (`LevelDef.exitByCar`, and `carIsWayOut` is the
- * shared predicate the mark over the roof and the boarding verb both read).
- *
- * A SEPARATE RUNG FROM {@link hubGoal} RATHER THAN A WIDER GATE ON IT, and the
- * difference is where it sits in the travel ladder. At home the car is the top
- * of a short ordered list, because a hub has no horde, no cache and no fog to
- * lose to. On a venue that has just been CLEARED there is a boss's drop on the
- * floor, chests nobody opened and the last of a horde still walking, and a
- * ladder that put the car above those would march the ride out of the building
- * over the top of the loot it came for.
- *
- * Null on every other level and on every other tick, which leaves the ladder
- * exactly as it was. Pure.
- */
-export function exitCar(state: GameState): CarVehicle | null {
-  if (atHub(state)) return null;
-  if (!runLevelDef(state).exitByCar) return null;
-  return carIsWayOut(state) ? hubCar(state) : null;
 }
 
 /** The car this hero is at the wheel of, or null when he is on his own feet. */
@@ -241,16 +219,6 @@ export function hubTapCommand(
   // A hero with a screen up is reading something; a hero at the wheel has
   // already pressed the only button home has left for him.
   if (hero.screen !== undefined || heroCar(state, hero)) return null;
-  // THE WAY HOME OFF A CLEARED VENUE ({@link exitCar}) — the same press for the
-  // same reason, and it is not a hub thing so it is asked first. Reach-gated
-  // like the hub's, so it only fires standing at the wagon: the walk itself is
-  // the macro ladder's, which is where the ordering against the loot lives.
-  const ride = exitCar(state);
-  if (ride) {
-    return distance(hero.pos, ride.pos) <= CAR.boardRadius
-      ? { name: "enterCar", args: [] }
-      : null;
-  }
   // THE PRESS IS THE ERRAND THE WALK IS ON, never merely what happens to be
   // within arm's reach — and the difference is the whole hub. The hero SPAWNS
   // sitting on the car (the carve puts his landing and the bay's parking spot

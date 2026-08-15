@@ -41,6 +41,7 @@
 // caller into — never a claim on the frame.
 
 import { discardHeldAbility } from "./abilities.ts";
+import { departByCar } from "./boarding.ts";
 import {
   advanceIntro,
   advanceOutro,
@@ -255,6 +256,13 @@ export const RUN_COMMAND_ARGS = {
   resumeGame: [],
   stayOnField: [],
   reopenVictoryChoice: [],
+  // MOVING ON FROM A VENUE YOU LEAVE BY CAR (`LevelDef.exitByCar`) — the
+  // victory splash's NEXT LEVEL, which here is a walk out to the wagon rather
+  // than a crossing (`boarding.ts`). The argument is WHERE THE NIGHT GOES, and
+  // it is a level id rather than a road: the wagon drives home whatever the
+  // campaign has next, and the engine cannot ask a character which venues it
+  // has unlocked.
+  departByCar: ["str"],
   // THE WAY BACK from a party death (downed.ts): stand the ACTING hero
   // up at the level's start. No arguments — WHO respawns is the seat the
   // session admitted the caller into, exactly like every other private verb,
@@ -583,6 +591,8 @@ export function applyRunCommand(
       return stayOnField(state);
     case "reopenVictoryChoice":
       return reopenVictoryChoice(state);
+    case "departByCar":
+      return departByCar(state, hero, str(a, 0));
     case "respawn":
       return respawnHero(state, hero);
 

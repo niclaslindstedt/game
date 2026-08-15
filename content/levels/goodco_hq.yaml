@@ -128,28 +128,32 @@ merchant:
     - BACK ALREADY, FRIEND? THE MACHINES MISSED YOU.
 objective:
   type: killBoss
-# LEVEL CLEAR goes home: the campaign breathes in THE GARAGE between
-# missions (the D2 town loop), and the part comes back to the bench.
-exitTo: garage
-# …AND IT GOES HOME IN THE CAR HE PARKED ON THE LOT, not through a button
-# (`LevelDef.exitByCar`, engine/game/step/index.ts). PAYLOAD-1 falling is the
-# last BEAT of this venue rather than the end of it: the win banks on the same
-# tick it always did, the loot window runs, and then the field simply stays live
-# with the hero told where to go. The part he came for is no use in the building
-# it came out of and the ship it goes into is on his own lawn, so what the story
-# says happens next is that he walks the floor back out through the gate,
-# crosses the tarmac to his own wagon and drives — which is the DRIVE home
-# (`driveParamsFor`), booked by boarding rather than by a splash.
+# LEVEL CLEAR MOVES HIM ON, and here that is a DRIVE rather than a crossing
+# (`LevelDef.exitByCar`, engine/game/boarding.ts). The venue ends the way every
+# other one does — objective, loot window, the splash with NEXT LEVEL on it —
+# and what this field changes is what the button DOES: the picture cuts to the
+# lot, he walks the last paces to the wagon he parked on it, gets in, and the
+# road home picks him up. The part he came for is no use in the building it came
+# out of and the ship it goes into is on his own lawn, so what the player is
+# shown is exactly what the story says happens next.
+#
+# THERE IS DELIBERATELY NO `exitTo`. Home is where the DRIVE ends and where the
+# launch is filmed (`moon.yaml`'s prelude opens on that lawn), not a stop the
+# player is put down at: an errand run before a rocket he is standing next to
+# is a hub visit the beat has already walked past. NEXT LEVEL therefore means
+# the campaign's next venue — the moon — and the trip to it is the road, the
+# launch and the voyage in a row.
 exitByCar:
   thought: goodco_back_to_car
-# THE WAGON, AS A DOOR. It is what `exitByCar` reads the destination off, and
-# it is the same entry the garage carries at the other end of the same road —
-# so the trip home is the trip out, driven the other way.
+# THE WAGON'S OWN ROAD. This names where the CAR goes, which is not where the
+# run goes: home, the same entry the garage carries at the other end of the same
+# tarmac, so the trip home is the trip out driven the other way (`carRoad`,
+# engine/game/vehicles.ts). Where the NIGHT goes is the splash's business.
 #
-# UNLIKE THE GARAGE'S, THIS ONE IS SHUT FOR MOST OF THE RUN. `carIsWayOut`
-# (engine/game/vehicles.ts) keeps the "you can get in this" mark down and
-# refuses `enterCar` until the objective clears, so the car he lands beside is
-# scenery for the whole mission and becomes the way out the moment it is over.
+# AND UNLIKE THE GARAGE'S, THIS ONE IS NOBODY'S TO PRESS. `carIsWayOut` keeps
+# the "you can get in this" mark down for the whole mission and raises it only
+# for the length of the walk-out beat, so the car he lands beside is scenery
+# until the game itself walks him back to it.
 travelDoors:
   - id: car
     name: THE CAR

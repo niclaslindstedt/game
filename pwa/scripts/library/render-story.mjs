@@ -269,8 +269,8 @@ function thoughtsSection(chapter, { href }) {
               // others fill with a mob's name gets the door's instead.
               door: "The way out he cannot take yet",
               // Not a speaker either: the venue ENDING, which on this one
-              // venue is a beat rather than a splash (`LevelDef.exitByCar`).
-              exit: "When the last of them stops moving",
+              // venue hands over to a drive (`LevelDef.exitByCar`).
+              exit: "On the way out to the car",
               // Not a speaker either: the GATE, and what the night shift does
               // at it. The first is somebody arriving; the second is the one
               // that only ever fires on a player who watched the way in open

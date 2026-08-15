@@ -696,36 +696,42 @@ export type LevelDef = {
    */
   exitTo?: string;
   /**
-   * THE WAY OUT OF THIS VENUE IS THE CAR — so it has no LEVEL CLEAR button at
-   * all, and the objective clearing is a beat rather than an ending.
+   * THE WAY OUT OF THIS VENUE IS THE CAR — so MOVING ON is a drive rather than
+   * a crossing, and the game SHOWS him leaving instead of asking the player to
+   * go and find the wagon.
    *
    * GOODCO is the case, and the reason is the story's rather than the
    * interface's: he drove here, the part he came for is no use in the building
-   * it came out of, and the ship it goes into is on his own lawn. A splash
-   * offering NEXT LEVEL in the middle of that says the game moves him on,
-   * when what the plot says is that he walks the floor back out through the
-   * gate, crosses the lot to the wagon he parked on it and drives home.
+   * it came out of, and the ship it goes into is on his own lawn. What the plot
+   * says happens after PAYLOAD-1 stops moving is that he walks the floor back
+   * out through the gate, crosses the lot to the wagon he parked on it and
+   * drives home.
    *
-   * WHAT IT CHANGES IS THE END OF THE COUNTDOWN AND NOTHING ELSE. The objective
-   * still clears, the loot window still runs, and the `victory` event still
-   * fires on the same tick — which is what banks the clear, unlocks the next
-   * venue and books the campaign score. What does NOT happen is the phase
-   * change: the run stays `playing` with the win already banked (which is
-   * exactly `GameState.staying`), `thought` is raised so the player is told
-   * where to go, and the car becomes boardable (`carIsWayOut`, vehicles.ts) —
-   * boarding it books the trip home.
+   * THE VENUE ENDS LIKE EVERY OTHER ONE. The objective clears, the loot window
+   * runs, the `victory` event fires and the LEVEL CLEAR splash comes up with
+   * NEXT LEVEL on it — because a venue that ended with no splash at all was a
+   * cleared floor and no sign the run was still on, which is exactly what
+   * playtesters got stuck in. What this field changes is what that button DOES:
+   * the picture cuts to the lot, the hero walks the last paces to the wagon and
+   * gets in, and the road picks him up (`engine/game/boarding.ts`, and
+   * `pwa/src/game/drive-screen/begin.ts` for whether the road is played at all).
+   *
+   * THE CAR IS NOT A DOOR THE PLAYER PRESSES. `carIsWayOut` answers yes for
+   * exactly the length of that walk, so the gold mark over the roof is the beat
+   * saying where he is going rather than a control — the venue has one way out
+   * and it is the splash.
    *
    * A LEVEL THAT AUTHORS THIS OWES ITSELF A `car` TRAVEL DOOR, because that is
-   * where the destination comes from; without one the countdown falls through
-   * to the ordinary splash rather than stranding the run.
+   * where the wagon's ROAD comes from (`carRoad`, vehicles.ts) — which is not
+   * the same as where the run goes next, and on this venue the two differ.
    */
   exitByCar?: {
     /**
-     * What he says when the objective clears — a thought id
-     * (`content/thoughts.yaml`), and the only line in the game that is an
-     * instruction. Omitted leaves the beat silent, which on a venue with no
-     * splash means a cleared floor and nothing telling the player the run is
-     * still on; author one.
+     * What he says on the way out — a thought id (`content/thoughts.yaml`),
+     * and the only line in the game that is an instruction. Raised the moment
+     * the player commits to leaving, ahead of the cut, so the words are read
+     * over the room he is still standing in. Omitted leaves the departure
+     * silent, which is legible now that the splash carries the choice.
      */
     thought?: string;
   };

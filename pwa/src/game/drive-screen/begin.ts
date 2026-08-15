@@ -83,9 +83,7 @@ export function driveParamsFor(
   car?: CarDamage,
   flags?: Readonly<Record<string, boolean>>,
 ): DriveParams | null {
-  if (!areMinigamesEnabled()) return null;
-  if (!solo) return null;
-  if (autoplayed) return null;
+  if (!driveIsPlayed(from, to, solo, autoplayed)) return null;
   const direction = legDirection(from, to);
   if (direction === null) return null;
   return {
@@ -116,6 +114,29 @@ export function driveParamsFor(
     // somebody as a shower of pastel dust, so the road may not keep them.
     dust: sfwModeEnabled(),
   };
+}
+
+/**
+ * THE FOUR GATES ON THEIR OWN — is this leg going to be PLAYED, asked without
+ * building one.
+ *
+ * A caller that only needs the yes/no is deciding how to STAGE the departure
+ * rather than how to drive it: a venue you leave by car walks the hero out to
+ * the wagon when there is a road under him and cuts straight to the next venue
+ * when there is not (`LevelDef.exitByCar`, and `boarding.ts` for the walk).
+ * Same four questions, one place, so the staging and the leg can never disagree
+ * about whether the player is about to drive.
+ */
+export function driveIsPlayed(
+  from: string,
+  to: string,
+  solo: boolean,
+  autoplayed: boolean,
+): boolean {
+  if (!areMinigamesEnabled()) return false;
+  if (!solo) return false;
+  if (autoplayed) return false;
+  return legDirection(from, to) !== null;
 }
 
 /**
