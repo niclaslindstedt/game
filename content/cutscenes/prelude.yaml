@@ -102,13 +102,14 @@ stage:
     # THE FLOOR LAMP between the mount and the window, where the light it throws
     # falls on the pair rather than into the corner by the door.
     - { sprite: lamp, at: { x: 128, y: 90 } }
-    # THE BOOKCASE, pushed BACK AGAINST THE WALL (a base of 82 stands it on the
-    # wall line rather than out in the room with the furniture), and the PLANT in
-    # the gap between it and the television — the left third of the room was the
-    # emptiest stretch in the scene and these are what a room like this has
-    # along it.
+    # THE BOOKCASE, pushed BACK AGAINST THE WALL — a base of 82 stands it on the
+    # wall line rather than out in the room with the furniture.
     - { sprite: bookshelf, at: { x: 16, y: 82 } }
-    - { sprite: houseplant, at: { x: 68, y: 96 } }
+    # THE PLANT beside the front door, where a plant by a door is. Anchored at 92
+    # rather than out on the floor: both walks to that door cross this x at y≈96
+    # (Ada's and, at the end, his), so a step further up the room is what keeps
+    # them passing in FRONT of it instead of through it.
+    - { sprite: houseplant, at: { x: 178, y: 92 } }
     # HER FLOWERS, on the floor at the end of the couch rather than out on the
     # coffee table — on the table they sat between the camera and the two people
     # the scene is about.
