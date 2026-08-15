@@ -2167,7 +2167,14 @@ stage:
   width: 224 # world px; the renderer draws the stage ×3 and letterboxes it
   height: 126
   backdrop: space # the renderer's key for the setting; the palette does the painting
-  palette: { wall: "#08101a", floor: "#1c3a30", trim: "#0a1a14", floorY: 88 }
+  palette:
+    wall: "#08101a"
+    floor: "#1c3a30"
+    trim: "#0a1a14"
+    floorY: 88
+    grain: boards # optional: `bands` (default) or `boards` — see below
+    ceiling: "#060c14" # optional, with ceilingY: the room has a top
+    ceilingY: 26
   drift: { x: -14, y: 0 } # optional: constant camera velocity, px/s (a transit)
   props:
     - { sprite: sky_earth, at: { x: 34, y: 34 }, parallax: 0.06 }
@@ -2194,6 +2201,19 @@ the renderer paints back to front by y — so a higher y is nearer the camera.
 `palette.floorY` is where the floor line sits, measured down from the top; push
 it past `height` and no horizon shows at all (that is how the game's space
 transits are lit).
+
+**`palette.grain` is which way the renderer rules the floor.** `bands` (the
+default) rules across the frame and gives an open ground plane its depth — a
+lawn, a deck, a hangar floor. `boards` rules the other way, away from the eye,
+because that is how planks are laid and it is what makes a window's light fall
+ALONG them; ruled horizontally a wooden floor comes out as a flight of steps.
+
+**`palette.ceiling` + `ceilingY` give the stage a TOP**, and a scene set indoors
+wants one. Left out, the wall runs to the edge of the frame, which is right for
+a lot under a sky and wrong for a room: a wall that never ends reads as a hangar
+somebody put furniture in, and no amount of dressing fixes it — what says how
+big a room is is where the top of it is. Both fields or neither; the band is
+ruled off with the same `trim` the floor line uses.
 
 **`parallax` is depth**: how much of the camera's shift a prop takes. `1` (the
 default) moves with the ground, `0` is pinned to the sky. `wrap: true` makes a
@@ -2508,15 +2528,23 @@ questGivers:
       until: some_flag # a flag some branch of it sets
     arrive: # optional: they WALK IN rather than being found standing there
       from: { x: 900, y: 420 } # where they are on the run's first tick
+      via: [{ x: 940, y: 420 }] # corners the walk turns, in order, optional
       delayMs: 1100 # …after standing there this long, optional
       speed: 55 # world px/s, optional
 ```
 
 **`arrive:` is for somebody the run should SEE turn up.** They stand at `from`
-for `delayMs`, then walk to `at` — in a straight line and through anything in
-the way, because this is a scripted entrance rather than a body finding its way
-— and an approach door on that line opens for them, so a person with a key can
-let themselves in. They are not met, marked or talkable until they get there.
+for `delayMs`, then walk to `at` — in STRAIGHT LEGS and through anything in the
+way, because this is a scripted entrance rather than a body finding its way —
+and an approach door on any leg's line opens for them, so a person with a key
+can let themselves in. They are not met, marked or talkable until they get
+there.
+
+**`via:` is how the walk turns a corner**, and on any map with a wall between
+the doorstep and the spot it is not optional in practice: nothing pushes an
+arriving giver out of masonry, so a straight line that clips a jamb is a person
+who walks in through the wall. Aim a leg squarely at the doorway, put a corner a
+step INSIDE it, and turn for the spot from there.
 
 **AND THEY CAN BE RUN OVER while they are still walking.** A car above
 `roadkillSpeed` that reaches an arriving giver kills them: they stop being

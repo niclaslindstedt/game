@@ -288,6 +288,18 @@ export function validateQuestGiver(id, def, refs) {
       } else {
         checkOnMap(def.arrive.from, def.level, "arrive.from", refs, err, warn);
       }
+      // THE CORNERS THE WALK TURNS, checked like every other coordinate: a
+      // waypoint off the lot is a person who detours through the void.
+      if (def.arrive.via !== undefined) {
+        if (!Array.isArray(def.arrive.via)) {
+          err("arrive.via must be a list of `{ x, y }` corners (world px)");
+        } else {
+          def.arrive.via.forEach((at, i) => {
+            if (!isVec(at)) err(`arrive.via[${i}] must be \`{ x, y }\``);
+            else checkOnMap(at, def.level, `arrive.via[${i}]`, refs, err, warn);
+          });
+        }
+      }
       if (
         def.arrive.speed !== undefined &&
         (typeof def.arrive.speed !== "number" || !(def.arrive.speed > 0))

@@ -881,7 +881,7 @@
         {
           "actor": "hero",
           "kind": "jump",
-          "lift": 30,
+          "lift": 22,
           "ms": 380
         },
         {
@@ -994,12 +994,31 @@
         "backdrop": "livingRoom",
         "height": 126,
         "palette": {
+          "ceiling": "#1c1e2b",
+          "ceilingY": 26,
           "floor": "#4a3a2c",
           "floorY": 78,
+          "grain": "boards",
           "trim": "#1a1c28",
           "wall": "#262838"
         },
         "props": [
+          {
+            "ground": true,
+            "kind": "rug",
+            "pos": {
+              "x": 104,
+              "y": 114
+            }
+          },
+          {
+            "ground": true,
+            "kind": "doormat",
+            "pos": {
+              "x": 198,
+              "y": 92
+            }
+          },
           {
             "kind": "window",
             "pos": {
@@ -1008,11 +1027,25 @@
             }
           },
           {
+            "kind": "painting_shore",
+            "pos": {
+              "x": 62,
+              "y": 60
+            }
+          },
+          {
+            "kind": "painting_orchard",
+            "pos": {
+              "x": 84,
+              "y": 60
+            }
+          },
+          {
             "id": "arm",
             "kind": "wall_medieval_sword",
             "pos": {
               "x": 104,
-              "y": 54
+              "y": 66
             }
           },
           {
@@ -1056,8 +1089,29 @@
           {
             "kind": "lamp",
             "pos": {
-              "x": 168,
+              "x": 128,
               "y": 90
+            }
+          },
+          {
+            "kind": "bookshelf",
+            "pos": {
+              "x": 16,
+              "y": 82
+            }
+          },
+          {
+            "kind": "houseplant",
+            "pos": {
+              "x": 68,
+              "y": 96
+            }
+          },
+          {
+            "kind": "flowers",
+            "pos": {
+              "x": 142,
+              "y": 96
             }
           }
         ],
@@ -1254,7 +1308,7 @@
         {
           "actor": "hero",
           "kind": "jump",
-          "lift": 30,
+          "lift": 22,
           "ms": 380
         },
         {
@@ -1367,12 +1421,31 @@
         "backdrop": "livingRoom",
         "height": 126,
         "palette": {
+          "ceiling": "#1c1e2b",
+          "ceilingY": 26,
           "floor": "#4a3a2c",
           "floorY": 78,
+          "grain": "boards",
           "trim": "#1a1c28",
           "wall": "#262838"
         },
         "props": [
+          {
+            "ground": true,
+            "kind": "rug",
+            "pos": {
+              "x": 104,
+              "y": 114
+            }
+          },
+          {
+            "ground": true,
+            "kind": "doormat",
+            "pos": {
+              "x": 198,
+              "y": 92
+            }
+          },
           {
             "kind": "window",
             "pos": {
@@ -1381,11 +1454,25 @@
             }
           },
           {
+            "kind": "painting_shore",
+            "pos": {
+              "x": 62,
+              "y": 60
+            }
+          },
+          {
+            "kind": "painting_orchard",
+            "pos": {
+              "x": 84,
+              "y": 60
+            }
+          },
+          {
             "id": "arm",
             "kind": "wall_sawed_off_shotgun",
             "pos": {
               "x": 104,
-              "y": 54
+              "y": 66
             }
           },
           {
@@ -1429,8 +1516,29 @@
           {
             "kind": "lamp",
             "pos": {
-              "x": 168,
+              "x": 128,
               "y": 90
+            }
+          },
+          {
+            "kind": "bookshelf",
+            "pos": {
+              "x": 16,
+              "y": 82
+            }
+          },
+          {
+            "kind": "houseplant",
+            "pos": {
+              "x": 68,
+              "y": 96
+            }
+          },
+          {
+            "kind": "flowers",
+            "pos": {
+              "x": 142,
+              "y": 96
             }
           }
         ],
@@ -1627,7 +1735,7 @@
         {
           "actor": "hero",
           "kind": "jump",
-          "lift": 30,
+          "lift": 22,
           "ms": 380
         },
         {
@@ -1740,12 +1848,31 @@
         "backdrop": "livingRoom",
         "height": 126,
         "palette": {
+          "ceiling": "#1c1e2b",
+          "ceilingY": 26,
           "floor": "#4a3a2c",
           "floorY": 78,
+          "grain": "boards",
           "trim": "#1a1c28",
           "wall": "#262838"
         },
         "props": [
+          {
+            "ground": true,
+            "kind": "rug",
+            "pos": {
+              "x": 104,
+              "y": 114
+            }
+          },
+          {
+            "ground": true,
+            "kind": "doormat",
+            "pos": {
+              "x": 198,
+              "y": 92
+            }
+          },
           {
             "kind": "window",
             "pos": {
@@ -1754,11 +1881,25 @@
             }
           },
           {
+            "kind": "painting_shore",
+            "pos": {
+              "x": 62,
+              "y": 60
+            }
+          },
+          {
+            "kind": "painting_orchard",
+            "pos": {
+              "x": 84,
+              "y": 60
+            }
+          },
+          {
             "id": "arm",
             "kind": "wall_combat_knife",
             "pos": {
               "x": 104,
-              "y": 54
+              "y": 66
             }
           },
           {
@@ -1802,8 +1943,29 @@
           {
             "kind": "lamp",
             "pos": {
-              "x": 168,
+              "x": 128,
               "y": 90
+            }
+          },
+          {
+            "kind": "bookshelf",
+            "pos": {
+              "x": 16,
+              "y": 82
+            }
+          },
+          {
+            "kind": "houseplant",
+            "pos": {
+              "x": 68,
+              "y": 96
+            }
+          },
+          {
+            "kind": "flowers",
+            "pos": {
+              "x": 142,
+              "y": 96
             }
           }
         ],
@@ -2000,7 +2162,7 @@
         {
           "actor": "hero",
           "kind": "jump",
-          "lift": 30,
+          "lift": 22,
           "ms": 380
         },
         {
@@ -2113,12 +2275,31 @@
         "backdrop": "livingRoom",
         "height": 126,
         "palette": {
+          "ceiling": "#1c1e2b",
+          "ceilingY": 26,
           "floor": "#4a3a2c",
           "floorY": 78,
+          "grain": "boards",
           "trim": "#1a1c28",
           "wall": "#262838"
         },
         "props": [
+          {
+            "ground": true,
+            "kind": "rug",
+            "pos": {
+              "x": 104,
+              "y": 114
+            }
+          },
+          {
+            "ground": true,
+            "kind": "doormat",
+            "pos": {
+              "x": 198,
+              "y": 92
+            }
+          },
           {
             "kind": "window",
             "pos": {
@@ -2127,11 +2308,25 @@
             }
           },
           {
+            "kind": "painting_shore",
+            "pos": {
+              "x": 62,
+              "y": 60
+            }
+          },
+          {
+            "kind": "painting_orchard",
+            "pos": {
+              "x": 84,
+              "y": 60
+            }
+          },
+          {
             "id": "arm",
             "kind": "wall_stick",
             "pos": {
               "x": 104,
-              "y": 54
+              "y": 66
             }
           },
           {
@@ -2175,8 +2370,29 @@
           {
             "kind": "lamp",
             "pos": {
-              "x": 168,
+              "x": 128,
               "y": 90
+            }
+          },
+          {
+            "kind": "bookshelf",
+            "pos": {
+              "x": 16,
+              "y": 82
+            }
+          },
+          {
+            "kind": "houseplant",
+            "pos": {
+              "x": 68,
+              "y": 96
+            }
+          },
+          {
+            "kind": "flowers",
+            "pos": {
+              "x": 142,
+              "y": 96
             }
           }
         ],
@@ -2373,7 +2589,7 @@
         {
           "actor": "hero",
           "kind": "jump",
-          "lift": 30,
+          "lift": 22,
           "ms": 380
         },
         {
@@ -2486,12 +2702,31 @@
         "backdrop": "livingRoom",
         "height": 126,
         "palette": {
+          "ceiling": "#1c1e2b",
+          "ceilingY": 26,
           "floor": "#4a3a2c",
           "floorY": 78,
+          "grain": "boards",
           "trim": "#1a1c28",
           "wall": "#262838"
         },
         "props": [
+          {
+            "ground": true,
+            "kind": "rug",
+            "pos": {
+              "x": 104,
+              "y": 114
+            }
+          },
+          {
+            "ground": true,
+            "kind": "doormat",
+            "pos": {
+              "x": 198,
+              "y": 92
+            }
+          },
           {
             "kind": "window",
             "pos": {
@@ -2500,11 +2735,25 @@
             }
           },
           {
+            "kind": "painting_shore",
+            "pos": {
+              "x": 62,
+              "y": 60
+            }
+          },
+          {
+            "kind": "painting_orchard",
+            "pos": {
+              "x": 84,
+              "y": 60
+            }
+          },
+          {
             "id": "arm",
             "kind": "wall_brass_knuckles",
             "pos": {
               "x": 104,
-              "y": 54
+              "y": 66
             }
           },
           {
@@ -2548,8 +2797,29 @@
           {
             "kind": "lamp",
             "pos": {
-              "x": 168,
+              "x": 128,
               "y": 90
+            }
+          },
+          {
+            "kind": "bookshelf",
+            "pos": {
+              "x": 16,
+              "y": 82
+            }
+          },
+          {
+            "kind": "houseplant",
+            "pos": {
+              "x": 68,
+              "y": 96
+            }
+          },
+          {
+            "kind": "flowers",
+            "pos": {
+              "x": 142,
+              "y": 96
             }
           }
         ],

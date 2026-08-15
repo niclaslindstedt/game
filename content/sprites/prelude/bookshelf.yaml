@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: bookshelf
+family: prelude
+size: [22, 30]
+description: >
+  A tall wooden bookcase of four packed shelves, standing against the
+  living-room wall beside the television.
+subject:
+  kind: "furniture prop (side view bookcase)"
+  build: "a tall wooden case with four shelves, packed with upright books of mixed heights"
+  features: "coloured spines of varying width, one gap where a few have been pulled out"
+  accent: "warm spine colours against dark wood"
+  flavor: "half of it is hers, and nobody has ever been able to tell which half"
+palette:
+  O: "#1a1c2c" # outline
+  B: "#92643e" # case timber
+  E: "#5d4028" # shelf shadow
+  R: "#963c46" # red spines
+  G: "#2f5a2c" # green spines
+  Y: "#c8a63e" # gold spines
+  P: "#4a3d6b" # purple spines
+grid: |
+  OOOOOOOOOOOOOOOOOOOOOO
+  OEEEEEEEEEEEEEEEEEEEEO
+  OEBBBBBBBBBBBBBBBBBBEO
+  OEBOROOYEEOOBBOGOEEBEO
+  OEBRRGYYOPRBBBGGYOPBEO
+  OEBRRGYYPPRBBBGGYPPBEO
+  OEBRRGYYPPRBBBGGYPPBEO
+  OEOOOOOOOOOOOOOOOOOOEO
+  OEBBBBBBBBBBBBBBBBBBEO
+  OEBOOYEEOOBBOGOEEOBBEO
+  OEBGYYOPRBBBGGYOPBBBEO
+  OEBGYYPPRBBBGGYPPBBBEO
+  OEBGYYPPRBBBGGYPPBBBEO
+  OEOOOOOOOOOOOOOOOOOOEO
+  OEBBBBBBBBBBBBBBBBBBEO
+  OEBOYEEOOBBOGOEEEEEBEO
+  OEBYYOPRBBBGGYOEEEEBEO
+  OEBYYPPRBBBGGYPEEEEBEO
+  OEBYYPPRBBBGGYPEEEEBEO
+  OEOOOOOOOOOOOOOOOOOOEO
+  OEBBBBBBBBBBBBBBBBBBEO
+  OEBEEOOBBOGOEEOBORRBEO
+  OEBOPRBBBGGYOPBBRRRBEO
+  OEBPPRBBBGGYPPBBRRRBEO
+  OEBPPRBBBGGYPPBBRRRBEO
+  OEOOOOOOOOOOOOOOOOOOEO
+  OEBBBBBBBBBBBBBBBBBBEO
+  OEBBBBBBBBBBBBBBBBBBEO
+  OEEEEEEEEEEEEEEEEEEEEO
+  OOOOOOOOOOOOOOOOOOOOOO

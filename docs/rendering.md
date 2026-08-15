@@ -165,6 +165,25 @@ wall's plane too**: a door on a different plane from the run it interrupts is a
 hole in the world, which is why the garage door's roll-up (`drawWorldSpriteTop`)
 answers the plane question the same way one frame later, seat included.
 
+**WHAT STANDS UP SORTS; WHAT LIES DOWN DOES NOT** — and that one question,
+asked of the ART (`laidFlat`, render/plane.ts), is what decides whether a pass
+runs once or twice. Painted marking, run of conduit, driveway slab, rug: ground,
+under everything that walks, one pass. A bush, a machine, a lamp post, a laundry
+line: a body, and it goes over the hero when its own base is nearer the eye than
+his boots (`PLAYER.footLift`). The DECOR pass earns its second half exactly
+there — the hero walked round the back of a hanging sheet and was painted on top
+of it.
+
+**A TOWER IS ASKED WHERE ITS OWN SILHOUETTE ENDS.** One anchor says one thing
+about where a picture meets the ground, and the garage's booster meets it in
+three places — three splayed legs, their foot pads half a body length apart
+down the screen. Sorted on the anchor alone a hero standing a clear stride in
+FRONT of a rear pad was painted behind sixty feet of rocket with a leg across
+his chest. So a ship reads its art's lowest opaque row in the HERO'S OWN COLUMN
+(`baseProfile`, one cached `getImageData` per bitmap) and sorts against that:
+under the front leg he is still behind it, beside it he is in front of the pads
+he has walked past, and a redrawn hull brings its own new answer with it.
+
 And **everything with a BODY is drawn after `drawObstacles`** (render.ts), which
 the obstacle pass earns by no longer being a floor pass: a face that sweeps
 `rise` px up the screen covers whatever was painted there, which is right for the
@@ -653,6 +672,15 @@ mid-driveway. `LevelLight.sprite` plus a `drawLamps` pass immediately AFTER
 `drawObstacles` is what lets a fitting sit on the wall it is bolted to. That
 pass runs in daylight too: a lamp is hardware, and a wall that grows a light
 fitting at dusk is a bug — only the pool under it belongs to the night.
+
+**…AND A FIXTURE THAT STANDS ON THE GROUND TAKES A SIDE AGAINST THE HERO**, so
+`drawLamps` runs TWICE like the obstacle and vehicle passes do. A barn light is
+bolted to masonry and nobody can get behind it, but the yard light on the
+garage's back lawn is a POST planted in grass the player walks all the way
+round — painted only ahead of him, the hero stood in front of a post he was
+demonstrably behind. The sort is on the fitting's own foot (`LevelLight.pos`),
+never on the lifted art above it, because the foot is the point the picture
+stands on.
 
 **AND HOW HIGH IT IS BOLTED IS THE FIXTURE'S BUSINESS ALONE** (`LevelLight.lift`,
 authored as `lift:` on a door's `lamps`). A wall is drawn as an EXTRUDED FACE and

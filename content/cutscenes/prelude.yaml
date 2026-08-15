@@ -14,10 +14,42 @@ stage:
   width: 224
   height: 126
   backdrop: livingRoom
-  palette: { wall: "#262838", floor: "#4a3a2c", trim: "#1a1c28", floorY: 78 }
+  # `grain: boards` rules the floor the way boards are laid — away from the eye,
+  # so the light coming in the window falls ALONG the run rather than across it.
+  # Ruled the other way (the renderer's default, and what a lawn or a deck
+  # wants) a wooden floor comes out as a flight of steps.
+  #
+  # AND THE ROOM HAS A TOP. Without `ceiling*` the wall runs to the edge of the
+  # frame, which is right for a lot under a sky and wrong for a living room: a
+  # wall that never ends reads as a hangar somebody put a sofa in, and no amount
+  # of furniture fixes it, because what says how big a room is is where the top
+  # of it is. At 26 the ceiling sits about three of the hero's own heights over
+  # the boards, which is a house.
+  palette:
+    wall: "#262838"
+    floor: "#4a3a2c"
+    trim: "#1a1c28"
+    ceiling: "#1c1e2b"
+    ceilingY: 26
+    floorY: 78
+    grain: boards
   # Side view: `at` is bottom-anchored (y is where a thing meets the floor) and
   # the renderer paints back to front by y.
+  #
+  # AND IT IS DRESSED LIKE SOMEWHERE PEOPLE LIVE. A bare wall with a sofa under
+  # it is a stage set, and the scene's whole job is to establish a home worth
+  # the rest of the campaign: the things on these walls were hung by somebody,
+  # over years, and none of them is ever mentioned. The room is read, not
+  # explained.
   props:
+    # ── ON THE FLOOR, UNDER EVERYTHING ────────────────────────────────────
+    # `ground: true` paints these WITH the floor rather than into the standing
+    # queue — a mat is anchored at its NEAR edge, so sorted normally it would
+    # come out in front of the couch standing on it and of the pair walking
+    # across it.
+    - { sprite: rug, at: { x: 104, y: 114 }, ground: true }
+    - { sprite: doormat, at: { x: 198, y: 92 }, ground: true }
+    # ── ON THE WALL ───────────────────────────────────────────────────────
     # The window hangs at a REAL height: its head under the front door's (the
     # door is 30 tall off a floor mark of 80, so its frame tops out at y 50)
     # and its sill at about a standing man's HEAD — a hero walking the wall at
@@ -25,6 +57,12 @@ stage:
     # it read as a skylight: the one opening in the room nobody could have seen
     # the street through. It clears the floor lamp (x 163…173) at this width.
     - { sprite: window, at: { x: 146, y: 72 } }
+    # THE PAIR OF PAINTINGS, hung along the wall to the LEFT of the mount and
+    # level with each other. Left rather than either side of it: the mount is
+    # centred on the couch and the couch is the middle of the frame, so anything
+    # flanking it competes with the one thing the scene is about.
+    - { sprite: painting_shore, at: { x: 62, y: 60 } }
+    - { sprite: painting_orchard, at: { x: 84, y: 60 } }
     # The starting weapon, mounted on the back wall until he leaps for it — the
     # one thing the hero owns worth taking, and what he fights with until the
     # run yields better (DifficultyDef.startingWeapon). Its `label:` is also the
@@ -32,7 +70,13 @@ stage:
     # (centred on the couch's own x, clear of the seated pair's heads at y≈73):
     # the thing he will carry out of this room is over the two of them for the
     # whole scene, rather than parked in the corner by the door.
-    - { label: arm, sprite: wall_medieval_sword, at: { x: 104, y: 54 } }
+    #
+    # A MAN'S REACH ABOVE THE SOFA, not up by the ceiling. The couch's back tops
+    # out at 76 and the seated pair's heads at 73, so a mount at 66 clears both
+    # and still reads as something taken down rather than climbed for — and the
+    # `jump` beat below is sized to it (`lift: 22`), which is the pair that has
+    # to move together.
+    - { label: arm, sprite: wall_medieval_sword, at: { x: 104, y: 66 } }
     # THE FRONT DOOR, SHUT AND OPEN — one thing in two states, stacked on the
     # same mark and swapped by the `prop` beats below (the open one starts off
     # the stage). What shows through the opening is the lot the game already
@@ -55,7 +99,20 @@ stage:
     - { sprite: tv, at: { x: 44, y: 94 } }
     - { sprite: couch, at: { x: 104, y: 96 } }
     - { sprite: table, at: { x: 104, y: 108 } }
-    - { sprite: lamp, at: { x: 168, y: 90 } }
+    # THE FLOOR LAMP between the mount and the window, where the light it throws
+    # falls on the pair rather than into the corner by the door.
+    - { sprite: lamp, at: { x: 128, y: 90 } }
+    # THE BOOKCASE, pushed BACK AGAINST THE WALL (a base of 82 stands it on the
+    # wall line rather than out in the room with the furniture), and the PLANT in
+    # the gap between it and the television — the left third of the room was the
+    # emptiest stretch in the scene and these are what a room like this has
+    # along it.
+    - { sprite: bookshelf, at: { x: 16, y: 82 } }
+    - { sprite: houseplant, at: { x: 68, y: 96 } }
+    # HER FLOWERS, on the floor at the end of the couch rather than out on the
+    # coffee table — on the table they sat between the camera and the two people
+    # the scene is about.
+    - { sprite: flowers, at: { x: 142, y: 96 } }
 # Both of them on the sofa for movie night, watching the TV off to the left —
 # the hero never gets up, which is the whole joke. Their `at.y` sits a hair below
 # the couch's floor anchor so they paint just in front of the backrest; the
@@ -160,7 +217,7 @@ beats:
   # `hold.at` is the paper doll's own grip anchor (HELD_DX/HELD_DY in
   # pwa/src/game/paper-doll.ts) on the 16×16 body, so he carries it out of the
   # room at exactly the angle he carries it through the run.
-  - { kind: jump, actor: hero, lift: 30, ms: 380 }
+  - { kind: jump, actor: hero, lift: 22, ms: 380 }
   - { kind: prop, prop: arm, hidden: true }
   - label: grip
     kind: hold

@@ -75,6 +75,13 @@ export type QuestGiver = {
    * drawn walking rather than standing.
    */
   to?: Vec2;
+  /**
+   * THE CORNERS STILL AHEAD OF THEM after `to` (world px), nearest first — the
+   * rest of a walk that turns a corner (`QuestGiverDef.arrive.via`). Each one
+   * becomes `to` in turn as the previous is reached; the last leg ends at the
+   * authored spot and clears both fields. Absent on a straight walk in.
+   */
+  path?: Vec2[];
   /** Milliseconds still to stand still before setting off for `to`. */
   waitMs?: number;
   /** Walking pace while `to` is set (world px/s). */

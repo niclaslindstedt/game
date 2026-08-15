@@ -463,6 +463,44 @@ export function opaqueWidth(sprite: SpriteImage): number {
 }
 
 /**
+ * HOW FAR DOWN THE SCREEN A PIECE OF UPRIGHT ART REACHES, COLUMN BY COLUMN —
+ * the row of the lowest opaque pixel in each column of the sprite, or -1 for a
+ * column the art never touches. One getImageData scan per bitmap, cached
+ * beside `opaqueWidth`.
+ *
+ * It exists for the one case the depth sort cannot answer from an anchor: a
+ * TOWER standing on SPLAYED LEGS (render/vehicles.ts). An anchor says one thing
+ * about where a picture meets the ground, and the garage's booster meets it in
+ * three places twenty px apart — so a hero standing a stride in front of a rear
+ * foot pad was painted behind the whole rocket. Asking the art itself where its
+ * silhouette ends in the hero's own column answers that exactly, for any art,
+ * with nothing to author and nothing to keep in step with a redrawn sprite.
+ */
+const baseProfileCache = new Map<SpriteImage, Int16Array>();
+export function baseProfile(sprite: SpriteImage): Int16Array {
+  const cached = baseProfileCache.get(sprite);
+  if (cached !== undefined) return cached;
+  const profile = new Int16Array(sprite.width).fill(-1);
+  const c = document.createElement("canvas");
+  c.width = sprite.width;
+  c.height = sprite.height;
+  const g = c.getContext("2d", { willReadFrequently: true });
+  if (!g) return profile;
+  g.drawImage(sprite, 0, 0);
+  const { data } = g.getImageData(0, 0, sprite.width, sprite.height);
+  for (let x = 0; x < sprite.width; x++) {
+    for (let y = sprite.height - 1; y >= 0; y--) {
+      if ((data[(y * sprite.width + x) * 4 + 3] ?? 0) > 0) {
+        profile[x] = y;
+        break;
+      }
+    }
+  }
+  baseProfileCache.set(sprite, profile);
+  return profile;
+}
+
+/**
  * The COLOUR OF THE FLOOR at a world point, as `"r, g, b"` — what a boot kicks
  * up when it lands there.
  *

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: flowers
+family: prelude
+size: [10, 14]
+description: >
+  A short glass vase of cut flowers, standing on the living-room floor at the
+  end of the couch.
+subject:
+  kind: "floor prop (vase of flowers)"
+  build: "a small straight-sided glass vase standing on the floor, three stems fanning out of it"
+  features: "three blooms, each a cross of petals round a bright eye"
+  accent: "red and violet blooms against a dark room"
+  flavor: "bought on a Friday, like every other Friday"
+palette:
+  O: "#1a1c2c" # outline
+  A: "#5f7f9a" # glass
+  a: "#8fb0c6" # glass highlight
+  N: "#2f5a2c" # stems
+  R: "#963c46" # red blooms
+  P: "#7a4a8c" # violet bloom
+  Y: "#ffe3b6" # bloom eye
+grid: |
+  ..........
+  ..........
+  .....P....
+  ..R.PYPR..
+  .RYR.PRYR.
+  ..R..N.R..
+  ..N..N.N..
+  ...N.NN...
+  ...ONNO...
+  ...OAAO...
+  ...OaAO...
+  ...OAAO...
+  ...OAAO...
+  ...OOOO...

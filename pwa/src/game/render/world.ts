@@ -24,7 +24,7 @@ import {
 } from "./caches.ts";
 import { drawConjuringSprite } from "./conjure.ts";
 import { isLandmarkHidden } from "./hidden-landmarks.ts";
-import { drawnWallRise, drawWorldSprite } from "./plane.ts";
+import { drawnWallRise, drawWorldSprite, laidFlat } from "./plane.ts";
 import {
   drawRiftPortal,
   riftPortalBob,
@@ -96,7 +96,17 @@ export function drawGround(
  * The art says which plane it belongs to (./plane.ts): a bush or a machine
  * stands up, a painted marking or a run of conduit laid flush along the floor
  * lies down with the tiles. An ANIMATED piece is judged per FRAME name, which
- * is what a belt wants — each of `conveyor_0..4` is its own authored file. */
+ * is what a belt wants — each of `conveyor_0..4` is its own authored file.
+ *
+ * …AND WHAT STANDS UP TAKES A SIDE, on the same terms as the lifted obstacles
+ * and the machines: a piece whose base is nearer the eye than the hero's boots
+ * is drawn over him. Washing pegged out on a line is where a floor-only decor
+ * pass reads as broken — the hero walked round the BACK of a hanging sheet and
+ * was painted on top of it. What lies down never leaves the "under" pass; it is
+ * ground, and a body stands on it.
+ */
+export type DecorLayer = "under" | "over";
+
 export function drawDecor(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -104,7 +114,9 @@ export function drawDecor(
   camera: Camera,
   inView: InView,
   timeMs: number,
+  layer: DecorLayer = "under",
 ): void {
+  const feet = localHero(state).pos.y + PLAYER.footLift;
   for (const decor of state.decor) {
     if (!inView(decor.pos.x, decor.pos.y, 32)) continue;
     const frames = decorFrames(sprites, decor.sprite);
@@ -112,6 +124,8 @@ export function drawDecor(
       ? Math.floor(timeMs / DECOR_FRAME_MS) % frames.length
       : -1;
     const name = frames ? `${decor.sprite}_${frame}` : decor.sprite;
+    const over = !laidFlat(name) && decor.pos.y > feet;
+    if ((over ? "over" : "under") !== layer) continue;
     const sprite = frames
       ? frames[frame]!
       : (spriteByName(sprites, decor.sprite) ?? sprites.rocks);
