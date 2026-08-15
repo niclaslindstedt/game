@@ -114,7 +114,15 @@ stage:
     - { sprite: table, at: { x: 104, y: 108 } }
     # THE FLOOR LAMP between the mount and the window, where the light it throws
     # falls on the pair rather than into the corner by the door.
-    - { sprite: lamp, at: { x: 128, y: 90 } }
+    #
+    # AND IT STANDS ON THE SAME FLOOR THE SOFA DOES. Both sprites carry blank
+    # rows under their feet, so a mark shared with the couch is NOT a foot shared
+    # with it: the couch's own feet bottom out at y 92 (rows 15–16 of a 20-tall
+    # sprite anchored at 96) and the lamp's base at 19 of 22, so 95 is the mark
+    # that lands the two on one line. Left at 90 the lamp hovered a stride behind
+    # the furniture instead of standing beside it to read by — and 124 puts its
+    # shade at the sofa's own arm, which is the reach a reading lamp has.
+    - { sprite: lamp, at: { x: 124, y: 95 } }
     # THE BOOKCASE, pushed BACK AGAINST THE WALL — a base of 82 stands it on the
     # wall line rather than out in the room with the furniture.
     - { sprite: bookshelf, at: { x: 16, y: 82 } }
