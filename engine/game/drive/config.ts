@@ -1231,6 +1231,46 @@ export const DRIVE = {
     downBounce: 0.24,
     downSpinPerSpeed: 0.009,
     /**
+     * …AND HOW HARD THE BLOW ITSELF CARTWHEELS IT — rad/s per m/s of the Δv
+     * that put it down, which is the unit `crush.rollSpinPerMs` turns a car over
+     * in. One scale for "a vehicle has left its wheels", read twice.
+     *
+     * THE PAIR IS THE WHOLE OF "spin and crash, depending on speed". `perSpeed`
+     * alone said the turn was a fact about how fast the VICTIM was going, so a
+     * PARKED moped met flat out lay down without rotating at all — and the speed
+     * a player means when he asks for that is his own. Higher than the car's
+     * 0.5, because this is the lighter half of the pair going over: the same Δv
+     * is a shove to an estate and a launch to a scooter.
+     */
+    downSpinPerMs: 0.4,
+    /** …and the ceiling on the two terms together (rad/s). Half again what a
+     * rolling car is allowed (`crush.maxRollSpin`) and for the same reason: past
+     * about a revolution and a half a second the sprite has stopped reading as a
+     * cartwheel and started reading as a blur. */
+    downMaxSpin: 9,
+    /**
+     * HOW MUCH OF THE BLOW'S ALONG-ROAD Δv A MACHINE GOING DOWN LEAVES WITH.
+     *
+     * Not one, and the shortfall is the tarmac rather than a fudge: a shunted
+     * car takes the punt on its wheels and rolls, where this thing is taking it
+     * on its side and is being scrubbed from the instant it lands. Most of it
+     * still travels, which is what makes a clipped moped skate up the road ahead
+     * of the wagon instead of vanishing under the floorpan.
+     */
+    downPunt: 0.8,
+    /** …and how much of the LATERAL Δv it leaves with, on top of the clearance
+     * floor every shove keeps (`separationPx`). */
+    downSlewKeep: 0.6,
+    /** HOW HIGH THE BLOW THROWS IT (px/s per m/s of Δv), and the most it may be
+     * thrown. The floor under this is the contact's own upward kick, which on a
+     * square bumper hit is almost nothing — what actually puts a bike in the air
+     * is being scooped off its own wheels, and that is the whole Δv rather than
+     * the geometry's vertical component. Above a car's `rollLiftPerMs` for the
+     * reason the spin is, and capped below its `maxRollLiftPx`: a moped leaves
+     * the ground, it does not leave the frame. */
+    downLiftPerMs: 12,
+    downMaxLiftPx: 210,
+    /**
      * WHAT GOING OVER COSTS A VEHICLE, as the share of its road speed it keeps.
      *
      * THE FIRST HALF OF WHY A ROLLED CAR USED TO CARRY ON DOWN THE ROAD. Tipping
@@ -1676,6 +1716,28 @@ export const DRIVE = {
     explodeChance: 0.3,
     smallFireCap: 0.45,
     largeFireStart: 0.5,
+    /**
+     * …AND THE LADDER A MACHINE ON ITS SIDE RUNS INSTEAD (`igniteDowned`) — how
+     * often the sparks find the tank, and the force past which what starts is a
+     * fire rather than a lick of one.
+     *
+     * A SEPARATE PAIR FROM THE COLLISION LOTTERY ABOVE, deliberately. That one
+     * decides between a bang and a burn, which is the right question about a car
+     * and the wrong one about a scooter: five litres under a seat is a fire, and
+     * a moped removing a street would be the same lie as a pushbike with a tank.
+     * So a downed machine only ever burns, and the roll is only about WHETHER.
+     *
+     * HIGH ON PURPOSE. A moped goes down when its rider comes off, and a rider
+     * comes off at any contact at all — so this is the outcome of an ordinary
+     * collision rather than of a rare one, and the player asked for the picture
+     * where the bike he clipped is lying in the road behind him alight. Three in
+     * ten still slide away dark, which is what keeps the seven from being a
+     * texture. The FORCE line sits just above the rung the machine goes down on
+     * (`traffic.downWear`), so a bike merely dropped smoulders and one genuinely
+     * hit goes up.
+     */
+    downFireChance: 0.7,
+    downFireForce: 0.22,
     /**
      * …AND HOW MANY OF THOSE EXPLOSIONS GO UP BIG — the rare one that puts a
      * pressure ring across the whole picture and a wall of air under it.

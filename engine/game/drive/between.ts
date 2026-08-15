@@ -37,7 +37,12 @@ import { crushVehicle, shatterGlass, tipsOver, tipVehicle } from "./crush.ts";
 import { ejectRider, tearMachine, wreckForce } from "./eject.ts";
 import { FLEET, vehicleDef, type DriveVehicleClass } from "./fleet.ts";
 import { hurtTraffic } from "./collide.ts";
-import { smashEnd, turnedRound, wreckTotally } from "./wreckage.ts";
+import {
+  igniteDowned,
+  smashEnd,
+  turnedRound,
+  wreckTotally,
+} from "./wreckage.ts";
 import { impactMasses, panelAt, type Impact } from "./impact.ts";
 import { breakTrafficLamps, knockDown, trafficMass } from "./traffic.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
@@ -263,11 +268,18 @@ function answer(
     // missing: a machine that comes apart leaves the traffic list, and the
     // whole point of this pass is to LEAVE things in the road. Down, shedding
     // and sliding is the obstacle; a cloud of debris is scenery.
+    const hadRider = one.rider;
     drive.remains.push(...ejectRider(drive, one, hit));
-    if (!one.downed && force >= DRIVE.traffic.downWear) {
-      knockDown(one, dv.y, hit.liftZ, by.pos.y);
+    // …AND A MACHINE THAT HAS LOST ITS RIDER HAS GONE OVER WITH THEM, whoever
+    // took them off it. The hero's own pass states the rule (`collide.ts`); this
+    // one obeys it, because the whole contract of this file is that a lorry
+    // meeting a moped and the wagon meeting one are the same collision.
+    const threw = hadRider && !one.rider;
+    if (!one.downed && (threw || force >= DRIVE.traffic.downWear)) {
+      knockDown(one, hit, by.pos.y);
       drive.remains.push(...tearMachine(drive, one, hit, force));
       drive.events.push({ type: "machineDown", pos: contact, joules });
+      igniteDowned(drive, one, contact, force);
     }
     return;
   }

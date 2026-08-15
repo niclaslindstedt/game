@@ -57,12 +57,18 @@ questGivers:
     # the doorstep to the engine parts crosses the bay's south wall a few px
     # below the opening: a woman with her own key let herself in THROUGH THE
     # BRICKWORK beside it. The corner is a step INSIDE the bay on the doorway's
-    # own line (the roll-up is punched at y 326–374), so she crosses the
-    # threshold square-on under the door she just opened and only then turns for
-    # the corner she waits in.
+    # own line (the roll-up is punched at y 322–386, centred on 354), so she
+    # crosses the threshold square-on under the door she just opened and only
+    # then turns for the corner she waits in.
+    #
+    # AUTHORED COORDINATES, which is only safe because the hub's carve is PINNED
+    # (`carveSeed` in content/maps/garage.yaml) — the doorway lands on the same
+    # px every visit forever. They are the doorway's line rather than a number
+    # somebody liked, so a plan row that moves in that file moves these too, and
+    # `tests/content/garage_test.ts` is what says so out loud.
     arrive:
-      from: { x: 296, y: 350 }
-      via: [{ x: 196, y: 350 }]
+      from: { x: 296, y: 354 }
+      via: [{ x: 196, y: 354 }]
       delayMs: 1100
     # …AND WHAT THE REST OF THE GAME MAKES OF IT. Three words on the spot, and a
     # flag that travels with the hero to the end of the campaign (see

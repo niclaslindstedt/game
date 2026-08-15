@@ -20,6 +20,7 @@ import {
   laneAt,
   laneCenter,
   roadEdges,
+  rungTopSpeedPx,
   skipDriveOpening,
   stepDrive,
   DRIVE,
@@ -113,47 +114,72 @@ describe("the auto-driver", () => {
     ROAD_TIMEOUT_MS,
   );
 
-  it("holds the throttle — it does not coast to a stop", () => {
-    // The bug this whole driver exists to fix: a road with nobody at the wheel
-    // coasts down from its opening 28% and stops.
-    const drive = createDrive(PARAMS);
-    const driver = createDriveDriver();
-    const opening = drive.car.speed;
-    // OVER A WINDOW, NOT AT AN INSTANT, and past the opening by a real margin.
-    //
-    // The approach is a COUNTDOWN (`DRIVE.opening.handsOff`) — the car is held
-    // at the road's own pace and the pedal reaches nothing — so the window has
-    // to open past the gate, and it is DERIVED from the road rather than typed
-    // as a number: the whole approach is `cityPx` at a held `entrySpeedPx`, so
-    // retiming it moves this on its own instead of quietly filling the sample
-    // with held frames. And once he IS in the town, threading is a saw: he lifts
-    // for a knot of people, takes the gap, and buries it again, so ANY single
-    // frame in there is a coin toss about which half of that he was caught on.
-    // What "it holds the throttle" actually claims is about the shape of the
-    // whole window: it gets past the pace it was handed the car at, and it
-    // spends the leg well clear of a coast to a stop.
-    const { cityPx, entrySpeedPx } = DRIVE.opening;
-    const fromMs = (cityPx / entrySpeedPx) * 1000 + 2000;
-    let best = 0;
-    let total = 0;
-    let frames = 0;
-    for (let t = 0; t < fromMs + 12000; t += 16) {
-      stepDrive(drive, 16, driveDriverInput(driver, drive));
-      if (t < fromMs) continue;
-      best = Math.max(best, drive.car.speed);
-      total += drive.car.speed;
-      frames++;
-    }
-    // Faster than it was handed the wheel at, and averaging above the floor the
-    // driver itself promises never to go under — which is the claim, said in the
-    // driver's own terms rather than as a number that has to be re-tuned every
-    // time the crowd is. (A thicker crowd genuinely slows it: `threatSlowFrac`
-    // buys the time to thread, and that is the driver working, not failing.)
-    expect(best).toBeGreaterThan(opening);
-    expect(total / frames).toBeGreaterThan(
-      DRIVE.topSpeedPx * DRIVE_BOT_DEFAULTS.floorFrac,
-    );
-  });
+  it(
+    "holds the throttle — it does not coast to a stop",
+    () => {
+      // The bug this whole driver exists to fix: a road with nobody at the wheel
+      // coasts down from its opening 28% and stops.
+      //
+      // OVER A WINDOW, NOT AN INSTANT — and over SEVERAL ROADS, not one.
+      //
+      // The approach is a COUNTDOWN (`DRIVE.opening.handsOff`): the car is held at
+      // the road's own pace and the pedal reaches nothing, so the window has to
+      // open past the gate, and it is DERIVED from the road rather than typed as a
+      // number — the whole approach is `cityPx` at a held `entrySpeedPx`, so
+      // retiming it moves this on its own instead of quietly filling the sample
+      // with held frames. Once he IS in the town, threading is a saw: he lifts for
+      // a knot of people, takes the gap and buries it again.
+      //
+      // WHICH IS WHY THE PEAK IS A RATE. "Did he ever get past the pace he was
+      // handed the car at" is a question about the twelve seconds of TOWN the seed
+      // dealt him: a road that hands him one clear stretch answers yes, one that
+      // hands him a solid wall of traffic answers no, and both of those are the
+      // driver working. Across the twelve seeds below the shipped road answers yes
+      // eight times, and WHICH eight moves with any change to the town's
+      // furniture — so a bar of half the sample is the honest reading of it, and
+      // pinning it to a single road pins it to that road's traffic instead of to
+      // the driver. The claim is about the DRIVER: on most roads he gets clear of
+      // the pace he was handed, and on EVERY road he spends the leg well above a
+      // coast to a stop.
+      const { cityPx, entrySpeedPx } = DRIVE.opening;
+      const fromMs = (cityPx / entrySpeedPx) * 1000 + 2000;
+      // THE FLOOR IS THE RUNG'S, NOT THE DIAL'S — `rungTopSpeedPx`, which is
+      // exactly what the driver itself multiplies `floorFrac` by (`driver.ts`).
+      // Read off `DRIVE.topSpeedPx` it is the JESUS floor (208 px/s) asserted
+      // against a MEDIUM road whose driver has only promised 162, so the test was
+      // holding the driver to a speed it never claimed and passing on the one
+      // seed whose road happened to be clear enough.
+      const floor =
+        rungTopSpeedPx(PARAMS.difficulty) * DRIVE_BOT_DEFAULTS.floorFrac;
+      let clearedOpening = 0;
+      const seeds = [4242, 4343, 4444, 1, 2, 3, 5, 7, 11, 13, 17, 19];
+      for (const seed of seeds) {
+        const drive = createDrive({ ...PARAMS, seed });
+        const driver = createDriveDriver();
+        const opening = drive.car.speed;
+        let best = 0;
+        let total = 0;
+        let frames = 0;
+        for (let t = 0; t < fromMs + 12000; t += 16) {
+          stepDrive(drive, 16, driveDriverInput(driver, drive));
+          if (t < fromMs) continue;
+          best = Math.max(best, drive.car.speed);
+          total += drive.car.speed;
+          frames++;
+        }
+        if (best > opening) clearedOpening++;
+        // THE FLOOR IS THE ACTUAL CLAIM AND IT HOLDS ON EVERY ROAD: averaging
+        // above the speed the driver itself promises never to go under, said in
+        // the driver's own terms rather than as a number that has to be re-tuned
+        // every time the crowd is. (A thicker crowd genuinely slows it —
+        // `threatSlowFrac` buys the time to thread — and so does a road with more
+        // wreckage lying in it; that is the driver working, not failing.)
+        expect(total / frames, `seed ${seed}`).toBeGreaterThan(floor);
+      }
+      expect(clearedOpening).toBeGreaterThanOrEqual(seeds.length / 2);
+    },
+    ROAD_TIMEOUT_MS,
+  );
 
   it("gets the protected hero car through a real road without breaking it", () => {
     const { drive: steered } = autoDrive(ARRIVING_PARAMS);

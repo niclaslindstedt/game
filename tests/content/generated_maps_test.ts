@@ -63,6 +63,12 @@ import { ABILITY_DEFS } from "../../engine/game/defs/abilities.ts";
 import { STORY_ITEM_DEFS } from "../../engine/game/defs/story.ts";
 import { THOUGHT_DEFS } from "../../engine/game/defs/thoughts.ts";
 import { UNIQUE_DEFS, WORLD_UNIQUES } from "../../engine/game/defs/uniques.ts";
+// THE RENDERER'S OWN RULE, asked directly. Which ground a tile actually shows is
+// the first zone that contains it, and the zone list is full of deliberate
+// overlaps — so a test that read the list would be a second implementation of
+// the lookup, agreeing with itself. The module is framework-free for exactly
+// this reason (the library's build step reads it from plain node too).
+import { groundTileName } from "../../pwa/src/game/render/ground-tiles.ts";
 
 // Enough seeds that a one-in-twenty layout quirk shows up, few enough that the
 // suite stays under a few seconds.
@@ -645,6 +651,77 @@ describe("the hub's lawn", () => {
     expect(map).toEqual(
       new Set(["lawn_tree", "lawn_tree_charred", "lawn_tree_ashen"]),
     );
+  });
+});
+
+describe("the hub's driveway", () => {
+  // THE ONE BUILT SURFACE ON THE LOT, and the only district out here whose edge
+  // is a KERB rather than a hem. A driveway is poured in one straight pour from
+  // the roll-up door to the tarmac, so it is `ragged: false` (`content/maps/
+  // garage.yaml`) — everything else outdoors keeps the torn edge that stops open
+  // ground reading as a rug thrown on the floor.
+  //
+  // ASSERTED THROUGH THE DRAWN TILE rather than through the zone list, because
+  // the zone list is not what anybody sees: a district's floor is emitted per
+  // chamber and grown out to the 16 px grid, several zones overlap, and which
+  // one wins is `groundTileName`'s first-match rule. Reading the same function
+  // the renderer and the library's page backgrounds read is the only way this
+  // can be right about the picture.
+  const level = resolveLevelDef("garage", 1);
+  const TILE = 16;
+  const kindAt = (x: number, y: number): string => {
+    const name = groundTileName(level.tiles, Math.floor(x / TILE), y / TILE);
+    return name.replace(/_[a-z]*\d+$/, "").replace(/_\d+$/, "");
+  };
+  /** Every tile kind drawn down one column of the lot, top of the map to bottom. */
+  const column = (x: number): string[] => {
+    const out: string[] = [];
+    for (let y = 0; y < level.height; y += TILE) out.push(kindAt(x, y));
+    return out;
+  };
+
+  it("lays the lot's fall-through ground as LAWN, not as garage floor", () => {
+    // THE ROOT OF EVERY GREY SMEAR THIS PLACE USED TO HAVE. A mission's own
+    // ground is what a tile NO district claims falls through to, and the seams
+    // an open district's torn hem leaves open are exactly such tiles — so with
+    // the bay's cement here, every one of them was a slab of garage floor lying
+    // out on the grass, at the top of the map and along the drive.
+    expect(levelDef("garage").tiles.ground.common).toBe("grass_0");
+  });
+
+  it("paves it flush to the road and flush to the bay, with no torn edge", () => {
+    // The two halves of "it is not symmetrical": one ragged column stopped short
+    // of the tarmac and the next stepped up into the lawn.
+    const road = 400;
+    const drive = { from: 224, to: road, top: 288 };
+    for (let x = drive.from; x < drive.to; x += TILE) {
+      const strip = column(x);
+      for (let y = drive.top; y < level.height; y += TILE) {
+        expect(kindAt(x, y), `pavement at ${x},${y}`).toBe("pavement");
+      }
+      // …and NOTHING above it: the seam is a ruled line at one y across the
+      // whole slab rather than a different y in every column.
+      expect(strip[drive.top / TILE - 1], `above the kerb at ${x}`).toBe(
+        "grass",
+      );
+    }
+    // IT REACHES THE TARMAC. The kerb and the road's own edge are the same line,
+    // so no strip of anything else shows between the two.
+    expect(kindAt(road - TILE, 320)).toBe("pavement");
+    expect(kindAt(road, 320)).toBe("asphalt");
+  });
+
+  it("leaves no garage floor anywhere outside the garage", () => {
+    // The bay is walled and its cement stops at its own walls; the rest of the
+    // lot is lawn, pavement, tarmac and the painted line, and nothing else.
+    const bay = { to: 224, top: 288 };
+    for (let x = 0; x < level.width; x += TILE) {
+      for (let y = 0; y < level.height; y += TILE) {
+        const inside = x < bay.to && y >= bay.top;
+        if (inside) continue;
+        expect(kindAt(x, y), `outdoors at ${x},${y}`).not.toBe("cement");
+      }
+    }
   });
 });
 
