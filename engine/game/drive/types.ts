@@ -1300,10 +1300,26 @@ export type DriveParams = {
   flags?: Readonly<Record<string, boolean>>;
 };
 
+/**
+ * HOW FAR THE OPENING'S VOICE HAS GOT — `quiet` before he starts, `talking`
+ * while a page of it is on the screen, and `said` once the player has turned
+ * the last one. It only ever moves forwards, which is what makes the gate
+ * settle exactly once (`holdDriveOpening`).
+ */
+export type DriveSpeech = "quiet" | "talking" | "said";
+
 /** The whole of a drive. */
 export type DriveState = {
-  /** The parameters it was built from — kept so a restart can rebuild it
-   * exactly (`restartDrive`). */
+  /**
+   * The parameters it was built from — kept so a restart can rebuild it exactly
+   * (`restartDrive`).
+   *
+   * IT IS THE DRIVE'S OWN COPY, and the copy is load-bearing: the approach's
+   * two lengths (`cityPx`, `coursePx`) are moved while the road waits on the
+   * hero's opening line (`holdDriveOpening`), and the caller's parameters — the
+   * app's, the cabinet's, an exhibit's — must not grow a road under them. Every
+   * other field is settled before the first tick and never touched again.
+   */
   params: DriveParams;
   /** The road's own seeded stream. Never `state.rng()`: a drive is not a run
    * and must never be able to shift one's rolls. */
@@ -1425,8 +1441,25 @@ export type DriveState = {
    * pitch in world x (so the way home passes the same posts) and it walks in
    * whichever direction this leg runs. */
   nextPropSlot: number;
-  /** Latched once the hero has had his think about the people ahead. */
+  /** Latched once the hero has been GIVEN his think about the people ahead —
+   * the beat is raised here and delivered out there, so the box's own progress
+   * through it is `speech` below. */
   monologueDone: boolean;
+  /**
+   * WHETHER THE ROAD IS WAITING ON HIM — how far the opening's voice has got,
+   * and the ONE thing that decides how long the approach turns out to be.
+   *
+   * It is the APP's answer, set through `holdDriveOpening`, because the words
+   * are the app's: the engine raises a `monologue` beat and knows nothing about
+   * pages, taps or how fast anybody reads. `talking` holds the town out of reach
+   * (`DRIVE.opening.holdLeadPx`); the move to `said` plants the gate a taper
+   * ahead and is what starts the widening and GET READY.
+   *
+   * `quiet` FOREVER IS A VALID LEG and is the one every headless caller drives:
+   * an exhibit, a bench, the attract loop and a `?bot=` road have no speech box,
+   * never call in, and get the authored approach exactly as it is written.
+   */
+  speech: DriveSpeech;
   /** …and once THE GLUED have been laid down. A blockade that could be laid
    * twice is a wall the player drives into and then into again. */
   blockadeDone: boolean;

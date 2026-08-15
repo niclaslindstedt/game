@@ -25,8 +25,10 @@ import {
   createDriveDriver,
   driveDashUp,
   driveDriverInput,
+  driveHandsOff,
   driveReadyUp,
   driveScore,
+  holdDriveOpening,
   readCarDamage,
   stepDrive,
   withHeroNameLines,
@@ -57,7 +59,7 @@ import {
   stopMusic,
 } from "../music/index.ts";
 import { viewScaleFor } from "../render/view.ts";
-import { ageBark, openBark, type Speech } from "./bark.ts";
+import { ageBark, openBark, turnBark, type Speech } from "./bark.ts";
 import {
   createWearTrail,
   driveBindings,
@@ -378,8 +380,8 @@ export function DriveScreen({
    * does, with the clock, and takes the caption away with it.
    *
    * SEEDED QUIET because that is what a fresh road is — the wagon is still
-   * sliding into frame with the hero's own two lines to get through, and the
-   * words have nothing to be about yet.
+   * sliding into frame with the hero's own thought to get through, and the words
+   * have nothing to be about until he has finished it.
    */
   const [opening, setOpening] = useState({ ready: false, dash: false });
   /** The damage dial's fresh-slice anchor. Held across ticks (and across a
@@ -410,22 +412,43 @@ export function DriveScreen({
       const rows = lead ? arrivalLine(lead, id) : thoughtPages(id);
       if (!rows.length) return;
       const pages = rows.map((page) => [...withHeroNameLines(page, heroName)]);
-      const next = openBark(id, pages, nowMs);
+      // THE OPENING'S LINE IS TURNED BY THE PLAYER, and it is the only one that
+      // is: it is the one thing said while the car is HELD (`driveHandsOff`),
+      // with no clock running and nothing else to be doing. So the box waits for
+      // a thumb and the road waits with it — the town is kept out of reach until
+      // the last page goes, which is what lets a page be added to the thought
+      // without re-measuring the approach it is said over.
+      //
+      // NOBODY'S THUMB, NO WAIT. An `auto` road — the attract loop, a `?bot=`
+      // playtest, a screenshot recipe — has nobody to turn a page, so its lines
+      // stay barks that retire themselves and its approach stays the authored
+      // one. It is the same rule the title card and the pause card follow.
+      const drive = driveRef.current;
+      const waits = !auto && driveHandsOff(drive);
+      const next = openBark(id, pages, nowMs, waits);
+      if (waits) holdDriveOpening(drive, true);
       speechRef.current = next;
       setSpeech(next);
     },
-    [heroName],
+    [auto, heroName],
   );
 
   /** Take whatever is on the screen away right now — what a restart owes the
-   * box (see `endDrive`), and what the last page of a bark does to itself. */
+   * box (see `endDrive`), and what the last page of a bark does to itself.
+   *
+   * IT LETS THE ROAD GO TOO. A held road is waiting on a box that is no longer
+   * on the screen, and every way one can leave — the last page, a restart —
+   * has to hand the town back or the approach never ends. Idempotent in the
+   * engine, so the calls that had nothing to release cost nothing. */
   const clearSpeech = useCallback(() => {
     speechRef.current = null;
     setSpeech(null);
+    holdDriveOpening(driveRef.current, false);
   }, []);
 
   /** The bark's own clock, run from inside the loop: turn the page when this
-   * one has had its time, and take the box away after the last. */
+   * one has had its time, and take the box away after the last. A waiting line
+   * is not on this clock at all (`ageBark`) — `nudgeSpeech` turns that one. */
   const ageSpeech = useCallback(
     (nowMs: number) => {
       const live = speechRef.current;
@@ -441,6 +464,35 @@ export function DriveScreen({
     },
     [clearSpeech],
   );
+
+  /**
+   * THE THUMB ON THE OPENING'S LINE — a tap finishes the crawl, then turns the
+   * page, then takes the box away and lets the road arrive.
+   *
+   * THE TWO-STEP IS THE BOX'S, NOT THIS SCREEN'S (`revealRef`): the same staged
+   * reveal every conversation in the game answers to, so a tap out here means
+   * what a tap means everywhere else and a key can never disagree with it.
+   *
+   * Returns whether it ate the press. Only a WAITING line does — the car is held
+   * while one is up, so there is no steering for the tap to be taking away, and
+   * every other line is a bark the road drives out from under on its own.
+   */
+  const nudgeSpeech = useCallback((): boolean => {
+    const live = speechRef.current;
+    if (!live?.waits) return false;
+    if (!revealRef.current.done) {
+      revealRef.current.skip();
+      return true;
+    }
+    const next = turnBark(live, driveRef.current.ms);
+    if (!next) {
+      clearSpeech();
+      return true;
+    }
+    speechRef.current = next;
+    setSpeech(next);
+    return true;
+  }, [clearSpeech]);
 
   const setPause = useCallback((on: boolean) => {
     pausedRef.current = on;
@@ -662,6 +714,11 @@ export function DriveScreen({
         return;
       }
       if (pausedRef.current) return;
+      // …AND THE OPENING'S LINE OWNS EVERY KEY WHILE IT IS UP, the way the card
+      // above owns the first one. The car is held out there so there is nothing
+      // for a key to be steering, and a press banked into `keysRef` would be a
+      // control held down from before the player had finished reading.
+      if (nudgeSpeech()) return;
       keysRef.current.add(e.code);
     };
     const up = (e: KeyboardEvent) => keysRef.current.delete(e.code);
@@ -671,7 +728,7 @@ export function DriveScreen({
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
     };
-  }, [onScreenshot, setPause]);
+  }, [nudgeSpeech, onScreenshot, setPause]);
 
   // ?debug — THE ROAD'S OWN `window.__game`.
   //
@@ -762,11 +819,13 @@ export function DriveScreen({
           : { ...keys, handbrake };
 
       // TWO THINGS PARK THE CAR: the pause card, and the high-score board at
-      // the end of the leg. A LINE DOES NOT —
-      // his thoughts are barked over a road that keeps moving (see `Speech`),
-      // which is the only way a man muttering at the wheel reads as a man
-      // muttering at the wheel, and it is also what leaves an UNATTENDED drive
-      // (the attract loop, a playtest) nothing to be stuck on.
+      // the end of the leg. A LINE DOES NOT — his thoughts are said over a road
+      // that keeps moving (see `Speech`), which is the only way a man muttering
+      // at the wheel reads as a man muttering at the wheel, and it is also what
+      // leaves an UNATTENDED drive (the attract loop, a playtest) nothing to be
+      // stuck on. What the OPENING's line holds is the TOWN, not the wagon: the
+      // gate walks along in front of him until the page is turned, so the road
+      // waits without a single frame of it standing still.
 
       // ── THE MOMENT ────────────────────────────────────────────────────────
       // THERE ISN'T ONE, AND THAT IS A DECISION. The road used to drop to a
@@ -1067,11 +1126,11 @@ export function DriveScreen({
           every arcade racer has ever opened with — and, more than the words, a
           beat in which nothing can go wrong yet.
 
-          NOT THE WHOLE APPROACH, which is what it used to be: ten seconds of
-          empty road with GET READY held over the hero's own two lines, telling
-          the player to brace for something that was still eight seconds away.
-          The words mean something when they arrive with the thing they are
-          about.
+          IT IS THE ANSWER TO HIS LAST PAGE, and never a caption held over one.
+          The town is planted a taper ahead of the car on the frame the player
+          turns the opening thought away (`holdDriveOpening`), so these words go
+          up on that tap: the countdown is never counting down to something eight
+          seconds off, and it is never over the top of a line still being read.
 
           Inert, aria-hidden and out of the way of the thumb: the last second of
           it is genuinely steerable, and a caption that ate the pad would be a
@@ -1096,10 +1155,18 @@ export function DriveScreen({
           drag, which is exactly right for the one control a driver reaches for
           without looking. The first finger down owns the pad and keeps it
           (`padIdRef`) — without that, a second thumb landing re-anchored the
-          steering under the first one and the car snapped straight. */}
+          steering under the first one and the car snapped straight.
+
+          …AND WHILE THE OPENING'S LINE IS UP IT IS A PAGE-TURN INSTEAD. The pad
+          covers the whole picture, which is exactly what that line wants: the
+          box itself is `pointer-events: none` and holds no target worth aiming
+          at, so anywhere on the screen turns the page. Nothing is lost by it —
+          the car is held while a waiting line is on screen, so the pad it takes
+          the press from is not connected to anything yet. */}
       <div
         style={PAD}
         onPointerDown={(e) => {
+          if (nudgeSpeech()) return;
           (e.target as Element).setPointerCapture(e.pointerId);
           if (padIdRef.current !== null) {
             brakeIdsRef.current.add(e.pointerId);
@@ -1171,12 +1238,14 @@ export function DriveScreen({
             portrait={heroPortrait}
             pageKey={`${speech.id}:${speech.page}`}
             revealRef={revealRef}
-            // NOBODY CAN PRESS THIS ONE. It is inert by design (see above), so
-            // it must not draw the "there is more" arrow at a player who has
-            // nothing to press it with — and it turns its own screens instead,
-            // or the tail of a page that folded on a narrow phone would simply
-            // never be shown.
-            inert
+            // A BARK IS INERT AND THE OPENING'S LINE IS NOT. A bark has nobody
+            // to press it, so it must not draw the "there is more" arrow at a
+            // player who has nothing to press it with, and it turns its own
+            // folded screens or the tail of a long page on a narrow phone would
+            // never be shown. The opening's line is turned by the thumb the
+            // whole screen collects (`nudgeSpeech`), so it wants the arrow and
+            // wants its screens left alone.
+            inert={!speech.waits}
           />
         </div>
       )}

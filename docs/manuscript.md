@@ -275,7 +275,7 @@ _The joke is the SHAPE of this set: he says what he thinks of these people on an
 empty road BEFORE he meets any of them, and afterwards he reports on the road
 surface. Nothing in between, ever. He must never acknowledge a single body._
 
-### On the outskirts, going out (barked)
+### On the outskirts, going out (read at the player's own pace)
 
 1. HER JACKET'S PINGING FROM GOODCO.
 2. THEY BEG HARD IN TOWN. NONE OF THEM'S ON THE WELFARE. NOT LIKE ME.
@@ -286,7 +286,7 @@ about the car:_
 
 2. FRONT END'S PULLING. MUST'VE GONE OVER SOMETHING BACK THERE.
 
-### On the same road, coming home (barked)
+### On the same road, coming home (read at the player's own pace)
 
 _He does not mention the people. That absence is the joke._
 

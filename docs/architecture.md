@@ -1031,8 +1031,8 @@ escort.ts` walks the people an escort errand puts on the field, and
   road is driven BOTH WAYS and a road that only reads right one way round is half
   a road. The town is bracketed by `cityStartPx` of empty road at each end
   (`cityEndPx` is the far one), so the stretch one leg OPENS over — the wagon
-  sliding into frame, the two lines said to nobody, the town arriving in front of
-  the player — is the stretch the other leg FINISHES on. The clock stops at the
+  sliding into frame, his own thought said to nobody, the town arriving in front
+  of the player — is the stretch the other leg FINISHES on. The clock stops at the
   far gate rather than at the finish (`cityEnd`), because the run-out is road the
   player still drives and nobody races. Past the finish is the RUN-IN, and what
   stands there is the destination's own SITE (`engine/game/drive/sites.ts`): a
@@ -1041,28 +1041,33 @@ escort.ts` walks the people an escort errand puts on the field, and
   are two rows of data rather than two code paths. A third destination is one
   more layout beside `campus.ts` and `homestead.ts` and one more line in
   `DRIVE_SITES`.
-  THE APPROACH IS A COUNTDOWN. The ten seconds before the town are held: the
-  speed is the road's own and the pedal reaches nothing. Its last beats are the
-  road's own picture — the carriageway opens out from two lanes to four
-  (`opening.widenPx`) and GET READY goes up with the taper (`driveReadyUp`),
-  then one second out the WHEEL is handed back and the dashboard slides in from
-  the left (`driveHandsOff` / `driveSteerOnly` / `opening.dashAtPx`). The pedal
-  arrives with the clock and not a frame before it, so the gate is a starting
-  flag rather than a line the player crosses without noticing. Its length is a
-  DISTANCE at a held speed (`opening.cityPx` at `entrySpeedPx`), which is why the
-  approach is retimed by moving one number — and `coursePx` moves with it, so the
-  LEG changes length and the minigame does not: the town, which is the stretch
-  the clock runs over and the board ranks, is what it has always been. WHAT SETS
-  THE NUMBER is the hero's two lines: he starts as the wagon settles into frame
-  (`opening.sayAtPx`) and has to be finished by the hand-over, so the approach is
-  the sum of the slide-in, both pages of speech and the hand-over's own second.
-  The pages are sized in the app off their own crawl (`drive-screen/bark.ts`) and
-  `tests/drive_bark_test.ts` holds the two halves against each other.
+  THE APPROACH IS A COUNTDOWN. The road before the town is held: the speed is the
+  road's own and the pedal reaches nothing. Its last beats are the road's own
+  picture — the carriageway opens out from two lanes to four (`opening.widenPx`)
+  and GET READY goes up with the taper (`driveReadyUp`), then one second out the
+  WHEEL is handed back and the dashboard slides in from the left
+  (`driveHandsOff` / `driveSteerOnly` / `opening.dashAtPx`). The pedal arrives
+  with the clock and not a frame before it, so the gate is a starting flag rather
+  than a line the player crosses without noticing.
+  AND IT IS AS LONG AS THE HERO'S OPENING THOUGHT, which is turned by the PLAYER
+  a page at a time. The app tells the road when a page is up and when the last
+  one goes (`holdDriveOpening`); while it is up, the gate is pushed to stay ahead
+  of the car (`opening.holdLeadPx` — bigger than the spawners' own reach, or the
+  town's four lanes of traffic would be laid onto a two-lane road the gate then
+  slides away from), and the falling edge PLANTS the town a taper in front of
+  him. So the widening and GET READY are the answer to the last tap, and a page
+  added to `content/thoughts.yaml` re-tunes nothing. The move is `cityPx` plus
+  TWICE that delta on `coursePx`, which is what keeps `cityLength` — the stretch
+  the clock runs over and the board ranks — the same for a slow reader and a fast
+  one. `opening.cityPx` is the floor and the whole road for a leg that says
+  nothing: an exhibit, a bench, the attract loop, a `?bot=` playtest.
   A BREAKDOWN REPLAYS THE LAST STRETCH OF IT AND NOTHING ELSE. `restartDrive`
   lays the same seed's road down again and opens it at the WIDENING
   (`skipDriveOpening`'s `beforeGatePx`), so the taper, GET READY, the dashboard
   and the wheel all arrive exactly as they did the first time, and the wagon
-  sliding into frame with the two lines over it does not. None of it is scored —
+  sliding into frame with his thought over it does not — the same road too,
+  because a restart rebuilds from the drive's own parameters, which is where the
+  length the wait settled on is kept. None of it is scored —
   the clock is the town's — so what a restart hands back is a beat to breathe
   rather than distance off the board. Every HEADLESS caller (a suite, the bench,
   the effects gallery) takes the default instead and opens at the gate itself.
