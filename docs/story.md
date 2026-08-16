@@ -65,10 +65,12 @@ prints the name.
 Movie night. Ada announces they are out of chips and soda; he calls after her —
 without getting up — to take her jacket, and she lifts it off the hall tree by
 the front door and steps out for five minutes. Alone in the quiet after the door
-shuts, he mentions the jacket, and then mentions what is sewn into its lining:
-he put a tracking beacon in there the winter he fixed its zipper, because she
-loses things. He does not think this needs explaining, and the game never brings
-it up again as anything but a bearing. Two hours later the man who
+shuts, he is glad she took it, and then says why: he sewed a tracking beacon
+into its lining, so that he always knows where she is — which he calls keeping
+her safe. He offers no excuse for it and the game never brings it up again as
+anything but a bearing — but it is the first thing the player learns about him
+that is not a joke about a man who will not get off a couch. Two hours later
+the man who
 never gets up gets up, leaps for the weapon mounted over the couch — which one
 depends on the difficulty, from grandpa's sawed-off down to a stick — weighs it
 in one line, and says the only thing he will say about the plan: he is taking
