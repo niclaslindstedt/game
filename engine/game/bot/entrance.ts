@@ -18,8 +18,15 @@
 // watching: SOMEBODY IS ABOUT TO OPEN THAT DOOR — go and be standing there
 // when they do. Which is also, precisely, what the level is asking for.
 //
-// The rung is deliberately narrow. It answers null the instant the doors are
-// open, and null on every map that has no arrivals at all, so the ladder below
+// …AND THEN THROUGH IT. Getting the doors to move is only half the errand: the
+// venue's own opening beats wait on a hero who is actually ON the floor rather
+// than standing in the opening (`ARRIVALS.enteredStep`), so the rung carries him
+// a few tiles past the jambs before it retires. Left to stop at the threshold he
+// waits there forever — the read that arms him is behind a depth he never walks,
+// and every rung below this one is still waiting for a weapon.
+//
+// The rung is deliberately narrow. It answers null the moment he is properly
+// inside, and null on every map that has no arrivals at all, so the ladder below
 // it is untouched everywhere else and the bot goes back to playing the level
 // the moment there is a level to play.
 //
@@ -30,9 +37,10 @@ import { distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
 import { ENTRANCE_DOOR } from "../arrivals.ts";
+import { ARRIVALS, PLAYER } from "../config/index.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
 import { anyZoneContains } from "../zones.ts";
-import type { GameState, Player } from "../types/index.ts";
+import type { ArrivalPlan, GameState, Player } from "../types/index.ts";
 
 /** Where the bot is going while the way in is shut, and what BOT VIEW calls
  * it. */
@@ -59,6 +67,16 @@ export function lockedOut(state: GameState, hero: Player): boolean {
   return anyZoneContains(def.arrivalLot, hero.pos);
 }
 
+/** How far past the doorway a body stands, in world px down the plan's own
+ * normal — negative is the tarmac. The plan holds a point either side of the
+ * opening, so the way in is simply the direction between them. */
+function depthInside(plan: ArrivalPlan, at: Vec2): number {
+  const nx = plan.inside.x - plan.door.x;
+  const ny = plan.inside.y - plan.door.y;
+  const len = Math.hypot(nx, ny) || 1;
+  return ((at.x - plan.door.x) * nx + (at.y - plan.door.y) * ny) / len;
+}
+
 /**
  * WHERE TO STAND WHILE HE WAITS — and it is a PERSON first, the doorway second.
  *
@@ -73,14 +91,42 @@ export function lockedOut(state: GameState, hero: Player): boolean {
  * the answer: it is a step off the doorway, which is where somebody waiting to
  * go in stands.
  *
- * Null whenever the doors are open or the hero is already through.
+ * AND ONCE THE WAY IS OPEN THE GOAL IS THE FLOOR, not the doorway. The venue's
+ * first beats wait on a hero who has walked a few tiles in
+ * (`ARRIVALS.enteredStep`), and the crowd they are about stands well beyond
+ * that — so a bot that stops on the threshold is a bot standing among neutral
+ * staff with no weapon, waiting for a read that is waiting for him. He goes to
+ * the landing: the doorway's own normal, that far in.
+ *
+ * THE LANDING IS PAST THE BAR, NOT ON IT. Steering stops within
+ * `PLAYER.arriveRadius` of its target, so aiming AT the depth the beats want
+ * leaves him a few px short of it — arrived, satisfied, and still not inside as
+ * far as the venue is concerned. A body's radius of overshoot puts him plainly
+ * on the floor rather than balanced on the line.
+ *
+ * Null once he is properly inside — which is what hands the run back to the
+ * ladder below.
  */
 export function entranceGoal(
   state: GameState,
   hero: Player,
 ): EntranceGoal | null {
   const plan = state.arrivalPlan;
-  if (!plan || !lockedOut(state, hero)) return null;
+  if (!plan) return null;
+  if (depthInside(plan, hero.pos) >= ARRIVALS.enteredStep) return null;
+  if (!lockedOut(state, hero)) {
+    const nx = plan.inside.x - plan.door.x;
+    const ny = plan.inside.y - plan.door.y;
+    const len = Math.hypot(nx, ny) || 1;
+    const landing = ARRIVALS.enteredStep + PLAYER.arriveRadius + PLAYER.radius;
+    return {
+      pos: {
+        x: plan.door.x + (nx / len) * landing,
+        y: plan.door.y + (ny / len) * landing,
+      },
+      thought: "GET INSIDE",
+    };
+  }
   // The nearest one still on their feet — nearest, because on a lot with three
   // cars in the rank the person to fall in behind is the one already passing.
   let follow: Vec2 | null = null;

@@ -171,6 +171,51 @@ describe("GOODCO HQ's staff lot", () => {
     }
   });
 
+  it("leaves the hero a floor to walk onto, not a scientist in the doorway", () => {
+    // THE SCENE BEHIND THE DOOR HAS TO BE BEHIND IT. `clearTheLobby` walks the
+    // scripted rusher back toward the entrance until its swept line is clear,
+    // and the point it measures to decides whether the beat has a room or a
+    // threshold: asked about the APRON it is asking a body indoors to see a
+    // point on the tarmac, and this runs at level open, when the gate across
+    // that opening is SHUT. Every candidate depth fails, the loop falls through
+    // to its floor, and the rusher is planted at `insideStep` — so the hero
+    // steps through the gate and meets him in it, with the venue's first read
+    // and the blow behind it landing on a man who has walked nowhere.
+    //
+    // Two claims, because either alone is passable while the beat is broken.
+    // NO seed may land on the pull-back's own floor: that value means the walk
+    // back ran out of candidates, and a test that only checked "deeper than the
+    // doorway" would have passed the shut-gate bug by a pixel. And the pull-back
+    // has to stay the EXCEPTION its comment claims it is — a real rank of
+    // furniture pens it on a minority of carves, and the rest keep the post the
+    // carve chose. Under the bug it was every seed, at the floor, exactly.
+    const depths = SEEDS.map((seed) => {
+      const state = hq(seed);
+      const plan = state.arrivalPlan;
+      expect(plan, `seed ${seed}: no plan`).not.toBeNull();
+      const rusher = state.enemies.find((e) => e.vanguard);
+      expect(rusher, `seed ${seed}: no rusher`).toBeDefined();
+      if (!plan || !rusher) return 0;
+      const nx = plan.inside.x - plan.door.x;
+      const ny = plan.inside.y - plan.door.y;
+      const len = Math.hypot(nx, ny) || 1;
+      const depth =
+        ((rusher.pos.x - plan.door.x) * nx +
+          (rusher.pos.y - plan.door.y) * ny) /
+        len;
+      expect(
+        depth,
+        `seed ${seed}: the rusher is planted in the doorway`,
+      ).toBeGreaterThan(ARRIVALS.insideStep);
+      return depth;
+    });
+    const roomy = depths.filter((d) => d > ARRIVALS.enteredStep).length;
+    expect(
+      roomy,
+      "the lobby is being cleared on nearly every carve, not the odd penned one",
+    ).toBeGreaterThan(SEEDS.length * 0.75);
+  });
+
   it("waits with the first blow until he is inside", () => {
     for (const seed of SEEDS) {
       const state = hq(seed);
@@ -381,12 +426,19 @@ describe("GOODCO HQ's staff lot", () => {
     );
   }, 30_000);
 
-  it("keeps the read on the floor from firing out on the tarmac", () => {
+  it("keeps the read on the floor from firing until he is onto it", () => {
     // "EVERY DESK'S MANNED. EVERY LAB LIT." is a line about the inside of a
     // building, and a sighting is plain distance — so the crowd standing a step
     // past the doorway is within the beat's own radius of a man on the car park
     // the instant a badge opens the gate. `inside` on the trigger is what holds
     // it, and this is the assertion that says so about the shipped map.
+    //
+    // AND IT HAS TO BE A DEPTH, not a side of the doorway's line. Standing in
+    // the opening already clears a side test, which lands the line on a hero
+    // who has not walked anywhere — the read, and the blow behind it, arriving
+    // together the tick the slabs move. The bar is `ARRIVALS.enteredStep` of
+    // actual floor covered, so what is asserted here is the distance, not the
+    // sign.
     //
     // It also covers the FIRST BLOW, which waits on this same read
     // (`openingStrike.after`): a scientist that broke cover early would be
@@ -398,24 +450,28 @@ describe("GOODCO HQ's staff lot", () => {
       expect(plan, `seed ${seed}: no plan`).not.toBeNull();
       if (!plan) continue;
       const bot = createBot("balanced");
-      // Which side of the doorway the hero is on, measured down the plan's own
-      // normal — positive is the building.
+      // How far INTO the building the hero is, in world px down the plan's own
+      // normal — negative is the tarmac.
       const nx = plan.inside.x - plan.door.x;
       const ny = plan.inside.y - plan.door.y;
-      let readAt = -1;
+      const len = Math.hypot(nx, ny) || 1;
+      let readAt: number | undefined;
       for (let t = 0; t < 90_000 / DT; t++) {
         step(state, [botAct(bot, state, state.players[0]!)], DT);
         if (state.thoughtsSeen.includes("goodco_staff")) {
           const hero = state.players[0]!;
           readAt =
-            (hero.pos.x - plan.door.x) * nx + (hero.pos.y - plan.door.y) * ny;
+            ((hero.pos.x - plan.door.x) * nx +
+              (hero.pos.y - plan.door.y) * ny) /
+            len;
           break;
         }
       }
-      expect(readAt, `seed ${seed}: never read the floor`).not.toBe(-1);
-      expect(readAt, `seed ${seed}: read it from the car park`).toBeGreaterThan(
-        0,
-      );
+      expect(readAt, `seed ${seed}: never read the floor`).toBeDefined();
+      expect(
+        readAt,
+        `seed ${seed}: read it from the doorway`,
+      ).toBeGreaterThanOrEqual(ARRIVALS.enteredStep);
     }
   }, 60_000);
 

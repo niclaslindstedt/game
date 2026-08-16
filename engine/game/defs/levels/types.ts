@@ -1624,8 +1624,9 @@ export type ThoughtTrigger = {
   radius?: number;
   /**
    * `firstSightThoughts` only: HOLD THIS BEAT UNTIL THE HERO IS PAST THE GATE —
-   * inside the building, on the far side of the level's arrival entrance
-   * (`LevelDef.arrivals`, `anyHeroPastEntrance`).
+   * inside the building, and a few tiles onto its floor rather than standing in
+   * the opening (`LevelDef.arrivals`, `anyHeroPastEntrance`,
+   * `ARRIVALS.enteredStep`).
    *
    * IT IS NOT A SMALLER RADIUS, and the difference is the whole reason it
    * exists. A sighting is measured as plain distance, and the crowd the beat is

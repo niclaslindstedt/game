@@ -230,9 +230,21 @@ const READER_GAP = 18;
  * the first campaign level, holstered for the whole clock.)
  *
  * So the rusher is walked BACK toward the doorway until it has a clear swept
- * line to the apron — the deepest post it can actually leave. It keeps its
- * scene (it is still inside, still the first thing past the doors) and it keeps
- * its job. Deterministic, and a no-op on the seeds where it was already fine.
+ * line to the INSIDE of it — the deepest post it can actually leave. It keeps
+ * its scene (it is still inside, still the first thing past the doors) and it
+ * keeps its job. Deterministic, and a no-op wherever it was already fine.
+ *
+ * THE LINE IS MEASURED TO THIS SIDE OF THE DOORWAY, NEVER TO THE APRON, and the
+ * difference is the whole beat. This runs at level open, when the gate is SHUT —
+ * and a shut gate is a chain of slabs across the opening, so a swept line from
+ * anywhere inside to anything on the tarmac is blocked BY THE DOOR. Asked about
+ * the apron the test therefore fails at every depth on every seed, the loop
+ * falls through to its floor, and the rusher is dumped against the inside of the
+ * gate: the hero steps through the opening and meets him in it, with the venue's
+ * first read and the blow that answers it landing on a man who has not walked
+ * anywhere. Getting from the doorway to the tarmac is the GATE's business and it
+ * is open by the time any of this plays; what this function has to know is only
+ * whether the lobby's own furniture has penned him in.
  *
  * Only the RUSHER, deliberately. The crowd around it is ordinary horde: some of
  * them being penned behind a rank is a floor with furniture on it, and none of
@@ -242,7 +254,7 @@ function clearTheLobby(state: GameState, plan: ArrivalPlan): void {
   const rusher = state.enemies.find((e) => e.vanguard);
   if (!rusher) return;
   const radius = enemyDef(rusher.defId).radius;
-  if (!blockedByObstacle(state, rusher.pos, plan.apron, radius)) return;
+  if (!blockedByObstacle(state, rusher.pos, plan.inside, radius)) return;
   const dx = plan.inside.x - plan.door.x;
   const dy = plan.inside.y - plan.door.y;
   const len = Math.hypot(dx, dy) || 1;
@@ -251,7 +263,7 @@ function clearTheLobby(state: GameState, plan: ArrivalPlan): void {
   for (let d = reach; d >= ARRIVALS.insideStep; d -= 20) {
     const at = vec(plan.door.x + (dx / len) * d, plan.door.y + (dy / len) * d);
     if (insideObstacle(state, at, radius)) continue;
-    if (blockedByObstacle(state, at, plan.apron, radius)) continue;
+    if (blockedByObstacle(state, at, plan.inside, radius)) continue;
     rusher.pos = at;
     rusher.home = { ...at };
     return;

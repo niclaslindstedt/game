@@ -8,7 +8,14 @@
 
 import { createCutscene } from "@game/lib/cutscene.ts";
 import { distance, type Vec2 } from "@game/lib/vec.ts";
-import { DIALOGUE, DOORS, GATES, MERCHANT, PLAYER } from "./config/index.ts";
+import {
+  ARRIVALS,
+  DIALOGUE,
+  DOORS,
+  GATES,
+  MERCHANT,
+  PLAYER,
+} from "./config/index.ts";
 import { companionDef } from "./defs/companions.ts";
 import { cutsceneDef, cutsceneVariant } from "./defs/cutscenes.ts";
 import { MERCHANT_RETURN_SENDOFF } from "./defs/difficulties.ts";
@@ -695,9 +702,17 @@ export function stepPlaceThoughts(
  * The staff lot's own geometry already answers it. The arrival plan
  * (`engine/game/arrivals.ts`) holds the doorway and the two points either side
  * of it — `apron` out on the tarmac, `inside` a step into the building — so
- * "inside" is simply the side of the doorway's line that `inside` is on. No
- * zone, no room id, no carve lookup, which is what makes it work on a floor
- * plan that did not exist until this run was carved.
+ * the way in is the direction of the doorway's own normal. No zone, no room id,
+ * no carve lookup, which is what makes it work on a floor plan that did not
+ * exist until this run was carved.
+ *
+ * IT ASKS HOW FAR IN, NOT WHICH SIDE (`ARRIVALS.enteredStep`). A hero standing
+ * in the opening is already on the building's side of it, so a side test hands
+ * every beat that waits to be indoors to the same instant — the gate moves and
+ * the floor's first read and the blow that answers it both land on a man who
+ * has not walked anywhere yet. He has to cross the floor for a few tiles first,
+ * which is the difference between arriving somewhere and being teleported into
+ * it.
  *
  * TRUE on every level that has no arrival lot, and deliberately: a beat that
  * waits to be indoors on a map with no indoors is a beat that never plays. The
@@ -709,10 +724,13 @@ export function anyHeroPastEntrance(state: GameState): boolean {
   if (!plan) return true;
   const nx = plan.inside.x - plan.door.x;
   const ny = plan.inside.y - plan.door.y;
+  const len = Math.hypot(nx, ny) || 1;
   return state.players.some(
     (hero) =>
       heroInPlay(hero) &&
-      (hero.pos.x - plan.door.x) * nx + (hero.pos.y - plan.door.y) * ny > 0,
+      ((hero.pos.x - plan.door.x) * nx + (hero.pos.y - plan.door.y) * ny) /
+        len >=
+        ARRIVALS.enteredStep,
   );
 }
 

@@ -35,7 +35,15 @@ import {
   type GameState,
 } from "@game/core";
 
-import { DT, idle, makeEnemy, SEED, stopWaves } from "../helpers.ts";
+import {
+  DT,
+  idle,
+  makeEnemy,
+  SEED,
+  stopWaves,
+  walkInside,
+  wellInside,
+} from "../helpers.ts";
 
 /**
  * A GOODCO HQ run past the opening scenes but with the hero still DISARMED —
@@ -65,8 +73,7 @@ function disarmedHQ(seed = SEED): GameState {
  */
 function insideHQ(seed = SEED): GameState {
   const state = disarmedHQ(seed);
-  const inside = state.arrivalPlan?.inside;
-  if (!inside) throw new Error("goodco_hq carved no way in");
+  if (!wellInside(state)) throw new Error("goodco_hq carved no way in");
   muteDialogue(state);
   let opened = false;
   for (let i = 0; i < 4000 && !opened; i++) {
@@ -75,7 +82,9 @@ function insideHQ(seed = SEED): GameState {
   }
   if (!opened) throw new Error("nobody ever badged the entrance open");
   unmuteDialogue(state);
-  state.players[0].pos = { x: inside.x, y: inside.y };
+  // Onto the floor, not into the opening — the beats this suite is about are
+  // held until he has crossed `ARRIVALS.enteredStep` of it.
+  walkInside(state);
   return state;
 }
 

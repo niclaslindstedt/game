@@ -4,6 +4,7 @@
 
 import {
   AMMO,
+  ARRIVALS,
   createGame,
   dismissIntro,
   enemyDef,
@@ -140,17 +141,41 @@ export function clearStage(state: GameState): void {
  * PUT THE HERO INSIDE THE BUILDING on a venue that opens on a staff lot.
  *
  * GOODCO's floor beats — the read on the night shift, the scripted first blow —
- * are held until somebody is past the GATE (`ThoughtTrigger.inside`), because a
- * sighting is plain distance and the crowd stands a step past the doorway. A
- * test that stages one of those beats therefore has to be indoors first, and the
- * arrival plan already carries the one point that means "in": `plan.inside`.
+ * are held until somebody is properly indoors (`ThoughtTrigger.inside`), because
+ * a sighting is plain distance and a man in the opening is within any radius the
+ * beat could use. A test that stages one of those beats therefore has to be
+ * inside first.
+ *
+ * AND `plan.inside` IS NOT THAT POINT, though its name invites it: it is where a
+ * staffer's body dissolves, a step past the jambs, and the venue asks for
+ * `ARRIVALS.enteredStep` of floor actually crossed. Staging on the shallower one
+ * puts the hero exactly where the beats have decided he has not arrived yet, and
+ * the test then reports the beat as broken. Same direction, the depth the engine
+ * is asking about.
  *
  * A no-op on every level with no lot, so it is safe to call unconditionally.
  */
 export function walkInside(state: GameState): void {
+  const at = wellInside(state);
+  if (!at) return;
+  for (const hero of state.players) hero.pos = { ...at };
+}
+
+/** The point {@link walkInside} stands a hero on — exposed for the suites that
+ * need to stage a body relative to it. Null on a level with no arrival lot. */
+export function wellInside(state: GameState): Vec2 | null {
   const plan = state.arrivalPlan;
-  if (!plan) return;
-  for (const hero of state.players) hero.pos = { ...plan.inside };
+  if (!plan) return null;
+  const nx = plan.inside.x - plan.door.x;
+  const ny = plan.inside.y - plan.door.y;
+  const len = Math.hypot(nx, ny) || 1;
+  // A hair past the bar rather than on it: the engine's own test is `>=`, and a
+  // staging that lands exactly on a threshold is a staging that flickers.
+  const depth = ARRIVALS.enteredStep + 1;
+  return {
+    x: plan.door.x + (nx / len) * depth,
+    y: plan.door.y + (ny / len) * depth,
+  };
 }
 
 /**
