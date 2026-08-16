@@ -225,7 +225,7 @@ gets, about somebody he knows. She is standing there again on the next visit;
 what does not come back is this night, and the campaign carries it: the road out
 says something different (below), and so does Friday (the epilogue)._
 
-**Greeting:** SHE LAUGHED ABOUT THAT ZIPPER FOR A WEEK. LISTEN - COULD YOU DO SOMETHING FOR ME?
+**Greeting:** SHE ALWAYS SAID YOU NOTICED EVERYTHING. LISTEN - COULD YOU DO SOMETHING FOR ME?
 
 **Farewell:** SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW SHE WOULD BE. GO ON.
 
@@ -1616,7 +1616,7 @@ _Drops: GOLDEN PARACHUTE. Leaves: a second RIFT._
 
 **ADA'S JACKET SCRAP** _(Ada's Trail)_
 
-- A SCRAP OF HER JACKET - THE ONE I FIXED THE ZIPPER ON - SNAGGED ON A SHARD.
+- A SCRAP OF HER JACKET, SNAGGED ON A SHARD. I CHECKED THE LINING FIRST. NOT THIS PIECE.
 - WRAPPED IN IT: A SCALE SHE PRIED OFF A LIZARD GOD. STILL FIGHTING. GOOD.
 
 **WARDENCLYFFE NOTES**

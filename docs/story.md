@@ -47,6 +47,13 @@ The gore engine makes every one of these deaths as loud and wet as it can, and
 he notices the suspension. Ada is the only thing he is ever thinking about, and
 that is presented as devotion, which is the point.
 
+**And the devotion is never quite examined either.** He put a transmitter in her
+clothes and is glad she is wearing it, he reaches for the lining before anything
+else when a piece of her jacket turns up in the rift, and Ruth — who thinks the
+world of him — greets him with how much he notices. None of it is ever called
+out, by him or by anybody else: the game states it flatly three times across the
+campaign and leaves the player to decide what they have just been told.
+
 **Ada is never on screen and never passive.** She leaves a trace at every stop
 (**Ada's Trail**) — scared, then defiant, then actively wrecking the place. The
 other person who cannot stop following her is **RUTH, her mother**, who lets
@@ -362,7 +369,8 @@ nobody** — not its board, not any government. THE FOUNDER read its private log
 and sold the secret to the lizards for a planet, which is how the tribute road
 got a door. BRO OMEGA dies for real and drops a SINGULARITY CANNON; at the far
 door THE FOUNDER is cornered a second time and runs again. **Ada's Trail**: a
-scrap of the zipper-fixed jacket wrapped around a scale she pried off a god.
+scrap of her jacket wrapped around a scale she pried off a god — and the hero
+says what he went for in it first, which was the lining.
 Not fighting: **THE LIGHTHOUSE KEEPER**, still trimming a light and still two men
 short since 1900, and **THE SHIP'S COOK**, who maintains his crew are merely
 late.

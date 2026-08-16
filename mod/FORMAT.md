@@ -2347,11 +2347,11 @@ break.
 ```yaml
 text:
   # One entry — the box breaks it wherever it has to.
-  - SHE TOOK HER JACKET. THE ONE I FIXED THE ZIPPER ON.
+  - GOOD THING SHE TOOK HER JACKET. I PUT A TRACKING BEACON IN THE LINING.
 text:
   # Two — a break you MEANT, held for the beat.
-  - SHE TOOK HER JACKET.
-  - THE ONE I FIXED THE ZIPPER ON.
+  - HANG ON, ADA. I'M COMING.
+  - YEE-HAW, I GUESS.
 ```
 
 ### `variants:` — one scene per difficulty, from one file

@@ -166,14 +166,20 @@ storyItems:
       - - "A STONE TABLET, A GANTT CHART CHISELED IN. ONE MILESTONE GLOWS: 'TRIBUTE NIGHT.'"
       - - "'OFFERING: SPECIMEN 7. VENUE: THE RIFT. DRESS CODE: SCALES.' SHE'S ALIVE. AND I'M NOT LATE."
   # ---- The Rift ---------------------------------------------------------------
-  # ADA'S TRAIL (4/5): the gut-punch — the zipper-fixed jacket from the
-  # prelude, and proof she's fighting back (the "kicked a lizard" line, made
-  # physical).
+  # ADA'S TRAIL (4/5): the gut-punch — the jacket from the prelude, and proof
+  # she's fighting back (the "kicked a lizard" line, made physical).
+  #
+  # AND WHAT HE REACHES FOR IS THE LINING. He is holding a piece torn off the
+  # woman he is crossing universes for, and his first move is to check whether
+  # his own device is in it — the prelude's caption said flatly, a chapter and
+  # a half later, with no more comment on it than the prelude gave. The page
+  # settles the mechanics too: the signal he is following did not come off this
+  # scrap, so the trail still leads somewhere.
   ada_jacket:
     name: ADA'S JACKET SCRAP
     icon: icon_ada_jacket
     lore:
-      - - A SCRAP OF HER JACKET - THE ONE I FIXED THE ZIPPER ON - SNAGGED ON A SHARD.
+      - - A SCRAP OF HER JACKET, SNAGGED ON A SHARD. I CHECKED THE LINING FIRST. NOT THIS PIECE.
       - - "WRAPPED IN IT: A SCALE SHE PRIED OFF A LIZARD GOD. STILL FIGHTING. GOOD."
   wardenclyffe_notes:
     name: WARDENCLYFFE NOTES

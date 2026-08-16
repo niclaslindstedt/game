@@ -93,7 +93,7 @@ questGivers:
       conversation: ruth_arrival
       until: ruth_met
     greeting:
-      - SHE LAUGHED ABOUT THAT ZIPPER FOR A WEEK. LISTEN - COULD YOU DO SOMETHING FOR ME?
+      - SHE ALWAYS SAID YOU NOTICED EVERYTHING. LISTEN - COULD YOU DO SOMETHING FOR ME?
     farewell:
       - SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW SHE WOULD BE. GO ON.
 

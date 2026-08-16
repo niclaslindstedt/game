@@ -1,6 +1,6 @@
 ---
 type: Changed
-title: The prelude's beacon line lets the hero show a little of himself
+title: The beacon in Ada's jacket now says something about the hero
 ---
 
-The caption after the front door shuts now has the hero glad his girlfriend walked out wearing a transmitter he sewed into her jacket, calling it keeping her safe.
+Three lines state it flatly and never comment on it — he is glad she walked out wearing the transmitter he sewed into her jacket, he checks its lining before anything else when a scrap turns up in the rift, and her mother thanks him for how much he notices.
