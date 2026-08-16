@@ -905,8 +905,17 @@
           "kind": "move",
           "speed": 44,
           "to": {
-            "x": 136,
-            "y": 100
+            "x": 140,
+            "y": 106
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 140,
+            "y": 86
           }
         },
         {
@@ -951,6 +960,15 @@
         {
           "kind": "wait",
           "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 140,
+            "y": 86
+          }
         },
         {
           "actor": "hero",
@@ -1386,8 +1404,17 @@
           "kind": "move",
           "speed": 44,
           "to": {
-            "x": 136,
-            "y": 100
+            "x": 140,
+            "y": 106
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 140,
+            "y": 86
           }
         },
         {
@@ -1432,6 +1459,15 @@
         {
           "kind": "wait",
           "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 140,
+            "y": 86
+          }
         },
         {
           "actor": "hero",
@@ -1867,8 +1903,17 @@
           "kind": "move",
           "speed": 44,
           "to": {
-            "x": 136,
-            "y": 100
+            "x": 140,
+            "y": 106
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 140,
+            "y": 86
           }
         },
         {
@@ -1913,6 +1958,15 @@
         {
           "kind": "wait",
           "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 140,
+            "y": 86
+          }
         },
         {
           "actor": "hero",
@@ -2348,8 +2402,17 @@
           "kind": "move",
           "speed": 44,
           "to": {
-            "x": 136,
-            "y": 100
+            "x": 140,
+            "y": 106
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 140,
+            "y": 86
           }
         },
         {
@@ -2394,6 +2457,15 @@
         {
           "kind": "wait",
           "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 140,
+            "y": 86
+          }
         },
         {
           "actor": "hero",
@@ -2829,8 +2901,17 @@
           "kind": "move",
           "speed": 44,
           "to": {
-            "x": 136,
-            "y": 100
+            "x": 140,
+            "y": 106
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 140,
+            "y": 86
           }
         },
         {
@@ -2875,6 +2956,15 @@
         {
           "kind": "wait",
           "ms": 300
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 46,
+          "to": {
+            "x": 140,
+            "y": 86
+          }
         },
         {
           "actor": "hero",

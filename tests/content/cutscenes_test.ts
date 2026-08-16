@@ -135,3 +135,67 @@ describe("the launch scene stands on the garage lot", () => {
     }
   });
 });
+
+// AND THE PRELUDE'S HERO WALKS ROUND THE FLOOR LAMP RATHER THAN THROUGH IT.
+// No prop in a scene is solid — an actor walks the line it is given, so a leg
+// authored across a piece of furniture plays as a man passing through it. The
+// hero's is the walk that has to be blocked around this one: the weapon is
+// mounted over the couch and the only floor it hangs over is the strip BEHIND
+// the couch, so he gets past the lamp to reach the mount and past it again to
+// come back out.
+//
+// The check is the lamp's own STANDING FOOTPRINT, not its sprite box: the art
+// is a 6 px base under a 10 px shade, so what the hero may not share is the
+// base. Level with it means within 4 px of its mark — the depth the furniture
+// in this room is authored on (the couch's feet and the lamp's both bottom out
+// at y 92, off marks of 96 and 95), which is exactly the band where two
+// standing sprites read as intersecting rather than as one behind the other.
+describe("the prelude's hero walks round the floor lamp", () => {
+  /** The lamp's base, in stage units: `lamp.yaml` fills columns 2…7 of a
+   * 10-wide sprite, drawn centred on its own `pos.x`. */
+  const BASE_SPAN = 6;
+  /** A walking actor's body, and the widest the hero is ever drawn. */
+  const BODY = 16;
+  /** Closer than this in depth and the two are standing on one line. */
+  const LEVEL = 4;
+
+  const lit = Object.entries(CUTSCENE_DEFS).filter(([, def]) =>
+    def.stage.props.some((p) => p.kind === "lamp"),
+  );
+
+  // Without this the suite EVAPORATES rather than fails: retire the lamp and
+  // every case below simply stops being emitted, and a green run says nothing.
+  it("is checking the living room at all", () => {
+    expect(lit.map(([id]) => id)).toContain("prelude");
+  });
+
+  for (const [id, def] of lit) {
+    const lamp = def.stage.props.find((p) => p.kind === "lamp")!;
+    it(`${id}: never stands the hero in the lamp`, () => {
+      // Replay the blocking, sampling each leg finely enough that one crossing
+      // the lamp cannot slip between two samples.
+      let at = def.actors.find((a) => a.id === "hero")!.at;
+      let walked = 0;
+      for (const beat of def.beats) {
+        if (beat.kind !== "move" || beat.actor !== "hero") continue;
+        walked++;
+        const steps = Math.ceil(
+          Math.max(Math.abs(beat.to.x - at.x), Math.abs(beat.to.y - at.y)),
+        );
+        for (let i = 0; i <= steps; i++) {
+          const x = at.x + ((beat.to.x - at.x) * i) / steps;
+          const y = at.y + ((beat.to.y - at.y) * i) / steps;
+          if (Math.abs(x - lamp.pos.x) >= (BODY + BASE_SPAN) / 2) continue;
+          expect(
+            Math.abs(y - lamp.pos.y),
+            `hero stands over the lamp's base at (${x.toFixed(1)}, ${y.toFixed(1)})`,
+          ).toBeGreaterThan(LEVEL);
+        }
+        at = beat.to;
+      }
+      // A hero who never walks passes the loop above without being asked
+      // anything — and he crosses this room four times.
+      expect(walked, "the hero walks nowhere in this scene").toBeGreaterThan(0);
+    });
+  }
+});

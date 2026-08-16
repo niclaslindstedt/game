@@ -289,8 +289,22 @@ beats:
   # leap lifts him clear of it without ever re-sorting him (a `lift` is height,
   # not depth). It is also the shorter jump — from back there the mount is two
   # of his own heights up rather than three.
+  #
+  # AND HE GOES ROUND THE FLOOR LAMP, WHICH TAKES THREE LEGS RATHER THAN TWO.
+  # The lamp stands at x 119…129 on a mark of 95 and the couch's right arm ends
+  # at 122, so there is no gap between the two: the only way from the front of
+  # the room to the strip behind the couch is round the lamp's far side. One
+  # diagonal cannot do it — every line from downstage-right up to the mount at
+  # (104, 86) crosses the lamp's own floor cell on the way, and nothing refuses
+  # it, because no prop in a scene is solid and an actor walks the line it is
+  # given. So the corner is turned in three: OUT downstage of it (clearing its
+  # mark by eight, a shade more than Ada's own crossing has), UP its clear side
+  # at x 140, and only then LEFT along the wall — which passes BEHIND it, the
+  # lamp painting over him because 86 sorts before 95. He occludes it and is
+  # then occluded by it, which is what makes the detour read as one.
   - { kind: pose, actor: hero, sprite: hero }
-  - { kind: move, actor: hero, to: { x: 136, y: 100 }, speed: 44 }
+  - { kind: move, actor: hero, to: { x: 140, y: 106 }, speed: 44 }
+  - { kind: move, actor: hero, to: { x: 140, y: 86 }, speed: 40 }
   - { kind: move, actor: hero, to: { x: 104, y: 86 }, speed: 40 }
   - { kind: wait, ms: 320 } # the crouch before the leap
   # He takes the one thing off the wall worth taking. Whatever the difficulty
@@ -311,8 +325,11 @@ beats:
   - { kind: jump, actor: hero, lift: 0, ms: 300 }
   # And back out round the couch's arm BEFORE the caption: from behind the
   # backrest only his head and the sword's tip clear it, and the line that
-  # closes the scene wants the whole man and the whole weapon in frame.
+  # closes the scene wants the whole man and the whole weapon in frame. Out the
+  # way he came in, and for the same reason: the lamp still stands in the direct
+  # line, so the wall is walked to its far side before he steps downstage.
   - { kind: wait, ms: 300 }
+  - { kind: move, actor: hero, to: { x: 140, y: 86 }, speed: 46 }
   - { kind: move, actor: hero, to: { x: 146, y: 108 }, speed: 46 }
   - { kind: wait, ms: 300 }
   # He names the thing and stops. The hero is short and sharp everywhere he
