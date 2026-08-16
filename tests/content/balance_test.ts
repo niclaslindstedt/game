@@ -25,7 +25,7 @@ import {
   unmuteDialogue,
 } from "@game/core";
 
-import { DT, idle } from "../helpers.ts";
+import { DT, idle, walkInside } from "../helpers.ts";
 
 // A fixed seed keeps the horde arrangement deterministic.
 const SEED = 42;
@@ -55,8 +55,8 @@ function timeToDeathMs(
   // open — which is the level working as designed, and which would otherwise be
   // measured here as fifteen seconds of the horde failing to kill him. So the
   // lot's own business is played out first, off the clock, and the hero is
-  // stood a step inside; what the benchmark then measures is the HORDE, which
-  // is the only thing it was ever about.
+  // stood on the floor inside; what the benchmark then measures is the HORDE,
+  // which is the only thing it was ever about.
   const inside = state.arrivalPlan?.inside;
   const startedAt = inside ? stageInside(state) : 0;
   let guard = 0;
@@ -93,8 +93,10 @@ function stageInside(state: ReturnType<typeof createGame>): number {
     step(state, idle, DT);
   }
   unmuteDialogue(state);
-  const inside = state.arrivalPlan?.inside;
-  if (inside) state.players[0].pos = { x: inside.x, y: inside.y };
+  // Onto the floor rather than into the opening: `plan.inside` is a step past
+  // the jambs, which is where the venue's own beats have decided he has not
+  // arrived yet, and it is the doorway rather than the room the horde fills.
+  walkInside(state);
   return state.stats.timeMs;
 }
 

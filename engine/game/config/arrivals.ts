@@ -77,6 +77,26 @@ export const ARRIVALS = {
    * opening the hero is about to walk through. */
   insideStep: 46,
   /**
+   * HOW FAR IN "INSIDE" IS, for the beats that wait to be indoors (px) —
+   * `anyHeroPastEntrance`, and through it the venue's first read on the floor
+   * and the opening strike that waits on it.
+   *
+   * It is a DEPTH rather than a side, because a side is crossed by a single
+   * stride: standing in the gate with one heel on the tarmac already puts a
+   * hero past the doorway's line, so beats gated on it all landed in the
+   * opening, on top of each other, the instant the slabs moved. A man who has
+   * not yet walked anywhere cannot have looked at anything, and the lines read
+   * as a machine firing rather than as somebody arriving.
+   *
+   * Six tiles (`TILE` is 16), which at the hero's own pace is a little over a
+   * second of walking: through the gate, past the jambs, out of the doorway and
+   * properly onto the floor. Held well short of where the carve stands the
+   * lobby's crowd — `insideEntrance` posts it at least 180 px in — so the read
+   * still fires on a hero looking at the room rather than standing in the
+   * middle of it, and the sighting radius the beat carries still reaches.
+   */
+  enteredStep: 96,
+  /**
    * How far the driving lane is held off the footpath (px).
    *
    * They are two lines because a rank of parked cars stands on one of them:
