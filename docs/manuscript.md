@@ -71,16 +71,15 @@ have one.
 **A page is a PARAGRAPH; the box breaks it.** Every surface that speaks measures
 the column it actually has and flows the page into it, so an authored page is
 ONE string. A second string is an **explicit line break** and has to earn
-itself; the whole campaign spends five, tabled below. Past ~120 characters a page
+itself; the whole campaign spends four, tabled below. Past ~120 characters a page
 costs the player another tap, and the build warns.
 
-| Where                        | The break                                       |
-| ---------------------------- | ----------------------------------------------- |
-| Prelude, caption             | SHE TOOK HER JACKET. / I PUT A TRACKING BEACON… |
-| BOOT HILL, opening monologue | HANG ON, ADA. I'M COMING. / YEE-HAW, I GUESS.   |
-| BOOT HILL, closing monologue | …'YOU TOOK YOUR TIME.' / THEN: 'NICE HAT.'      |
-| MOON POST-MORTEM, lore       | …RECOMMEND MARS.' / 'AND NEVER DIG AGAIN.'      |
-| ENGAGEMENT REPORT, lore      | THAT'S MY GIRL. / …ALL OF IT. THAT'S MY GIRL.   |
+| Where                        | The break                                     |
+| ---------------------------- | --------------------------------------------- |
+| BOOT HILL, opening monologue | HANG ON, ADA. I'M COMING. / YEE-HAW, I GUESS. |
+| BOOT HILL, closing monologue | …'YOU TOOK YOUR TIME.' / THEN: 'NICE HAT.'    |
+| MOON POST-MORTEM, lore       | …RECOMMEND MARS.' / 'AND NEVER DIG AGAIN.'    |
+| ENGAGEMENT REPORT, lore      | THAT'S MY GIRL. / …ALL OF IT. THAT'S MY GIRL. |
 
 **An arrival scene is three pages, or five for a boss.** The mob hooks, the hero
 answers with ONE line (transcribed **ME:**), the mob lands the reveal. A boss
@@ -133,7 +132,7 @@ pegs are bare behind her for the rest of the scene.)_
 
 _(She goes out. The door shuts.)_
 
-> **CAPTION:** SHE TOOK HER JACKET. / I PUT A TRACKING BEACON IN THE LINING WHEN I FIXED THAT ZIPPER. SHE LOSES THINGS.
+> **CAPTION:** GOOD THING SHE TOOK HER JACKET. I PUT A TRACKING BEACON IN THE LINING. NOW I ALWAYS KNOW WHERE SHE IS. KEEPS HER SAFE.
 >
 > **CAPTION:** TWO HOURS LATER.
 
@@ -226,7 +225,7 @@ gets, about somebody he knows. She is standing there again on the next visit;
 what does not come back is this night, and the campaign carries it: the road out
 says something different (below), and so does Friday (the epilogue)._
 
-**Greeting:** SHE LAUGHED ABOUT THAT ZIPPER FOR A WEEK. LISTEN - COULD YOU DO SOMETHING FOR ME?
+**Greeting:** SHE ALWAYS SAID YOU NOTICED EVERYTHING. LISTEN - COULD YOU DO SOMETHING FOR ME?
 
 **Farewell:** SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW SHE WOULD BE. GO ON.
 
@@ -1617,7 +1616,7 @@ _Drops: GOLDEN PARACHUTE. Leaves: a second RIFT._
 
 **ADA'S JACKET SCRAP** _(Ada's Trail)_
 
-- A SCRAP OF HER JACKET - THE ONE I FIXED THE ZIPPER ON - SNAGGED ON A SHARD.
+- A SCRAP OF HER JACKET, SNAGGED ON A SHARD. I CHECKED THE LINING FIRST. NOT THIS PIECE.
 - WRAPPED IN IT: A SCALE SHE PRIED OFF A LIZARD GOD. STILL FIGHTING. GOOD.
 
 **WARDENCLYFFE NOTES**

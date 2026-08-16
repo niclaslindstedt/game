@@ -245,18 +245,21 @@ beats:
       # NOWHERE. Everything downstream — the garage's "her jacket's still
       # answering", GOODCO's "it's coming from INSIDE there", the beacon he ends
       # up wearing as a trinket — is a machine reporting a position, and none of
-      # it parses unless the player has been told there IS a machine. The scene
-      # used to hold up "THE ONE I FIXED THE ZIPPER ON" as if it were the reveal;
-      # a mended zipper is a fact about a boyfriend, not about a signal, so the
-      # first level opened on a jacket that had started talking for no reason.
+      # it parses unless the player has been told there IS a machine. He offers
+      # no excuse for how the lining came to be open, because a man who thought
+      # one was owed would not have done it.
       #
-      # EXPLICIT BREAK: he notices the jacket, and only then remembers what is
-      # in it. The zipper survives as the SUBORDINATE clause it always was — the
-      # reason he had the lining open — and the third sentence is the whole of
-      # his justification for a tracking beacon, which he does not think needs
-      # one. It is also the last laugh before the scene stops being funny.
-      - SHE TOOK HER JACKET.
-      - I PUT A TRACKING BEACON IN THE LINING WHEN I FIXED THAT ZIPPER. SHE LOSES THINGS.
+      # AND IT IS THE ONE MOMENT THE PLAYER IS ALLOWED TO WONDER ABOUT HIM. Up
+      # to here he is a man too comfortable to fetch his own chips; here he is
+      # pleased that the woman who just walked out is wearing a transmitter he
+      # sewed into her clothes, and he explains it the way you would explain a
+      # smoke alarm. Nothing in the scene winks at it and nothing later calls it
+      # back — the campaign takes him at his word and uses the signal as a
+      # bearing — so the whole tell has to be carried by the flatness of the
+      # last three sentences — one unbroken page, said in one breath, because a
+      # line break here would stage the beacon as a reveal and he does not think
+      # it is one.
+      - GOOD THING SHE TOOK HER JACKET. I PUT A TRACKING BEACON IN THE LINING. NOW I ALWAYS KNOW WHERE SHE IS. KEEPS HER SAFE.
   - { kind: fade, to: 0.85, ms: 700 }
   - kind: caption
     text:
