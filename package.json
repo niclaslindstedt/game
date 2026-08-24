@@ -73,7 +73,7 @@
     "playwright": "^1.62.1",
     "prettier": "^3.9.6",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "vitest": "^4.1.9",
+    "vitest": "^4.1.11",
     "yaml": "^2.9.0"
   },
   "engines": {
