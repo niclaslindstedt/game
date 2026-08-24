@@ -21,6 +21,7 @@ import type {
   MenuScreen,
 } from "../../pwa/src/game/title-screen/menu-model.ts";
 import type { Character } from "../../pwa/src/game/characters.ts";
+import { minigameDef } from "../../pwa/src/game/minigames.ts";
 import { buildMenu } from "../../pwa/src/game/title-screen/menus.ts";
 import { setDevicePolicyForTest } from "../../pwa/src/app/device-policy.ts";
 import { updateSettings } from "../../pwa/src/game/settings.ts";
@@ -393,13 +394,14 @@ describe("the title menu tree", () => {
     expect(buildMenu("main", beaten).map((row) => row.aria)).toContain(
       "main-minigames",
     );
-    // …and the shelf behind it lists the cabinets, with the two knobs under
-    // them — WHICH WAY they are played and what they weigh — and a BACK under
-    // those.
+    // …and the shelf behind it lists the cabinets, each followed by its OWN
+    // knob where it has one to offer — the road's DIRECTION, and nothing under
+    // the rocket, which goes one place — then the rung they are all weighed on
+    // and a BACK under that.
     expect(buildMenu("minigames", beaten).map((row) => row.aria)).toEqual([
       "minigames-drive",
+      "minigames-drive-variant",
       "minigames-rocket",
-      "minigames-direction",
       "minigames-difficulty",
       "minigames-back",
     ]);
@@ -423,6 +425,21 @@ describe("the title menu tree", () => {
       }),
     ).find((row) => row.aria === "minigames-difficulty");
     expect(two?.locked).toBe(false);
+  });
+
+  it("gives each cabinet its OWN knob, and only where it has a choice", () => {
+    // WHICH WAY the road is driven belongs to the road: its row sits directly
+    // under its cabinet, wears the label the def gives it, and shows the end
+    // the next lap is bound for. The rocket goes one place, so it carries no
+    // such row at all — absent rather than greyed, because there is no sentence
+    // a grey could say about a machine that will never have a second way.
+    const rows = buildMenu("minigames", ctxFor({ roster: [CHAMPION] }));
+    const knob = rows.find((row) => row.aria === "minigames-drive-variant");
+    expect(knob?.label).toBe(minigameDef("drive").variantLabel);
+    expect(knob?.value).toBe(minigameDef("drive").variants[0]?.name);
+    expect(rows.map((row) => row.aria)).not.toContain(
+      "minigames-rocket-variant",
+    );
   });
 
   it("hides LOAD GAME until there is a hero to load", () => {

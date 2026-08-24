@@ -61,11 +61,18 @@ capability, which is why most players never see it.
 
 The MINIGAMES switch above governs the interludes a RUN hands you. It does not
 gate the **ARCADE SHELF** — the main menu's MINIGAMES screen, which a beaten
-campaign earns. That screen carries two knobs of its own, both persisted:
-**DIRECTION** (`minigameVariant`, shipped at `goodco_hq`) — which way a lap is
-driven, out to GOODCO or the same road home to the GARAGE — and **DIFFICULTY**
-(`minigameDifficulty`, shipped at `medium`), which picks the rung out of the
-rungs the campaign has actually been beaten on.
+campaign earns. That screen carries two persisted knobs, and they sit in two
+different places because they answer to two different things. **DIFFICULTY**
+(`minigameDifficulty`, shipped at `medium`) is the shelf's — it picks the rung
+out of the rungs the campaign has actually been beaten on, and a rung means the
+same on every machine — so it sits under the cabinets, above BACK. A cabinet's
+own way of being played sits **under that cabinet**, labelled out of its
+definition and present only where the machine has a second way to offer: the
+road's is **DIRECTION** (`minigameVariant`, shipped at `goodco_hq`) — out to
+GOODCO or the same road home to the GARAGE. One pick is stored for the whole
+shelf and each cabinet resolves it against its own list, so a machine that has
+never heard of the stored id plays its own default rather than refusing to
+start.
 
 **None of the DEVELOPER rows below — nor the gesture that reveals them, nor the
 commit hash in the title footer — exist in a build uploaded to a STORE**: the

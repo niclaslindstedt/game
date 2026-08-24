@@ -7,6 +7,13 @@
 // opens with the cursor already on the thing to play. The DIFFICULTY row is an
 // adjustment to the next go rather than a destination, so it sits under them.
 //
+// A CABINET'S OWN KNOB TRAVELS WITH IT. Which way the road is driven is the
+// ROAD's setting and nothing else's, so the row that picks it is built from the
+// catalog beside its cabinet and drawn directly under it — labelled out of the
+// def (`variantLabel`), and absent entirely on a machine with one way to play.
+// The rung is the only thing on this screen that means the same on every
+// machine, which is why it is the only knob left at the foot of the shelf.
+//
 // THE DEVELOPER TREE HAS THE SAME SHELF WITH ITS LOCK OFF (DEVELOPER →
 // PLAYGROUND → MINIGAMES): every cabinet, every rung, no campaign to beat
 // first. It is the SAME builder rather than a second screen that looks like
@@ -26,8 +33,8 @@ import {
   minigameDef,
   pickRung,
   pickVariant,
-  shelfVariants,
   MINIGAME_ORDER,
+  type MinigameId,
 } from "../minigames.ts";
 import { getSettings, updateSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
@@ -66,15 +73,14 @@ function shelf(
   const rung = pickRung(rungs, getSettings().minigameDifficulty);
   // …AND WHICH WAY. One pick for the whole shelf, exactly as the rung is, with
   // each cabinet resolving it against its own list on the way in
-  // (`pickVariant`) — so the DIRECTION row below is the ROAD's two ends today
-  // and whatever a second machine offers the day one arrives.
-  const variants = shelfVariants();
+  // (`pickVariant`) — so a machine that has never heard of the saved pick plays
+  // its own default instead of refusing to start.
   const picked = getSettings().minigameVariant;
   return [
-    ...MINIGAME_ORDER.map((id) => {
+    ...MINIGAME_ORDER.flatMap((id) => {
       const def = minigameDef(id);
       const variant = pickVariant(def, picked);
-      return {
+      const cabinet = {
         label: def.name,
         aria: rowAria(screen, id),
         color: "#7ef0c8",
@@ -90,37 +96,14 @@ function shelf(
           ctx.onMinigame(id, rung, variant.id);
         },
       } satisfies MenuEntry;
+      // ONE WAY TO PLAY IS NO CHOICE, and here the row is ABSENT rather than
+      // greyed: a grey DIFFICULTY says "beat the campaign higher up and this
+      // opens", and there is no such sentence for a machine that goes one
+      // place. Nothing is being withheld, so nothing owes an explanation.
+      if (def.variants.length < 2) return [cabinet];
+      return [cabinet, variantRow(ctx, screen, id)];
     }),
     ...assembleRows(screen, {
-      direction: {
-        ...actionRow(
-          screen,
-          "direction",
-          () => {
-            // NOTHING ON THE SHELF HAS A CHOICE is a grey row, not a hidden
-            // one — the same call the rung's row makes, and for the same
-            // reason: the grey is the thing it says.
-            if (variants.length < 2) {
-              playUiSound(synth, "back");
-              return;
-            }
-            playUiSound(synth, "confirm");
-            const at = variants.findIndex((v) => v.id === picked);
-            const next = variants[(at + 1) % variants.length]!;
-            updateSettings({ minigameVariant: next.id });
-            ctx.bumpSettings();
-          },
-          { locked: variants.length < 2 },
-        ),
-        // The DESTINATION as the row's value — and no `color:` with it, for the
-        // reason the rung's row has none: a row's colour here is the colour it
-        // LIGHTS UP in, and the highlight's amber belongs to the selection
-        // rather than to what the selection is set to.
-        value:
-          variants.find((v) => v.id === picked)?.name ??
-          variants[0]?.name ??
-          "-",
-      },
       difficulty: {
         ...actionRow(
           screen,
@@ -150,4 +133,36 @@ function shelf(
     }),
     backRow(ctx, screen),
   ];
+}
+
+/**
+ * A cabinet's own knob: which of ITS ways the next lap is played, cycled by
+ * pressing the row. Only built for a machine with more than one.
+ *
+ * Not an authored row — it belongs to a cabinet rather than to the screen, so
+ * its label comes from the def and it is laid out beside the cabinet rather
+ * than through `assembleRows`. The value carries no `color:`, for the reason the
+ * rung's row has none: a row's colour here is the colour it LIGHTS UP in, and
+ * the highlight's amber belongs to the selection rather than to what the
+ * selection is set to.
+ */
+function variantRow(
+  ctx: MenuContext,
+  screen: MenuScreen,
+  id: MinigameId,
+): MenuEntry {
+  const def = minigameDef(id);
+  const picked = pickVariant(def, getSettings().minigameVariant);
+  return {
+    label: def.variantLabel,
+    aria: rowAria(screen, `${id}-variant`),
+    value: picked?.name ?? "-",
+    action: () => {
+      playUiSound(synth, "confirm");
+      const at = def.variants.findIndex((v) => v.id === picked?.id);
+      const next = def.variants[(at + 1) % def.variants.length]!;
+      updateSettings({ minigameVariant: next.id });
+      ctx.bumpSettings();
+    },
+  };
 }

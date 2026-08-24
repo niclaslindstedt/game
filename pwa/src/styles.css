@@ -4000,11 +4000,22 @@ html.app-locked body {
 }
 
 /* The trail rides at the BOTTOM of the line, not its middle: the pixel font
-   has no descenders, so bottom-aligning the two canvases sits the small path
-   text on the big title's baseline the way a caption should. */
+   has no descenders, so bottom-aligning the canvases sits the small path text
+   on the big title's baseline the way a caption should.
+
+   IT WRAPS, and the max-width is what gives it something to wrap against: the
+   header's grid column is content-sized, so an unbounded flex line would simply
+   grow past both screen edges instead of breaking. 84vw mirrors MenuHeading's
+   own WIDTH_SHARE — the title's scale is fitted against the layout this rule
+   produces, so the two numbers have to stay in step. Centred, because a
+   breadcrumb that wrapped ragged-left under a centred title would read as the
+   header having slipped. `gap` is mirrored there too (LINE_GAP_REM). */
 .menu-heading-line {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
+  justify-content: center;
+  max-width: 84vw;
   gap: 0.3rem;
 }
 
