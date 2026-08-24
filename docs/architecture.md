@@ -1290,10 +1290,14 @@ escort.ts` walks the people an escort errand puts on the field, and
   work rather than a padlock on a cabinet. The developer tree carries the same
   shelf with its lock off — DEVELOPER → PLAYGROUND → MINIGAMES, every cabinet
   on every rung.
-  A CABINET MAY ALSO OFFER VARIANTS — a second knob beside the rung, and the
-  shelf's DIRECTION row. They are the CABINET's own vocabulary rather than a
-  shared ladder (a difficulty means the same thing on every machine and a
-  variant does not), so the shelf keeps ONE pick and every cabinet resolves it
+  A CABINET MAY ALSO OFFER VARIANTS — a knob of its own, drawn as a row DIRECTLY
+  UNDER the cabinet it belongs to and labelled out of the def (`variantLabel`;
+  the road's says DIRECTION). They are the CABINET's own vocabulary rather than
+  a shared ladder — a difficulty means the same thing on every machine and a
+  variant does not — which is why the row travels with its cabinet instead of
+  sitting at the foot of the shelf beside the rung, where it would read as a
+  knob every machine answered to. A machine with one way to play carries no such
+  row at all. The shelf still keeps ONE pick and every cabinet resolves it
   against its own list with a fallback to its own default (`pickVariant`) — a
   machine that has never heard of the stored id plays its first variant rather
   than refusing to start. The ROAD's two are its two ends, and each variant's id

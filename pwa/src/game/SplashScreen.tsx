@@ -35,7 +35,7 @@ import {
   warmBoot,
   type SplashPhase,
 } from "./splash.ts";
-import { fitScale } from "./title-screen/MenuHeading.tsx";
+import { fitScale } from "./title-screen/heading-fit.ts";
 import { useViewportMetrics } from "./title-screen/use-title-layout.ts";
 
 /** How long the card takes to fade out of the way. Must match the
@@ -196,7 +196,14 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
 
   const name = IDENTITY.publisher.toUpperCase();
   const nameScale = font
-    ? fitScale(font, name, 0, width, uiScale, NAME_MAX_SCALE, NAME_MIN_SCALE)
+    ? fitScale(
+        font.measure(name),
+        0,
+        width,
+        uiScale,
+        NAME_MAX_SCALE,
+        NAME_MIN_SCALE,
+      )
     : NAME_MIN_SCALE;
 
   return (

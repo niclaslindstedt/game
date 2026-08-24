@@ -2,10 +2,7 @@
 // The sub-screen HEADER: the breadcrumb trail, the page title, and the rule
 // that closes the block off from the rows below it.
 //
-// A sub-screen used to name itself in a single scale-2 line — SMALLER than the
-// scale-3 rows it introduced, in a purple that appeared nowhere else in the
-// skin, tucked so close under the logo that it read as a second tagline. Here
-// the title is the loudest thing on the screen (the brand mark above it dims
+// The title is the loudest thing on the screen (the brand mark above it dims
 // and shrinks to make room), the path to it rides beside it small and dim, and
 // a fading rule underneath separates header from list.
 //
@@ -13,12 +10,39 @@
 // the drawn line fits the viewport's width budget, so a long title ("CHOOSE
 // YOUR NIGHTMARE") shrinks on a narrow phone instead of running off both edges
 // while a short one ("SOUND") stays big everywhere.
+//
+// AND THE TRAIL WRAPS, because shrinking the title cannot save a header the
+// TRAIL alone overruns: a screen four deep (SETTINGS » DEVELOPER » CHEATS »
+// SEED CHARACTERS) is wider than a portrait phone before the title is drawn at
+// all, and the whole line ran off both edges with the leaf's own name clipped.
+// So the path is drawn as ONE CANVAS PER CRUMB in a wrapping flex line rather
+// than as a single unbreakable string, and the header breaks between crumbs.
+//
+// The fit is measured against the layout the browser is ABOUT to perform:
+// `crumbTail` walks the crumbs the way `flex-wrap` will and reports what is
+// left of the last line, and the title is fitted against THAT. A header that
+// already fits on one line is fitted exactly as it always was — the wrap is a
+// fallback for the ones that do not, never a new shape for the ones that do.
+// All of that math is `heading-fit.ts`, a font-free leaf, so the layout can be
+// tested without a browser.
 
 import type { CSSProperties } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
+import {
+  crumbTail,
+  drawnWidth,
+  fitScale,
+  headerBudget,
+  trailCrumbs,
+  LINE_GAP_REM,
+  REM_BASE_PX,
+  TITLE_MAX,
+  TITLE_MIN,
+  TRAIL_SCALE,
+} from "./heading-fit.ts";
 import type { HeadingTone, ScreenHeading } from "./menus.ts";
 
 /** The colours each tone paints the header in. The TITLE is bone-white on the
@@ -34,50 +58,6 @@ const TONES: Record<
   dev: { title: "#f2ede3", trail: "#4f9b85", rule: "#7ef0c8" },
   store: { title: "#ffd75e", trail: "#b08b3f", rule: "#ffd75e" },
 };
-
-/** The trail's own pixel scale — half the title's biggest step, so the path
- * stays a caption beside the leaf however large the leaf ends up. */
-const TRAIL_SCALE = 2;
-
-/** The share of the viewport width the whole header line may span before the
- * title steps down a scale. Leaves a margin either side so the block never
- * touches the screen edges. */
-const WIDTH_SHARE = 0.84;
-
-/** The largest scale a title is ever drawn at (and the floor it may fall to).
- * The floor is still one step above the rows' scale-3 labels' companion text,
- * so even the longest title on the narrowest phone reads as a heading. */
-const TITLE_MAX = 5;
-const TITLE_MIN = 3;
-
-/**
- * The biggest scale in `[min, max]` at which `title` (plus the trail already
- * drawn beside it) fits the width budget.
- *
- * A PixelText canvas is displayed at `measure(text) × scale` font pixels, sized
- * in rem — so on screens past UI_SCALE_BREAKPOINT_PX, where the root font-size
- * doubles, it lands at twice that many CSS px. Multiplying by `uiScale` is what
- * makes one budget hold on a phone, a tablet and a desktop alike.
- *
- * The bounds default to a page header's; the opening studio card (see
- * `game/SplashScreen.tsx`) borrows the same fit with a bigger ceiling.
- */
-export function fitScale(
-  font: PixelFont,
-  title: string,
-  trailWidth: number,
-  viewportWidth: number,
-  uiScale: number,
-  max = TITLE_MAX,
-  min = TITLE_MIN,
-): number {
-  const budget = viewportWidth * WIDTH_SHARE - trailWidth;
-  const unit = font.measure(title) * uiScale;
-  for (let scale = max; scale > min; scale -= 1) {
-    if (unit * scale <= budget) return scale;
-  }
-  return min;
-}
 
 export function MenuHeading({
   font,
@@ -95,31 +75,54 @@ export function MenuHeading({
   uiScale: number;
 }) {
   const tone = TONES[heading.tone];
-  // The trail is drawn inline, on the title's line, rather than stacked above
-  // it: a second line would cost a landscape phone ~13 CSS px of the height
-  // its rows are already fighting for.
-  const trail = heading.trail ? `${heading.trail} » ` : "";
-  const trailWidth = trail ? font.measure(trail) * TRAIL_SCALE * uiScale : 0;
-  const scale = fitScale(
-    font,
-    heading.title,
-    trailWidth,
-    viewportWidth,
-    uiScale,
-    compact ? TITLE_MAX - 1 : TITLE_MAX,
+  // The trail rides on the title's line wherever it fits: stacking it above
+  // unconditionally would cost a landscape phone ~13 CSS px of the height its
+  // rows are already fighting for. It breaks only when the line cannot hold it.
+  const crumbs = trailCrumbs(heading.trail);
+  const gap = LINE_GAP_REM * REM_BASE_PX * uiScale;
+  const widths = crumbs.map((crumb) =>
+    drawnWidth(font.measure(crumb), TRAIL_SCALE, uiScale),
   );
+  // Each crumb owes the gap that follows it, the last one included: that gap
+  // sits between the path and the title.
+  const trailWidth = widths.reduce((sum, width) => sum + width + gap, 0);
+  const budget = headerBudget(viewportWidth);
+  const measured = font.measure(heading.title);
+  const max = compact ? TITLE_MAX - 1 : TITLE_MAX;
+  const inline = fitScale(measured, trailWidth, viewportWidth, uiScale, max);
+  // One line still holds it → the fit is the one it has always been. Otherwise
+  // the crumbs are about to wrap, and the title is re-fitted against the room
+  // that leaves it — which is how a leaf pushed onto its own line gets to be
+  // drawn LARGE instead of stranded at the floor scale.
+  const scale =
+    trailWidth + drawnWidth(measured, inline, uiScale) <= budget
+      ? inline
+      : fitScale(
+          measured,
+          crumbTail(
+            widths,
+            gap,
+            budget,
+            drawnWidth(measured, TITLE_MIN, uiScale),
+          ),
+          viewportWidth,
+          uiScale,
+          max,
+        );
   return (
     <div className={`menu-heading tone-${heading.tone}`}>
       <div className="menu-heading-line">
-        {trail && (
+        {crumbs.map((crumb, at) => (
           <PixelText
+            // Positional: two ancestors may legitimately share a name.
+            key={at}
             font={font}
-            text={trail}
+            text={crumb}
             scale={TRAIL_SCALE}
             color={tone.trail}
             className="menu-trail"
           />
-        )}
+        ))}
         {/* `menu-title` is the glow's hook — the drop-shadow that lifts the
             title off the sun and the planets drifting behind it. */}
         <PixelText

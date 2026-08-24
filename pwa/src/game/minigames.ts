@@ -35,14 +35,18 @@ export type MinigameId = (typeof MINIGAME_ORDER)[number];
  * ONE WAY A CABINET CAN BE PLAYED — a named setting the shelf offers beside the
  * rung, and the second thing a lap is settled by.
  *
- * IT IS THE CABINET'S OWN VOCABULARY, not the shelf's. A difficulty means the
- * same thing on every machine in the arcade (it is the campaign's own ladder),
- * and a variant does not: the ROAD's two are the two ends of it, and a second
- * cabinet's would be something else entirely. So the shelf stores ONE pick and
- * every cabinet resolves it against its own list, falling back to its first —
- * exactly the shape `pickRung` already has, and the reason a cabinet that has
- * never heard of "garage" simply plays its default rather than refusing to
- * start.
+ * IT IS THE CABINET'S OWN VOCABULARY, not the shelf's — which is why the row
+ * that picks it sits UNDER ITS CABINET rather than at the foot of the shelf
+ * beside the rung. A difficulty means the same thing on every machine in the
+ * arcade (it is the campaign's own ladder) and a variant does not: the ROAD's
+ * two are the two ends of it, and a second cabinet's would be something else
+ * entirely, under a heading of its own. One knob at the foot of the shelf would
+ * be a knob every machine appeared to answer to, and only one of them does.
+ *
+ * The shelf still stores ONE pick, and every cabinet resolves it against its
+ * own list, falling back to its first — exactly the shape `pickRung` already
+ * has, and the reason a cabinet that has never heard of "garage" simply plays
+ * its default rather than refusing to start.
  *
  * `id` is the string the SCREEN behind the cabinet is built from, so it is
  * whatever that screen's parameters want it to be — for the road it is the level
@@ -57,9 +61,17 @@ export type MinigameDef = {
    * carries no help lines, so the name has to be the explanation. */
   name: string;
   /** The ways it can be played, the first being what an unset shelf plays. A
-   * cabinet with one is a cabinet with no choice to offer, and the shelf's
-   * DIRECTION row greys out rather than pretending to cycle. */
+   * cabinet with ONE is a cabinet with no choice to offer, and carries no knob
+   * row at all — absent rather than greyed, because the grey would teach a
+   * player nothing they could act on (this machine has no second way, and never
+   * will). */
   variants: readonly MinigameVariant[];
+  /** What this cabinet CALLS the choice between its variants — the label of the
+   * knob row drawn under it. The road picks a DIRECTION; another machine would
+   * pick something else, which is the whole reason the label rides on the def
+   * instead of being authored once on the shelf. Unread on a cabinet with one
+   * variant, which has no knob row. */
+  variantLabel: string;
 };
 
 /**
@@ -74,11 +86,12 @@ export type MinigameDef = {
 const MINIGAME_DEFS: Record<MinigameId, MinigameDef> = {
   drive: {
     id: "drive",
-    // NOT "ROAD TO GOODCO" ANY MORE, because it is not only that: the same road
-    // is driven home, and a cabinet named after one end of it would be a cabinet
-    // whose label went stale the moment the DIRECTION row was touched. The row
-    // says which way; the name says what.
+    // The MACHINE, not the trip: the same road is driven out and back, so a
+    // cabinet named after one end of it would go stale the moment its own
+    // DIRECTION row was touched. The name says WHAT; the row under it says
+    // which way.
     name: "THE ROAD",
+    variantLabel: "DIRECTION",
     // The two ends of it. Each id is the LEVEL the leg is bound for, which is
     // what `DriveParams.to` carries and what the direction is derived from
     // (`legDirection`, drive-screen/begin.ts) — so the shelf never has to know
@@ -90,12 +103,13 @@ const MINIGAME_DEFS: Record<MinigameId, MinigameDef> = {
   },
   rocket: {
     id: "rocket",
-    // The MACHINE, not the trip — the road's own naming rule: the cabinet is
-    // the ship, and the one place it goes is the DIRECTION row's business.
+    // The road's own naming rule: the cabinet is the SHIP, and where it is
+    // pointed belongs to the row under it.
     name: "THE ROCKET",
+    variantLabel: "DESTINATION",
     // One way it can be played: up through the shell and down onto the moon.
-    // A single variant is a cabinet with no choice to offer, and the shelf's
-    // DIRECTION row greys out over it — exactly what `shelfVariants` expects.
+    // A single variant is a cabinet with no choice to offer, so no knob row is
+    // drawn under it and the label above goes unread until a second way exists.
     variants: [{ id: "moon", name: "MOON" }],
   },
 };
@@ -171,15 +185,4 @@ export function pickVariant(
     def.variants[0] ??
     null
   );
-}
-
-/** …and what the shelf's own DIRECTION row shows and cycles: the variants of the
- * first cabinet that offers a choice at all. Null when nothing on the shelf has
- * one, which is what greys the row out. */
-export function shelfVariants(): readonly MinigameVariant[] {
-  for (const id of MINIGAME_ORDER) {
-    const def = MINIGAME_DEFS[id];
-    if (def.variants.length > 1) return def.variants;
-  }
-  return [];
 }
