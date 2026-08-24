@@ -67,6 +67,16 @@ export const FLIGHT = {
   },
 
   ascent: {
+    /**
+     * WHERE THE HAND-OVER FINDS THE SHIP (world px of altitude) — barely off
+     * the lawn. The course is ~100 km of climb (`coursePx` reads as 62 miles
+     * on the dial), so a world px is ~7.4 m and this is about 100 m up: the
+     * liftoff the cutscene just played, still over its own back garden, with
+     * the burnt house right below. The minigame must OPEN low — the whole
+     * trip is leaving Earth, and a first frame that already reads as the
+     * stratosphere spends the entire story before the player has the stick.
+     */
+    launchAltPx: 14,
     /** Surface gravity (px/s²), and the floor it fades to at orbit — leaving
      * Earth is the whole plot, so the climb genuinely gets easier as the
      * planet lets go. */

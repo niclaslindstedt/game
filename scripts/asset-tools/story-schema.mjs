@@ -224,6 +224,9 @@ export function validateCutscene(doc, refs) {
   if (stage.drift !== undefined && !isVec(stage.drift)) {
     err("stage.drift must be `{ x, y }` world px/s");
   }
+  if (stage.weather !== undefined && stage.weather !== "storm") {
+    err('stage.weather must be "storm" — the one weather the renderer answers');
+  }
   if (stage.props !== undefined && !Array.isArray(stage.props)) {
     err("stage.props must be a list");
   }

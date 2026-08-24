@@ -19,14 +19,17 @@ import {
   CLANG_SOUNDS,
   ORBIT_SOUND,
   POOF_SOUND,
+  RAIN_SOUND,
   RUMBLE_SOUND,
   STICK_SOUNDS,
+  THUNDER_SOUNDS,
   TOUCHDOWN_SOUND,
   WARNING_SOUND,
   boomFor,
   takeAt,
 } from "./rocket-sounds.ts";
 import { boomFx, burstFx, poofFx, type RocketFxState } from "./rocket-fx.ts";
+import { STRIKE_WINDOW_MS, stormIntensity, thunderDue } from "./storm.ts";
 
 /** The one-shot beats this drain owes exactly once per flight — the sim can
  * only raise `orbit` once, but the shell-clear line is an EDGE the app reads,
@@ -136,6 +139,11 @@ export function voiceFlightControls(
     rumble.nextMs = nowMs + 190;
     playFlightSound(synth, RUMBLE_SOUND);
     if (throttle > 0) playFlightSound(synth, BOOST_SOUND);
+    // The downpour rides the same clock — a third grain under the engine while
+    // the climb is still inside the storm, gone the moment it punches out.
+    if (flight.phase === "ascent" && stormIntensity(flight.craft.alt) > 0.1) {
+      playFlightSound(synth, RAIN_SOUND);
+    }
   }
   if (Math.abs(steer) > 0.25) {
     // The poof leaves the OPPOSITE shoulder — the nozzle pushes the nose the
@@ -149,5 +157,32 @@ export function voiceFlightControls(
       nowMs,
     );
     if (fired) playFlightSound(synth, POOF_SOUND);
+  }
+}
+
+/**
+ * THE THUNDER — each strike's clap, seconds after its flash, exactly once.
+ * The schedule is the storm's own (`thunderDue`, hashed off the seed), so all
+ * this owes is the LATCH: the last window already clapped for, kept by the
+ * screen the way the rumble clock is.
+ */
+export function voiceStorm(
+  flight: FlightState,
+  storm: { clappedWindow: number },
+): void {
+  if (flight.phase !== "ascent") return;
+  if (stormIntensity(flight.craft.alt) <= 0) return;
+  // The due window is the one BEHIND the clock when thunder trails its flash
+  // across a boundary, so both candidates are checked, oldest first.
+  const w = Math.floor(flight.ms / STRIKE_WINDOW_MS);
+  for (const window of [w - 1, w]) {
+    if (window <= storm.clappedWindow) continue;
+    const due = thunderDue(flight.params.seed, window);
+    if (due === null || flight.ms < due) continue;
+    storm.clappedWindow = window;
+    playFlightSound(
+      synth,
+      THUNDER_SOUNDS[Math.abs(window) % THUNDER_SOUNDS.length]!,
+    );
   }
 }

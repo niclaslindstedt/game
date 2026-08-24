@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_thunder_a
+description: >-
+  THE CLAP — thunder arriving seconds after the strike's flash, the near take:
+  a bright crack, a saw dive to the floor, and a long black boom rolling off
+  through the echo bus. Rare and big on purpose; the storm's strikes are the
+  loudest thing in the climb short of the ship itself going up.
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.05
+    filter:
+      type: highpass
+      frequency: 2200
+    echo: 0.3
+  - call: tone
+    type: sawtooth
+    from: 130
+    to: 26
+    durationMs: 950
+    volume: 0.06
+    detuneCents: 9
+    echo: 0.35
+  - call: noise
+    durationMs: 1500
+    volume: 0.055
+    filter:
+      type: lowpass
+      frequency: 170
+    echo: 0.45

@@ -56,6 +56,14 @@ export const RUMBLE_SOUND = "rocket_rumble";
  * open — the engine opening up, never speeding up. */
 export const BOOST_SOUND = "rocket_boost";
 
+/** One grain of the DOWNPOUR — layered on the same clock while the climb is
+ * still inside the storm (`stormIntensity`), gone when the ship punches out. */
+export const RAIN_SOUND = "rocket_rain";
+
+/** The thunder a strike owes, seconds after its flash — two takes, picked by
+ * the strike's own window so a replayed storm claps identically. */
+export const THUNDER_SOUNDS = ["rocket_thunder_a", "rocket_thunder_b"] as const;
+
 /** Every id this screen can ask for — the content test walks this list against
  * the shipped catalog, so a renamed yaml cannot go quiet. */
 export const FLIGHT_SOUND_IDS: readonly string[] = [
@@ -69,6 +77,8 @@ export const FLIGHT_SOUND_IDS: readonly string[] = [
   POOF_SOUND,
   RUMBLE_SOUND,
   BOOST_SOUND,
+  RAIN_SOUND,
+  ...THUNDER_SOUNDS,
 ];
 
 /** Pick a take by position — the same event at the same spot is the same

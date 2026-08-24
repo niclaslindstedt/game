@@ -60,8 +60,10 @@ import {
   createFlightBeats,
   drainFlight,
   voiceFlightControls,
+  voiceStorm,
   type FlightBeats,
 } from "./loop.ts";
+import { drawStorm } from "./storm.ts";
 import { endFlight } from "./end-flight.ts";
 import { feelFlight, resetFlightHaptics } from "./rocket-haptics.ts";
 import {
@@ -137,6 +139,7 @@ export function RocketScreen({
   const fxRef = useRef<RocketFxState>(createRocketFx());
   const beatsRef = useRef<FlightBeats>(createFlightBeats());
   const rumbleRef = useRef({ nextMs: 0 });
+  const stormRef = useRef({ clappedWindow: -1 });
   const inputRef = useRef<FlightInput>({ throttle: 0, steer: 0 });
   const keysRef = useRef<Set<string>>(new Set());
   const padRef = useRef<{ x: number; y: number } | null>(null);
@@ -355,6 +358,7 @@ export function RocketScreen({
           inputRef.current.throttle,
           inputRef.current.steer,
         );
+        voiceStorm(flight, stormRef.current);
         ageSpeech(flight.ms);
         if (!auto) feelFlight(flight);
         endFlight(flight, fxRef.current, beatsRef.current, clearSpeech, arrive);
@@ -376,6 +380,9 @@ export function RocketScreen({
         flight.outcome === FLIGHT_OUTCOME.flying;
       drawFlight(ctx, flight, cam, assets, viewW, viewH, flight.ms, boost);
       drawRocketFx(ctx, fxRef.current, cam, flight.ms, viewW, viewH, assets);
+      // The weather is between the camera and all of it — rain and the
+      // lightning's flash go on last.
+      drawStorm(ctx, flight, cam, viewW, viewH, flight.ms);
 
       // ── THE STEERING HINT — the run's own dpad, the drive's rules. ────────
       if (dpad) {

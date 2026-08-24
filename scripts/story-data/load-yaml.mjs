@@ -121,7 +121,14 @@ function sceneDef(doc, id) {
   return {
     id,
     stage: {
-      ...pick(stage, ["width", "height", "backdrop", "palette", "drift"]),
+      ...pick(stage, [
+        "width",
+        "height",
+        "backdrop",
+        "palette",
+        "drift",
+        "weather",
+      ]),
       props: (stage.props ?? []).map((prop) => ({
         kind: prop.sprite,
         pos: prop.at,

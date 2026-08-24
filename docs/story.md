@@ -259,14 +259,21 @@ goes and what he was carrying is left on the floor.
 ## Travel — THE LAUNCH (cutscene)
 
 The part goes in, the hero gathers "engine, fuel, duct tape, and the part they
-said I couldn't have", and lights it. The blast throws fire the length of the lot,
-blacks the side of his own house and leaves the garage roof burning. Nobody comes
+said I couldn't have", and lights it — in a storm, because leaving is not a
+happy occasion: the rain is coming down hard on the lot the whole scene. The
+blast throws fire the length of the lot, blacks the side of his own house and
+leaves the garage roof burning, and the rain does not put it out. Nobody comes
 out, and he never mentions it.
 
 ## Travel — THE VOYAGE, LEG ONE (cutscene)
 
-**The climb out is played, not cut**, and it is the road's joke stood on end.
-GOODCO makes the Earth clean — it says so on everything the company owns — and
+**The climb out is played, not cut**, and it opens where the launch left off:
+a hundred metres over his own burning house, in the same storm — the treeline
+on the horizon, then the cloud deck, rain hammering the hull and lightning
+going off in it, thunder rolling up after each strike — until the ship punches
+out of the weather into clean starlight, which is where the road's joke stands
+itself on end. GOODCO makes the Earth clean — it says so on everything the
+company owns — and
 nobody down there asks how. Up here it is the whole sky: everything the company
 "recycles" goes up on a government disposal contract and stays, and thirty
 years of that is a shell of garbage around the planet that thickens all the way

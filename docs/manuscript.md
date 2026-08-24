@@ -1056,9 +1056,10 @@ _Drops: PLASMA CUTTER._
 
 ## Travel — THE LAUNCH (cutscene)
 
-_The garage at night, and the first of three fires the game never mentions
-again: the blast blacks the side of the house and sets the garage roof alight.
-Nothing is ever repaired, and nobody comes out._
+_The garage at night, in a driving storm — the rain falls on the lot for the
+whole scene — and the first of three fires the game never mentions again: the
+blast blacks the side of the house and sets the garage roof alight, and the
+rain does not put it out. Nothing is ever repaired, and nobody comes out._
 
 > **CAPTION:** TEN YEARS OF WEEKENDS IN THE GARAGE. SHE ONLY EVER NEEDED ONE MORE PART.
 
@@ -1072,7 +1073,9 @@ no new lines.)_
 ## Travel — THE FLIGHT (minigame, up and down)
 
 _The climb through GOODCO's orbital landfill and the drop onto the moon,
-played. Every line is a bark over a sky that keeps moving
+played. It opens low, over the burning house, and the first stretch is the
+launch's own storm — rain, lightning, thunder — before the sky goes clean and
+the junk band begins. Every line is a bark over a sky that keeps moving
 (`content/thoughts.yaml`, read by `rocket-screen/voice.ts`); when the flight is
 not flown, THE VOYAGE below carries the tracker beat instead — same facts, the
 film version. Nobody gets both._

@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_rain
+description: >-
+  ONE GRAIN OF THE DOWNPOUR — the storm the ship climbs out of, layered on the
+  engine bed's own 190 ms clock while `stormIntensity` says the flight is
+  still inside the weather. A noise grain has no hold, so the fuse comes from
+  overlap instead: each grain runs ~2.5 cadences and the fading copies sum to
+  a steady hiss. A high hiss for the rain on the hull and a soft lowpass
+  patter under it; both quiet, because the bed never stops while it plays.
+voices:
+  - call: noise
+    durationMs: 520
+    volume: 0.014
+    filter:
+      type: highpass
+      frequency: 3200
+  - call: noise
+    durationMs: 460
+    volume: 0.007
+    filter:
+      type: lowpass
+      frequency: 500

@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_thunder_b
+description: >-
+  THE CLAP, the far take — no crack, just the roll: a sub dive and two waves
+  of lowpass pressure, the second arriving late, the way a distant strike
+  reaches the hull as weather rather than as a blow.
+voices:
+  - call: tone
+    type: sine
+    from: 95
+    to: 20
+    durationMs: 1200
+    volume: 0.055
+    echo: 0.4
+  - call: noise
+    durationMs: 1100
+    volume: 0.045
+    filter:
+      type: lowpass
+      frequency: 150
+    echo: 0.45
+  - call: noise
+    delayMs: 650
+    durationMs: 1000
+    volume: 0.03
+    filter:
+      type: lowpass
+      frequency: 120
+    echo: 0.45
