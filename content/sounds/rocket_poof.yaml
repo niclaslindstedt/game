@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_poof
+description: >-
+  ONE BREATH OF THE STEERING POOFS — a tiny cold-gas puff, rate-limited in the
+  app's funnel (at most one per 90 ms however hard the stick is held). The
+  quietest sound in the minigame on purpose: it fires constantly, and the
+  balance is felt through it rather than listened to.
+voices:
+  - call: noise
+    durationMs: 70
+    volume: 0.016
+    filter:
+      type: lowpass
+      frequency: 1400

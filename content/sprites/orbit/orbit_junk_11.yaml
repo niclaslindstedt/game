@@ -1,0 +1,25 @@
+name: orbit_junk_11
+family: orbit
+size: [12, 8]
+description: >
+  A picked-clean fish skeleton — tail fin, ribbed spine, round head with an
+  empty eye.
+subject:
+  kind: orbital junk prop
+  build: a horizontal ribbed spine from a forked tail to a round head
+  features: short pale ribs above and below the spine, a dark empty eye
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # bone white
+  k: "#342c26" # empty eye socket
+  w: "#c6c6c6" # bone shade
+grid: |
+  ............
+  .........OO.
+  W.w.w.w.WWWO
+  WWWWWWWWWWkO
+  W.w.w.w.WWWO
+  .........OO.
+  ............
+  ............

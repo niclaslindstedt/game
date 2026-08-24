@@ -1,0 +1,30 @@
+name: orbit_junk_15
+family: orbit
+size: [10, 12]
+description: >
+  A table lamp tumbling free — cream shade, thin stem, round base, cord long
+  gone.
+subject:
+  kind: orbital junk prop
+  build: a flared lampshade over a thin stem and a rounded base
+  accent: warm cream shade over cold grey metal
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  A: "#8d9196" # grey stem
+  O: "#1a1c2c" # outline
+  Y: "#ffe3b6" # cream shade
+  b: "#3f4553" # dark base
+  o: "#d6a842" # shade shadow
+grid: |
+  ...OOOO...
+  ..OYYYoO..
+  .OYYYYooO.
+  .OYYYYooO.
+  OYYYYYoooO
+  OOOOOOOOOO
+  ...OAO....
+  ...OAO....
+  ...OAO....
+  ..ObbbbO..
+  .ObbbbbbO.
+  .OOOOOOOO.

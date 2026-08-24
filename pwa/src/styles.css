@@ -770,6 +770,108 @@ html.app-locked body {
   }
 }
 
+/* ── MISSION CONTROL (the flight minigame's HUD) ────────────────────────────
+   The rocket surface wears the road's console skin (`.drive-dash`, the round
+   dials, the corner clock) so the arcade is one arcade — what is added here is
+   only what the road never had: a fourth instrument on the shelf, the attitude
+   indicator, and the mission timeline across the top. */
+.rocket-dash {
+  /* Four instruments, not the wagon's two-and-a-gate: the shelf sizes itself
+     to its row instead of the road's fixed width. */
+  width: auto;
+}
+
+/* THE ATTITUDE INDICATOR — two bars growing OUTWARD from the ship's own glyph,
+   so the light spreads toward the side the ship is falling over and the
+   correction owed is literally the other way. */
+.rocket-lean {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  pointer-events: none;
+}
+.rocket-lean-row {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+.rocket-lean-bar {
+  width: 2.4rem;
+  height: 0.5rem;
+  background: #1b2431;
+  border: 1px solid #0a0c14;
+  overflow: hidden;
+}
+/* The port bar is the same bar mirrored, so its fill grows leftward — away
+   from the ship, like its twin. */
+.rocket-lean-port {
+  transform: scaleX(-1);
+}
+.rocket-lean-fill {
+  height: 100%;
+}
+.rocket-lean-ship {
+  image-rendering: pixelated;
+}
+
+/* THE MISSION TIMELINE — the launch feed's event strip, hung across the top of
+   the picture, tap-transparent like everything on this surface. */
+.rocket-strip {
+  position: absolute;
+  top: max(0.5rem, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.85));
+}
+.rocket-strip-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: min(72vw, 30rem);
+}
+.rocket-strip-bar {
+  width: 100%;
+  height: 0.3rem;
+  background: #1b2431;
+  border: 1px solid #0a0c14;
+}
+.rocket-strip-fill {
+  height: 100%;
+  background: #ffd75e;
+}
+.rocket-strip-labels {
+  display: flex;
+  justify-content: space-between;
+}
+.rocket-strip-trash {
+  align-self: flex-end;
+  opacity: 0.85;
+}
+/* Portrait has no room for six stations; the bar alone still narrates. */
+@media (orientation: portrait) {
+  .rocket-strip-labels {
+    display: none;
+  }
+}
+
+/* THE FLIGHT'S INTRO wears the road's card without its self-lifting fade: the
+   lift is timed to a card that always unmounts at 1900 ms, and the pre-flight
+   manual page here waits for a thumb — under a faded container it would be an
+   invisible screen the player is stuck on. The card leaves on the spot.
+   Doubled selector on purpose: `.drive-intro`'s own animation rule sits LATER
+   in this sheet, and at equal specificity later wins. */
+.drive-intro.rocket-intro {
+  animation: none;
+}
+
+/* THE PRE-FLIGHT CARD — the one manual in the arcade (`RocketIntro`), spaced
+   so four rules read as four rules. */
+.rocket-controls-card {
+  gap: 0.6rem;
+}
+
 /* A ROUND DIAL: the arcs are absolutely placed over each other and the face
    sits in the middle of them, so a speedometer with a rev counter inside it is
    two `kind: gauge` nodes and a stack of words rather than a widget. Sized in
@@ -6842,6 +6944,22 @@ html.app-locked body {
        carries the distance to the edge as well. */
     --drive-dash-hide: calc(-100% - 50vw - 1rem);
   }
+}
+
+/* THE FLIGHT'S BARK sits ABOVE the console on every orientation — the road's
+   portrait treatment made the default, because mission control is four
+   instruments wide and leaves no room beside it. After both `.drive-bark`
+   blocks on purpose: same specificity, later wins, in and out of the media
+   query alike. */
+.dialogue-box.drive-bark.rocket-bark {
+  left: 50%;
+  right: auto;
+  bottom: calc(
+    max(0.75rem, env(safe-area-inset-bottom)) + var(--drive-dial-size) *
+      (1 - var(--drive-dial-tail)) + 0.75rem
+  );
+  width: min(80vw, 34rem);
+  transform: translateX(-50%);
 }
 
 /* THE ROAD GOING OUT — the fade the leg ends on, over a car parked on GOODCO's

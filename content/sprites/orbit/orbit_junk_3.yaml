@@ -1,0 +1,27 @@
+name: orbit_junk_3
+family: orbit
+size: [12, 12]
+description: >
+  A bald car tire spinning slowly, empty hub open to the void.
+subject:
+  kind: orbital junk prop
+  build: a thick rubber ring with an open square hub hole
+  accent: worn lighter rubber on the upper-left of the ring
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # worn rubber
+  k: "#342c26" # black rubber
+grid: |
+  ....OOOO....
+  ..OObbbbOO..
+  .ObbbbbkkbO.
+  .ObkkkkkkbO.
+  ObkkOOOOkkbO
+  ObkO....OkbO
+  ObkO....OkbO
+  ObbkOOOOkkbO
+  .ObkkkkkkbO.
+  .ObkkkkkkbO.
+  ..OOkkkkOO..
+  ....OOOO....

@@ -1,0 +1,28 @@
+name: orbit_rock_2
+family: orbit
+size: [14, 10]
+description: >
+  A cracked twin-lobed meteoroid — two pitted lumps still holding together
+  along a dark fissure.
+subject:
+  kind: space rock
+  build: two rounded lobes joined at a pinched waist
+  features: a dark fissure splitting the lobes, pale pits on the larger one
+  flavor: honest rock, the only thing up here GOODCO did not launch
+palette:
+  E: "#5d4028" # dark pit
+  F: "#a2a4ad" # lit grey rock
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark rock shadow
+  f: "#888a96" # mid grey rock
+grid: |
+  ..OOOO...OOO..
+  .OFFffO.OFffO.
+  OFFfffbOFfffbO
+  OFffffbOffffbO
+  OFfffbbOfffbbO
+  OffEEfbOffbbbO
+  .OffffbOfbbO..
+  ..OObbOObbOO..
+  ....OO..OO....
+  ..............

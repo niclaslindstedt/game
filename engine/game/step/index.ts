@@ -162,6 +162,17 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   const hostInput = inputFor(input, 0);
   if (hostInput.view) state.view = copyView(state.view, hostInput.view);
 
+  // SCENES THAT ENDED SINCE THE LAST TICK, announced first — the queue exists
+  // because a tap can roll the chain between ticks (see `scenesEnded`), and
+  // it drains OUTSIDE the cutscene branch because the last scene's ending is
+  // exactly the moment the phase stops being `cutscene`.
+  if (state.scenesEnded?.length) {
+    for (const id of state.scenesEnded) {
+      state.events.push({ type: "sceneEnded", id });
+    }
+    state.scenesEnded.length = 0;
+  }
+
   // The prelude scenes run on the same clock as the sim (deterministic,
   // headless-testable); the world stays frozen until the chain plays out.
   if (state.phase === "cutscene") {

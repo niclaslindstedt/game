@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_boom_a
+description: >-
+  AN EXPLOSION IN THE SHELL — first of three takes, picked by the blast's own
+  seed so the boom always matches its fireball. The road's blast grammar in a
+  thinner sky: an air crack, a falling saw shell, lowpass pressure, and a
+  late highpass sizzle of debris leaving.
+voices:
+  - call: noise
+    durationMs: 70
+    volume: 0.07
+    filter:
+      type: bandpass
+      frequency: 1600
+  - call: tone
+    type: sawtooth
+    from: 380
+    to: 30
+    durationMs: 560
+    volume: 0.085
+    detuneCents: 30
+    echo: 0.3
+  - call: noise
+    durationMs: 900
+    volume: 0.06
+    filter:
+      type: lowpass
+      frequency: 300
+    echo: 0.36
+  - call: noise
+    durationMs: 520
+    volume: 0.03
+    delayMs: 160
+    filter:
+      type: highpass
+      frequency: 3800
+    echo: 0.24

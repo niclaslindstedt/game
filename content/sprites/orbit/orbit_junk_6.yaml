@@ -1,0 +1,28 @@
+name: orbit_junk_6
+family: orbit
+size: [12, 9]
+description: >
+  A microwave oven tumbling door-first — dark window, side panel, a dead
+  cyan clock.
+subject:
+  kind: orbital junk prop
+  build: a wide box, big dark door window left, control panel strip right
+  accent: a dead cyan clock square on the panel
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  A: "#8d9196" # casing shadow
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # grey casing
+  b: "#3f4553" # dark door window
+  e: "#8ccdd7" # dead cyan clock
+  v: "#60687e" # window glint
+grid: |
+  .OOOOOOOOOO.
+  .OTTTTTOTAO.
+  .OvbbbbOeAO.
+  .ObbbbbOTAO.
+  .ObbbbbOTAO.
+  .ObbbbbOAAO.
+  .OOOOOOOAAO.
+  .OAAAAAAAAO.
+  .OOOOOOOOOO.

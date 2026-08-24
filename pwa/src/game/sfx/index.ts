@@ -137,6 +137,26 @@ export function playDriveSound(
 }
 
 /**
+ * Fire one of the FLIGHT's sounds by id (`content/sounds/rocket_*.yaml`) — the
+ * rocket minigame's door into the same live bank, for the drive's reason: a
+ * flight emits `FlightEvent`s off its own clock and never touches
+ * `state.events`, so there is no `GameEvent` for the key table to match.
+ */
+export function playFlightSound(
+  synth: Synth,
+  id: string,
+  pos?: { x: number; y: number },
+): void {
+  playSound(
+    synth,
+    catalog,
+    id,
+    pos ? { pos, spatial: true } : undefined,
+    GENERATED_SOUNDS,
+  );
+}
+
+/**
  * The fields that pick WHICH SOUND an event plays. Everything else on an event
  * (positions, ids, damage numbers) never reaches the synth.
  *

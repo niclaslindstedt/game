@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE MISSION CLOCK — T+ in the cabinet's corner, the road's stopwatch at the
+# second machine and under the same rules: the CABINET talking over the
+# picture, no plate and no dial; formatted by the app (`rocket.clock`, a clock
+# is a format); coloured by Lua (whether it is a GOOD time is a judgement); and
+# the touch player's one way into the pause card (`pauseGame`).
+#
+# It survives the drop and every crashed module on purpose — the ladder ranks
+# the whole trip, crashes included, and a clock that reset with the module
+# would promise a refund the board does not give.
+region: rocket_clock
+order: 0
+kind: button
+class: drive-clock
+aria: rocket-pause
+visible: rocket.clockStarted
+press:
+  action: pauseGame
+children:
+  - id: clock_caption
+    kind: text
+    class: drive-clock-caption
+    text:
+      script: rocket.clock_label
+    scale: 2
+    color: "#7c8592"
+  - id: clock_time
+    kind: text
+    class: drive-clock-time
+    bind: rocket.clock
+    scale: 5
+    color:
+      script: rocket.clock_color

@@ -63,6 +63,12 @@ const DriveWorkbench = /* @__PURE__ */ lazy(() =>
     default: m.DriveWorkbench,
   })),
 );
+// THE FLIGHT (`?rocket`), the same idea at the second cabinet.
+const RocketWorkbench = /* @__PURE__ */ lazy(() =>
+  import("./game/rocket-screen/RocketWorkbench.tsx").then((m) => ({
+    default: m.RocketWorkbench,
+  })),
+);
 // A MINIGAME OFF THE ARCADE SHELF, lazy for the same reason as the game screen
 // above it: it mounts the real minigame, which drags the engine's simulation,
 // the renderer and the sprite atlas in behind it. Not developer tooling — it
@@ -436,6 +442,29 @@ export function App() {
             onClose={() => {
               const url = new URL(window.location.href);
               url.searchParams.delete("drive");
+              window.location.replace(url.toString());
+            }}
+          />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
+  // THE ROCKET WORKBENCH (`?rocket`, `&difficulty=`, `&seed=`, `&course=`,
+  // `&phase=landing`, `&stage=hit|chain`): the flight on its own, without the
+  // campaign it sits inside — same iteration loop, same fold-out.
+  if (__DEV_TOOLS__ && params.has("rocket")) {
+    return (
+      <ErrorBoundary
+        fallback={<RunLoadError />}
+        onError={(e) => warn(`rocket workbench failed: ${String(e)}`)}
+      >
+        <Suspense fallback={null}>
+          <RocketWorkbench
+            params={params}
+            onClose={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("rocket");
               window.location.replace(url.toString());
             }}
           />

@@ -1,0 +1,28 @@
+name: orbit_junk_1
+family: orbit
+size: [8, 10]
+description: >
+  An empty tin can tumbling in the dark — chrome cylinder, rolled rims, a
+  torn red label band.
+subject:
+  kind: orbital junk prop
+  build: a squat cylinder with rolled rims top and bottom
+  accent: a red label band around the middle
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  A: "#8d9196" # dull tin shadow
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # shiny tin
+  i: "#772020" # label shadow
+  r: "#d83a3a" # red label
+grid: |
+  .OOOOOO.
+  OTTTTAAO
+  OAAAAAAO
+  OTrrrriO
+  OrrrrriO
+  OrrrrriO
+  OTrrrriO
+  OAAAAAAO
+  OTTTAAAO
+  .OOOOOO.

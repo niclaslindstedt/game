@@ -4348,6 +4348,42 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
+    "flight_drop": {
+      "id": "flight_drop",
+      "pages": [
+        [
+          "HER TRACKER PINGS FROM THE MOON. NOBODY GOES THERE FOR CHIPS AND SODA."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "flight_shell_clear": {
+      "id": "flight_shell_clear",
+      "pages": [
+        [
+          "CLEAR. THE RICH LEFT BEFORE THE SKY SHUT. THE REST OF US LEARN TO STEER."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "flight_touchdown": {
+      "id": "flight_touchdown",
+      "pages": [["DOWN. THE TRASH RODE UP HERE FOR FREE."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "flight_up_junk": {
+      "id": "flight_up_junk",
+      "pages": [
+        [
+          "GOODCO MAKES THE EARTH CLEAN. NOBODY ASKS HOW. UP HERE, NOBODY HAS TO."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "garage_on_foot": {
       "id": "garage_on_foot",
       "pages": [

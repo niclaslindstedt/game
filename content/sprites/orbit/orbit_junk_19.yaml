@@ -1,0 +1,27 @@
+name: orbit_junk_19
+family: orbit
+size: [8, 10]
+description: >
+  A dented paint can — chrome tin, a red drip frozen over the rim, one side
+  caved in.
+subject:
+  kind: orbital junk prop
+  build: a small cylinder with one side caved in
+  accent: a red paint drip frozen over the rim
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  A: "#8d9196" # tin shadow
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # shiny tin
+  r: "#d83a3a" # red paint drip
+grid: |
+  .OOOOOO.
+  OTTTTTAO
+  OTrrTTAO
+  OTTrTTAO
+  OTTTTAO.
+  OTTTTAO.
+  OTTTTTAO
+  OATTTAAO
+  OAAAAAAO
+  .OOOOOO.

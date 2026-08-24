@@ -54,6 +54,7 @@ import {
   reopenVictoryChoice,
   resumeGame,
   skipCutscene,
+  skipScene,
   skipIntro,
   skipOutro,
   skipStoryOpening,
@@ -211,6 +212,7 @@ export const RUN_COMMAND_ARGS = {
   advanceOutro: [],
   skipOutro: [],
   skipCutscene: [],
+  skipScene: [],
   tapCutscene: [],
   skipStoryOpening: [],
   skipDeathScene: [],
@@ -535,6 +537,8 @@ export function applyRunCommand(
       return skipOutro(state);
     case "skipCutscene":
       return skipCutscene(state);
+    case "skipScene":
+      return skipScene(state);
     case "tapCutscene":
       return tapCutscene(state);
     case "skipStoryOpening":

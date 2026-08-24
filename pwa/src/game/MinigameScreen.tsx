@@ -29,6 +29,8 @@ import { loadGameAssets, peekGameAssets, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { arcadeDriveParams } from "./drive-screen/begin.ts";
 import { DriveScreen } from "./drive-screen/DriveScreen.tsx";
+import { arcadeFlightParams } from "./rocket-screen/begin.ts";
+import { RocketScreen } from "./rocket-screen/RocketScreen.tsx";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import type { MinigameId } from "./minigames.ts";
 import { captureScreen } from "./screenshots.ts";
@@ -68,6 +70,11 @@ export function MinigameScreen({
   const [params] = useState(() =>
     arcadeDriveParams(Date.now() >>> 0, difficulty, variant),
   );
+  // …and the rocket's, settled the same way. Both are built whatever cabinet
+  // this is — two seeds a render, no drive under either until one mounts.
+  const [flightParams] = useState(() =>
+    arcadeFlightParams(Date.now() >>> 0, difficulty),
+  );
 
   useEffect(() => {
     if (assets) return;
@@ -83,17 +90,37 @@ export function MinigameScreen({
   /** The SCREENSHOT bind, here as in a run. No flash miniature — the shelf that
    * shows one belongs to a run, and a cabinet has none; the shutter and the roll
    * are what a player taking a picture of their board needs. */
-  const takeScreenshot = useCallback(() => {
+  const takeScreenshot = useCallback((title: string) => {
     const root = rootRef.current;
     if (!root) return;
     playUiSound(synth, "shutter");
-    void captureScreen(root, "THE DRIVE");
+    void captureScreen(root, title);
   }, []);
 
   if (!assets) return <LoadingScreen />;
-  // One cabinet, and the id is what a second one joins on. The catalog answers
-  // WHICH — this answers WHAT IT IS, because only this module may reach the
-  // simulation (`minigames.ts` is on the startup path).
+  // The cabinets, by id — the catalog answers WHICH, this answers WHAT IT IS,
+  // because only this module may reach the simulations (`minigames.ts` is on
+  // the startup path).
+  if (id === "rocket") {
+    return (
+      <div ref={rootRef} style={{ position: "absolute", inset: 0 }}>
+        <RocketScreen
+          params={flightParams}
+          assets={assets}
+          heroName={heroName}
+          // NO PORTRAIT, for the road's reason: a cabinet has no run to dress
+          // the doll from.
+          heroPortrait={null}
+          arcade
+          onScreenshot={() => takeScreenshot("THE ROCKET")}
+          // Down (or given up): back to the shelf either way — there is no
+          // crossing waiting on an arcade sky.
+          onLanded={onExit}
+          onMenu={onExit}
+        />
+      </div>
+    );
+  }
   if (id !== "drive") return null;
   return (
     <div ref={rootRef} style={{ position: "absolute", inset: 0 }}>
@@ -107,7 +134,7 @@ export function MinigameScreen({
         // lines and stands a shade shorter.
         heroPortrait={null}
         arcade
-        onScreenshot={takeScreenshot}
+        onScreenshot={() => takeScreenshot("THE DRIVE")}
         // ARRIVED, and the board has been signed: there is no crossing to make,
         // so the road hands back to the shelf.
         onArrived={onExit}

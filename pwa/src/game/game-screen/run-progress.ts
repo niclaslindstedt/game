@@ -161,6 +161,13 @@ export function createRunProgress(deps: {
    * setting is off, or a party is aboard — and the trip books as it always did.
    */
   beginDrive?: (to: string) => boolean;
+  /**
+   * Put the FLIGHT on screen when a prelude scene has just played out — the
+   * rocket minigame stands in for the cruise cutscene on the way to the moon,
+   * and the fork hangs on the LAUNCH scene ending (`sceneEnded`). Say whether
+   * it took the stick; false means the chain simply plays its next scene.
+   */
+  beginFlight?: (sceneId: string) => boolean;
   /** THE DRIVE-OUT'S FAR SIDE: the wall-clock instant the arrival curtain
    * should be fully lifted by. The departing run washes the screen to black on
    * its own clock (`GameState.departure`); the run it hands over to is a fresh
@@ -534,6 +541,15 @@ export function createRunProgress(deps: {
       }
       if (event.solo) return; // somebody else's way home
       travelTo(state, event.to, { viaRift: true });
+    }
+    // A PRELUDE SCENE PLAYED OUT: the one seam between two chained scenes,
+    // and the FLIGHT's whole door. The launch has lifted off the burning
+    // lawn and the chain is about to show the cruise; `beginFlight` answers
+    // true when the minigame flies that leg instead (mounting itself over
+    // this frozen run and dropping `voyage_moon` on the way back down —
+    // GameScreen owns both halves). False, and the chain plays on untouched.
+    if (event.type === "sceneEnded") {
+      deps.beginFlight?.(event.id);
     }
     // DRIVING OUT of the garage: the drive-out beat has played out — the car
     // is away down the road and the screen is already black — and the trip it

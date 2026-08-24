@@ -37,6 +37,7 @@ import {
   type GameInput,
   type GameState,
   type DriveParams,
+  type FlightParams,
 } from "@game/core";
 
 import { describeError } from "@ui/lib/describe-error.ts";
@@ -46,6 +47,8 @@ import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 import { loadGameAssets, spriteCursor, type GameAssets } from "./assets.ts";
 import { DriveScreen } from "./drive-screen/DriveScreen.tsx";
 import { driveIsPlayed, driveParamsFor } from "./drive-screen/begin.ts";
+import { RocketScreen } from "./rocket-screen/RocketScreen.tsx";
+import { LAUNCH_SCENE, flightParamsFor } from "./rocket-screen/begin.ts";
 import { recordRunStarted } from "./achievements.ts";
 import { AchievementsScreen } from "./achievements-shelf.ts";
 import { AchievementToast } from "./AchievementToast.tsx";
@@ -357,6 +360,16 @@ export function GameScreen({
    */
   const [drive, setDrive] = useState<DriveParams | null>(null);
   const driveRef = useRef<DriveParams | null>(null);
+  /**
+   * …AND THE FLIGHT'S — the rocket minigame, mounted over the moon run's own
+   * frozen PRELUDE rather than between two runs: the launch scene has played,
+   * `voyage_moon` is standing by underneath, and while this is set the flight
+   * owns the picture and the input. Clearing it drops that one scene
+   * (`skipScene`) so the run continues at the intro monologue — or plays it
+   * after all, on the paths that never mount this.
+   */
+  const [rocket, setRocket] = useState<FlightParams | null>(null);
+  const rocketRef = useRef<FlightParams | null>(null);
   /**
    * The crossing the drive is holding up, with the options it must be made
    * with. A drive is a scene BETWEEN two levels, not a way of getting to one,
@@ -1065,6 +1078,34 @@ export function GameScreen({
         setDrive(params);
         return true;
       },
+      beginFlight: (sceneId) => {
+        // ONLY THE LAUNCH cues a flight — the chain announces every scene, and
+        // the id arrives variant-resolved (`launch_hard` is still the launch).
+        if (
+          sceneId !== LAUNCH_SCENE &&
+          !sceneId.startsWith(`${LAUNCH_SCENE}_`)
+        ) {
+          return false;
+        }
+        const solo = !(
+          Boolean(driver.session) &&
+          (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1)
+        );
+        // The flight lands where this run already is — the launch is the MOON
+        // run's own prelude, so `to` is this level, and `flightParamsFor`
+        // refuses every other venue's launch (Mars flies by cutscene).
+        const params = flightParamsFor(
+          runLevelId,
+          solo,
+          autoplayedRef.current(),
+          Date.now() >>> 0,
+          difficulty,
+        );
+        if (!params) return false;
+        rocketRef.current = params;
+        setRocket(params);
+        return true;
+      },
       arrivalFadeRef,
       setHud,
       setLevelId,
@@ -1196,7 +1237,9 @@ export function GameScreen({
       // Never before the first one, though — the first drawn frame is the line
       // between a survivable bad frame and a run that cannot start, and a drive
       // can only begin many frames into a run anyway.
-      if (health.ran("render") && driveRef.current) return;
+      if (health.ran("render") && (driveRef.current || rocketRef.current)) {
+        return;
+      }
       renderFrame(timeMs);
       health.ok("render");
     };
@@ -1218,7 +1261,9 @@ export function GameScreen({
         // (`carEngine`, one grain per `CAR.engineCueMs`) kept revving under the
         // road, which is the one thing a player could still tell was happening.
         // The frozen state is what `onArrived` hands to `travelTo`, unchanged.
-        if (driveRef.current) return;
+        // The FLIGHT holds its run the same way — a prelude nobody is watching
+        // must not play its cruise scene under the minigame replacing it.
+        if (driveRef.current || rocketRef.current) return;
         // HOW TO PLAY: the sim stays frozen while a teaching tooltip is being
         // read; render keeps drawing the frozen frame + tip.
         if (demoDirector.holdSim(dtMs)) return;
@@ -2049,6 +2094,53 @@ export function GameScreen({
                 pending?.to ?? to,
                 pending?.opts ?? {},
               );
+            }
+          }}
+        />
+      )}
+
+      {/* THE FLIGHT. Same contract as the road above — the minigame owns the
+          whole picture and the whole input while it is up — but a different
+          seam under it: the run it freezes is the MOON run's own prelude, with
+          `voyage_moon` standing by, so landing does not make a crossing. It
+          drops the one scene the flight stood in for and lets the run carry on
+          into the intro monologue. */}
+      {rocket && assets && (
+        <RocketScreen
+          params={rocket}
+          assets={assets}
+          heroName={character.name}
+          heroPortrait={
+            state
+              ? (dollDataUrl(
+                  assets.sprites,
+                  playerDollLayers(state, "0"),
+                  heroSoak(state),
+                  { bust: true },
+                ) ?? null)
+              : null
+          }
+          onScreenshot={() => takeScreenshot("THE FLIGHT")}
+          // ESCAPE → MAIN MENU: end the run, bank the hero as he sits — the
+          // road's own rule, for the road's reasons. A man who turned the
+          // ship around is put back at home next time.
+          onMenu={() => {
+            rocketRef.current = null;
+            setRocket(null);
+            if (state) progressRef.current?.bankHero(state);
+            onQuit();
+          }}
+          auto={demo || botView}
+          onLanded={() => {
+            // Down on the moon: lift the minigame off the run and drop the
+            // cruise scene it replaced — `skipScene` rolls the chain past
+            // `voyage_moon` alone, so the intro monologue behind it still
+            // plays. The fade is the arrival's own, same as every crossing.
+            rocketRef.current = null;
+            setRocket(null);
+            if (state) {
+              arrivalFadeRef.current = performance.now() + ARRIVAL_FADE_MS;
+              runCommand(state, "skipScene");
             }
           }}
         />

@@ -700,6 +700,10 @@
     "drive_home_errand",
     "drive_out_bump",
     "drive_out_welfare",
+    "flight_drop",
+    "flight_shell_clear",
+    "flight_touchdown",
+    "flight_up_junk",
     "garage_on_foot",
     "garage_ship_unfinished",
     "garage_take_the_car",
@@ -2406,6 +2410,35 @@
     "one_armed_bandit_hurt_1",
     "operator_pit",
     "orb",
+    "orbit_junk_0",
+    "orbit_junk_1",
+    "orbit_junk_10",
+    "orbit_junk_11",
+    "orbit_junk_12",
+    "orbit_junk_13",
+    "orbit_junk_14",
+    "orbit_junk_15",
+    "orbit_junk_16",
+    "orbit_junk_17",
+    "orbit_junk_18",
+    "orbit_junk_19",
+    "orbit_junk_2",
+    "orbit_junk_3",
+    "orbit_junk_4",
+    "orbit_junk_5",
+    "orbit_junk_6",
+    "orbit_junk_7",
+    "orbit_junk_8",
+    "orbit_junk_9",
+    "orbit_lander",
+    "orbit_lander_burn",
+    "orbit_pad",
+    "orbit_rock_0",
+    "orbit_rock_1",
+    "orbit_rock_2",
+    "orbit_sat_0",
+    "orbit_sat_1",
+    "orbit_sat_2",
     "ore_pile",
     "painting_orchard",
     "painting_shore",
@@ -4037,6 +4070,21 @@
     "quest_restocked",
     "quest_turned_in",
     "repair_kit_used",
+    "rocket_boom_a",
+    "rocket_boom_b",
+    "rocket_boom_c",
+    "rocket_boom_deep",
+    "rocket_boost",
+    "rocket_clang_a",
+    "rocket_clang_b",
+    "rocket_orbit",
+    "rocket_poof",
+    "rocket_rumble",
+    "rocket_stick_a",
+    "rocket_stick_b",
+    "rocket_stick_c",
+    "rocket_touchdown",
+    "rocket_warning",
     "scorch_burn",
     "seismic_landing",
     "shot_magic",
@@ -5229,6 +5277,51 @@
       },
       "what": "Spending a repair kit: the toolbox at work — two ratchet clicks, then the mended edge rings bright (the chime that used to fire on pickup)."
     },
+    "rocket_boom_a": {
+      "what": "AN EXPLOSION IN THE SHELL — first of three takes, picked by the blast's own seed so the boom always matches its fireball. The road's blast grammar in a thinner sky: an air crack, a falling saw shell, lowpass pressure, and a late highpass sizzle of debris leaving."
+    },
+    "rocket_boom_b": {
+      "what": "An explosion in the shell, SECOND take — snappier and brighter than the first: the crack opens higher, the shell falls faster, the debris arrives sooner. A satellite's tanks rather than a hull."
+    },
+    "rocket_boom_c": {
+      "what": "An explosion in the shell, THIRD take — the slow rolling one: the crack is duller, the pressure longer, and a second late thump under the tail. The take that makes a chain read as a chain instead of a stutter."
+    },
+    "rocket_boom_deep": {
+      "what": "THE FLOOR UNDER THE BIG ONE — layered beneath a boom take when the SHIP itself goes, never alone: a long two-stage sub dive and black lowpass pressure, which is the whole difference the ear needs between \"a satellite died\" and \"I did\"."
+    },
+    "rocket_boost": {
+      "what": "THE BOOSTERS OPENING — the brighter grain LAYERED over `rocket_rumble` on the same 190 ms clock while the throttle is held: the engine opening up, never speeding up (the bed's cadence rule). A harder saw a fifth above the burn and a mid lowpass roar; still a bed grain, so it holds like one."
+    },
+    "rocket_clang_a": {
+      "what": "HARDWARE MEETING THE PAINTWORK — a satellite or a rock going through the hull, first of two takes. A hard square strike with a metallic ring hanging off it and a bandpass crack of contact: unmistakably METAL, where the trash is unmistakably not."
+    },
+    "rocket_clang_b": {
+      "what": "Hardware meeting the paintwork, SECOND take — lower strike, longer ring: a bigger panel taking it, or the same panel taking it worse."
+    },
+    "rocket_orbit": {
+      "what": "THE SHELL FALLING AWAY / ORBIT MADE — the trip's one moment of fanfare: a consonant three-step triangle climb with a sine sparkle an octave up, and a generous echo send because this is the rare moment that has earned one."
+    },
+    "rocket_poof": {
+      "what": "ONE BREATH OF THE STEERING POOFS — a tiny cold-gas puff, rate-limited in the app's funnel (at most one per 90 ms however hard the stick is held). The quietest sound in the minigame on purpose: it fires constantly, and the balance is felt through it rather than listened to."
+    },
+    "rocket_rumble": {
+      "what": "ONE GRAIN OF THE ENGINE BED — the garage rocket's base burn, re-fired every 190 ms for the whole flight so the copies fuse into one continuous roar (`continuous-bed-needs-a-hold`: cadence ~half the hold). A low detuned saw under a lowpass rumble; the volumes are the SUM's over ~3 overlapping grains, so each is a third of the loudness the bed arrives at."
+    },
+    "rocket_stick_a": {
+      "what": "A BAG OF GARBAGE LANDING ON THE HULL — the FIRST of three takes, so a climb through the shell never plays one squish twenty times. Dead and a little embarrassing on purpose: a dull low square with no ring (trash is not a bell) and a soft lowpass flump of it settling against the paintwork."
+    },
+    "rocket_stick_b": {
+      "what": "A bag landing on the hull, SECOND take — a shade higher and shorter than the first, with a touch of bandpass slap: a smaller thing, or a harder corner of the same thing."
+    },
+    "rocket_stick_c": {
+      "what": "A bag landing on the hull, THIRD take — the lowest and wettest of the three: a slow flump with a late soft scuff, something soft-sided arriving whole."
+    },
+    "rocket_touchdown": {
+      "what": "THE PADS MEETING REGOLITH, gently enough to keep — a soft lowpass crunch of dust taking the legs, then a small consonant chime up: relief, sized to a landing rather than a victory (the board after it is the fanfare)."
+    },
+    "rocket_warning": {
+      "what": "THE ATTITUDE ALARM — the one beep this cockpit has, edge-triggered by the sim so it can never nag: two short hard square pulses, dry (no echo — an alarm in a cabin, not a noise in a hall)."
+    },
     "scorch_burn": {
       "on": {
         "type": "scorchBurn"
@@ -5507,6 +5600,7 @@
     "questTurnedIn",
     "repairKitUsed",
     "sandstormHit",
+    "sceneEnded",
     "scorchBurn",
     "seismicLanding",
     "shot",
@@ -5541,6 +5635,10 @@
     "hud",
     "left",
     "portrait",
+    "rocket",
+    "rocket_clock",
+    "rocket_dash",
+    "rocket_strip",
     "scores",
     "status",
     "top",
@@ -5623,6 +5721,28 @@
     "menu.open": "flag",
     "menu.screen": "text",
     "menu.session": "flag",
+    "rocket.altFrac": "frac",
+    "rocket.altitude": "number",
+    "rocket.boost": "flag",
+    "rocket.clock": "text",
+    "rocket.clockMs": "number",
+    "rocket.clockStarted": "flag",
+    "rocket.dashLive": "flag",
+    "rocket.failing": "flag",
+    "rocket.hullFrac": "frac",
+    "rocket.hullPercent": "number",
+    "rocket.landing": "flag",
+    "rocket.leanFrac": "frac",
+    "rocket.leanPortFrac": "frac",
+    "rocket.leanStarFrac": "frac",
+    "rocket.mph": "number",
+    "rocket.paused": "flag",
+    "rocket.phase": "text",
+    "rocket.progress": "frac",
+    "rocket.shellClear": "flag",
+    "rocket.speedFrac": "frac",
+    "rocket.trash": "number",
+    "rocket.warn": "flag",
     "ui.autopilot": "flag",
     "ui.keyHints": "flag",
     "ui.scoreboard": "flag",
@@ -5707,7 +5827,8 @@
   ],
   "hudSurfaces": [
     "drive",
-    "field"
+    "field",
+    "rocket"
   ],
   "menus": [
     "cache",

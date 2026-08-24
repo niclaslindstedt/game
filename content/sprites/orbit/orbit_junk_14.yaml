@@ -1,0 +1,29 @@
+name: orbit_junk_14
+family: orbit
+size: [10, 12]
+description: >
+  A desk fan drifting — round chrome cage, dark blades stopped inside, stem
+  and flat base.
+subject:
+  kind: orbital junk prop
+  build: a round caged head on a short stem over a flat base
+  features: dark stopped blades and a grey hub behind the cage
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  A: "#8d9196" # grey hub and stem
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # chrome cage
+  b: "#3f4553" # dark blades
+grid: |
+  ...OOOO...
+  ..OTTTTO..
+  .OTbbbbTO.
+  .OTbAAbTO.
+  .OTbAAbTO.
+  .OTbbbbTO.
+  ..OTTTTO..
+  ...OOOO...
+  ...OAO....
+  ...OAO....
+  ..OAAAAO..
+  ..OOOOOO..

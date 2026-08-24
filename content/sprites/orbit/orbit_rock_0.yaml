@@ -1,0 +1,31 @@
+name: orbit_rock_0
+family: orbit
+size: [10, 12]
+description: >
+  A jagged meteoroid shard — a tall angular splinter of grey-brown rock, lit
+  on its left facets.
+subject:
+  kind: space rock
+  build: a tall jagged splinter, narrow point up, widening to an angular base
+  features: hard facet steps down the silhouette, a dark pit low on the flank
+  flavor: honest rock, the only thing up here GOODCO did not launch
+palette:
+  B: "#92643e" # brown vein
+  E: "#5d4028" # dark pit
+  F: "#a2a4ad" # lit grey rock
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark rock shadow
+  f: "#888a96" # mid grey rock
+grid: |
+  ....OO....
+  ...OFfO...
+  ...OFfO...
+  ..OFFfbO..
+  ..OFffbO..
+  .OFFffbbO.
+  .OFfEEbbO.
+  .OFffbbbO.
+  OFFfffbbbO
+  OFffBbbbbO
+  OOOOOOOOOO
+  ..........

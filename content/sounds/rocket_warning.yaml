@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_warning
+description: >-
+  THE ATTITUDE ALARM — the one beep this cockpit has, edge-triggered by the
+  sim so it can never nag: two short hard square pulses, dry (no echo — an
+  alarm in a cabin, not a noise in a hall).
+voices:
+  - call: tone
+    type: square
+    from: 920
+    to: 920
+    durationMs: 70
+    volume: 0.05
+  - call: tone
+    type: square
+    from: 920
+    to: 920
+    durationMs: 70
+    volume: 0.05
+    delayMs: 130

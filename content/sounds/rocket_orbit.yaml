@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_orbit
+description: >-
+  THE SHELL FALLING AWAY / ORBIT MADE — the trip's one moment of fanfare: a
+  consonant three-step triangle climb with a sine sparkle an octave up, and a
+  generous echo send because this is the rare moment that has earned one.
+voices:
+  - call: tone
+    type: triangle
+    from: 392
+    to: 392
+    durationMs: 140
+    volume: 0.04
+  - call: tone
+    type: triangle
+    from: 523
+    to: 523
+    durationMs: 140
+    volume: 0.04
+    delayMs: 130
+  - call: tone
+    type: triangle
+    from: 784
+    to: 784
+    durationMs: 320
+    volume: 0.045
+    delayMs: 260
+    echo: 0.34
+  - call: tone
+    type: sine
+    from: 1568
+    to: 1568
+    durationMs: 300
+    volume: 0.02
+    delayMs: 260
+    echo: 0.3

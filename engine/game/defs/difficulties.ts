@@ -643,6 +643,33 @@ export type DifficultyDef = {
      */
     topSpeedMph: number;
   };
+  /**
+   * THE FLIGHT'S OWN RUNG — how hostile the sky is in the minigame between the
+   * lawn and the moon (`engine/game/rocket/`), as multipliers on the four
+   * things that make the climb a climb.
+   *
+   * THE LADDER TURNS THE SKY AND THE SHIP, NEVER THE PHYSICS. The instability
+   * is real dynamics (`FLIGHT.ascent.tipPerS` is a divergence rate), so the
+   * honest knobs are what is genuinely a property of the rung: how much of the
+   * company's garbage is up there (`junkMult`), how much of its hardware
+   * (`hazardMult`), how bent this rung's build tolerances left the ship
+   * (`tipMult`) and what a hit costs the skin (`damageMult`). MEDIUM is the
+   * 1.0 baseline the sky was tuned at.
+   */
+  flight: {
+    /** Multiplies `FLIGHT.field.junkPerKPx` — the shell's thickness. */
+    junkMult: number;
+    /** Multiplies the satellite and rock densities together — the hardware is
+     * one hazard with two sprites, and thinning only half of it would just
+     * change which thing kills you. */
+    hazardMult: number;
+    /** Multiplies `FLIGHT.ascent.tipPerS` — how fast a neglected lean grows.
+     * The one knob that changes the SHIP rather than the sky, kept in a narrow
+     * band because the pendulum's feel is the minigame. */
+    tipMult: number;
+    /** Multiplies what a satellite or rock takes off the hull. */
+    damageMult: number;
+  };
 };
 
 export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
@@ -783,6 +810,15 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       // things on it.
       topSpeedMph: 120,
     },
+    // A thinner shell, a steadier ship, and a hit that costs less skin: the
+    // kindest sky is one the flip can be LEARNED on, because the flip is the
+    // whole minigame and EASY is where it teaches itself.
+    flight: {
+      junkMult: 0.7,
+      hazardMult: 0.55,
+      tipMult: 0.8,
+      damageMult: 0.75,
+    },
   },
   medium: {
     id: "medium",
@@ -873,6 +909,14 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       laneGuardPx: 0,
       topSpeedMph: 135,
     },
+    // THE SKY AS IT WAS TUNED — the 1.0 baseline every other rung is a
+    // multiple of.
+    flight: {
+      junkMult: 1,
+      hazardMult: 1,
+      tipMult: 1,
+      damageMult: 1,
+    },
   },
   hard: {
     id: "hard",
@@ -949,6 +993,14 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       // the problem the player is here to solve.
       laneGuardPx: 0,
       topSpeedMph: 148,
+    },
+    // A thicker shell and a twitchier ship: the first rung on which boosting
+    // through the band stops being a way of getting there sooner.
+    flight: {
+      junkMult: 1.25,
+      hazardMult: 1.4,
+      tipMult: 1.1,
+      damageMult: 1.2,
     },
   },
   nightmare: {
@@ -1029,6 +1081,12 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       trafficDensity: 1.3,
       laneGuardPx: 0,
       topSpeedMph: 161,
+    },
+    flight: {
+      junkMult: 1.5,
+      hazardMult: 1.8,
+      tipMult: 1.2,
+      damageMult: 1.5,
     },
   },
   jesus: {
@@ -1111,6 +1169,15 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       laneGuardPx: 0,
       // The whole dial, which nothing below this rung is trusted with.
       topSpeedMph: 174,
+    },
+    // The shell is a wall, the hardware is everywhere, and two hits end the
+    // climb — but the tip stays inside the learnable band, because a pendulum
+    // nobody can hold is not a harder game, it is a coin toss.
+    flight: {
+      junkMult: 1.8,
+      hazardMult: 2.4,
+      tipMult: 1.3,
+      damageMult: 2,
     },
   },
 };

@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE VELOCITY DIAL — mission control's left hand, and the launch feed's
+# signature instrument: a five-digit figure climbing a round gauge.
+#
+# THE SAME DIAL AS THE WAGON'S, to the pixel — same size, same 250° sweep from
+# the same lower-left opening — because the two minigames are one arcade and a
+# player learns one shape. What differs is the number in it: this face runs to
+# 25 020, which is escape velocity in the unit the game says out loud, and the
+# figure is PEGGED there (`rocket.mph`) — past the shell the air is gone and
+# the true number runs off any face you could print, so the dial simply holds
+# its last word like an instrument that has done its job.
+#
+# The word down in the gap is the THROTTLE LAMP — BURN while the boosters are
+# open, dark while they idle — which is the one control state the thumb wants
+# confirmed without looking at the thumb.
+region: rocket_dash
+order: 0
+kind: panel
+class: drive-dial
+children:
+  - id: speed_arc
+    kind: gauge
+    class: drive-dial-ring
+    bind: rocket.speedFrac
+    sweep: 250
+    start: 235
+    thickness: 3.5
+    color:
+      script: rocket.speed_color
+    track: "#1b2431"
+
+  - id: speed_face
+    kind: panel
+    class: drive-dial-face
+    children:
+      - id: speed_number
+        kind: text
+        bind: rocket.mph
+        scale: 2
+        color:
+          script: rocket.speed_color
+      - id: speed_unit
+        kind: text
+        text: MPH
+        scale: 1
+        color: "#7d8899"
+
+  - id: burn_lamp
+    kind: text
+    class: drive-dial-foot
+    text:
+      script: rocket.burn_label
+    scale: 1
+    color:
+      script: rocket.burn_color

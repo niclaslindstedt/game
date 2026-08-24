@@ -370,6 +370,11 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "rng",
       "sandstormTimerMs",
       "sandstorms",
+      // THE SCENE-END RELAY (`sceneEnded` events queued across a command's
+      // tick boundary — story.ts). Defaults cleanly on a thaw (every reader
+      // guards with `?.`/`??=`, and a parked run is never mid-prelude anyway),
+      // so no version bump.
+      "scenesEnded",
       "scorches",
       "spawners",
       "staminaEmptyMs",

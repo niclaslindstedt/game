@@ -27,7 +27,7 @@ import { DIFFICULTY_ORDER, type Difficulty } from "@game/menu";
 import { isDifficultyBeaten, type Character } from "./characters.ts";
 
 /** Every minigame the game has, in shelf order. */
-export const MINIGAME_ORDER = ["drive"] as const;
+export const MINIGAME_ORDER = ["drive", "rocket"] as const;
 
 export type MinigameId = (typeof MINIGAME_ORDER)[number];
 
@@ -87,6 +87,16 @@ const MINIGAME_DEFS: Record<MinigameId, MinigameDef> = {
       { id: "goodco_hq", name: "GOODCO" },
       { id: "garage", name: "GARAGE" },
     ],
+  },
+  rocket: {
+    id: "rocket",
+    // The MACHINE, not the trip — the road's own naming rule: the cabinet is
+    // the ship, and the one place it goes is the DIRECTION row's business.
+    name: "THE ROCKET",
+    // One way it can be played: up through the shell and down onto the moon.
+    // A single variant is a cabinet with no choice to offer, and the shelf's
+    // DIRECTION row greys out over it — exactly what `shelfVariants` expects.
+    variants: [{ id: "moon", name: "MOON" }],
   },
 };
 

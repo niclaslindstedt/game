@@ -1,0 +1,27 @@
+name: orbit_junk_7
+family: orbit
+size: [16, 8]
+description: >
+  A stained mattress drifting flat — cream ticking, tuft dots, two ugly
+  grime blooms.
+subject:
+  kind: orbital junk prop
+  build: a long flat slab with a deep side band
+  features: tuft dots across the top, button dents along the side band
+  accent: two brown-yellow stain blooms
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  B: "#92643e" # band shadow
+  O: "#1a1c2c" # outline
+  S: "#b39378" # tan shade
+  Y: "#ffe3b6" # cream ticking
+  q: "#96762e" # stain
+grid: |
+  .OOOOOOOOOOOOOO.
+  OYYYYYYYYYYYYYSO
+  OYqqYYYSYYYYYYSO
+  OYSYYYYYYYqqYYSO
+  OYYYYSYYYYYYYYSO
+  OSSSSSSSSSSSSBBO
+  OSBSSBSSBSSBSBBO
+  .OOOOOOOOOOOOOO.

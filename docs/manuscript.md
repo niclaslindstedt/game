@@ -1069,7 +1069,34 @@ Nothing is ever repaired, and nobody comes out._
 _(This scene plays again for the Mars launch, on a house two fires worse, with
 no new lines.)_
 
+## Travel — THE FLIGHT (minigame, up and down)
+
+_The climb through GOODCO's orbital landfill and the drop onto the moon,
+played. Every line is a bark over a sky that keeps moving
+(`content/thoughts.yaml`, read by `rocket-screen/voice.ts`); when the flight is
+not flown, THE VOYAGE below carries the tracker beat instead — same facts, the
+film version. Nobody gets both._
+
+### Into the band, just after the controls hand over
+
+**ME:** GOODCO MAKES THE EARTH CLEAN. NOBODY ASKS HOW. UP HERE, NOBODY HAS TO.
+
+### Punching out of the shell — the sky suddenly clean
+
+**ME:** CLEAR. THE RICH LEFT BEFORE THE SKY SHUT. THE REST OF US LEARN TO STEER.
+
+### The drop beginning, the moon under the module
+
+**ME:** HER TRACKER PINGS FROM THE MOON. NOBODY GOES THERE FOR CHIPS AND SODA.
+
+### The pads meeting regolith
+
+**ME:** DOWN. THE TRASH RODE UP HERE FOR FREE.
+
 ## Travel — THE VOYAGE, LEG ONE (cutscene)
+
+_The trip's film — played when the flight is not flown (MINIGAMES off, a party
+aboard, nobody's hands on the run); the minigame above replaces it when it is._
 
 > **CAPTION:** EARTH GOT SMALL FAST.
 

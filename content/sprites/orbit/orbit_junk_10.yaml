@@ -1,0 +1,27 @@
+name: orbit_junk_10
+family: orbit
+size: [12, 8]
+description: >
+  A pizza box floating open a crack — tan cardboard lid, dark slit, a grease
+  bloom on the base.
+subject:
+  kind: orbital junk prop
+  build: a flat cardboard box with the lid lifted a crack
+  features: a dark opening slit under the lid
+  accent: a grease bloom soaked into the front
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  B: "#92643e" # cardboard shadow
+  O: "#1a1c2c" # outline
+  S: "#b39378" # tan cardboard
+  b: "#3f4553" # dark opening slit
+  q: "#96762e" # grease stain
+grid: |
+  ..OOOOOOOO..
+  .OSSSSSSSSO.
+  .OSSSSSSSSO.
+  .ObbbbbbbbO.
+  OSSSSSSSSSBO
+  OSqqSSSSSSBO
+  OOOOOOOOOOOO
+  ............

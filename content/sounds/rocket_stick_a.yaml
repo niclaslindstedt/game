@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_stick_a
+description: >-
+  A BAG OF GARBAGE LANDING ON THE HULL — the FIRST of three takes, so a climb
+  through the shell never plays one squish twenty times. Dead and a little
+  embarrassing on purpose: a dull low square with no ring (trash is not a
+  bell) and a soft lowpass flump of it settling against the paintwork.
+voices:
+  - call: tone
+    type: square
+    from: 150
+    to: 78
+    durationMs: 90
+    volume: 0.04
+    detuneCents: 7
+  - call: noise
+    durationMs: 110
+    volume: 0.026
+    filter:
+      type: lowpass
+      frequency: 520

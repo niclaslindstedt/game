@@ -1,0 +1,27 @@
+name: orbit_junk_16
+family: orbit
+size: [12, 8]
+description: >
+  A worn sneaker drifting sole-down — scuffed white upper, red stripe, dark
+  rubber sole.
+subject:
+  kind: orbital junk prop
+  build: a low shoe, high heel collar sloping to a rounded toe
+  features: pale lace crosses on the top slope
+  accent: a red stripe along the side
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # pale laces
+  a: "#d6dce4" # scuffed white upper
+  b: "#3f4553" # rubber sole
+  r: "#d83a3a" # red stripe
+grid: |
+  ............
+  .OOOO.......
+  .OaaaO......
+  .OaWaWOOOOO.
+  OaarraaaaaaO
+  ObbbbbbbbbbO
+  .OOOOOOOOOO.
+  ............
