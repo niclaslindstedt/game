@@ -14,9 +14,14 @@ import { describe, expect, it } from "vitest";
 
 import { ORBIT_VARIANTS } from "../../engine/game/rocket/index.ts";
 import {
+  BIRD_SPRITES,
+  DRONE_SPRITES,
   JUNK_SPRITES,
+  PARAGLIDER_SPRITES,
+  PLANE_SPRITES,
   ROCK_SPRITES,
   SATELLITE_SPRITES,
+  SKYDIVER_SPRITES,
 } from "../../pwa/src/game/rocket-screen/orbit-art.ts";
 import { FLIGHT_SOUND_IDS } from "../../pwa/src/game/rocket-screen/rocket-sounds.ts";
 import { GENERATED_SOUNDS } from "../../pwa/src/generated/sounds.ts";
@@ -51,6 +56,11 @@ describe("the flight's sprite tables", () => {
     expect(JUNK_SPRITES).toHaveLength(ORBIT_VARIANTS.junk);
     expect(SATELLITE_SPRITES).toHaveLength(ORBIT_VARIANTS.satellite);
     expect(ROCK_SPRITES).toHaveLength(ORBIT_VARIANTS.rock);
+    expect(PLANE_SPRITES).toHaveLength(ORBIT_VARIANTS.plane);
+    expect(DRONE_SPRITES).toHaveLength(ORBIT_VARIANTS.drone);
+    expect(BIRD_SPRITES).toHaveLength(ORBIT_VARIANTS.bird);
+    expect(SKYDIVER_SPRITES).toHaveLength(ORBIT_VARIANTS.skydiver);
+    expect(PARAGLIDER_SPRITES).toHaveLength(ORBIT_VARIANTS.paraglider);
   });
 
   it("names only sprites the shipped atlas actually has", () => {
@@ -58,6 +68,11 @@ describe("the flight's sprite tables", () => {
       ...JUNK_SPRITES,
       ...SATELLITE_SPRITES,
       ...ROCK_SPRITES,
+      ...PLANE_SPRITES,
+      ...DRONE_SPRITES,
+      ...BIRD_SPRITES,
+      ...SKYDIVER_SPRITES,
+      ...PARAGLIDER_SPRITES,
       ...NAMED,
     ];
     const missing = all.filter((name) => !(name in ATLAS));

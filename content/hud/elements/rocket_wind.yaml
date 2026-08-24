@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE WIND METER — under the attitude indicator, because the two are one
+# instrument really: the wind is the weather the lean is fighting, and the
+# vane's arrow lights on the shoulder the push is coming FROM so the
+# correction reads straight off it.
+#
+# The figure is what the ship can FEEL (`rocket.windMph` — the layer's wind
+# bought down by the air), which is why the meter dies on the climb: by the
+# shell there is no air left for the wind to push with, and the label's last
+# word is VACUUM. The ladder (calm through jet stream) is a judgement and
+# lives in Lua.
+region: rocket_attitude
+order: 1
+kind: panel
+class: rocket-wind
+children:
+  - id: wind_row
+    kind: panel
+    class: rocket-wind-row
+    children:
+      - id: wind_port
+        kind: text
+        text: "◀"
+        scale: 1
+        color:
+          script: rocket.wind_port_color
+      - id: wind_mph
+        kind: text
+        bind: rocket.windMph
+        scale: 1
+        color:
+          script: rocket.wind_color
+      - id: wind_star
+        kind: text
+        text: "▶"
+        scale: 1
+        color:
+          script: rocket.wind_star_color
+  - id: wind_label
+    kind: text
+    class: rocket-wind-caption
+    text:
+      script: rocket.wind_label
+    scale: 1
+    color:
+      script: rocket.wind_color

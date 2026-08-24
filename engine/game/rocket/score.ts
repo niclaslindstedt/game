@@ -54,6 +54,9 @@ export type FlightScorecard = {
   /** GOODCO's garbage, hauled to the moon on somebody else's hull. ON THE CARD
    * AND WORTH NOTHING — see the header. */
   trash: number;
+  /** The sky's soft bodies met on the way up — birds, hobbyists. Itemised
+   * beside the trash, and worth exactly as much. */
+  bodies: number;
 };
 
 /**
@@ -84,13 +87,10 @@ export function flightScore(state: FlightState): FlightScorecard {
   // Floored at zero: par is a bonus a hot pilot earns, never a fine a careful
   // one pays.
   const underS = Math.max(0, (parMs - tripMs) / 1000);
-  // Pegged at the dial's last figure, exactly as the dashboard is: in the
-  // vacuum above the shell the true number runs away, and a bonus that grew
-  // with it would make the clear stretch worth more than the game.
-  const topSpeedMph = Math.min(
-    FLIGHT.topSpeedMph,
-    Math.round((state.topSpeed / FLIGHT.topSpeedPx) * FLIGHT.topSpeedMph),
-  );
+  // The tally is already the dial's own mph (`state.topSpeed`), pegged here
+  // exactly as the dashboard pegs it: past orbital speed a bonus that kept
+  // growing would make the clear stretch worth more than the game.
+  const topSpeedMph = Math.min(FLIGHT.orbitalMph, Math.round(state.topSpeed));
   const intact = Math.max(0, Math.min(1, state.hullAtOrbit));
   // A feather is the whole bonus, the legal limit is none of it.
   const gentle = Math.max(0, 1 - state.touchdownVy / l.safeVyPx);
@@ -119,5 +119,6 @@ export function flightScore(state: FlightState): FlightScorecard {
     touchdownVy: Math.round(state.touchdownVy),
     onPad: state.touchdownPad,
     trash: state.trashCount,
+    bodies: state.softHits,
   };
 }

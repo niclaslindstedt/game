@@ -219,6 +219,46 @@ thoughts:
     portrait: hero
     pages:
       - - GOODCO MAKES THE EARTH CLEAN. NOBODY ASKS HOW. UP HERE, NOBODY HAS TO.
+  # THE SKY'S SURPRISES — each said ONCE per flight, the first time the climb
+  # earns it, and the TIPPING line a rotation (the ship never stops trying, so
+  # a repeated scare gets the next variation — `rocket-screen/voice.ts` keeps
+  # the cycle). All of them are THOUGHTS: a man alone in a homemade cockpit
+  # gets no dialogue window, and the sky never stops for a line.
+  flight_tipping_0:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - UP. THE ONE JOB IS UP.
+  flight_tipping_1:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - I GLUED THAT FIN ON. I REMEMBER BEING TIRED.
+  flight_tipping_2:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THE MOON IS THE OTHER WAY.
+  flight_jetstream:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - JET STREAM. EVEN THE AIR WANTS ME SIDEWAYS.
+  flight_off_course:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - OFF THE CORRIDOR. EVERYTHING ELSE UP HERE HAS RIGHT OF WAY.
+  flight_bird:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THAT WAS A BIRD. WE'RE BOTH SURPRISED.
+  flight_hobbyist:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THEY HAD THE WHOLE SKY. THEY PICKED MINE.
   flight_shell_clear:
     speaker: "{HERO}"
     portrait: hero

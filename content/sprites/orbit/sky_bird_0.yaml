@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_bird_0
+family: orbit
+size: [8, 6]
+description: >
+  A bird mid-climb, wings RAISED — one of the flap's two beats, facing
+  left; the renderer mirrors it for a rightward crosser.
+subject:
+  kind: bird
+  build: small dark bird in level flight, wings up
+  features: raised wing pair, dull beak tip
+  flavor: up where birds are, notice or no notice
+palette:
+  b: "#3f4553" # body, dark against any sky
+  w: "#5d6675" # wing, a shade lighter so the beat reads
+  k: "#c9a13d" # beak, dulled
+grid: |
+  .ww...ww
+  .bwb.bwb
+  ..bbbbb.
+  kbbbbbb.
+  ..bbbb..
+  ........

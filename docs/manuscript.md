@@ -1075,26 +1075,53 @@ no new lines.)_
 _The climb through GOODCO's orbital landfill and the drop onto the moon,
 played. It opens low, over the burning house, and the first stretch is the
 launch's own storm — rain, lightning, thunder — before the sky goes clean and
-the junk band begins. Every line is a bark over a sky that keeps moving
-(`content/thoughts.yaml`, read by `rocket-screen/voice.ts`); when the flight is
-not flown, THE VOYAGE below carries the tracker beat instead — same facts, the
-film version. Nobody gets both._
+the junk band begins. Every line is a THOUGHT — a man alone in a homemade
+cockpit gets no dialogue window: it prints small over the sky, near his own
+column, and the climb never stops for it (`content/thoughts.yaml`, read by
+`rocket-screen/voice.ts`). The surprises each fire ONCE per flight, the first
+time the sky earns them; the tip-over line rotates, because the ship never
+stops trying. When the flight is not flown, THE VOYAGE below carries the
+tracker beat instead — same facts, the film version. Nobody gets both._
 
 ### Into the band, just after the controls hand over
 
-**ME:** GOODCO MAKES THE EARTH CLEAN. NOBODY ASKS HOW. UP HERE, NOBODY HAS TO.
+**ME (thinks):** GOODCO MAKES THE EARTH CLEAN. NOBODY ASKS HOW. UP HERE, NOBODY HAS TO.
+
+### The ship starting to go over — a rotation, one per scare
+
+**ME (thinks):** UP. THE ONE JOB IS UP.
+
+**ME (thinks):** I GLUED THAT FIN ON. I REMEMBER BEING TIRED.
+
+**ME (thinks):** THE MOON IS THE OTHER WAY.
+
+### The jet stream taking the hull — once, the first time the wind meter goes red
+
+**ME (thinks):** JET STREAM. EVEN THE AIR WANTS ME SIDEWAYS.
+
+### Properly off the corridor — once, the first time he has wandered
+
+**ME (thinks):** OFF THE CORRIDOR. EVERYTHING ELSE UP HERE HAS RIGHT OF WAY.
+
+### A bird across the nose — once, the first one
+
+**ME (thinks):** THAT WAS A BIRD. WE'RE BOTH SURPRISED.
+
+### Somebody's canopy across the hull — once, the first skydiver or paraglider
+
+**ME (thinks):** THEY HAD THE WHOLE SKY. THEY PICKED MINE.
 
 ### Punching out of the shell — the sky suddenly clean
 
-**ME:** CLEAR. THE RICH LEFT BEFORE THE SKY SHUT. THE REST OF US LEARN TO STEER.
+**ME (thinks):** CLEAR. THE RICH LEFT BEFORE THE SKY SHUT. THE REST OF US LEARN TO STEER.
 
 ### The drop beginning, the moon under the module
 
-**ME:** HER TRACKER PINGS FROM THE MOON. NOBODY GOES THERE FOR CHIPS AND SODA.
+**ME (thinks):** HER TRACKER PINGS FROM THE MOON. NOBODY GOES THERE FOR CHIPS AND SODA.
 
 ### The pads meeting regolith
 
-**ME:** DOWN. THE TRASH RODE UP HERE FOR FREE.
+**ME (thinks):** DOWN. THE TRASH RODE UP HERE FOR FREE.
 
 ## Travel — THE VOYAGE, LEG ONE (cutscene)
 

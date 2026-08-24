@@ -39,7 +39,29 @@ export type OrbitKind =
    * thing in the field that moves with any purpose. Holes the ship. */
   | "satellite"
   /** A rock that never asked anybody. Holes the ship for less. */
-  | "rock";
+  | "rock"
+  /** An airliner crossing its own lane — the corridor was closed for this
+   * launch, the sky beside it was not. A stray (off-course) spawn; holes
+   * nearly the whole ship and goes up like the machine it is. */
+  | "plane"
+  /** A delivery drone running parcels — it is an AI world, and somebody
+   * automated even this altitude. A stray; a lithium firecracker. */
+  | "drone"
+  /** A bird, up where birds are. SOFT: bursts across the hull. */
+  | "bird"
+  /** A skydiver under canopy, off the corridor where jumping is still legal.
+   * SOFT: the drive's crowd, met a thousand feet up. */
+  | "skydiver"
+  /** A paraglider having a hobby. SOFT. */
+  | "paraglider";
+
+/** The kinds that BURST rather than hole — one list, so the collision, the
+ * fx and the gore gate can never disagree about who bleeds. */
+export const SOFT_KINDS: readonly OrbitKind[] = [
+  "bird",
+  "skydiver",
+  "paraglider",
+];
 
 /** One thing adrift — where it is, how it drifts, and which art it wears. */
 export type OrbitObject = {
@@ -96,6 +118,15 @@ export type FlightCraft = {
   /** What is left of the skin, 0–1. Trash never touches it; satellites and
    * rocks do. */
   hull: number;
+  /**
+   * WHAT IS LEFT IN THE TANKS, 0–1 — the ascent's weight, spent as the burn
+   * runs (`burnFuelPerS`). The engine never cuts when it hits zero (an empty
+   * ship still flies on the base burn — running dry is not a fail state);
+   * what the propellant buys while it lasts is MASS, and the thrust pushes
+   * the ship that is actually left (`fuelMassMult`). The landing module's
+   * gauge just reads full — its engine is a fixed authority.
+   */
+  fuel: number;
 };
 
 /** Everything the sky owes the app this tick — sounds, flashes and beats,
@@ -105,7 +136,23 @@ export type FlightEvent =
    * took it (for the pan and the kick's direction). */
   | { type: "stuck"; variant: number; side: 1 | -1 }
   /** Something hard went through the paintwork. */
-  | { type: "strike"; kind: "satellite" | "rock"; x: number; alt: number }
+  | {
+      type: "strike";
+      kind: "satellite" | "rock" | "plane" | "drone";
+      x: number;
+      alt: number;
+    }
+  /** Something SOFT did not go through anything — it came apart across the
+   * nose. `along`/`across` is where it landed in the ship's own frame (the
+   * smear rides the hull the way the trash does); whether the smear is red is
+   * the app's question to the gore gate (`FlightParams.gib`/`dust`). */
+  | {
+      type: "splat";
+      kind: "bird" | "skydiver" | "paraglider";
+      side: 1 | -1;
+      along: number;
+      across: number;
+    }
   /** Something detonated — the ship, the module, or a satellite in the chain.
    * `seed` picks the app's whole picture of it. */
   | {
@@ -193,6 +240,15 @@ export type FlightParams = {
    * every flight a player takes; the attract loop brings the top down
    * (`FLIGHT.attractCoursePx`), for the drive's own reason. */
   coursePx?: number;
+  /**
+   * THE GORE GATE'S ANSWER, settled at the door (`rocket-screen/begin.ts`)
+   * exactly as the road settles its own: may the sky's soft bodies burst red
+   * (`gib`), and is this the SFW build's fairy-dust read (`dust`). Absent
+   * means yes/no respectively — the gate FAILS OPEN, like everything under
+   * the mature-content umbrella.
+   */
+  gib?: boolean;
+  dust?: boolean;
 };
 
 /** The whole of a flight. */
@@ -237,6 +293,12 @@ export type FlightState = {
   nextJunkAt: number;
   nextSatelliteAt: number;
   nextRockAt: number;
+  /** …and the STRAYS' mark, with their own stream beside it: what an
+   * off-course sky feeds the climb must never shift the shell the corridor
+   * deals (`field.ts` — the stray stride reads how far off course the ship
+   * is, so its draws are the flying's own). */
+  nextStrayAt: number;
+  strayRng: Rng;
 
   // ── THE WANDER ─────────────────────────────────────────────────────────────
   /** Where this ship's bias torque started in its cycle (rad, seeded) — two
@@ -251,7 +313,11 @@ export type FlightState = {
   trashCount: number;
   /** Hits that cost skin. */
   hullHits: number;
-  /** The fastest the ship climbed (px/s) — the dial's bragging rights. */
+  /** Soft bodies met on the way up — birds, skydivers, paragliders. On the
+   * scorecard beside the trash, and worth exactly as much. */
+  softHits: number;
+  /** The biggest figure the speed dial ever said (mph, `flightMph`) — the
+   * dial's bragging rights, and the scorecard's speed line. */
   topSpeed: number;
   /** The skin the SHIP reached orbit with (0–1) — the score's hull bonus reads
    * the climb's answer, not the module's. */

@@ -6,10 +6,10 @@
 # THE SAME DIAL AS THE WAGON'S, to the pixel — same size, same 250° sweep from
 # the same lower-left opening — because the two minigames are one arcade and a
 # player learns one shape. What differs is the number in it: this face runs to
-# 25 020, which is escape velocity in the unit the game says out loud, and the
-# figure is PEGGED there (`rocket.mph`) — past the shell the air is gone and
-# the true number runs off any face you could print, so the dial simply holds
-# its last word like an instrument that has done its job.
+# 17 060, which is orbital speed in the unit the game says out loud, and the
+# figure is PEGGED there (`rocket.mph`) — a webcast's telemetry (climb plus
+# the gravity turn's downrange speed, engine/game/rocket/config.ts), so the
+# dial holds its last word like an instrument that has done its job.
 #
 # The word down in the gap is the THROTTLE LAMP — BURN while the boosters are
 # open, dark while they idle — which is the one control state the thumb wants

@@ -87,7 +87,13 @@ if (!device) {
 }
 assertRasters([device]);
 
-const shots = SHOTS.filter((s) => !onlyShots || onlyShots.includes(s.id));
+// A recipe may claim specific rasters (`devices` — the minigame frames are
+// Steam's); sweeping one on another device would tune a delay no capture uses.
+const shots = SHOTS.filter(
+  (s) =>
+    (!onlyShots || onlyShots.includes(s.id)) &&
+    (!s.devices || s.devices.includes(device.name)),
+);
 if (shots.length === 0) {
   console.error(`store-shot-sweep: no recipe matched --shot ${onlyShots}`);
   process.exit(2);

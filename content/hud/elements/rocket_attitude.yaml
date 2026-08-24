@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 #
-# THE ATTITUDE INDICATOR — the middle of the console, and the instrument the
-# whole minigame is played off: which way the ship is falling over, and how far
-# gone it is.
+# THE ATTITUDE INDICATOR — top centre, on the ship's own column
+# (`rocket_attitude` region), and the instrument the whole minigame is played
+# off: which way the ship is falling over, and how far gone it is.
 #
 # TWO BARS FROM A CENTRE, not a dial. A lean is a SIGNED reading and a dial's
 # arc is not: this draws the ship's glyph between two bars that fill OUTWARD
@@ -14,9 +14,10 @@
 # second decides it.
 #
 # The caption under it is the alarm's own voice — BALANCE, until the warning
-# line is crossed, and then the one word this cockpit shouts.
-region: rocket_dash
-order: 1
+# line is crossed (then the one word this cockpit shouts), with OFF COURSE
+# taking the slot when the ship has wandered out of the corridor upright.
+region: rocket_attitude
+order: 0
 kind: panel
 class: rocket-lean
 children:

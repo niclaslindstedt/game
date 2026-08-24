@@ -12,7 +12,7 @@
 -- Called as `f(state)`, like every HUD script. The flight's own half is
 -- `state.rocket`:
 --
---   mph           how fast, pegged at the dial's 25 020 (escape velocity)
+--   mph           how fast, pegged at the dial's 17 060 (orbital speed)
 --   speedFrac     0..1 of the dial — the velocity arc
 --   altitude      miles of climb on the ascent, px of drop left on the landing
 --   altFrac       0..1 of the same, whichever half is flying
@@ -34,6 +34,11 @@
 --   progress      the mission timeline's staged marker, 0..1
 --   shellClear    out of the junk — the sky above is clean
 --   paused        the sky is stopped behind the pause card
+--   windMph       the wind the ship can FEEL (mph) — zero once the air is gone
+--   windDir       which shoulder it pushes toward: -1 port, 0 calm, 1 starboard
+--   windFrac      its share of the profile's worst, for the ladder here
+--   offCourse     how far out of the launch corridor, 0..1 of the strays' ramp
+--   fuelFrac      what is left in the tanks — the mass the climb is spending
 --
 -- WHY THIS IS THE INTERESTING FILE FOR A MOD, same as the road's: a total
 -- conversion's flight can be a crop duster with a fuel gauge and a field, or a
@@ -63,6 +68,15 @@ local LEAN_ALARM_FRAC = 0.64
 -- paintwork, past half it is a problem, and `failing` (one real hit from the
 -- end) is the engine's own word for the rest.
 local HULL_WARN_FRAC = 0.66
+
+--- Where the caption starts saying OFF COURSE (of `rocket.offCourse`'s ramp) —
+-- early, because the strays it warns about are already being dealt.
+local OFF_COURSE_FRAC = 0.12
+
+--- The wind ladder, as shares of the profile's worst (`rocket.windFrac`).
+local WIND_BREEZE_FRAC = 0.18
+local WIND_SHEAR_FRAC = 0.55
+local WIND_JET_FRAC = 0.8
 
 function M.speed_color(state)
   if state.rocket.speedFrac >= 0.98 then
@@ -128,15 +142,71 @@ function M.lean_color(state)
     return ALARM
   elseif state.rocket.leanFrac >= LEAN_WARN_FRAC then
     return WARN
+  elseif state.rocket.offCourse >= OFF_COURSE_FRAC then
+    return WARN
   end
   return CALM
 end
 
+--- The caption ranks its emergencies: a ship going over outranks a ship that
+-- has merely wandered into somebody else's airspace.
 function M.lean_label(state)
   if state.rocket.leanFrac >= LEAN_ALARM_FRAC then
     return "SHE'S GOING OVER"
+  elseif state.rocket.offCourse >= OFF_COURSE_FRAC then
+    return "OFF COURSE"
   end
   return "BALANCE"
+end
+
+--- THE WIND METER (`elements/rocket_wind.yaml`). The figure it colours is
+-- what the ship can FEEL — wind bought down by air — so the ladder is honest
+-- twice over: a jet-stream layer reads as the emergency it is while the ship
+-- is in the soup, and the same layer over the shell reads as the nothing it
+-- can do.
+function M.wind_color(state)
+  local frac = state.rocket.windFrac
+  if frac >= WIND_JET_FRAC then
+    return ALARM
+  elseif frac >= WIND_SHEAR_FRAC then
+    return WARN
+  elseif frac >= WIND_BREEZE_FRAC then
+    return CALM
+  end
+  return DIM
+end
+
+--- The label under the figure: named weather, and the one honest word the
+-- meter has left once the air is gone.
+function M.wind_label(state)
+  if state.rocket.shellClear then
+    return "VACUUM"
+  end
+  local frac = state.rocket.windFrac
+  if frac >= WIND_JET_FRAC then
+    return "JET STREAM"
+  elseif frac >= WIND_SHEAR_FRAC then
+    return "SHEAR"
+  elseif frac >= WIND_BREEZE_FRAC then
+    return "WIND"
+  end
+  return "CALM"
+end
+
+--- The vane's two arrows: the lit one points the way the wind will PUSH the
+-- ship, which is the correction's own direction read backwards.
+function M.wind_port_color(state)
+  if state.rocket.windDir < 0 then
+    return M.wind_color(state)
+  end
+  return DIM
+end
+
+function M.wind_star_color(state)
+  if state.rocket.windDir > 0 then
+    return M.wind_color(state)
+  end
+  return DIM
 end
 
 function M.clock_label(state)

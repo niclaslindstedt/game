@@ -14,9 +14,10 @@
 //                  person, and the run they are all standing in would have to
 //                  be held open for the length of it.
 //   THE PILOT.     Nobody's hands are on this run (BOT VIEW, the demo, the
-//                  paid AUTO PILOT). The autopilot has no strategy for an
-//                  inverted pendulum: handed the stick it flips inside four
-//                  seconds forever.
+//                  paid AUTO PILOT). A minigame is a thing to PLAY — the
+//                  engine's own flight auto-pilot exists (`createFlightDriver`,
+//                  for the attract loop and the harnesses), but a run being
+//                  played FOR you takes the cut, exactly as the road does.
 //   THE TRIP.      There is exactly one flight in the game, and it is the leg
 //                  between the lawn and the moon. A prelude ending anywhere
 //                  else has no sky authored for it.
@@ -24,7 +25,9 @@
 // KEEPING IT IN ONE FUNCTION is what makes "minigames are skipped in
 // multiplayer" a fact about the game rather than a thing call sites remember.
 // The ARCADE SHELF's door (`arcadeFlightParams`) asks none of the four, for
-// the shelf's usual reasons.
+// the shelf's usual reasons — but BOTH doors settle the gore gate here, the
+// road's own rule: whether the sky's soft bodies burst red is decided before
+// the first tick and carried on the params, never asked mid-flight.
 
 import {
   FLIGHT,
@@ -32,6 +35,20 @@ import {
   type Difficulty,
   type FlightParams,
 } from "@game/core";
+
+import {
+  dismemberAllowed,
+  goreAmount,
+  sfwModeEnabled,
+} from "../game-screen/gore-gate.ts";
+
+/** The gore gate's answers, asked once per door — see `FlightParams.gib`. */
+function flightGore(): { gib: boolean; dust: boolean } {
+  return {
+    gib: goreAmount("blood") !== null && dismemberAllowed("gib"),
+    dust: sfwModeEnabled(),
+  };
+}
 
 /** The one destination the sky is authored for. */
 const MOON = "moon";
@@ -56,6 +73,7 @@ export function flightParamsFor(
     seed,
     difficulty,
     to,
+    ...flightGore(),
     ...(attract ? { coursePx: FLIGHT.attractCoursePx } : {}),
   };
 }
@@ -75,12 +93,12 @@ export function flightIsPlayed(
 /**
  * THE SAME SKY, OFF THE ARCADE SHELF — played on its own for the score. None
  * of the four gates applies at a cabinet the player walked over and pressed;
- * there is nothing here the gore gate would need to carry either, because
- * nothing in this sky bleeds.
+ * the gore gate still does, because the sky's soft bodies bleed at a cabinet
+ * exactly as much as on the campaign's climb.
  */
 export function arcadeFlightParams(
   seed: number,
   difficulty: Difficulty,
 ): FlightParams {
-  return { seed, difficulty, to: MOON };
+  return { seed, difficulty, to: MOON, ...flightGore() };
 }

@@ -25,10 +25,13 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import {
   FLIGHT_OUTCOME,
   createFlight,
+  createFlightDriver,
+  flightDriverInput,
   flightHandsOff,
   flightScore,
   stepFlight,
   withHeroNameLines,
+  type FlightDriver,
   type FlightInput,
   type FlightParams,
   type FlightState,
@@ -44,11 +47,6 @@ import {
   resumeMusic,
   stopMusic,
 } from "../music/index.ts";
-import {
-  DialogueBox,
-  IDLE_REVEAL,
-  type DialogueReveal,
-} from "../overlays/DialogueBox.tsx";
 import { viewScaleFor } from "../render/view.ts";
 import { DPAD_DEADZONE_PX, DPAD_RING_PX } from "../game-screen/player-input.ts";
 import { HudRoot } from "../hud/HudRoot.tsx";
@@ -58,6 +56,7 @@ import { drawFlight, flightCamera } from "./render.ts";
 import {
   createRocketFx,
   drawRocketFx,
+  easeBurn,
   shakeOffset,
   type RocketFxState,
 } from "./rocket-fx.ts";
@@ -107,7 +106,6 @@ export function RocketScreen({
   onLanded,
   stage,
   heroName,
-  heroPortrait,
   onScreenshot,
   onMenu,
   auto = false,
@@ -123,13 +121,12 @@ export function RocketScreen({
    * tick. */
   stage?: (flight: FlightState) => void;
   heroName?: string;
-  /** The dressed doll, composed by the caller — a flight has no `GameState` to
-   * read one off. Null shortens the box. */
-  heroPortrait?: string | null;
   onScreenshot?: () => void;
   /** The pause card's MAIN MENU; absent → the row is not drawn. */
   onMenu?: () => void;
-  /** Nobody's hands: no cards, no board, no buzz — the attract loop's rules. */
+  /** Nobody's hands: the engine's own auto-pilot (`createFlightDriver`) flies
+   * it, and there are no cards, no board and no buzz — the attract loop's
+   * rules, and the road's `auto` at the second cabinet. */
   auto?: boolean;
   /** PLAY THE LIFT-OFF FIRST — for a flight nothing else set up. The campaign
    * leaves it false: its own prelude has already played the same scene on the
@@ -149,6 +146,12 @@ export function RocketScreen({
     })(),
   );
   const fxRef = useRef<RocketFxState>(createRocketFx());
+  // The hands on the stick when nobody's are — minted once, because the pilot
+  // carries the column it has committed to and the lessons the sky has taught
+  // it; rebuilding it every frame would be a pilot that never learns.
+  const driverRef = useRef<FlightDriver | null>(
+    auto ? createFlightDriver() : null,
+  );
   const beatsRef = useRef<FlightBeats>(createFlightBeats());
   const rumbleRef = useRef({ nextMs: 0 });
   const stormRef = useRef({ clappedWindow: -1 });
@@ -160,7 +163,6 @@ export function RocketScreen({
   const padTypeRef = useRef<string>("touch");
   const [speech, setSpeech] = useState<Speech | null>(null);
   const speechRef = useRef<Speech | null>(null);
-  const revealRef = useRef<DialogueReveal>(IDLE_REVEAL);
   const [paused, setPaused] = useState(false);
   const pausedRef = useRef(false);
   const [intro, setIntro] = useState(!auto);
@@ -355,20 +357,26 @@ export function RocketScreen({
         canvas.height = h;
       }
 
-      // Gather the controls: a thumb on the pad wins, otherwise the keys.
+      // Gather the controls: the auto-pilot when nobody is playing (a stray
+      // keypress in a demo must not be able to flip the ship), otherwise a
+      // thumb on the pad wins, otherwise the keys.
       const pad = padRef.current;
       const flight = flightRef.current;
+      const driver = driverRef.current;
       const keys = keysRef.current;
       const keySteer =
         (keys.has("ArrowRight") || keys.has("KeyD") ? 1 : 0) -
         (keys.has("ArrowLeft") || keys.has("KeyA") ? 1 : 0);
       const keyThrottle =
         keys.has("ArrowDown") || keys.has("KeyS") || keys.has("Space") ? 1 : 0;
-      inputRef.current = pad
-        ? { throttle: Math.max(0, pad.y), steer: pad.x }
-        : { throttle: keyThrottle, steer: keySteer };
+      inputRef.current = driver
+        ? flightDriverInput(driver, flight)
+        : pad
+          ? { throttle: Math.max(0, pad.y), steer: pad.x }
+          : { throttle: keyThrottle, steer: keySteer };
 
-      acc += Math.min(MAX_CATCHUP_MS, now - last);
+      const frameDt = Math.min(MAX_CATCHUP_MS, now - last);
+      acc += frameDt;
       last = now;
       while (acc >= STEP_MS) {
         acc -= STEP_MS;
@@ -399,11 +407,35 @@ export function RocketScreen({
       const base = flightCamera(flight, viewW, viewH);
       const shake = shakeOffset(fxRef.current, flight.ms);
       const cam = { x: base.x + shake.dx, topAlt: base.topAlt + shake.dy };
+      // THE PLUME'S THROAT. The base burn never stops on the climb, so the
+      // column is always alive up there; the boosters open it to the
+      // cutscene's full takeoff. The module burns only when the thumb says
+      // so. Eased (`easeBurn`) so the change BLOOMS instead of snapping.
+      const flying = flight.outcome === FLIGHT_OUTCOME.flying;
       const boost =
-        inputRef.current.throttle > 0 &&
-        !flightHandsOff(flight) &&
-        flight.outcome === FLIGHT_OUTCOME.flying;
-      drawFlight(ctx, flight, cam, assets, viewW, viewH, flight.ms, boost);
+        inputRef.current.throttle > 0 && !flightHandsOff(flight) && flying;
+      const wantBurn =
+        flight.phase === "landing"
+          ? boost
+            ? 1
+            : 0
+          : flight.outcome === "wrecked"
+            ? 0
+            : boost
+              ? 1
+              : 0.45;
+      const burn = easeBurn(fxRef.current, wantBurn, frameDt);
+      drawFlight(
+        ctx,
+        flight,
+        cam,
+        assets,
+        viewW,
+        viewH,
+        flight.ms,
+        burn,
+        fxRef.current.smears,
+      );
       drawRocketFx(ctx, fxRef.current, cam, flight.ms, viewW, viewH, assets);
       // The weather is between the camera and all of it — rain and the
       // lightning's flash go on last.
@@ -560,21 +592,27 @@ export function RocketScreen({
         <span className="dpad-nub" />
       </div>
 
-      {/* His own voice, in the game's own window — barks over a moving sky,
-          inert, beside the dash (`.drive-bark`). */}
+      {/* HIS OWN HEAD — a man alone in a homemade cockpit gets no dialogue
+          window. A thought prints small near the ship's own column, times
+          itself out (`ageBark`), and never parks the sky — which also leaves
+          nothing standing in front of the rocket (`.rocket-thought`). */}
       {speech && (
-        <div style={BARK} aria-live="polite">
-          <DialogueBox
-            className="drive-bark rocket-bark"
-            font={assets.font}
-            lines={speech.pages[speech.page] ?? EMPTY_PAGE}
-            speaker={heroName ?? "YOU"}
-            speakerColor="#7ef0c8"
-            portrait={heroPortrait ?? null}
-            pageKey={`${speech.id}:${speech.page}`}
-            revealRef={revealRef}
-            inert
-          />
+        <div
+          key={`${speech.id}:${speech.page}`}
+          className="rocket-thought"
+          aria-live="polite"
+        >
+          {(speech.pages[speech.page] ?? EMPTY_PAGE).map((line, i) => (
+            <PixelText
+              key={i}
+              font={assets.font}
+              text={line}
+              scale={1}
+              color="#9fe8d2"
+              maxWidth={20}
+              align="center"
+            />
+          ))}
         </div>
       )}
 
@@ -632,9 +670,4 @@ const PAD: CSSProperties = {
   position: "absolute",
   inset: 0,
   touchAction: "none",
-};
-const BARK: CSSProperties = {
-  position: "absolute",
-  inset: 0,
-  pointerEvents: "none",
 };

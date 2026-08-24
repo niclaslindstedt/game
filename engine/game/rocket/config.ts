@@ -37,19 +37,77 @@ export const FLIGHT = {
    * THE FINISH IS A PLACE, NOT A CLOCK: the climb is over when the ship has
    * punched out of the company's junk shell and flown the clear stretch above
    * it (`field.shellTopFrac`), because "safe from the garbage" is the whole
-   * win condition — the trip merely HAPPENS to take about a minute at the
-   * ~210 px/s a decent pilot averages, which is the drive's own length. A slow
-   * careful climb takes longer and still gets there; only the board cares.
+   * win condition — the trip merely HAPPENS to take under a minute (about 27 s
+   * of climb flown flat out, twice that nursing the base burn), which is the
+   * drive's own length. A slow careful climb takes longer and still gets
+   * there; only the board cares.
    */
   coursePx: 13500,
   /** The attract loop's short climb — same sky, same junk, the top brought
    * down, for the same reason the drive's demo leg is short: a title screen
    * has fifteen seconds to show somebody what this minigame is. */
   attractCoursePx: 4600,
-  /** How wide the sky is (world px). Wider than the reference viewport's ~422
-   * so there is somewhere to steer TO, narrow enough that the whole field is
-   * never more than a lean away. */
+  /**
+   * WHAT A WORLD PX IS WORTH (m) — the one exchange rate every instrument
+   * reads. The climb tops out at a 100-mile orbit (low LEO — the bottom of
+   * where a junk shell actually lives), so `coursePx` is 160 934 m and a px is
+   * this. The altitude dial, the speed telemetry and the launch-site comments
+   * all derive from it; a second, disagreeing scale is the bug this constant
+   * exists to prevent.
+   */
+  metersPerPx: 11.9,
+  /**
+   * HOW WIDE ONE SCREENFUL OF SKY IS (world px) — the window the shell is
+   * laid across, centred on the SHIP. It is not a wall: the sky has no edges
+   * and the ship drifts as far sideways as its lean carries it (`course`
+   * below is what that costs). Wider than the reference viewport's ~422 so
+   * there is somewhere to steer TO.
+   */
   fieldW: 560,
+
+  /**
+   * THE LAUNCH CORRIDOR — the column of closed airspace over the pad, and the
+   * price of leaving it. Inside `halfPx` of the pad's line the sky is the
+   * shell and nothing else; drift further and the ship is over somebody
+   * else's sky, ramping to fully OFF COURSE over `rampPx` — where the stray
+   * spawner (`stray`) starts feeding it the traffic the corridor was closed
+   * against. The dashboard's OFF COURSE lamp reads the same ramp.
+   */
+  course: {
+    halfPx: 320,
+    rampPx: 900,
+  },
+
+  /**
+   * THE WIND — real weather, in layers, with a real lever on the ship.
+   *
+   * Speed GROWS with altitude the way it does out a window: near the lawn a
+   * breeze, ramping to the jet stream around `jetAltPx` (which at
+   * `metersPerPx` is ~11 km — where the actual jet stream lives) and staying
+   * strong above it. Direction and strength come in LAYERS a few hundred px
+   * thick, hashed off the flight's seed (`windAt`) — winds aloft genuinely
+   * reverse between layers, and a seeded profile is one more thing a restart
+   * lets you learn.
+   *
+   * What the wind can DO is bought with AIR: the push (`pullPerS`, toward the
+   * wind's own speed) and the weathervane torque (`tipPerS`) are both scaled
+   * by `airFrac`, so the jet stream shoves a ship that is still in the soup
+   * and the same wind over the shell moves nothing — a wind meter in vacuum
+   * is a dead instrument, and the HUD's says so.
+   */
+  wind: {
+    /** The fastest layer the profile ever deals (px/s, ± by layer). */
+    maxPx: 46,
+    /** Where the profile reaches full strength (world px of altitude). */
+    jetAltPx: 900,
+    /** How thick one layer of sky is (px) — samples are lerped between. */
+    layerPx: 500,
+    /** How hard the air drags the hull toward the wind's own speed (per s). */
+    pullPerS: 0.9,
+    /** The weathervane torque at the reference wind (rad/s² at `maxPx`,
+     * before the air scales it) — the tail catching the crosswind. */
+    tipPerS: 0.35,
+  },
 
   opening: {
     /**
@@ -69,35 +127,65 @@ export const FLIGHT = {
   ascent: {
     /**
      * WHERE THE HAND-OVER FINDS THE SHIP (world px of altitude) — barely off
-     * the lawn. The course is ~100 km of climb (`coursePx` reads as 62 miles
-     * on the dial), so a world px is ~7.4 m and this is about 100 m up: the
-     * liftoff the cutscene just played, still over its own back garden, with
-     * the burnt house right below. The minigame must OPEN low — the whole
-     * trip is leaving Earth, and a first frame that already reads as the
-     * stratosphere spends the entire story before the player has the stick.
+     * the lawn. At `metersPerPx` this is ~170 m up: the liftoff the cutscene
+     * just played, still over its own back garden, with the burnt house right
+     * below. The minigame must OPEN low — the whole trip is leaving Earth, and
+     * a first frame that already reads as the stratosphere spends the entire
+     * story before the player has the stick.
      */
     launchAltPx: 14,
-    /** Surface gravity (px/s²), and the floor it fades to at orbit — leaving
-     * Earth is the whole plot, so the climb genuinely gets easier as the
-     * planet lets go. */
+    /** Surface gravity (px/s²). The pull FADES on the way up by the only law
+     * it has — inverse square (`gravityAt`) — with the planet's radius
+     * compressed to the sky's own scale (`gravityRadiusPx`), so the fade the
+     * plot wants ("the planet lets go") keeps a physical shape instead of a
+     * hand-drawn ramp: ~22% of surface pull at the top of the course. */
     gravityPx: 150,
-    gravityFloorFrac: 0.22,
-    /** The engine that is ALWAYS burning (px/s²). There is no brake and no
-     * idle on this ship: the burn slightly beats surface gravity, so hands-off
-     * is a slow climb, never a hover. */
-    burnPx: 178,
-    /** …and what holding the throttle adds (px/s²). Boost is the game — the
-     * clock and the speed bonus are both bought here — and its price is the
-     * flip (`boostTipFrac`). */
-    boostPx: 215,
+    gravityRadiusPx: 22000,
     /**
-     * Aerodynamic drag at sea level, as k in `k · v²` (per px). Thins with the
-     * air (`airFloorFrac`), so the same burn that tops out near 520 px/s in
-     * the soup low down runs away toward `topSpeedPx` where the sky goes
-     * black — "we need to keep going faster to leave Earth" is this curve.
+     * THE ENGINE THAT IS ALWAYS BURNING — thrust as the acceleration it buys
+     * ON FULL TANKS (px/s²). There is no brake and no idle on this ship: off
+     * the pad the burn barely beats surface gravity (thrust-to-weight ~1.17,
+     * which is what a real first stage leaves the ground on), so hands-off is
+     * a slow climb, never a hover — and the same thrust pushes harder as the
+     * tanks drain (`massDryFrac`), which is the honest reason a climb gets
+     * easier: the ship is throwing most of itself overboard.
      */
-    dragK: 0.0009,
+    burnPx: 165,
+    /** …and what holding the throttle adds, on the same full-tank scale
+     * (px/s²). Boost is the game — the clock and the speed bonus are both
+     * bought here — and its price is the flip (`boostTipFrac`). */
+    boostPx: 200,
+    /**
+     * THE WEIGHT OF THE ROCKET, as what is LEFT when the tanks run dry —
+     * dry mass over wet, so ~59% of the ship on the pad is propellant (a
+     * garage build hauling its own fuel shed; a real orbital stage is nearer
+     * 10%, but a real stage also is not wearing a shed). Thrust is constant,
+     * so acceleration is divided by the mass of the moment: the pad hand-over
+     * answers the stick like a loaded truck and the last clear stretch like an
+     * empty one.
+     */
+    massDryFrac: 0.59,
+    /** How fast the tanks drain (fraction of the full load per second): the
+     * base burn's share, and what full boost adds. Sized so a boosted flight
+     * arrives nearly dry — the mass curve is spent across the whole trip
+     * rather than in its first act. */
+    burnFuelPerS: 1 / 75,
+    boostFuelPerS: 1 / 110,
+    /**
+     * Drag, as k in `k · medium · v²` (per px). The MEDIUM is two things laid
+     * end to end: the ATMOSPHERE (`airFrac`, thinning to `airFloorFrac` over
+     * the course) and the JUNK SHELL'S OWN DUST — thirty years of fired
+     * garbage grinding itself to grit, so it follows the shell's density
+     * profile (`bandFrac` × `dustK`) and PEAKS just under the shell's top.
+     * Together they are the minigame's speed governor: the dodge stays
+     * playable because the sky has a terminal velocity everywhere the sky has
+     * things in it — and ABOVE the shell both are gone, so the clear stretch
+     * is the one place the burn genuinely runs away toward orbital speed.
+     * "We need to keep going faster to leave Earth" is this curve.
+     */
+    dragK: 0.0012,
     airFloorFrac: 0.06,
+    dustK: 0.6,
     /**
      * THE INSTABILITY (rad/s² at a full right-angle lean) — the inverted
      * pendulum's spring. Near upright the divergence rate is √tip = 1/s: a
@@ -138,12 +226,10 @@ export const FLIGHT = {
     /** Falling faster than this (px/s, downward) is falling, not settling —
      * the climb has stalled past saving and the ship is wrecked. */
     fallLimitPx: 90,
-    /** Lateral drag (per s) — space is not soup, but a leaning burn is, and
-     * without a little bleed the ship skates to the edge and lives there. */
+    /** Lateral drag (per s) — the sideways bleed the air takes off a leaning
+     * burn. There is no wall to lean on out there: a held lean carries the
+     * ship off course for real, and the corridor (`course`) prices it. */
     lateralDragPerS: 0.6,
-    /** How close to the field's edge the ship may drift (px) before the sky
-     * simply refuses — there is nothing out there but more junk. */
-    edgeMarginPx: 26,
     /** The hull as the collision model holds it (px): a capsule this wide and
      * this tall around the ship's centre — the `ship_*` art's own hull (24×32
      * with the fins outside the capsule; a bag brushing a fin is a miss, which
@@ -177,7 +263,9 @@ export const FLIGHT = {
    * WHAT DOES NOT STICK. A GOODCO satellite is a van-sized machine on its own
    * orbit and a rock never asked anybody; both of them HOLE the ship, and both
    * knock it off its balance — which on this ship is the worse half of the
-   * bill.
+   * bill. The strays off the corridor hole it too, each at its own price: an
+   * AIRLINER is the end of nearly any ship, a delivery DRONE is a lithium
+   * firecracker.
    */
   hazard: {
     /** Hull taken by a satellite (fraction of the whole ship). Three of these
@@ -185,11 +273,66 @@ export const FLIGHT = {
     satelliteHullFrac: 0.34,
     /** …and by a rock. */
     rockHullFrac: 0.2,
+    /** …by an airliner met off the corridor — one is nearly the whole ship. */
+    planeHullFrac: 0.75,
+    /** …and by a drone: cheap, and there are always more. */
+    droneHullFrac: 0.12,
     /** The lean a hit knocks in (rad/s, signed by side) — the reason a hit at
      * a hard lean is usually the last one. */
     kickPerS: 0.55,
     /** Climb speed kept on impact. */
     speedKeep: 0.9,
+  },
+
+  /**
+   * WHAT COMES APART ON THE HULL — the sky's soft bodies: birds low down,
+   * skydivers and paragliders under them (somebody is always having a hobby
+   * off the corridor). None of them holes a rocket; they BURST across it, the
+   * drive's crowd met a thousand feet up, and what that leaves riding the
+   * paintwork is the app's business (the gore gate decides red or fairy
+   * dust — `FlightParams.gib`/`dust`). The sim's bill is a knock and a smear
+   * on the speed, plus the tally the scorecard prints and pays nothing for.
+   */
+  soft: {
+    /** The lean a body knocks in (rad/s, signed by side) — a thud, not a
+     * hazard's wallop. */
+    kickPerS: 0.12,
+    /** Climb speed kept on the thud. */
+    speedKeep: 0.995,
+  },
+
+  /**
+   * THE STRAYS — what an OFF-COURSE sky feeds the climb, on its own seeded
+   * stream and its own altitude mark (so wandering off the corridor never
+   * shifts the shell everybody else learns). The corridor was CLOSED for this
+   * launch; the sky beside it was not: airliners cross their own lanes, the
+   * delivery drones are everywhere (it is an AI world), and the birds and
+   * hobbyists never read the notice. Density ramps with how far off course
+   * the ship is (`course.rampPx`), scaled by the rung's hazard knob.
+   */
+  stray: {
+    /** Px of climb between strays when fully off course… */
+    strideMinPx: 240,
+    /** …and when merely brushing the corridor's edge. */
+    strideMaxPx: 1100,
+    /** ON-course strides are this many times longer — the corridor still has
+     * the odd bird in it, so the sky reads as alive before it reads as a
+     * punishment. */
+    onCourseStrideMult: 4,
+    /** How far to the side of the ship a stray enters (px). */
+    entryPx: 420,
+    /** The bands each kind lives in (world px of altitude). Birds top out
+     * where the air gets thin for wings; the hobbyists under them; airliners
+     * cross their cruise lanes; drones run parcels most of the way up the
+     * shell, because somebody automated even this. */
+    birdTopAlt: 1600,
+    diverTopAlt: 1900,
+    planeAlt: [500, 2300] as const,
+    droneTopFrac: 0.7,
+    /** Airliner crossing speed (px/s) — the fastest thing in the low sky. */
+    planePx: [165, 235] as const,
+    /** Bird crossing speed (px/s). */
+    birdPx: [42, 80] as const,
   },
 
   /**
@@ -297,11 +440,28 @@ export const FLIGHT = {
   orbitHoldMs: 2600,
   landedHoldMs: 3200,
 
-  /** The speed the dashboard says out loud: `topSpeedPx` px/s reads as
-   * `topSpeedMph` mph. Escape velocity is 25 000 mph and the dial says so —
-   * the one instrument in the game allowed five digits. */
-  topSpeedPx: 640,
-  topSpeedMph: 25020,
+  /**
+   * THE SPEED THE DASHBOARD SAYS OUT LOUD — a launch webcast's telemetry, and
+   * the one instrument in the game allowed five digits.
+   *
+   * A webcast's speed figure is mostly SIDEWAYS: a ship does not reach orbit
+   * by climbing but by going 17 000 mph across, and the picture stays a
+   * close-up of a rocket pointing up while the dial runs away — which is
+   * exactly this minigame's situation. So the figure is two components in
+   * quadrature (`flightMph`): the CLIMB the player is actually flying, and the
+   * DOWNRANGE speed of the gravity turn the camera never shows, ramped with
+   * altitude (`downrangeExp`) to `orbitalMph` — 17 060 mph, which IS low-orbit
+   * speed, and the figure the dial pegs at.
+   *
+   * `telemetryLapse` divides the climb component: the minute-long minigame
+   * compresses an ascent that takes the better part of ten, so a raw px/s
+   * conversion would read thousands of mph seconds off the lawn. Divided by
+   * the compression, the hand-over reads a few hundred — a rocket a few
+   * seconds into its burn — and the ramp to five digits is the trip's.
+   */
+  orbitalMph: 17060,
+  telemetryLapse: 8,
+  downrangeExp: 1.6,
 
   score: {
     /** Flat, for getting there at all — only a LANDING scores; every wreck on
@@ -316,9 +476,9 @@ export const FLIGHT = {
     /** …and the landing's share of par (ms): a patient, safe drop fits inside
      * it with a little to spare. */
     landingParMs: 26000,
-    /** Per mph of the fastest the ship went. The dial reads five digits, so
-     * the rate is small — flat out for a moment is worth ~6300. */
-    perTopMph: 0.25,
+    /** Per mph of the fastest the dial ever said. The dial reads five digits,
+     * so the rate is small — pegged at orbital speed it is worth ~6000. */
+    perTopMph: 0.35,
     /** The whole of it, for reaching orbit without a hole in the ship — scaled
      * by the hull actually left. */
     hull: 8000,
@@ -369,16 +529,89 @@ export function flightCoursePx(params: { coursePx?: number }): number {
 }
 
 /** Air density at this altitude (0–1): the soup the drag and the gusts both
- * live in, gone by the top of the climb. */
+ * live in, mostly gone by the top of the climb. Linear on purpose — this
+ * curve is the minigame's speed governor (see `dragK`). */
 export function airFrac(alt: number, coursePx: number): number {
   const thin = 1 - alt / coursePx;
   return Math.max(FLIGHT.ascent.airFloorFrac, thin);
 }
 
-/** Earth's pull at this altitude (px/s²) — fading toward the floor as the
- * planet lets go, which is what "leaving" feels like on the climb dial. */
-export function gravityAt(alt: number, coursePx: number): number {
+/** Earth's pull at this altitude (px/s²) — inverse square, on the compressed
+ * radius `gravityRadiusPx`: ~22% of surface pull at the top of the course,
+ * which is what "leaving" feels like on the climb dial. */
+export function gravityAt(alt: number): number {
   const a = FLIGHT.ascent;
-  const fade = Math.max(a.gravityFloorFrac, 1 - (alt / coursePx) * 0.9);
-  return a.gravityPx * fade;
+  const r = 1 + Math.max(0, alt) / a.gravityRadiusPx;
+  return a.gravityPx / (r * r);
+}
+
+/**
+ * HOW MUCH HARDER THE SAME THRUST PUSHES with this much propellant left —
+ * the acceleration multiplier against the full-tank figures (`burnPx`,
+ * `boostPx`): 1 on the pad, `1 / massDryFrac` (~1.7) with the tanks dry.
+ * Constant thrust over a shrinking ship is the whole honest physics of a
+ * climb that gets easier.
+ */
+export function fuelMassMult(fuel: number): number {
+  const dry = FLIGHT.ascent.massDryFrac;
+  const f = Math.max(0, Math.min(1, fuel));
+  return 1 / (dry + (1 - dry) * f);
+}
+
+/** Px/s of climb → the mph the telemetry prints for it — through the world
+ * scale and the broadcast's time compression (`telemetryLapse`). */
+export function climbMph(vPx: number): number {
+  const MPH_PER_MPS = 2.23694;
+  return (
+    (Math.abs(vPx) * FLIGHT.metersPerPx * MPH_PER_MPS) / FLIGHT.telemetryLapse
+  );
+}
+
+/** The gravity turn's downrange speed at this point of the climb (mph) — the
+ * sideways half of orbit the camera never shows, ramped to `orbitalMph` at
+ * the top of the course. */
+export function downrangeMph(altFrac: number): number {
+  const t = Math.max(0, Math.min(1, altFrac));
+  return FLIGHT.orbitalMph * Math.pow(t, FLIGHT.downrangeExp);
+}
+
+/** HOW FAR OFF COURSE this x is, 0–1: nothing inside the corridor, ramping
+ * over `course.rampPx` beyond its edge. The stray spawner's throttle and the
+ * dashboard's lamp both read this one ramp. */
+export function offCourseFrac(x: number): number {
+  const away = Math.abs(x - FLIGHT.fieldW / 2) - FLIGHT.course.halfPx;
+  return Math.max(0, Math.min(1, away / FLIGHT.course.rampPx));
+}
+
+/** A cheap integer hash → 0..1 — the wind's layers must not spend anybody's
+ * stream (the same rule the sky's stars follow). */
+function windHash(seed: number, n: number): number {
+  let h = Math.imul((seed ^ n) >>> 0, 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/**
+ * THE WIND AT THIS ALTITUDE (px/s, signed) — the flight's weather report,
+ * derived rather than stored: layers `layerPx` thick, each dealt its own
+ * speed and direction off the seed, lerped so a climb feels the wind VEER
+ * rather than snap. The envelope grows toward `jetAltPx` and holds — how
+ * much of it the SHIP feels is the air's business (`stepAscent` scales the
+ * push and the torque by `airFrac`), not this function's.
+ */
+export function windAt(seed: number, alt: number): number {
+  const w = FLIGHT.wind;
+  const layer = Math.max(0, alt) / w.layerPx;
+  const i = Math.floor(layer);
+  const t = layer - i;
+  // Smoothstep between the two neighbouring layers' deals.
+  const ease = t * t * (3 - 2 * t);
+  const deal = (n: number) => {
+    const speed = 0.35 + 0.65 * windHash(seed, n * 2 + 1);
+    const dir = windHash(seed, n * 2) < 0.5 ? -1 : 1;
+    return dir * speed;
+  };
+  const mixed = deal(i) * (1 - ease) + deal(i + 1) * ease;
+  const envelope = Math.min(1, Math.max(0, alt) / w.jetAltPx) ** 0.7;
+  return w.maxPx * envelope * mixed;
 }

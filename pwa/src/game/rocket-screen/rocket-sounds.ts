@@ -24,6 +24,10 @@ export const STICK_SOUNDS = [
 /** Something hard meeting the paintwork. */
 export const CLANG_SOUNDS = ["rocket_clang_a", "rocket_clang_b"] as const;
 
+/** Something SOFT meeting the nose at climb speed — the sky's birds and
+ * hobbyists coming apart across the hull. */
+export const SPLAT_SOUNDS = ["rocket_splat_a", "rocket_splat_b"] as const;
+
 /** The fireworks — one per explosion, varied by the blast's own seed. */
 export const BOOM_SOUNDS = [
   "rocket_boom_a",
@@ -69,6 +73,7 @@ export const THUNDER_SOUNDS = ["rocket_thunder_a", "rocket_thunder_b"] as const;
 export const FLIGHT_SOUND_IDS: readonly string[] = [
   ...STICK_SOUNDS,
   ...CLANG_SOUNDS,
+  ...SPLAT_SOUNDS,
   ...BOOM_SOUNDS,
   BOOM_DEEP_SOUND,
   WARNING_SOUND,

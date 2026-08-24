@@ -363,8 +363,15 @@ export function drawRocketExhaust(
  * THE COLUMN. Walked one scanline at a time and filled in four bands, which is
  * what keeps it crisp: a radial gradient at this size comes out as a smudge,
  * and a stack of hard 1-px runs comes out as pixel fire.
+ *
+ * EXPORTED for the flight minigame's own ship (`rocket-screen/render.ts`),
+ * which draws THIS plume — halo, lash, shock diamonds — under its hull rather
+ * than a private imitation: the takeoff the cutscene sold is the takeoff the
+ * minigame flies. `burn` is the caller's throttle-shaped 0..1 (the cutscene
+ * passes its spool ramp), `height` the room under the bells (`Infinity` in
+ * open sky).
  */
-function drawPlume(
+export function drawPlume(
   ctx: CanvasRenderingContext2D,
   look: RocketExhaust,
   ageMs: number,

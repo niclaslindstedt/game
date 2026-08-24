@@ -204,3 +204,14 @@ regions:
     parent: rocket
     order: 2
     class: drive-clock-slot
+
+  # THE ATTITUDE INDICATOR'S OWN SHELF, top centre under the timeline — NOT on
+  # the console, because it is the instrument the whole minigame is played off
+  # and the console's corner is the last place the eye is: up here it sits on
+  # the ship's own column, where the lean it reports is happening. Moving it
+  # out is also what lets the console fit a portrait phone at all.
+  rocket_attitude:
+    parent: rocket
+    order: 3
+    class: rocket-attitude-slot
+    visible: rocket.dashLive

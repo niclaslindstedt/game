@@ -4349,12 +4349,38 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
+    "flight_bird": {
+      "id": "flight_bird",
+      "pages": [["THAT WAS A BIRD. WE'RE BOTH SURPRISED."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "flight_drop": {
       "id": "flight_drop",
       "pages": [
         [
           "HER TRACKER PINGS FROM THE MOON. NOBODY GOES THERE FOR CHIPS AND SODA."
         ]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "flight_hobbyist": {
+      "id": "flight_hobbyist",
+      "pages": [["THEY HAD THE WHOLE SKY. THEY PICKED MINE."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "flight_jetstream": {
+      "id": "flight_jetstream",
+      "pages": [["JET STREAM. EVEN THE AIR WANTS ME SIDEWAYS."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "flight_off_course": {
+      "id": "flight_off_course",
+      "pages": [
+        ["OFF THE CORRIDOR. EVERYTHING ELSE UP HERE HAS RIGHT OF WAY."]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"
@@ -4366,6 +4392,24 @@
           "CLEAR. THE RICH LEFT BEFORE THE SKY SHUT. THE REST OF US LEARN TO STEER."
         ]
       ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "flight_tipping_0": {
+      "id": "flight_tipping_0",
+      "pages": [["UP. THE ONE JOB IS UP."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "flight_tipping_1": {
+      "id": "flight_tipping_1",
+      "pages": [["I GLUED THAT FIN ON. I REMEMBER BEING TIRED."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "flight_tipping_2": {
+      "id": "flight_tipping_2",
+      "pages": [["THE MOON IS THE OTHER WAY."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },

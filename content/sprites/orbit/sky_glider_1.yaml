@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_glider_1
+family: orbit
+size: [16, 10]
+description: >
+  The same soar on a blue wing.
+subject:
+  kind: paraglider
+  build: crescent celled wing over converging lines over a pilot pod
+  features: blue celled wing, tiny dark pod
+  flavor: the club has two wings
+palette:
+  O: "#1a1c2c" # outline
+  F: "#3d7dc9" # wing blue
+  f: "#2c5a94" # wing cell shadow
+  l: "#c0c5cf" # lines
+  b: "#3f4553" # pilot pod
+grid: |
+  ..OOOOOOOOOOOO..
+  .OFfFFfFFfFFfFO.
+  OFFFFFFFFFFFFFFO
+  .OOOOOOOOOOOOOO.
+  ..l....ll....l..
+  ...l...ll...l...
+  ....l..ll..l....
+  .......OO.......
+  .......ObO......
+  ................
