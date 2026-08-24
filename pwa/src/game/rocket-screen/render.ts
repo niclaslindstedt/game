@@ -666,6 +666,61 @@ function drawMoonGround(
   }
 }
 
+/**
+ * HEAT SHIMMER — the candle's trick: the column of hot exhaust bends the
+ * light coming through it, so the sky BEHIND the wake wobbles. Faked the way
+ * 2D has always faked it: thin slivers of the already-painted canvas redrawn
+ * with a small sinusoidal sideways offset, each row on its own phase so the
+ * wobble crawls. Horizontal offsets only, copied top-down, so no sliver ever
+ * samples a row this pass already moved.
+ *
+ * `strength` is REFRACTION'S OWN physics: it needs air to heat, so the caller
+ * scales it by `airFrac` — strong over the lawn, gone in vacuum, the exact
+ * opposite arc to the plume's blue shift.
+ */
+function drawHeatShimmer(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  topY: number,
+  strength: number,
+  nowMs: number,
+): void {
+  if (strength <= 0.05) return;
+  const m = ctx.getTransform();
+  // The view is drawn under one uniform scale (`RocketScreen`'s setTransform);
+  // the canvas-space source rects below multiply through it.
+  const unit = m.a;
+  const canvas = ctx.canvas;
+  const halfW = 24;
+  const tall = 92;
+  const sliver = 3;
+  for (let row = 0; row < tall; row += sliver) {
+    const y = topY + row;
+    const deep = row / tall;
+    // Widest and strongest at the nozzle, blending out down the wake.
+    const amp =
+      strength * 1.7 * (1 - deep * 0.55) * Math.sin(nowMs / 55 + row * 0.31);
+    if (Math.abs(amp) < 0.2) continue;
+    const w = halfW * 2 * (1 - deep * 0.3);
+    const sx = Math.max(0, Math.round((centerX - w / 2) * unit));
+    const sy = Math.max(0, Math.round(y * unit));
+    const sw = Math.min(canvas.width - sx, Math.round(w * unit));
+    const sh = Math.min(canvas.height - sy, Math.round(sliver * unit));
+    if (sw <= 0 || sh <= 0) continue;
+    ctx.drawImage(
+      canvas,
+      sx,
+      sy,
+      sw,
+      sh,
+      centerX - w / 2 + amp,
+      y,
+      sw / unit,
+      sh / unit,
+    );
+  }
+}
+
 /** The whole picture, in paint order: sky, stars, the weather, home (the lawn
  * low down, the limb high up), the moon, the field, the ground, the craft.
  * The fx layer draws over this on the same camera. `burn` is the smoothed
@@ -727,4 +782,19 @@ export function drawFlight(
     drawMoonGround(ctx, state, cam, assets.sprites, viewW, viewH, nowMs);
   }
   drawCraft(ctx, state, cam, assets.sprites, burn, smears, nowMs);
+
+  // The exhaust's heat bending the sky behind the wake — refraction spends
+  // AIR, so it rides `airFrac` and dies with the climb exactly as the flame's
+  // orange does. Painted last: it re-samples everything already down,
+  // ship and plume included.
+  if (!landing && state.outcome !== "wrecked" && burn > 0.05) {
+    const s = toScreen(cam, state.craft.x, state.craft.alt);
+    drawHeatShimmer(
+      ctx,
+      s.x,
+      s.y + 16,
+      airFrac(state.craft.alt, flightCoursePx(state.params)) * burn,
+      nowMs,
+    );
+  }
 }
