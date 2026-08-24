@@ -13,11 +13,11 @@
 // climb. The THUNDER each strike owes is voiced by the drain (`loop.ts`,
 // `thunderDue`), because sound is the drain's job everywhere else too.
 
-import { FLIGHT, type FlightState } from "@game/core";
+import type { FlightState } from "@game/core";
 
 import { drawRain } from "@ui/lib/rain.ts";
 
-import { toScreen, type SkyCamera } from "./rocket-fx.ts";
+import type { SkyCamera } from "./rocket-fx.ts";
 
 /** Where the weather stops (world px of altitude): full storm through the low
  * sky, gone before the junk shell's business begins — punching out of the
@@ -38,8 +38,12 @@ export function stormIntensity(alt: number): number {
 export const STRIKE_WINDOW_MS = 2400;
 /** How long a strike lights the sky (flicker included). */
 const FLASH_MS = 460;
-/** …and how long its bolt is actually drawn at the front of that. */
-const BOLT_MS = 170;
+// THIS STORM'S LIGHTNING IS SHEET LIGHTNING: light going off INSIDE the
+// clouds, never a bolt reaching the ground — the ground's one fire is the
+// rocket's own, and a drawn bolt over the lot read as the house being
+// struck. A distant flash has no parallax worth speaking of, so the glow is
+// SKY-PINNED (fractions of the frame, `sx`/`sy`), like the backdrop it
+// lights, and always somewhere the player can see it.
 
 function hash01(seed: number, n: number): number {
   let h = (seed ^ Math.imul(n, 668265263)) | 0;
@@ -52,9 +56,10 @@ export type StormStrike = {
   t: number;
   /** The window that owns it — the thunder latch's key. */
   window: number;
-  /** Where the bolt comes down (world px across the sky). */
-  x: number;
-  /** The strike's own seed — the bolt's jag and the flicker's phase. */
+  /** Where the glow sits, as fractions of the frame (sky-pinned). */
+  sx: number;
+  sy: number;
+  /** The strike's own seed — the flicker's phase. */
   seed: number;
 };
 
@@ -76,7 +81,8 @@ export function strikeAt(seed: number, nowMs: number): StormStrike | null {
     return {
       t,
       window,
-      x: hash01(seed, window ^ 0x2c1b3c6d) * FLIGHT.fieldW,
+      sx: 0.1 + hash01(seed, window ^ 0x2c1b3c6d) * 0.8,
+      sy: 0.06 + hash01(seed, window ^ 0x51ed270b) * 0.48,
       seed: (seed ^ Math.imul(window, 2654435761)) >>> 0,
     };
   }
@@ -91,45 +97,36 @@ export function thunderDue(seed: number, window: number): number | null {
   return start + 350 + hash01(seed, window ^ 0x7f4a7c15) * 800;
 }
 
-/** The bolt — a jagged run of white from the cloud deck down to the strike's
- * ground, drawn core-over-glow for the two frames it exists. */
-function drawBolt(
+/** The glow a strike puts INSIDE the deck — a wide soft ellipse of light at
+ * the strike's spot, the clouds lit from within. No bolt: sheet lightning is
+ * the whole vocabulary up here. */
+function drawStrikeGlow(
   ctx: CanvasRenderingContext2D,
   strike: StormStrike,
-  cam: SkyCamera,
+  viewW: number,
   viewH: number,
+  flicker: number,
 ): void {
-  const top = toScreen(cam, strike.x, cam.topAlt);
-  const steps = 9;
-  const drop = viewH * 0.72;
-  const pts: [number, number][] = [];
-  let px = top.x;
-  for (let i = 0; i <= steps; i++) {
-    const jag = (hash01(strike.seed, i) - 0.5) * 26;
-    px += jag;
-    pts.push([px, (drop / steps) * i]);
-  }
-  for (const pass of [
-    { width: 4, alpha: 0.25 },
-    { width: 2, alpha: 0.85 },
-  ]) {
-    ctx.globalAlpha = pass.alpha;
-    ctx.strokeStyle = "#eaf2ff";
-    ctx.lineWidth = pass.width;
-    ctx.beginPath();
-    for (const [bx, by] of pts) {
-      if (by === 0) ctx.moveTo(bx, by);
-      else ctx.lineTo(bx, by);
-    }
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
+  const gx = strike.sx * viewW;
+  const gy = strike.sy * viewH;
+  const glow = ctx.createRadialGradient(gx, gy, 8, gx, gy, 150);
+  glow.addColorStop(0, `rgba(215,228,255,${(0.55 * flicker).toFixed(3)})`);
+  glow.addColorStop(0.5, `rgba(200,215,255,${(0.26 * flicker).toFixed(3)})`);
+  glow.addColorStop(1, "rgba(200,215,255,0)");
+  ctx.save();
+  // Wider than tall — light diffusing ALONG the deck, the way a cloud lights.
+  ctx.translate(gx, gy);
+  ctx.scale(1.7, 1);
+  ctx.translate(-gx, -gy);
+  ctx.fillStyle = glow;
+  ctx.fillRect(gx - 260, gy - 160, 520, 320);
+  ctx.restore();
 }
 
 /**
  * The weather, painted OVER the picture and the fx — rain is between the
- * camera and everything else. The flash brightens the whole frame with a
- * flicker; the bolt only exists at the front of it.
+ * camera and everything else. A strike lights the deck from within and lifts
+ * the whole frame with a flicker; there is never a bolt.
  */
 export function drawStorm(
   ctx: CanvasRenderingContext2D,
@@ -144,13 +141,13 @@ export function drawStorm(
   if (intensity <= 0) return;
   const strike = strikeAt(flight.params.seed, nowMs);
   if (strike) {
-    if (strike.t < BOLT_MS) drawBolt(ctx, strike, cam, viewH);
     const t = strike.t / FLASH_MS;
     // Two-pulse flicker — a strike never lights the sky evenly.
     const flicker =
       Math.max(0, Math.sin(t * Math.PI)) *
       (0.6 + 0.4 * Math.sin(t * 26 + (strike.seed % 7)));
-    ctx.fillStyle = `rgba(208,222,255,${(0.18 * intensity * flicker).toFixed(3)})`;
+    drawStrikeGlow(ctx, strike, viewW, viewH, intensity * flicker);
+    ctx.fillStyle = `rgba(208,222,255,${(0.14 * intensity * flicker).toFixed(3)})`;
     ctx.fillRect(0, 0, viewW, viewH);
   }
   drawRain(ctx, 0, 0, viewW, viewH, nowMs, {
