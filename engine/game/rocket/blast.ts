@@ -94,7 +94,13 @@ export function stepBlasts(state: FlightState, dtMs: number): void {
           x: o.x,
           alt: o.alt,
         });
-        if (o.kind === "satellite") {
+        // Anything with tanks or batteries joins the chain — the company's
+        // hardware, an airliner's kerosene, a drone's lithium.
+        if (
+          o.kind === "satellite" ||
+          o.kind === "plane" ||
+          o.kind === "drone"
+        ) {
           detonate(
             state,
             o.x,

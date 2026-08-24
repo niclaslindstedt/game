@@ -668,6 +668,64 @@ export const SHOTS = [
     sweepMs: [800, 1100, 1400, 1700, 1900, 2300, 2700, 3200, 4000, 5000],
   },
   {
+    id: "drive",
+    caption: "DRIVE THE NIGHT SHIFT",
+    // THE CAR MINIGAME, staged by its own workbench (`?drive`) with the
+    // engine's auto-driver at the wheel (`&bot=1`) — the same deterministic
+    // leg every run, so the sweep's chosen delay reproduces. NIGHTMARE for a
+    // thick crowd; the seed picks a stretch of town that photographs.
+    devices: ["steam-1080"],
+    stage: async (page, shot, url) => {
+      await page.goto(
+        `${url}/?drive&bot=1&debug&seed=808&difficulty=nightmare`,
+      );
+      // The leg is live once the sim handle exists; the town (crowd, shops,
+      // the dashboard) is up by 25 s of road.
+      await page.waitForFunction(() => !!window.__drive, null, {
+        timeout: 30000,
+      });
+      await page.waitForFunction(() => window.__drive.ms > 25000, null, {
+        timeout: 60000,
+      });
+      await page.addStyleTag({
+        content: ".game-fps { display: none !important; }",
+      });
+    },
+    // Swept coarsely over the town stretch; mid-crowd with the dials lit.
+    captureAtMs: 1200,
+    sweepMs: [0, 400, 800, 1200, 1800, 2600, 3600, 4800, 6200, 8000],
+  },
+  {
+    id: "rocket",
+    caption: "FLY THE JUNK SHELL",
+    // THE ROCKET MINIGAME, staged by its workbench (`?rocket`): the auto-pilot
+    // flies (`&bot=1`), the lift-off cutscene is skipped (`&launch=0` — a held
+    // card is a `window.__flight` that never climbs), and the capture waits
+    // for the shell proper — junk thick, plume lit, dials alive.
+    devices: ["steam-1080"],
+    stage: async (page, shot, url) => {
+      await page.goto(
+        `${url}/?rocket&bot=1&launch=0&debug&seed=606&difficulty=nightmare`,
+      );
+      await page.waitForFunction(() => !!window.__flight, null, {
+        timeout: 30000,
+      });
+      // EARLY, on purpose: down in the CLOUD DECK the sky is at its busiest —
+      // storm clouds and rain around the ship, the night moon still up, the
+      // junk band already dealing, and the plume at its full sea-level
+      // bonfire. Higher up the frame empties out and the flame thins with
+      // the air.
+      await page.waitForFunction(() => window.__flight.craft.alt > 1300, null, {
+        timeout: 90000,
+      });
+      await page.addStyleTag({
+        content: ".game-fps { display: none !important; }",
+      });
+    },
+    captureAtMs: 900,
+    sweepMs: [0, 300, 600, 900, 1300, 1800, 2400, 3200, 4200, 5600],
+  },
+  {
     id: "powers",
     caption: "STACK THE POWERS YOU FIND",
     // BOOT HILL — the knockoff western — so the set isn't four purple fields.
@@ -697,8 +755,18 @@ export const SHOTS = [
  * Walk the menus and stage one recipe's run. Leaves the page in `playing` with
  * the scenario applied, the FPS meter hidden, and `prepare` done — i.e. at the
  * instant the capture clock should start.
+ *
+ * A recipe with its own `stage(page, shot, url)` — the two MINIGAME frames —
+ * skips the menu walk entirely: a minigame is staged by its own workbench URL
+ * (`?drive` / `?rocket`, each with `&bot=1` so the engine's own driver plays
+ * it), not by a level warp.
  */
 export async function stageRun(page, shot, url) {
+  if (shot.stage) {
+    await shot.stage(page, shot, url);
+    if (shot.prepare) await shot.prepare(page);
+    return;
+  }
   const scenario = encodeURIComponent(
     JSON.stringify({ ...DISPLAY_CASE, clearDrops: true }),
   );

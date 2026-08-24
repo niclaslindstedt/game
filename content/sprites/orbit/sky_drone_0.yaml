@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_drone_0
+family: orbit
+size: [12, 8]
+description: >
+  A delivery quad mid-route — rotor blurs on two arms, a white shell,
+  the green status light, a parcel slung underneath.
+subject:
+  kind: delivery drone
+  build: twin visible rotor blurs over a boxy white shell, parcel below
+  features: green status light on the shell, slung blue parcel
+  flavor: an AI world's air freight, automated even at this altitude
+palette:
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # rotor blur
+  a: "#d6dce4" # body shell
+  A: "#8d9196" # shell shadow
+  e: "#7ef0c8" # status light, green because the parcel is late
+  j: "#4054bc" # parcel, courier blue
+grid: |
+  TTT......TTT
+  .O........O.
+  .OOOOOOOOOO.
+  ..OaaaaaAO..
+  ..OaeeaaAO..
+  ..OOOOOOOO..
+  ....OjjO....
+  ....OOOO....

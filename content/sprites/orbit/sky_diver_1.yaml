@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_diver_1
+family: orbit
+size: [12, 14]
+description: >
+  The same jump on a green canopy — two hobbyists are a club.
+subject:
+  kind: skydiver
+  build: rectangular canopy over converging lines over a small hanging figure
+  features: celled green canopy, pale helmet
+  flavor: the second member of the club
+palette:
+  O: "#1a1c2c" # outline
+  F: "#3f8f6b" # canopy green
+  f: "#2c6b50" # canopy cell shadow
+  l: "#c0c5cf" # lines
+  h: "#d6dce4" # helmet
+  b: "#3f4553" # jumpsuit
+grid: |
+  .OOOOOOOOOO.
+  OFfFFfFFfFFO
+  OFFFFFFFFFFO
+  .OOOOOOOOOO.
+  .l...ll...l.
+  ..l..ll..l..
+  ...l.ll.l...
+  ....llll....
+  ....OhhO....
+  ....ObbO....
+  ....ObbO....
+  ....O..O....
+  ....O..O....
+  ............

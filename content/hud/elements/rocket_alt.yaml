@@ -3,7 +3,7 @@
 # THE ALTITUDE DIAL — mission control's right hand, the velocity dial's twin.
 #
 # THE FACE CHANGES MEANING AT ORBIT, and says so in its own unit: miles of
-# climb on the way up (62 is the edge of space, and the top of the sweep), then
+# climb on the way up (100 is the orbit, and the top of the sweep), then
 # the drop's own countdown — height left over the regolith — on the way down,
 # where the arc runs the other errand: full at release, empty on the ground.
 # One dial, two trips, and the unit under the figure (`rocket.alt_unit`) is

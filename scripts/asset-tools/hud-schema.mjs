@@ -223,6 +223,18 @@ export const HUD_BINDINGS = {
   "rocket.progress": "frac",
   "rocket.shellClear": "flag",
   "rocket.paused": "flag",
+  // THE WEATHER AND THE COURSE. `windMph` is the wind the ship can FEEL —
+  // the layer's wind bought down by the air (`flightWindPx`), so it dies to
+  // zero in vacuum and the meter's label can say so; `windDir` is its sign
+  // (-1 port, 0 calm, 1 starboard) and `windFrac` its share of the profile's
+  // worst, for the ladder. `offCourse` is how far out of the launch corridor
+  // the ship has wandered (0..1 of the ramp the stray spawner reads), and
+  // `fuelFrac` what is left in the tanks — the mass the climb is spending.
+  "rocket.windMph": "number",
+  "rocket.windDir": "number",
+  "rocket.windFrac": "frac",
+  "rocket.offCourse": "frac",
+  "rocket.fuelFrac": "frac",
   // VOICE CHAT. A session fact rather than a run fact — the engine's state
   // knows nothing about who is talking — but the HUD is where a player reads
   // it, so it is a binding group like any other. Empty on every run without

@@ -18,12 +18,17 @@ import {
   FLIGHT_OUTCOME,
   FLIGHT_WRECKS,
   airFrac,
+  climbMph,
+  downrangeMph,
   flightCoursePx,
+  fuelMassMult,
   gravityAt,
+  offCourseFrac,
+  windAt,
   type FlightWreck,
 } from "./config.ts";
 import { detonate, stepBlasts } from "./blast.ts";
-import { firstMarks, stepField } from "./field.ts";
+import { bandFrac, firstMarks, stepField } from "./field.ts";
 import type {
   FlightCraft,
   FlightInput,
@@ -39,6 +44,9 @@ import type {
  */
 export function createFlight(params: FlightParams): FlightState {
   const rng = createRng(params.seed);
+  // The strays' own stream, derived from the same seed — see
+  // `FlightState.strayRng` for why it is not the shell's.
+  const strayRng = createRng((params.seed ^ 0x2545f491) >>> 0);
   const marks = firstMarks();
   return {
     params: { ...params },
@@ -57,6 +65,7 @@ export function createFlight(params: FlightParams): FlightState {
       tilt: (rng() < 0.5 ? -1 : 1) * FLIGHT.ascent.launchTiltRad,
       tiltVel: 0,
       hull: 1,
+      fuel: 1,
     },
     trash: [],
     field: [],
@@ -68,9 +77,12 @@ export function createFlight(params: FlightParams): FlightState {
     nextJunkAt: marks.junk,
     nextSatelliteAt: marks.satellite,
     nextRockAt: marks.rock,
+    nextStrayAt: marks.stray,
+    strayRng,
     gustPhase: rng() * Math.PI * 2,
     trashCount: 0,
     hullHits: 0,
+    softHits: 0,
     topSpeed: 0,
     hullAtOrbit: 1,
     touchdownVy: 0,
@@ -110,6 +122,9 @@ export function beginDescent(state: FlightState): void {
     tilt: (rng() * 2 - 1) * 0.12,
     tiltVel: 0,
     hull: 1,
+    // The module's own tank never enters the physics — its descent engine is
+    // a fixed authority (`landing.mainPx`) — so the gauge just reads full.
+    fuel: 1,
   };
   state.trash = [];
   state.field = [];
@@ -139,6 +154,7 @@ export function restartFlight(previous: FlightState): FlightState {
     next.clockMs = previous.clockMs;
     next.trashCount = previous.trashCount;
     next.hullHits = previous.hullHits;
+    next.softHits = previous.softHits;
     next.topSpeed = previous.topSpeed;
     next.hullAtOrbit = previous.hullAtOrbit;
   }
@@ -157,16 +173,18 @@ export function flightHandsOff(state: FlightState): boolean {
   return state.ms < hold;
 }
 
-/** The dial's number: climb (or descent) speed as the mph the dashboard says
- * out loud — PEGGED at the dial's last figure, because past the shell the air
- * is gone and the true number runs away from any face you could print. */
+/**
+ * The dial's number — the webcast's telemetry (`FLIGHT.orbitalMph`): the climb
+ * the player is flying plus the gravity turn's downrange speed, in quadrature,
+ * PEGGED at orbital speed because that is where the figure stops meaning
+ * anything a dial face could add to. The drop reads its own descent speed
+ * alone — there is no orbit under a module easing onto the regolith.
+ */
 export function flightMph(state: FlightState): number {
-  return Math.min(
-    FLIGHT.topSpeedMph,
-    Math.round(
-      (Math.abs(state.craft.vy) / FLIGHT.topSpeedPx) * FLIGHT.topSpeedMph,
-    ),
-  );
+  const climb = climbMph(state.craft.vy);
+  if (state.phase === "landing") return Math.round(climb);
+  const across = downrangeMph(flightAltFrac(state));
+  return Math.min(FLIGHT.orbitalMph, Math.round(Math.hypot(climb, across)));
 }
 
 /** How far up the sky the climb has got, 0–1 — the altitude tape, and the
@@ -174,6 +192,27 @@ export function flightMph(state: FlightState): number {
 export function flightAltFrac(state: FlightState): number {
   if (state.phase === "landing") return 1;
   return Math.min(1, state.craft.alt / flightCoursePx(state.params));
+}
+
+/** THE WIND THE SHIP CAN FEEL right now (px/s, signed) — the layer's wind
+ * bought down by the air, which is also what a vane on the hull would read:
+ * a jet stream's worth in the soup, nothing in vacuum. The landing has no
+ * weather at all (the moon keeps none). */
+export function flightWindPx(state: FlightState): number {
+  if (state.phase === "landing") return 0;
+  const coursePx = flightCoursePx(state.params);
+  return (
+    windAt(state.params.seed, state.craft.alt) *
+    airFrac(state.craft.alt, coursePx)
+  );
+}
+
+/** How far off the launch corridor the ship has wandered, 0–1 — the stray
+ * spawner's throttle and the dashboard's lamp, off one ramp
+ * (`offCourseFrac`). */
+export function flightOffCourse(state: FlightState): number {
+  if (state.phase === "landing") return 0;
+  return offCourseFrac(state.craft.x);
 }
 
 /** HAS THE SHIP PUNCHED OUT OF THE SHELL — the sky above is clean, nothing is
@@ -227,7 +266,19 @@ function touches(
   return mx * mx + my * my <= (halfW + o.r) * (halfW + o.r);
 }
 
-/** The ascent's contacts: bags stick, hardware holes, both knock the balance. */
+/** What a hard hazard takes off the skin, by kind (fraction of the ship). */
+function hazardHullFrac(
+  kind: "satellite" | "rock" | "plane" | "drone",
+): number {
+  const h = FLIGHT.hazard;
+  if (kind === "satellite") return h.satelliteHullFrac;
+  if (kind === "plane") return h.planeHullFrac;
+  if (kind === "drone") return h.droneHullFrac;
+  return h.rockHullFrac;
+}
+
+/** The ascent's contacts: bags stick, soft bodies burst across the nose,
+ * hardware holes — and everything knocks the balance. */
 function collideAscent(state: FlightState): void {
   const a = FLIGHT.ascent;
   const rung = difficultyDef(state.params.difficulty).flight;
@@ -237,17 +288,22 @@ function collideAscent(state: FlightState): void {
     if (Math.abs(o.alt - craft.alt) > a.shipHalfH + o.r + 4) continue;
     if (!touches(craft, o, a.shipHalfW, a.shipHalfH)) continue;
     const side: 1 | -1 = o.x >= craft.x ? 1 : -1;
+    // Where it met the hull, in the ship's own frame — the trash rides there,
+    // and so does what is left of a bird.
+    const ax = Math.sin(craft.tilt);
+    const ay = Math.cos(craft.tilt);
+    const dx = o.x - craft.x;
+    const dy = o.alt - craft.alt;
+    const along = Math.max(
+      -a.shipHalfH,
+      Math.min(a.shipHalfH, dx * ax + dy * ay),
+    );
     if (o.kind === "junk") {
       const t = FLIGHT.trash;
-      // Where it landed, in the ship's own frame — so it rides the lean.
-      const ax = Math.sin(craft.tilt);
-      const ay = Math.cos(craft.tilt);
-      const dx = o.x - craft.x;
-      const dy = o.alt - craft.alt;
       state.trash.push({
         id: o.id,
         variant: o.variant,
-        along: Math.max(-a.shipHalfH, Math.min(a.shipHalfH, dx * ax + dy * ay)),
+        along,
         across: side * (a.shipHalfW - 1),
         angle: o.angle,
       });
@@ -255,11 +311,34 @@ function collideAscent(state: FlightState): void {
       craft.vy *= t.speedKeep;
       craft.tiltVel += side * t.kickPerS;
       state.events.push({ type: "stuck", variant: o.variant, side });
+    } else if (
+      o.kind === "bird" ||
+      o.kind === "skydiver" ||
+      o.kind === "paraglider"
+    ) {
+      // SOFT: nothing here holes a rocket — it comes apart across it. The
+      // burst and whatever it leaves on the paintwork are the app's
+      // (`FlightEvent.splat` + the gore gate); the sim's bill is a thud.
+      const soft = FLIGHT.soft;
+      craft.vy *= soft.speedKeep;
+      craft.tiltVel += side * soft.kickPerS;
+      state.softHits++;
+      state.strikes.push({
+        kind: o.kind,
+        variant: o.variant,
+        x: o.x,
+        alt: o.alt,
+      });
+      state.events.push({
+        type: "splat",
+        kind: o.kind,
+        side,
+        along,
+        across: side * (a.shipHalfW - 1),
+      });
     } else {
       const h = FLIGHT.hazard;
-      const frac =
-        o.kind === "satellite" ? h.satelliteHullFrac : h.rockHullFrac;
-      craft.hull -= frac * rung.damageMult;
+      craft.hull -= hazardHullFrac(o.kind) * rung.damageMult;
       craft.vy *= h.speedKeep;
       craft.tiltVel += side * h.kickPerS;
       state.hullHits++;
@@ -270,10 +349,10 @@ function collideAscent(state: FlightState): void {
         alt: o.alt,
       });
       state.events.push({ type: "strike", kind: o.kind, x: o.x, alt: o.alt });
-      // A struck satellite is an explosion at arm's length: its own front
+      // Struck machinery is an explosion at arm's length: its own front
       // shoves the nearby garbage, knocks the ship's balance (`stepBlasts`),
       // and can light the chain. A rock just comes apart.
-      if (o.kind === "satellite") detonate(state, o.x, o.alt, "small");
+      if (o.kind !== "rock") detonate(state, o.x, o.alt, "small");
       if (craft.hull <= 0 && state.outcome === FLIGHT_OUTCOME.flying) {
         wreckOut(state, FLIGHT_WRECKS.holed);
       }
@@ -307,9 +386,15 @@ function stepAscent(state: FlightState, dt: number, input: FlightInput): void {
       a.gustPerS *
       (0.35 + 0.65 * air) *
       Math.sin((state.ms / a.gustPeriodMs) * Math.PI * 2 + state.gustPhase);
+    // THE WEATHER'S TORQUE — the tail catching the crosswind (`windAt`),
+    // bought with air like everything the wind does: full weathervane in the
+    // soup, nothing in vacuum.
+    const wind = windAt(state.params.seed, craft.alt);
+    const vane = FLIGHT.wind.tipPerS * air * (wind / FLIGHT.wind.maxPx);
     craft.tiltVel +=
       (tip * Math.sin(craft.tilt) +
-        gust -
+        gust +
+        vane -
         (a.steerPerS / load) * steer -
         a.tiltDampPerS * craft.tiltVel) *
       dt;
@@ -317,22 +402,38 @@ function stepAscent(state: FlightState, dt: number, input: FlightInput): void {
   craft.tilt += craft.tiltVel * dt;
 
   // ── THE CLIMB ─────────────────────────────────────────────────────────────
-  const thrust = a.burnPx + a.boostPx * throttle;
-  const g = gravityAt(craft.alt, coursePx);
-  const drag = a.dragK * air * craft.vy * Math.abs(craft.vy);
+  // THE TANKS DRAIN AND THE SHIP GETS LIGHTER — the trip's real physics: the
+  // thrust never changes, the mass it pushes does, so the same burn that
+  // barely beat gravity off the pad is throwing an empty shell by the top.
+  // Boost spends propellant faster, which is its second, slower price.
+  craft.fuel = Math.max(
+    0,
+    craft.fuel - (a.burnFuelPerS + a.boostFuelPerS * throttle) * dt,
+  );
+  const mass = fuelMassMult(craft.fuel);
+  const thrust = (a.burnPx + a.boostPx * throttle) * mass;
+  const g = gravityAt(craft.alt);
+  // The medium the hull pushes through: the thinning air plus the shell's own
+  // dust (see `dragK`) — gone above the shell, which is what lets the clear
+  // stretch run away.
+  const medium = air + a.dustK * bandFrac(craft.alt, coursePx);
+  const drag = a.dragK * medium * craft.vy * Math.abs(craft.vy);
   craft.vy += (thrust * Math.cos(craft.tilt) - g - drag) * dt;
   craft.vx += thrust * Math.sin(craft.tilt) * dt;
+  // THE WIND'S PUSH — the air dragging the hull toward its own speed. It is
+  // the same term that bleeds a leaning burn (`lateralDragPerS` is the
+  // still-air case), so a crosswind is fought the only way a rocket can: by
+  // leaning into it. There is no wall to lean on instead — the sky has no
+  // edges, and a lean held too long is a ship over somebody else's airspace
+  // (`offCourseFrac`), which the strays price.
+  const wind = windAt(state.params.seed, craft.alt);
+  craft.vx += FLIGHT.wind.pullPerS * air * (wind - craft.vx) * dt;
   craft.vx -= craft.vx * a.lateralDragPerS * dt;
   craft.alt += craft.vy * dt;
   craft.x += craft.vx * dt;
-  if (craft.x < a.edgeMarginPx) {
-    craft.x = a.edgeMarginPx;
-    craft.vx = Math.max(0, craft.vx);
-  } else if (craft.x > FLIGHT.fieldW - a.edgeMarginPx) {
-    craft.x = FLIGHT.fieldW - a.edgeMarginPx;
-    craft.vx = Math.min(0, craft.vx);
-  }
-  state.topSpeed = Math.max(state.topSpeed, craft.vy);
+  // The dial's own record — mph, not px/s, because the scorecard prints what
+  // the dashboard said.
+  state.topSpeed = Math.max(state.topSpeed, flightMph(state));
 
   // ── THE WARNING, ON THE EDGE ──────────────────────────────────────────────
   if (Math.abs(craft.tilt) > a.warnRad) {
@@ -446,8 +547,7 @@ export function stepFlight(
       if (state.phase === "ascent") {
         // The wreck falls out of the sky the way it was always going to:
         // burning, turning over, planet winning.
-        craft.vy -=
-          gravityAt(craft.alt, flightCoursePx(state.params)) * 0.6 * dt;
+        craft.vy -= gravityAt(craft.alt) * 0.6 * dt;
         craft.alt += craft.vy * dt;
         craft.x += craft.vx * dt;
         craft.tilt += craft.tiltVel * dt;
@@ -476,15 +576,25 @@ export {
   FLIGHT_OUTCOME,
   FLIGHT_WRECKS,
   airFrac,
+  climbMph,
+  downrangeMph,
   flightCoursePx,
+  fuelMassMult,
   gravityAt,
+  offCourseFrac,
+  windAt,
 } from "./config.ts";
 export type { FlightOutcome, FlightWreck } from "./config.ts";
 export { blastHash, blastRoll, detonate } from "./blast.ts";
 export { ORBIT_VARIANTS, bandFrac } from "./field.ts";
 export { flightPar, flightScore, flightTripMs } from "./score.ts";
 export type { FlightScorecard } from "./score.ts";
-export { IDLE_FLIGHT_INPUT } from "./types.ts";
+export { IDLE_FLIGHT_INPUT, SOFT_KINDS } from "./types.ts";
+export {
+  createFlightDriver,
+  flightDriverInput,
+  type FlightDriver,
+} from "./driver.ts";
 export type {
   FlightBlast,
   FlightCraft,

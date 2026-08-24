@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_glider_0
+family: orbit
+size: [16, 10]
+description: >
+  A paraglider mid-soar — a crescent wing of celled fabric, lines down
+  to the pilot's pod, drifting on the same layers the ship fights.
+subject:
+  kind: paraglider
+  build: crescent celled wing over converging lines over a pilot pod
+  features: pink celled wing, tiny dark pod
+  flavor: the slowest thing in the sky, and the most relaxed
+palette:
+  O: "#1a1c2c" # outline
+  F: "#c94f7c" # wing pink, seen from below
+  f: "#9c3a60" # wing cell shadow
+  l: "#c0c5cf" # lines
+  b: "#3f4553" # pilot pod
+grid: |
+  ..OOOOOOOOOOOO..
+  .OFfFFfFFfFFfFO.
+  OFFFFFFFFFFFFFFO
+  .OOOOOOOOOOOOOO.
+  ..l....ll....l..
+  ...l...ll...l...
+  ....l..ll..l....
+  .......OO.......
+  .......ObO......
+  ................

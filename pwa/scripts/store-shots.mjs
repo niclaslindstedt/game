@@ -145,6 +145,10 @@ for (const device of devices) {
   await prepareContext(context, { safe });
 
   for (const [index, shot] of shots.entries()) {
+    // A recipe may claim specific rasters (`devices`) — the two minigame
+    // frames are Steam's, because a phone listing already has six field shots
+    // and Apple caps the set.
+    if (shot.devices && !shot.devices.includes(device.name)) continue;
     const n = String(index + 1).padStart(2, "0");
     const file = `${dir}/${n}-${shot.id}.png`;
     const page = await context.newPage();

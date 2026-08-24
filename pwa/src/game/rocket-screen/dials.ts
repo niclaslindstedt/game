@@ -15,19 +15,22 @@
 
 import {
   FLIGHT,
+  climbMph,
   flightAltFrac,
   flightCoursePx,
   flightHandsOff,
   flightMph,
+  flightOffCourse,
   flightShellClear,
+  flightWindPx,
   type FlightState,
 } from "@game/core";
 
 import type { HudValues } from "../hud/bindings.ts";
 
-/** The top of the altitude dial, in the unit it says out loud — the edge of
- * space, which is where the climb is going. */
-const SPACE_MILES = 62;
+/** The top of the altitude dial, in the unit it says out loud — the 100-mile
+ * orbit the climb is going to (`FLIGHT.metersPerPx` is derived against it). */
+const SPACE_MILES = 100;
 
 /** One diffable snapshot of every instrument. */
 export type FlightDials = {
@@ -76,6 +79,16 @@ export type FlightDials = {
   /** Out of the shell — the timeline's ALL CLEAR lamp. */
   shellClear: boolean;
   paused: boolean;
+  /** THE WIND METER: what the vane can feel (mph, absolute), which shoulder
+   * it is on (-1 port, 0 calm, 1 starboard), and its share of the profile's
+   * worst — zero in vacuum, which is the meter's own last word. */
+  windMph: number;
+  windDir: number;
+  windFrac: number;
+  /** Out of the launch corridor, 0..1 of the ramp the strays read. */
+  offCourse: number;
+  /** What is left in the tanks — the mass the climb is spending. */
+  fuelFrac: number;
 };
 
 /** `T+ m:ss` — a mission clock, not a lap clock: whole seconds, because the
@@ -118,9 +131,13 @@ export function flightDials(
   const landing = state.phase === "landing";
   const lean = craft.tilt / FLIGHT.ascent.flipRad;
   const hull = Math.max(0, Math.min(1, craft.hull));
+  const mph = flightMph(state);
+  const windPx = flightWindPx(state);
   return {
-    mph: flightMph(state),
-    speedFrac: Math.min(1, Math.abs(craft.vy) / FLIGHT.topSpeedPx),
+    mph,
+    // The arc IS the figure: one telemetry (`flightMph`), so the needle and
+    // the number can never tell two stories.
+    speedFrac: Math.min(1, mph / FLIGHT.orbitalMph),
     altitude: landing
       ? Math.max(0, Math.round(craft.alt))
       : Math.round(flightAltFrac(state) * SPACE_MILES),
@@ -148,6 +165,11 @@ export function flightDials(
     progress: missionProgress(state),
     shellClear: flightShellClear(state),
     paused,
+    windMph: Math.round(climbMph(Math.abs(windPx))),
+    windDir: windPx > 1 ? 1 : windPx < -1 ? -1 : 0,
+    windFrac: Math.min(1, Math.abs(windPx) / FLIGHT.wind.maxPx),
+    offCourse: flightOffCourse(state),
+    fuelFrac: Math.max(0, Math.min(1, craft.fuel)),
   };
 }
 
@@ -171,7 +193,12 @@ export function sameFlightDials(a: FlightDials, b: FlightDials): boolean {
     a.boost === b.boost &&
     a.progress === b.progress &&
     a.shellClear === b.shellClear &&
-    a.paused === b.paused
+    a.paused === b.paused &&
+    a.windMph === b.windMph &&
+    a.windDir === b.windDir &&
+    a.windFrac === b.windFrac &&
+    a.offCourse === b.offCourse &&
+    a.fuelFrac === b.fuelFrac
   );
 }
 
@@ -191,6 +218,10 @@ export function quantiseFlightDials(dials: FlightDials): FlightDials {
     leanFrac: q(dials.leanFrac, 1 / 32),
     progress: q(dials.progress, 1 / 128),
     clockMs: q(dials.clockMs, 1000),
+    windMph: q(dials.windMph, 5),
+    windFrac: q(dials.windFrac, 1 / 24),
+    offCourse: q(dials.offCourse, 1 / 16),
+    fuelFrac: q(dials.fuelFrac, 1 / 48),
   };
 }
 
@@ -220,5 +251,10 @@ export function flightBindings(d: FlightDials): HudValues {
     "rocket.progress": d.progress,
     "rocket.shellClear": d.shellClear,
     "rocket.paused": d.paused,
+    "rocket.windMph": d.windMph,
+    "rocket.windDir": d.windDir,
+    "rocket.windFrac": d.windFrac,
+    "rocket.offCourse": d.offCourse,
+    "rocket.fuelFrac": d.fuelFrac,
   };
 }

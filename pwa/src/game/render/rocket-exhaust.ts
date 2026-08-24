@@ -107,6 +107,28 @@ const HOT = "#ffd24a";
 const BODY = "#ff9a1f";
 const FRINGE = "#e0491c";
 
+/** …AND WHAT THE SAME FIRE LOOKS LIKE IN VACUUM. The yellow-orange of a
+ * kerosene flame is mostly glowing soot finishing its burn in the SURROUNDING
+ * AIR; take the air away and that wash goes with it, leaving the exhaust's
+ * own emission — the faint blue-violet fan every upper-stage camera shows.
+ * The plume lerps between the two palettes on `vacuum`. */
+const V_CORE = "#eef6ff";
+const V_HOT = "#a9c9ff";
+const V_BODY = "#7a8df0";
+const V_FRINGE = "#5548c8";
+
+/** Lerp two hex colours — called once per plume, never per scanline. */
+function mixColor(a: string, b: string, t: number): string {
+  const pa = parseInt(a.slice(1), 16);
+  const pb = parseInt(b.slice(1), 16);
+  const ch = (shift: number) => {
+    const va = (pa >> shift) & 0xff;
+    const vb = (pb >> shift) & 0xff;
+    return Math.round(va + (vb - va) * t);
+  };
+  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+}
+
 /** How long the engine takes to come up to pressure (ms) — the plume's length,
  * the blast's spread and every alpha here ramp over it, so ignition BLOOMS
  * rather than snapping on at full size in one frame. */
@@ -363,18 +385,49 @@ export function drawRocketExhaust(
  * THE COLUMN. Walked one scanline at a time and filled in four bands, which is
  * what keeps it crisp: a radial gradient at this size comes out as a smudge,
  * and a stack of hard 1-px runs comes out as pixel fire.
+ *
+ * EXPORTED for the flight minigame's own ship (`rocket-screen/render.ts`),
+ * which draws THIS plume — halo, lash, shock diamonds — under its hull rather
+ * than a private imitation: the takeoff the cutscene sold is the takeoff the
+ * minigame flies. `burn` is the caller's throttle-shaped 0..1 (the cutscene
+ * passes its spool ramp), `height` the room under the bells (`Infinity` in
+ * open sky).
+ *
+ * `vacuum` (0 sea level → 1 no air) is how the flame answers ALTITUDE, and
+ * the physics is ambient PRESSURE, not oxygen — the ship carries its own
+ * oxidizer, which is the whole reason it burns up there at all. With nothing
+ * pressing back the exhaust stops being a bonfire and becomes a nozzle
+ * pattern: the bright core SHORTENS and tightens, the shock diamonds fade
+ * out (they are standing pressure waves against outside air, so a vacuum has
+ * none), and what the gas does instead is BALLOON — a wide, faint,
+ * translucent sheath flaring off the bells. The cutscene's pad never passes
+ * it, so the launch keeps its ground-level fire untouched.
  */
-function drawPlume(
+export function drawPlume(
   ctx: CanvasRenderingContext2D,
   look: RocketExhaust,
   ageMs: number,
   burn: number,
   height: number,
+  vacuum = 0,
 ): void {
   // THE GROUND CUTS IT OFF. A rocket on the pad has nowhere to put its plume,
   // which is exactly why there is a blast: the column's length is the room
   // under it, and everything it cannot spend goes sideways instead.
-  const len = Math.round(Math.min(look.reach * burn, Math.max(0, height)));
+  // The visible core shortens as the air runs out — the fire is not smaller,
+  // the part of it bright enough to see is. The colours cool the same way:
+  // fire palette in the soup, blue-violet emission in vacuum. Quantised to
+  // eighths so the halo's colour (a cached sprite per colour string) mints a
+  // handful of glows over a whole climb instead of one per frame.
+  const air = 1 - Math.max(0, Math.min(1, vacuum));
+  const q = Math.round(Math.max(0, Math.min(1, vacuum)) * 8) / 8;
+  const core = mixColor(CORE, V_CORE, q);
+  const hot = mixColor(HOT, V_HOT, q);
+  const body = mixColor(BODY, V_BODY, q);
+  const fringe = mixColor(FRINGE, V_FRINGE, q);
+  const haloRgb = q < 0.5 ? "255, 150, 40" : "130, 150, 255";
+  const coreReach = look.reach * (0.55 + 0.45 * air);
+  const len = Math.round(Math.min(coreReach * burn, Math.max(0, height)));
   if (len <= 0) return;
   const x = look.bellX;
   const top = look.bellY;
@@ -383,14 +436,34 @@ function drawPlume(
   // a gradient, because it is not an object, it is what the object is doing to
   // the air. Sized off the plume so a stub on the pad glows like a stub.
   ctx.globalCompositeOperation = "lighter";
-  const halo = glowSprite("255, 150, 40", Math.round(look.flare * 2.2));
+  const halo = glowSprite(haloRgb, Math.round(look.flare * 2.2));
   if (halo) {
-    ctx.globalAlpha = 0.5 * burn;
+    ctx.globalAlpha = 0.5 * burn * (0.5 + 0.5 * air);
     ctx.drawImage(
       halo,
       Math.round(x - halo.width / 2),
       Math.round(top + len * 0.25 - halo.height / 2),
     );
+  }
+
+  // THE VACUUM SHEATH — where the bonfire went: with no air pressing back the
+  // exhaust expands the moment it leaves the bells, so a faint wide cone
+  // flares around the shrunken core. Scanlines like the column (a gradient
+  // this size is a smudge), too dim to read as flame — it reads as gas.
+  if (vacuum > 0.05) {
+    const sheathLen = Math.round(
+      Math.min(look.reach * (0.5 + 0.7 * vacuum) * burn, Math.max(0, height)),
+    );
+    ctx.fillStyle = fringe;
+    for (let i = 0; i < sheathLen; i += 2) {
+      const u = i / sheathLen;
+      const spread =
+        look.flare * (0.5 + (1.3 + 1.9 * vacuum) * Math.pow(u, 0.7)) * burn;
+      const w = Math.round(spread * 2);
+      if (w < 1) continue;
+      ctx.globalAlpha = 0.16 * vacuum * burn * (1 - u * u);
+      ctx.fillRect(Math.round(x - w / 2), Math.round(top + i), w, 2);
+    }
   }
   ctx.globalAlpha = 1;
 
@@ -424,16 +497,19 @@ function drawPlume(
       ctx.fillStyle = fill;
       ctx.fillRect(Math.round(cx - w / 2), y, w, 1);
     };
-    run(wide, FRINGE);
-    run(wide * 0.72, BODY);
+    run(wide, fringe);
+    run(wide * 0.72, body);
     // SHOCK DIAMONDS — the bright knots standing in a real supersonic exhaust,
     // and the one detail that makes a cone read as thrust. They stand still in
     // the column while the flame moves through them, so they are a function of
-    // depth with only a slow breath on the clock.
+    // depth with only a slow breath on the clock — and they FADE with the air:
+    // a diamond is the exhaust arguing with ambient pressure, and a vacuum
+    // does not argue back.
     const knot =
-      0.55 + 0.45 * Math.sin(u * 17 - ageMs / 260) * Math.max(0, 1 - u * 1.6);
-    run(wide * 0.44 * knot, HOT);
-    if (u < 0.62) run(wide * 0.26 * knot * (1 - u / 0.62), CORE);
+      0.55 +
+      0.45 * air * Math.sin(u * 17 - ageMs / 260) * Math.max(0, 1 - u * 1.6);
+    run(wide * 0.44 * knot, hot);
+    if (u < 0.62) run(wide * 0.26 * knot * (1 - u / 0.62), core);
   }
   ctx.globalCompositeOperation = "source-over";
 }

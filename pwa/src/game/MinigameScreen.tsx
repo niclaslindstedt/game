@@ -108,9 +108,6 @@ export function MinigameScreen({
           params={flightParams}
           assets={assets}
           heroName={heroName}
-          // NO PORTRAIT, for the road's reason: a cabinet has no run to dress
-          // the doll from.
-          heroPortrait={null}
           arcade
           // THE LIFT-OFF IS THE OPENING. A campaign flight is handed the sky
           // by the moon run's own prelude, which plays the launch on the lawn

@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_drone_1
+family: orbit
+size: [12, 8]
+description: >
+  The cheaper courier's quad — grey shell, cardboard parcel, same route.
+subject:
+  kind: delivery drone
+  build: twin rotor blurs over a grey shell, cardboard parcel below
+  features: green status light, plain brown parcel
+  flavor: the discount fleet flies the same sky
+palette:
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # rotor blur
+  a: "#9aa1ad" # shell, the cheaper fleet's grey
+  A: "#8d9196" # shell shadow
+  e: "#7ef0c8" # status light, green because the parcel is late
+  j: "#92643e" # parcel, plain cardboard
+grid: |
+  TTT......TTT
+  .O........O.
+  .OOOOOOOOOO.
+  ..OaaaaaAO..
+  ..OaeeaaAO..
+  ..OOOOOOOO..
+  ....OjjO....
+  ....OOOO....

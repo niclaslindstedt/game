@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_diver_0
+family: orbit
+size: [12, 14]
+description: >
+  A skydiver under a ram-air canopy — orange cells, lines converging to
+  a small figure hanging in harness.
+subject:
+  kind: skydiver
+  build: rectangular canopy over converging lines over a small hanging figure
+  features: celled orange canopy, pale helmet
+  flavor: somebody is always having a hobby off the corridor
+palette:
+  O: "#1a1c2c" # outline
+  F: "#d97e2c" # canopy orange
+  f: "#b3602a" # canopy cell shadow
+  l: "#c0c5cf" # lines
+  h: "#d6dce4" # helmet
+  b: "#3f4553" # jumpsuit
+grid: |
+  .OOOOOOOOOO.
+  OFfFFfFFfFFO
+  OFFFFFFFFFFO
+  .OOOOOOOOOO.
+  .l...ll...l.
+  ..l..ll..l..
+  ...l.ll.l...
+  ....llll....
+  ....OhhO....
+  ....ObbO....
+  ....ObbO....
+  ....O..O....
+  ....O..O....
+  ............

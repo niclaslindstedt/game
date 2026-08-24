@@ -2110,16 +2110,6 @@ export function GameScreen({
           params={rocket}
           assets={assets}
           heroName={character.name}
-          heroPortrait={
-            state
-              ? (dollDataUrl(
-                  assets.sprites,
-                  playerDollLayers(state, "0"),
-                  heroSoak(state),
-                  { bust: true },
-                ) ?? null)
-              : null
-          }
           onScreenshot={() => takeScreenshot("THE FLIGHT")}
           // ESCAPE → MAIN MENU: end the run, bank the hero as he sits — the
           // road's own rule, for the road's reasons. A man who turned the

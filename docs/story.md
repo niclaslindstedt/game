@@ -280,15 +280,30 @@ years of that is a shell of garbage around the planet that thickens all the way
 to the top. The billionaires left before the shell closed; everybody else is
 under it, which the hero learns with his hands full — a garage-built ship that
 never once wants to fly straight, boosters that feed the flip as fast as they
-feed the climb, and the company's own satellites, the other business, crossing
-the band with their lights on. Trash does not break the ship: it lands on it
-and rides, so he arrives everywhere wearing the company's garbage, and the
-scoreboard counts every bag and pays nothing for one. Satellites and rocks
-break the ship, and a satellite that goes up takes its neighbours with it, one
-fuse at a time. He says one flat line about the company on the way into the
-band, and when he punches out of the shell — the sky suddenly, conspicuously
-clean — one line of relief, and never mentions any of it again. Leaving Earth
-has quietly become hard, and he files it under road surface.
+feed the climb, a hull that gets lighter as the tanks drain and livelier the
+whole way up, real weather in layers (a breeze off the lawn, the jet stream
+shouldering him sideways where the air is fastest, nothing at all once it runs
+out), and the company's own satellites, the other business, crossing the band
+with their lights on. The launch corridor is his by permit and nothing beside
+it is: drift off course and the sky fills with everyone else's business —
+airliners on their own lanes, delivery drones running parcels most of the way
+up the shell (it is an AI world, and somebody automated even this), birds low
+down, and the odd skydiver or paraglider having a hobby — and the soft ones do
+not break the ship either; they come apart across it, the road's crowd met a
+thousand feet up. Trash does not break the ship: it lands on it and rides, so
+he arrives everywhere wearing the company's garbage, and the scoreboard counts
+every bag — and every body — and pays nothing for any of them. Satellites,
+rocks, airliners and drones break the ship, and anything with tanks or
+batteries that goes up takes its neighbours with it, one fuse at a time.
+Everything he says up here he says INSIDE HIS OWN HEAD — a man alone in a
+homemade cockpit does not get a dialogue window, and the sky never stops for a
+line: one flat thought about the company on the way into the band, a dry one
+each first time the sky surprises him (a bird across the nose, somebody's
+canopy, the jet stream, his own wandering), a shorter one when the ship starts
+going over, and when he punches out of the shell — the sky suddenly,
+conspicuously clean — one thought of relief, and never mentions any of it
+again. Leaving Earth has quietly become hard, and he files it under road
+surface.
 
 **The other half is THE DROP**: the module, the marked pad, the moon's easy
 pull, and a machine that finally does what it is told — tilt goes where he puts

@@ -776,9 +776,66 @@ html.app-locked body {
    only what the road never had: a fourth instrument on the shelf, the attitude
    indicator, and the mission timeline across the top. */
 .rocket-dash {
-  /* Four instruments, not the wagon's two-and-a-gate: the shelf sizes itself
-     to its row instead of the road's fixed width. */
+  /* Three round dials (speed, altitude, hull — the attitude cluster lives up
+     top): the shelf sizes itself to its row instead of the road's fixed
+     width. */
   width: auto;
+}
+
+/* PORTRAIT CENTRES THE CONSOLE — three dials fit a phone held upright with
+   room to spare, and a shelf pinned left under a centred sky reads as chrome
+   from a different game. Left/right pinning instead of a margin trick because
+   this shelf has no fixed width for a margin to halve; `transform` stays the
+   slide's alone (see the drive-dash pairing above). */
+@media (orientation: portrait) {
+  .drive-dash.rocket-dash {
+    left: 0;
+    right: 0;
+    margin-left: 0;
+    justify-content: center;
+    --drive-dash-hide: calc(-100vw - 1rem);
+  }
+}
+
+/* THE FLIGHT DIRECTOR'S CLUSTER — the attitude indicator with the wind meter
+   under it, top centre beneath the mission strip: on the ship's own column,
+   where the lean it reports is happening, and OFF the console — which is also
+   what lets the console fit a portrait phone (three dials do; four did not). */
+.rocket-attitude-slot {
+  position: absolute;
+  top: calc(max(0.5rem, env(safe-area-inset-top)) + 2.9rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  pointer-events: none;
+  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.85));
+}
+/* Portrait hides the strip's station labels, so the cluster rides higher. */
+@media (orientation: portrait) {
+  .rocket-attitude-slot {
+    top: calc(max(0.5rem, env(safe-area-inset-top)) + 1.9rem);
+  }
+}
+
+/* THE WIND METER — the vane's two arrows around the figure, the lit one
+   pointing the way the wind will push (`rocket_wind.yaml`). */
+.rocket-wind {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  pointer-events: none;
+}
+.rocket-wind-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.rocket-wind-caption {
+  opacity: 0.85;
 }
 
 /* THE ATTITUDE INDICATOR — two bars growing OUTWARD from the ship's own glyph,
@@ -849,9 +906,12 @@ html.app-locked body {
   align-self: flex-end;
   opacity: 0.85;
 }
-/* Portrait has no room for six stations; the bar alone still narrates. */
+/* Portrait has no room for six stations — the bar alone still narrates — nor
+   for the trash tally, whose corner is the clock caption's on a phone that
+   narrow. */
 @media (orientation: portrait) {
-  .rocket-strip-labels {
+  .rocket-strip-labels,
+  .rocket-strip-trash {
     display: none;
   }
 }
@@ -6957,20 +7017,44 @@ html.app-locked body {
   }
 }
 
-/* THE FLIGHT'S BARK sits ABOVE the console on every orientation — the road's
-   portrait treatment made the default, because mission control is four
-   instruments wide and leaves no room beside it. After both `.drive-bark`
-   blocks on purpose: same specificity, later wins, in and out of the media
-   query alike. */
-.dialogue-box.drive-bark.rocket-bark {
+/* THE FLIGHT'S THOUGHT — a man alone in a homemade cockpit gets no dialogue
+   window: his line prints SMALL, centred on the ship's own column, under the
+   flight director's cluster and well clear of both the rocket (which rides
+   the lower third) and the console. It times itself out (`ageBark`), so the
+   fade-in is all the ceremony it gets; the soft mint is the hero's own
+   speaker colour, which is what marks the words as his with no plate to say
+   so. */
+.rocket-thought {
+  position: absolute;
+  top: 31%;
   left: 50%;
-  right: auto;
-  bottom: calc(
-    max(0.75rem, env(safe-area-inset-bottom)) + var(--drive-dial-size) *
-      (1 - var(--drive-dial-tail)) + 0.75rem
-  );
-  width: min(80vw, 34rem);
   transform: translateX(-50%);
+  width: min(84vw, 22rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  pointer-events: none;
+  opacity: 0.92;
+  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.85));
+  animation: rocket-thought-in 260ms ease-out both;
+}
+
+@keyframes rocket-thought-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0.3rem);
+  }
+  to {
+    opacity: 0.92;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rocket-thought {
+    animation: none;
+  }
 }
 
 /* THE ROAD GOING OUT — the fade the leg ends on, over a car parked on GOODCO's

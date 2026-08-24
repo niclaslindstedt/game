@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_plane_0
+family: orbit
+size: [32, 10]
+description: >
+  An airliner crossing its own lane, nose left — white fuselage, blue
+  belly stripe, a run of cabin glass, the wing sweeping under.
+subject:
+  kind: airliner
+  build: long twin-deck fuselage nose-left, tail fin right, wing under the midline
+  features: cabin glass run, blue belly stripe, wingtip strobes drawn by the renderer
+  flavor: the corridor was closed for the launch, the lanes beside it were not
+palette:
+  O: "#1a1c2c" # outline
+  a: "#d6dce4" # fuselage white
+  A: "#8d9196" # fuselage shadow
+  j: "#4054bc" # livery stripe blue
+  w: "#9aa1ad" # wing grey
+  g: "#8ccdd7" # cabin glass
+grid: |
+  ..........................OO....
+  .........................OjO....
+  .........................OjO....
+  ....OOOOOOOOOOOOOOOOOOOOOOjOO...
+  ..OOaggagggaggggaaaaaaaaaajjOO..
+  OOaaaaaaaaaaaaaaaaaaaaaaaaaaAOO.
+  .OOjjjjjjjjjjjjjjjjjjjjjjjjOO...
+  ....OOAAAOwwOAAAAAAAAAOOOO......
+  ..........OwwO..................
+  ................................

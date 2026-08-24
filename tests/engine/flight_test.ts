@@ -339,7 +339,12 @@ describe("the blasts", () => {
   it("chain: a satellite caught in a blast goes up itself, later", () => {
     const flight = createFlight(PARAMS);
     handOver(flight);
+    // Two satellites in the core, at different distances: the fuse is the
+    // distance (`chainDelayMsPerPx`), so the two booked explosions land on
+    // different ticks — the stagger below is the chain's own, not a lucky
+    // bystander's.
     plant(flight, "satellite", FLIGHT.blast.big.coreR - 10, 0);
+    plant(flight, "satellite", -(FLIGHT.blast.big.coreR - 25), 0);
     detonate(flight, flight.craft.x, flight.craft.alt, "big");
     let explosions = 0;
     let lastAtMs = 0;

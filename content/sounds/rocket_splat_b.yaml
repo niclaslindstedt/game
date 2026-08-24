@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_splat_b
+description: >-
+  The second take of a soft body across the hull — a hair higher and shorter
+  than take A, so two birds in one climb read as two birds instead of a
+  sound-effect on repeat. Same three layers: the thump, the lowpass slap, the
+  highpass flick.
+voices:
+  - call: tone
+    type: sine
+    from: 260
+    to: 74
+    durationMs: 60
+    volume: 0.046
+  - call: noise
+    durationMs: 100
+    volume: 0.03
+    filter:
+      type: lowpass
+      frequency: 460
+  - call: noise
+    durationMs: 50
+    volume: 0.015
+    delayMs: 20
+    filter:
+      type: highpass
+      frequency: 3000

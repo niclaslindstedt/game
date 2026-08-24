@@ -48,10 +48,36 @@ export const ROCK_SPRITES: readonly string[] = [
   "orbit_rock_2",
 ];
 
+/** The airliners crossing their own lanes off the corridor. */
+export const PLANE_SPRITES: readonly string[] = ["sky_plane_0", "sky_plane_1"];
+
+/** The delivery drones — it is an AI world, and somebody automated even this
+ * altitude. */
+export const DRONE_SPRITES: readonly string[] = ["sky_drone_0", "sky_drone_1"];
+
+/** A bird's two variants are its two WINGBEATS — the renderer alternates them
+ * as the flap (`drawField`), so both are the same bird mid-stroke. */
+export const BIRD_SPRITES: readonly string[] = ["sky_bird_0", "sky_bird_1"];
+
+/** The hobbyists: a skydiver under canopy, a paraglider under wing. */
+export const SKYDIVER_SPRITES: readonly string[] = [
+  "sky_diver_0",
+  "sky_diver_1",
+];
+export const PARAGLIDER_SPRITES: readonly string[] = [
+  "sky_glider_0",
+  "sky_glider_1",
+];
+
 const TABLES: Record<OrbitKind, readonly string[]> = {
   junk: JUNK_SPRITES,
   satellite: SATELLITE_SPRITES,
   rock: ROCK_SPRITES,
+  plane: PLANE_SPRITES,
+  drone: DRONE_SPRITES,
+  bird: BIRD_SPRITES,
+  skydiver: SKYDIVER_SPRITES,
+  paraglider: PARAGLIDER_SPRITES,
 };
 
 /** The sprite a drifting thing wears. Clamped rather than trusted, so a mod's

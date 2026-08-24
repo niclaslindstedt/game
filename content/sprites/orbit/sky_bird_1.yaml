@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_bird_1
+family: orbit
+size: [8, 6]
+description: >
+  The same bird, wings DOWN — the flap's other beat.
+subject:
+  kind: bird
+  build: small dark bird in level flight, wings down
+  features: lowered wing pair, dull beak tip
+  flavor: the second half of the wingbeat
+palette:
+  b: "#3f4553" # body, dark against any sky
+  w: "#5d6675" # wing, a shade lighter so the beat reads
+  k: "#c9a13d" # beak, dulled
+grid: |
+  ........
+  ..bbbb..
+  kbbbbbb.
+  ..bwbwb.
+  ...w..w.
+  ........

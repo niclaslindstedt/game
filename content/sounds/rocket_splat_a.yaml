@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_splat_a
+description: >-
+  SOMETHING SOFT MEETING THE NOSE AT CLIMB SPEED — the first of two takes for
+  the sky's birds and hobbyists coming apart across the hull. Wet where the
+  trash's flump is dry: a fast downward thump with a lowpass slap of mass
+  behind it and a short highpass flick for what leaves the scene. Kept small —
+  it is a thud on a hull inside a helmet, not the drive's open-street crunch.
+voices:
+  - call: tone
+    type: sine
+    from: 220
+    to: 60
+    durationMs: 70
+    volume: 0.05
+  - call: noise
+    durationMs: 120
+    volume: 0.034
+    filter:
+      type: lowpass
+      frequency: 380
+  - call: noise
+    durationMs: 60
+    volume: 0.016
+    delayMs: 24
+    filter:
+      type: highpass
+      frequency: 2600

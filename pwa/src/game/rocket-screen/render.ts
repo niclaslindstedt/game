@@ -18,14 +18,16 @@
 
 import {
   FLIGHT,
+  airFrac,
   flightAltFrac,
   flightCoursePx,
   type FlightState,
 } from "@game/core";
 
 import { spriteByName, type GameAssets } from "../assets.ts";
+import { drawPlume, type RocketExhaust } from "../render/rocket-exhaust.ts";
 import { orbitSprite } from "./orbit-art.ts";
-import { toScreen, type SkyCamera } from "./rocket-fx.ts";
+import { toScreen, type HullSmear, type SkyCamera } from "./rocket-fx.ts";
 import { stormIntensity } from "./storm.ts";
 
 /** Where the frame stands over the sim. The ship rides the lower third on the
@@ -39,19 +41,23 @@ export function flightCamera(
 ): SkyCamera {
   const { craft } = state;
   const halfSpan = Math.min(viewW, FLIGHT.fieldW);
-  const x = Math.max(
-    0,
-    Math.min(FLIGHT.fieldW - halfSpan, craft.x - halfSpan / 2),
-  );
   if (state.phase === "landing") {
-    // The ground settles at 82% of the frame — ABOVE the console, because the
-    // regolith and the marked pad are the whole game down here and chrome must
-    // not be able to stand in front of the target.
+    // The drop is a bounded stage, so its camera still respects the ground's
+    // edges; the ground settles at 82% of the frame — ABOVE the console,
+    // because the regolith and the marked pad are the whole game down here
+    // and chrome must not be able to stand in front of the target.
+    const x = Math.max(
+      0,
+      Math.min(FLIGHT.fieldW - halfSpan, craft.x - halfSpan / 2),
+    );
     return { x, topAlt: Math.max(viewH * 0.82, craft.alt + viewH * 0.42) };
   }
+  // The climb's sky has NO edges — the camera simply follows the ship, which
+  // is also how the world-anchored clouds, stars and launch site get to say
+  // "you are drifting off course" without a single extra drawing.
   // 0.72, not the middle: at climb speed the sky above the nose is the whole
   // of the player's warning, and every extra row of it is reaction time.
-  return { x, topAlt: craft.alt + viewH * 0.72 };
+  return { x: craft.x - viewW / 2, topAlt: craft.alt + viewH * 0.72 };
 }
 
 /** The night → space ramp, sampled at one altitude fraction. */
@@ -429,7 +435,9 @@ function drawMoonAhead(
 }
 
 /** Everything adrift — each piece its own art, tumbling on its own angle, the
- * satellites blinking their status light because somebody still pays for it. */
+ * satellites and drones blinking their lights because somebody still pays for
+ * them, the birds flapping between their two poses, everything that flies
+ * with a nose FACING the way it flies. */
 function drawField(
   ctx: CanvasRenderingContext2D,
   state: FlightState,
@@ -441,56 +449,148 @@ function drawField(
 ): void {
   for (const o of state.field) {
     const s = toScreen(cam, o.x, o.alt);
-    if (s.x < -40 || s.x > viewW + 40 || s.y < -40 || s.y > viewH + 40) {
+    if (s.x < -60 || s.x > viewW + 60 || s.y < -60 || s.y > viewH + 60) {
       continue;
     }
-    const sprite = spriteByName(sprites, orbitSprite(o.kind, o.variant));
+    // A bird's two variants are its two wingbeats — the flap is the pair
+    // alternated on the clock, offset by id so a flock never rows in unison.
+    const variant =
+      o.kind === "bird"
+        ? (o.variant + Math.floor(nowMs / 150) + o.id) % 2
+        : o.variant;
+    const sprite = spriteByName(sprites, orbitSprite(o.kind, variant));
     if (!sprite) continue;
     ctx.save();
     ctx.translate(s.x, s.y);
     ctx.rotate(o.angle);
+    // Whatever flies on purpose faces its own travel — the art's noses point
+    // left, so a rightward crosser is mirrored.
+    if (
+      (o.kind === "plane" || o.kind === "bird" || o.kind === "paraglider") &&
+      o.vx > 0
+    ) {
+      ctx.scale(-1, 1);
+    }
     ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
     ctx.restore();
     if (o.kind === "satellite" && Math.floor(nowMs / 500) % 2 === 0) {
       ctx.fillStyle = "#8ccdd7";
       ctx.fillRect(Math.round(s.x), Math.round(s.y) - 1, 1, 1);
     }
+    // A drone's little status light — green, faster than the satellite's,
+    // because the parcel is late.
+    if (o.kind === "drone" && Math.floor(nowMs / 260) % 2 === 0) {
+      ctx.fillStyle = "#7ef0c8";
+      ctx.fillRect(Math.round(s.x), Math.round(s.y) - 2, 1, 1);
+    }
+    // An airliner's strobes, both wingtips.
+    if (o.kind === "plane" && Math.floor(nowMs / 700) % 2 === 0) {
+      ctx.fillStyle = "#e8635a";
+      ctx.fillRect(
+        Math.round(s.x - sprite.width / 2) + 1,
+        Math.round(s.y),
+        1,
+        1,
+      );
+      ctx.fillStyle = "#7ef0c8";
+      ctx.fillRect(
+        Math.round(s.x + sprite.width / 2) - 2,
+        Math.round(s.y),
+        1,
+        1,
+      );
+    }
   }
 }
 
-/** Which frame of the ship this moment wears: the cold hull coasting, the
- * firing frames under boost — the cutscene's own animation cadence. */
-function shipFrame(boost: boolean, nowMs: number): string {
-  if (boost) return `ship_fire_${Math.floor(nowMs / 120) % 2}`;
-  return `ship_${Math.floor(nowMs / 160) % 2}`;
+/** The engine is ALWAYS burning on the climb (`FLIGHT.ascent.burnPx`), so the
+ * ship always wears its firing frames up there; the cold frames belong to the
+ * module coasting on the drop. */
+function shipFrame(nowMs: number): string {
+  return `ship_fire_${Math.floor(nowMs / 120) % 2}`;
 }
 
-/** The ship (or the module), leaned to its real tilt, wearing its trash. */
+/** THE SHIP'S EXHAUST, in the sprite's own px (`RocketExhaust`) — the same
+ * bells as the cutscene's launch, with the REACH grown half again: up here
+ * the plume is the whole spectacle, and there is no pad under it to cut it
+ * short. The module's descent engine is a shorter throat under a wider
+ * hull. */
+const SHIP_PLUME: RocketExhaust = {
+  bellX: 12,
+  bellY: 27,
+  reach: 96,
+  flare: 10,
+};
+const LANDER_PLUME: RocketExhaust = {
+  bellX: 12,
+  bellY: 17,
+  reach: 34,
+  flare: 7,
+};
+
+/** The ship (or the module), leaned to its real tilt, wearing its trash, its
+ * smears, and the takeoff's own plume. `burn` is the smoothed throttle
+ * (`easeBurn`, 0..1): the base burn is a live column, full boost is the
+ * cutscene's takeoff. */
 function drawCraft(
   ctx: CanvasRenderingContext2D,
   state: FlightState,
   cam: SkyCamera,
   sprites: GameAssets["sprites"],
-  boost: boolean,
+  burn: number,
+  smears: readonly HullSmear[],
   nowMs: number,
 ): void {
   // A wrecked craft is not drawn — it is mid-fireball, and a hull visible
   // inside its own explosion un-says the explosion.
   if (state.outcome === "wrecked") return;
   const { craft } = state;
+  const landing = state.phase === "landing";
   const s = toScreen(cam, craft.x, craft.alt);
-  const name =
-    state.phase === "landing"
-      ? boost
-        ? "orbit_lander_burn"
-        : "orbit_lander"
-      : shipFrame(boost, nowMs);
+  const name = landing
+    ? burn > 0.2
+      ? "orbit_lander_burn"
+      : "orbit_lander"
+    : shipFrame(nowMs);
   const sprite = spriteByName(sprites, name);
   if (!sprite) return;
   ctx.save();
   ctx.translate(s.x, s.y);
   ctx.rotate(craft.tilt);
+  // THE PLUME FIRST, so the hull sits in front of its own fire — the
+  // cutscene's own column (`drawPlume`: the four bands, the lash, the shock
+  // diamonds, the halo), drawn in the sprite's own top-left space with all
+  // the sky in the world under it. The VACUUM is the altitude's answer: the
+  // low sky gets the full bonfire, and as the air thins the bright core
+  // shortens, the diamonds fade and the exhaust balloons into the faint wide
+  // sheath a real engine wears up there. The moon's drop is all sheath.
+  const look = landing ? LANDER_PLUME : SHIP_PLUME;
+  const vacuum = landing
+    ? 1
+    : 1 - airFrac(craft.alt, flightCoursePx(state.params));
+  if (burn > 0.02 && !(landing && burn <= 0.2)) {
+    ctx.save();
+    ctx.translate(-sprite.width / 2, -sprite.height / 2);
+    drawPlume(ctx, look, nowMs, burn, Number.POSITIVE_INFINITY, vacuum);
+    ctx.restore();
+  }
   ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
+  // WHAT THE SKY LEFT ON THE PAINTWORK — the soft bodies' smears, in the
+  // ship's own frame where the engine says they landed, under the trash the
+  // way paint is under cargo.
+  for (const smear of smears) {
+    ctx.fillStyle = smear.color;
+    ctx.globalAlpha = 0.85;
+    const w = 2 + (smear.seed % 3);
+    const h = 3 + ((smear.seed >> 2) % 4);
+    ctx.fillRect(
+      Math.round(smear.across - w / 2),
+      Math.round(-smear.along),
+      w,
+      h,
+    );
+    ctx.globalAlpha = 1;
+  }
   // THE TRASH RIDES THE HULL — each bag drawn in the ship's own frame, where
   // the sim stuck it, so a filthy ship leans filthy.
   for (const t of state.trash) {
@@ -566,9 +666,65 @@ function drawMoonGround(
   }
 }
 
+/**
+ * HEAT SHIMMER — the candle's trick: the column of hot exhaust bends the
+ * light coming through it, so the sky BEHIND the wake wobbles. Faked the way
+ * 2D has always faked it: thin slivers of the already-painted canvas redrawn
+ * with a small sinusoidal sideways offset, each row on its own phase so the
+ * wobble crawls. Horizontal offsets only, copied top-down, so no sliver ever
+ * samples a row this pass already moved.
+ *
+ * `strength` is REFRACTION'S OWN physics: it needs air to heat, so the caller
+ * scales it by `airFrac` — strong over the lawn, gone in vacuum, the exact
+ * opposite arc to the plume's blue shift.
+ */
+function drawHeatShimmer(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  topY: number,
+  strength: number,
+  nowMs: number,
+): void {
+  if (strength <= 0.05) return;
+  const m = ctx.getTransform();
+  // The view is drawn under one uniform scale (`RocketScreen`'s setTransform);
+  // the canvas-space source rects below multiply through it.
+  const unit = m.a;
+  const canvas = ctx.canvas;
+  const halfW = 24;
+  const tall = 92;
+  const sliver = 3;
+  for (let row = 0; row < tall; row += sliver) {
+    const y = topY + row;
+    const deep = row / tall;
+    // Widest and strongest at the nozzle, blending out down the wake.
+    const amp =
+      strength * 1.7 * (1 - deep * 0.55) * Math.sin(nowMs / 55 + row * 0.31);
+    if (Math.abs(amp) < 0.2) continue;
+    const w = halfW * 2 * (1 - deep * 0.3);
+    const sx = Math.max(0, Math.round((centerX - w / 2) * unit));
+    const sy = Math.max(0, Math.round(y * unit));
+    const sw = Math.min(canvas.width - sx, Math.round(w * unit));
+    const sh = Math.min(canvas.height - sy, Math.round(sliver * unit));
+    if (sw <= 0 || sh <= 0) continue;
+    ctx.drawImage(
+      canvas,
+      sx,
+      sy,
+      sw,
+      sh,
+      centerX - w / 2 + amp,
+      y,
+      sw / unit,
+      sh / unit,
+    );
+  }
+}
+
 /** The whole picture, in paint order: sky, stars, the weather, home (the lawn
  * low down, the limb high up), the moon, the field, the ground, the craft.
- * The fx layer draws over this on the same camera. */
+ * The fx layer draws over this on the same camera. `burn` is the smoothed
+ * throttle for the plume; `smears` what the soft bodies left on the hull. */
 export function drawFlight(
   ctx: CanvasRenderingContext2D,
   state: FlightState,
@@ -577,7 +733,8 @@ export function drawFlight(
   viewW: number,
   viewH: number,
   nowMs: number,
-  boost: boolean,
+  burn: number,
+  smears: readonly HullSmear[],
 ): void {
   const landing = state.phase === "landing";
   const altFrac = landing ? 1 : flightAltFrac(state);
@@ -624,5 +781,20 @@ export function drawFlight(
   if (landing) {
     drawMoonGround(ctx, state, cam, assets.sprites, viewW, viewH, nowMs);
   }
-  drawCraft(ctx, state, cam, assets.sprites, boost, nowMs);
+  drawCraft(ctx, state, cam, assets.sprites, burn, smears, nowMs);
+
+  // The exhaust's heat bending the sky behind the wake — refraction spends
+  // AIR, so it rides `airFrac` and dies with the climb exactly as the flame's
+  // orange does. Painted last: it re-samples everything already down,
+  // ship and plume included.
+  if (!landing && state.outcome !== "wrecked" && burn > 0.05) {
+    const s = toScreen(cam, state.craft.x, state.craft.alt);
+    drawHeatShimmer(
+      ctx,
+      s.x,
+      s.y + 16,
+      airFrac(state.craft.alt, flightCoursePx(state.params)) * burn,
+      nowMs,
+    );
+  }
 }

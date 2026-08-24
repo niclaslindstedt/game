@@ -16,18 +16,36 @@
 
 import { thoughtDef } from "@game/core";
 
-/** The flight's four beats, as thought ids. */
+/** The flight's fixed beats, as thought ids. */
 export const FLIGHT_VOICE = {
   /** Just after the hand-over, climbing into the band — why the sky is like
    * this, and where she is. */
   monologue: "flight_up_junk",
-  /** The shell's top falling away below — one line of relief. */
+  /** The shell's top falling away below — one thought of relief. */
   clear: "flight_shell_clear",
   /** The drop beginning: the moon under the module. */
   descent: "flight_drop",
   /** Down, intact. The last thing the flight says before the board. */
   touchdown: "flight_touchdown",
+  /** The first time the jet stream takes the hull — the wind meter's red. */
+  jetstream: "flight_jetstream",
+  /** The first time he has properly wandered off the corridor. */
+  offCourse: "flight_off_course",
+  /** The first bird across the nose… */
+  bird: "flight_bird",
+  /** …and the first of somebody's canopies (a skydiver or a paraglider —
+   * one thought covers the hobby). */
+  hobbyist: "flight_hobbyist",
 } as const;
+
+/** THE TIP-OVER ROTATION — the ship never stops trying, so a repeated scare
+ * gets the next variation rather than the same line (`drainFlight` keeps the
+ * cycle's count). */
+export const FLIGHT_TIPPING = [
+  "flight_tipping_0",
+  "flight_tipping_1",
+  "flight_tipping_2",
+] as const;
 
 /**
  * A thought's pages as the flight's box wants them — plain string rows. None

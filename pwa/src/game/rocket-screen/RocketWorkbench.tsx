@@ -20,6 +20,10 @@
 //                                on — what a harness that steers the sky wants,
 //                                since a held caption is a `window.__flight`
 //                                that never arrives
+//   &bot=1                       hand the stick to the engine's own auto-pilot
+//                                (`createFlightDriver`) — the `?drive&bot=1`
+//                                idea at the second cabinet, and how a
+//                                screenshot recipe flies this sky
 //
 // IT LAPS FOREVER and never banks a board row — the screen is remounted per
 // lap with the seed in the `key`, which is also why `window.__flight` is not
@@ -43,6 +47,7 @@ import {
 
 import { loadGameAssets, peekGameAssets, type GameAssets } from "../assets.ts";
 import { LoadingScreen } from "../LoadingScreen.tsx";
+import { arcadeFlightParams } from "./begin.ts";
 import { resetControlsCard } from "./RocketIntro.tsx";
 import { RocketScreen } from "./RocketScreen.tsx";
 
@@ -52,10 +57,11 @@ function flightFromParams(params: URLSearchParams): FlightParams {
     DIFFICULTY_ORDER.includes(wanted as Difficulty) ? wanted : "medium"
   ) as Difficulty;
   const course = Number(params.get("course"));
+  // Through the arcade door, so the gore gate is settled exactly as a shipped
+  // lap settles it — a safe-mode capture harness must not meet a workbench
+  // that bleeds anyway.
   return {
-    seed: Number(params.get("seed")) || 1234,
-    difficulty,
-    to: "moon",
+    ...arcadeFlightParams(Number(params.get("seed")) || 1234, difficulty),
     ...(Number.isFinite(course) && course > 0 ? { coursePx: course } : {}),
   };
 }
@@ -132,6 +138,9 @@ export function RocketWorkbench({
   }, []);
 
   if (!assets) return <LoadingScreen />;
+  const bot = params.get("bot");
+  const auto =
+    bot !== null && !["0", "off", "false"].includes(bot.toLowerCase());
   return (
     <div style={{ position: "absolute", inset: 0 }}>
       <RocketScreen
@@ -139,8 +148,8 @@ export function RocketWorkbench({
         params={flightParams}
         assets={assets}
         stage={stagerFor(params)}
-        heroPortrait={null}
         arcade
+        auto={auto}
         launch={lap === 0 && params.get("launch") !== "0"}
         onLanded={nextLap}
         onMenu={onClose}

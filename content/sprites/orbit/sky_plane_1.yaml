@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_plane_1
+family: orbit
+size: [32, 10]
+description: >
+  The cargo line's airliner — same hull, red stripe, no cabin glass to
+  speak of: freight does not look out of windows.
+subject:
+  kind: cargo airliner
+  build: long fuselage nose-left, tail fin right, wing under the midline
+  features: red belly stripe, two porthole lights only
+  flavor: freight flies the night lanes
+palette:
+  O: "#1a1c2c" # outline
+  a: "#d6dce4" # fuselage white
+  A: "#8d9196" # fuselage shadow
+  j: "#b3402f" # livery stripe, the cargo line's red
+  w: "#9aa1ad" # wing grey
+  g: "#8ccdd7" # cabin glass
+grid: |
+  ..........................OO....
+  .........................OjO....
+  .........................OjO....
+  ....OOOOOOOOOOOOOOOOOOOOOOjOO...
+  ..OOagaaaagaaaaaaaaaaaaaaajjOO..
+  OOaaaaaaaaaaaaaaaaaaaaaaaaaaAOO.
+  .OOjjjjjjjjjjjjjjjjjjjjjjjjOO...
+  ....OOAAAOwwOAAAAAAAAAOOOO......
+  ..........OwwO..................
+  ................................

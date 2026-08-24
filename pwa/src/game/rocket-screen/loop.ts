@@ -8,11 +8,18 @@
 // screen and the `?rocket` workbench run it unchanged; what happens AFTER a
 // terminal beat is policy and lives in `end-flight.ts` instead.
 
-import { FLIGHT_OUTCOME, flightShellClear, type FlightState } from "@game/core";
+import {
+  FLIGHT,
+  FLIGHT_OUTCOME,
+  flightOffCourse,
+  flightShellClear,
+  flightWindPx,
+  type FlightState,
+} from "@game/core";
 
 import { synth } from "../audio.ts";
 import { playFlightSound } from "../sfx/index.ts";
-import { FLIGHT_VOICE } from "./voice.ts";
+import { FLIGHT_TIPPING, FLIGHT_VOICE } from "./voice.ts";
 import {
   BOOM_DEEP_SOUND,
   BOOST_SOUND,
@@ -21,6 +28,7 @@ import {
   POOF_SOUND,
   RAIN_SOUND,
   RUMBLE_SOUND,
+  SPLAT_SOUNDS,
   STICK_SOUNDS,
   THUNDER_SOUNDS,
   TOUCHDOWN_SOUND,
@@ -28,20 +36,50 @@ import {
   boomFor,
   takeAt,
 } from "./rocket-sounds.ts";
-import { boomFx, burstFx, poofFx, type RocketFxState } from "./rocket-fx.ts";
+import {
+  boomFx,
+  burstFx,
+  poofFx,
+  splatFx,
+  type RocketFxState,
+} from "./rocket-fx.ts";
 import { STRIKE_WINDOW_MS, stormIntensity, thunderDue } from "./storm.ts";
+
+/** Where the wind meter's red begins for the jet-stream line — the Lua
+ * ladder's own top rung (`content/hud/scripts/rocket.lua`). */
+const JET_LINE_FRAC = 0.8;
+/** …and how far off the corridor earns the off-course line. */
+const OFF_COURSE_LINE_FRAC = 0.5;
 
 /** The one-shot beats this drain owes exactly once per flight — the sim can
  * only raise `orbit` once, but the shell-clear line is an EDGE the app reads,
- * so the app keeps the latch. */
+ * so the app keeps the latch. The sky's SURPRISES are once-per-flight too
+ * (the first bird, the first canopy, the first jet-stream shove, the first
+ * proper wander); only the tip-over line repeats, as a rotation, because the
+ * ship never stops trying. */
 export type FlightBeats = {
   clearSaid: boolean;
   monologueSaid: boolean;
   descentSaid: boolean;
+  birdSaid: boolean;
+  hobbyistSaid: boolean;
+  jetSaid: boolean;
+  offCourseSaid: boolean;
+  /** How many tip-over scares have spoken — the rotation's cursor. */
+  tips: number;
 };
 
 export function createFlightBeats(): FlightBeats {
-  return { clearSaid: false, monologueSaid: false, descentSaid: false };
+  return {
+    clearSaid: false,
+    monologueSaid: false,
+    descentSaid: false,
+    birdSaid: false,
+    hobbyistSaid: false,
+    jetSaid: false,
+    offCourseSaid: false,
+    tips: 0,
+  };
 }
 
 /**
@@ -71,6 +109,36 @@ export function drainFlight(
         // going up read as bigger than a satellite going up.
         if (event.size === "big") playFlightSound(synth, BOOM_DEEP_SOUND);
         break;
+      case "splat": {
+        // Something soft across the nose: the thud, the gore-gated burst and
+        // the smear (`splatFx` — the gate travelled in on the params), and
+        // the pilot's one dry thought the first time each kind surprises him.
+        playFlightSound(synth, takeAt(SPLAT_SOUNDS, event.side * 30, nowMs));
+        splatFx(
+          fx,
+          {
+            kind: event.kind,
+            x: flight.craft.x + event.across,
+            alt: flight.craft.alt + event.along,
+            side: event.side,
+            along: event.along,
+            across: event.across,
+            gib: flight.params.gib !== false,
+            dust: flight.params.dust === true,
+          },
+          nowMs,
+        );
+        if (event.kind === "bird") {
+          if (!beats.birdSaid) {
+            beats.birdSaid = true;
+            say(FLIGHT_VOICE.bird);
+          }
+        } else if (!beats.hobbyistSaid) {
+          beats.hobbyistSaid = true;
+          say(FLIGHT_VOICE.hobbyist);
+        }
+        break;
+      }
       case "wrecked":
         // The explosion event beside it carries the picture and the noise;
         // what the wreck itself owes is nothing — the hold and the restart
@@ -78,6 +146,10 @@ export function drainFlight(
         break;
       case "warning":
         playFlightSound(synth, WARNING_SOUND);
+        // The scare gets a thought as well as a beep — the rotation, so the
+        // third scare is not the first one word for word.
+        say(FLIGHT_TIPPING[beats.tips % FLIGHT_TIPPING.length]!);
+        beats.tips++;
         break;
       case "orbit":
         playFlightSound(synth, ORBIT_SOUND);
@@ -112,6 +184,24 @@ export function drainFlight(
   if (!beats.descentSaid && flight.phase === "landing" && nowMs > 1400) {
     beats.descentSaid = true;
     say(FLIGHT_VOICE.descent);
+  }
+  // The weather's and the corridor's own edges — each spoken once, the first
+  // time the sky earns it.
+  if (
+    !beats.jetSaid &&
+    flight.phase === "ascent" &&
+    Math.abs(flightWindPx(flight)) >= FLIGHT.wind.maxPx * JET_LINE_FRAC
+  ) {
+    beats.jetSaid = true;
+    say(FLIGHT_VOICE.jetstream);
+  }
+  if (
+    !beats.offCourseSaid &&
+    flight.phase === "ascent" &&
+    flightOffCourse(flight) >= OFF_COURSE_LINE_FRAC
+  ) {
+    beats.offCourseSaid = true;
+    say(FLIGHT_VOICE.offCourse);
   }
 }
 

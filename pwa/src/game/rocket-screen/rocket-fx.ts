@@ -103,6 +103,35 @@ type SpriteBurst = {
   born: number;
 };
 
+/** One flung fleck of a soft body coming apart — red under the gore gate,
+ * pastel in SFW dust mode, feather-grey for the bird's share either way. */
+type SplatDrop = {
+  x: number;
+  alt: number;
+  vx: number;
+  vy: number;
+  born: number;
+  lifeMs: number;
+  color: string;
+  /** Feathers flutter (slow, wandering) where droplets fly straight. */
+  flutter: boolean;
+};
+
+/**
+ * WHAT A SOFT BODY LEFT ON THE PAINTWORK — a smear in the SHIP'S OWN frame
+ * (`along`/`across`, the engine's own impact coordinates), so it leans when
+ * the ship leans exactly as the trash does. Kept until the flight ends or
+ * restarts (`clearRocketFx`), because the drive's car wears its morning too.
+ */
+export type HullSmear = {
+  along: number;
+  across: number;
+  seed: number;
+  /** Red under the gore gate; the SFW dust read leaves no mark at all, so a
+   * smear only exists when it may be one. */
+  color: string;
+};
+
 export type RocketFxState = {
   fireballs: Fireball[];
   sparks: Spark[];
@@ -110,6 +139,8 @@ export type RocketFxState = {
   rings: Ring[];
   poofs: Poof[];
   bursts: SpriteBurst[];
+  drops: SplatDrop[];
+  smears: HullSmear[];
   flashUntil: number;
   flashPower: number;
   shakeUntil: number;
@@ -117,6 +148,11 @@ export type RocketFxState = {
   /** The poof funnel's own clock — one breath per `POOF_GAP_MS`, however hard
    * the thumb is held. */
   lastPoofMs: number;
+  /** THE ENGINE'S SMOOTHED THROAT, 0..1 — the plume's width and reach, eased
+   * toward the throttle every frame so opening the boosters BLOOMS the column
+   * instead of snapping it (`easeBurn`). Presentation only, which is why it
+   * lives here and not on the craft. */
+  burnLevel: number;
 };
 
 export function createRocketFx(): RocketFxState {
@@ -127,15 +163,19 @@ export function createRocketFx(): RocketFxState {
     rings: [],
     poofs: [],
     bursts: [],
+    drops: [],
+    smears: [],
     flashUntil: 0,
     flashPower: 0,
     shakeUntil: 0,
     shakeAmp: 0,
     lastPoofMs: 0,
+    burnLevel: 0,
   };
 }
 
-/** A restart throws the show away with the sky it happened over. */
+/** A restart throws the show away with the sky it happened over — the hull's
+ * smears included: it is a fresh ship on the pad. */
 export function clearRocketFx(fx: RocketFxState): void {
   fx.fireballs.length = 0;
   fx.sparks.length = 0;
@@ -143,8 +183,11 @@ export function clearRocketFx(fx: RocketFxState): void {
   fx.rings.length = 0;
   fx.poofs.length = 0;
   fx.bursts.length = 0;
+  fx.drops.length = 0;
+  fx.smears.length = 0;
   fx.flashUntil = 0;
   fx.shakeUntil = 0;
+  fx.burnLevel = 0;
 }
 
 const POOF_GAP_MS = 90;
@@ -291,6 +334,92 @@ export function burstFx(
   }
 }
 
+/** The blood a soft body spends, the dust the SFW build spends instead, and
+ * the feathers a bird spends regardless — feathers are not gore. */
+const BLOOD_COLORS = ["#9c1b2e", "#c43b47", "#6e1220"] as const;
+const DUST_COLORS = ["#f2b6d8", "#b6e3f2", "#f7e7a8"] as const;
+const FEATHER_COLORS = ["#d6dce4", "#8b93a4"] as const;
+
+/**
+ * A SOFT BODY ACROSS THE HULL — the drive's crowd met a thousand feet up.
+ * What it throws is the gore gate's call, settled at the door
+ * (`FlightParams.gib`/`dust`): red droplets and a smear that rides the
+ * paintwork under the gate, pastel dust in the SFW read, and a bird's share
+ * of feathers either way. The sprite itself tumbling off is `burstFx`,
+ * exactly as it is for everything else the sky loses.
+ */
+export function splatFx(
+  fx: RocketFxState,
+  opts: {
+    kind: "bird" | "skydiver" | "paraglider";
+    x: number;
+    alt: number;
+    side: 1 | -1;
+    along: number;
+    across: number;
+    gib: boolean;
+    dust: boolean;
+  },
+  nowMs: number,
+): void {
+  const h = (n: number) =>
+    blastRoll((Math.round(opts.x * 5) ^ (Math.round(opts.alt * 11) << 7)) + n);
+  const red = opts.gib && !opts.dust;
+  const palette = opts.dust ? DUST_COLORS : red ? BLOOD_COLORS : FEATHER_COLORS;
+  const drops = opts.kind === "bird" ? 8 : 14;
+  for (let i = 0; i < drops; i++) {
+    const a = h(40 + i) * Math.PI * 2;
+    const speed = 40 + h(60 + i) * 140;
+    fx.drops.push({
+      x: opts.x,
+      alt: opts.alt,
+      vx: Math.cos(a) * speed + opts.side * 30,
+      vy: Math.sin(a) * speed - 40,
+      born: nowMs,
+      lifeMs: 380 + h(80 + i) * 420,
+      color: palette[Math.floor(h(100 + i) * palette.length) % palette.length]!,
+      flutter: false,
+    });
+  }
+  // The bird's feathers — always, and a couple for anything soft: something
+  // light has to be seen leaving, or the thud reads as a rock.
+  const feathers = opts.kind === "bird" ? 6 : 2;
+  for (let i = 0; i < feathers; i++) {
+    fx.drops.push({
+      x: opts.x,
+      alt: opts.alt,
+      vx: (h(200 + i) - 0.5) * 60,
+      vy: 20 + h(220 + i) * 40,
+      born: nowMs,
+      lifeMs: 900 + h(240 + i) * 700,
+      color: FEATHER_COLORS[i % FEATHER_COLORS.length]!,
+      flutter: true,
+    });
+  }
+  // The mark it leaves, riding the hull where the engine says it landed —
+  // only when the gate lets a mark exist at all.
+  if (red) {
+    fx.smears.push({
+      along: opts.along,
+      across: opts.across,
+      seed: Math.round(opts.x * 13 + opts.alt * 7),
+      color: BLOOD_COLORS[Math.floor(h(7) * 3) % 3]!,
+    });
+  }
+}
+
+/** Ease the plume's throat toward the throttle — called once per frame with
+ * the frame's dt, so the bloom is time-based rather than framerate-based. */
+export function easeBurn(
+  fx: RocketFxState,
+  target: number,
+  dtMs: number,
+): number {
+  const rate = 1 - Math.exp(-dtMs / 140);
+  fx.burnLevel += (target - fx.burnLevel) * rate;
+  return fx.burnLevel;
+}
+
 /** One breath of the steering poofs, through the funnel: at most one per
  * `POOF_GAP_MS`, however hard the stick is held. Returns whether it fired, so
  * the caller can voice it. */
@@ -352,6 +481,33 @@ export function drawRocketFx(
     ctx.beginPath();
     ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
     ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // ── THE SOFT BURSTS — droplets flying, feathers fluttering down. ──────────
+  for (let i = fx.drops.length - 1; i >= 0; i--) {
+    const d = fx.drops[i]!;
+    const t = nowMs - d.born;
+    if (t >= d.lifeMs) {
+      fx.drops.splice(i, 1);
+      continue;
+    }
+    const secs = t / 1000;
+    const frac = t / d.lifeMs;
+    let wx = d.x + d.vx * secs;
+    let wAlt = d.alt + d.vy * secs;
+    if (d.flutter) {
+      // A feather does not ballistically arc; it rocks its way down.
+      wx += Math.sin(nowMs / 130 + d.born) * 4;
+      wAlt -= 30 * secs * secs;
+    } else {
+      wAlt -= 0.5 * 90 * secs * secs;
+    }
+    const s = toScreen(cam, wx, wAlt);
+    ctx.globalAlpha = 1 - frac * frac;
+    ctx.fillStyle = d.color;
+    const size = d.flutter ? 2 : frac < 0.4 ? 2 : 1;
+    ctx.fillRect(Math.round(s.x), Math.round(s.y), size, size);
   }
   ctx.globalAlpha = 1;
 
