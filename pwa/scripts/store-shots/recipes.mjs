@@ -710,9 +710,12 @@ export const SHOTS = [
       await page.waitForFunction(() => !!window.__flight, null, {
         timeout: 30000,
       });
-      // A third of the way up the course the band is dense and the storm has
-      // cleared enough to read the field.
-      await page.waitForFunction(() => window.__flight.craft.alt > 4200, null, {
+      // EARLY, on purpose: down in the CLOUD DECK the sky is at its busiest —
+      // storm clouds and rain around the ship, the night moon still up, the
+      // junk band already dealing, and the plume at its full sea-level
+      // bonfire. Higher up the frame empties out and the flame thins with
+      // the air.
+      await page.waitForFunction(() => window.__flight.craft.alt > 1300, null, {
         timeout: 90000,
       });
       await page.addStyleTag({

@@ -18,6 +18,7 @@
 
 import {
   FLIGHT,
+  airFrac,
   flightAltFrac,
   flightCoursePx,
   type FlightState,
@@ -559,12 +560,18 @@ function drawCraft(
   // THE PLUME FIRST, so the hull sits in front of its own fire — the
   // cutscene's own column (`drawPlume`: the four bands, the lash, the shock
   // diamonds, the halo), drawn in the sprite's own top-left space with all
-  // the sky in the world under it.
+  // the sky in the world under it. The VACUUM is the altitude's answer: the
+  // low sky gets the full bonfire, and as the air thins the bright core
+  // shortens, the diamonds fade and the exhaust balloons into the faint wide
+  // sheath a real engine wears up there. The moon's drop is all sheath.
   const look = landing ? LANDER_PLUME : SHIP_PLUME;
+  const vacuum = landing
+    ? 1
+    : 1 - airFrac(craft.alt, flightCoursePx(state.params));
   if (burn > 0.02 && !(landing && burn <= 0.2)) {
     ctx.save();
     ctx.translate(-sprite.width / 2, -sprite.height / 2);
-    drawPlume(ctx, look, nowMs, burn, Number.POSITIVE_INFINITY);
+    drawPlume(ctx, look, nowMs, burn, Number.POSITIVE_INFINITY, vacuum);
     ctx.restore();
   }
   ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
