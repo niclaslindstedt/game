@@ -123,6 +123,13 @@ export type CutsceneStage = {
    * dialogue. Omitted = a static camera.
    */
   drift?: Vec2;
+  /**
+   * The stage's weather, answered by the renderer as an overlay on the whole
+   * frame ("storm" = intense rain). Data, not a beat: weather is the scene's
+   * condition rather than an event in it, so it holds through every beat and
+   * pan the scene plays.
+   */
+  weather?: "storm";
 };
 
 export type CutsceneActorDef = {

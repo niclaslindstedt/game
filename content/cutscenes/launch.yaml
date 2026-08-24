@@ -17,6 +17,12 @@ stage:
   # (`render/rocket-exhaust.ts`), so the two can never disagree about how far
   # the damage reaches.
   palette: { wall: "#0e1020", floor: "#20281c", trim: "#0a0c14", floorY: 88 }
+  # IT IS POURING. Leaving is not a happy occasion — the night he lights the
+  # rocket is a storm night, and the rain keeps falling on the lot while the
+  # ship climbs out of frame. The minigame that takes over above this scene
+  # flies the SAME storm (`rocket-screen/storm.ts`), which is the whole point
+  # of authoring the weather here: the cut lands in the sky the scene promised.
+  weather: storm
   props:
     # THE SKY IS NOT DRESSED HERE. `backdrop: garageNight` is one of the
     # renderer's SKY backdrops, so the night over this lot is the same night the

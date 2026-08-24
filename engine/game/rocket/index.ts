@@ -46,7 +46,9 @@ export function createFlight(params: FlightParams): FlightState {
     phase: "ascent",
     craft: {
       x: FLIGHT.fieldW / 2,
-      alt: 0,
+      // Barely off the lawn — see `launchAltPx`: the climb starts LOW, over
+      // the launch site itself, never in the stratosphere.
+      alt: FLIGHT.ascent.launchAltPx,
       vx: 0,
       vy: 60,
       // The pad never sent anybody up straight: the first thing the hand-over

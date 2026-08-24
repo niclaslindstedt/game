@@ -3,11 +3,15 @@
 // the regolith, painted around the sim every frame.
 //
 // THE SKY IS THE ALTIMETER. The launch is at night (the cutscene's lawn), so
-// the low sky is the garage's own dark blue and the climb is the world going
-// BLACK: the stars arrive with altitude, the planet's limb sinks off the
-// bottom of the frame, and by the shell's top there is nothing left but space
-// and the company's garbage. A player who never reads a dial still knows how
-// high they are, which is the whole job of a background.
+// the climb is the world going BLACK in stages, each one a height the eye can
+// read: the LAWN first — the burnt house and the charred trees right below,
+// because the flight opens ~100 m up and must LOOK it — then the night's
+// clouds whipping past, then the stars thickening, then the planet's limb
+// finally curving in near the top, and by the shell's top there is nothing
+// left but space and the company's garbage. A player who never reads a dial
+// still knows how high they are, which is the whole job of a background — and
+// the one mistake this file must not make is showing the curve of the Earth
+// to a ship that has barely cleared its own garden.
 //
 // EVERYTHING HERE READS THE SAME CAMERA (`SkyCamera`) the fx layer draws on,
 // shaken as one — the drive's rule, for the drive's reason.
@@ -22,6 +26,7 @@ import {
 import { spriteByName, type GameAssets } from "../assets.ts";
 import { orbitSprite } from "./orbit-art.ts";
 import { toScreen, type SkyCamera } from "./rocket-fx.ts";
+import { stormIntensity } from "./storm.ts";
 
 /** Where the frame stands over the sim. The ship rides the lower third on the
  * climb (the danger is above) and the upper half on the drop (the danger is
@@ -84,7 +89,9 @@ function drawStars(
   viewH: number,
   altFrac: number,
 ): void {
-  const alpha = 0.25 + 0.75 * altFrac;
+  // Near the ground the night has weather in it and the scatter stays shy;
+  // the high sky is nothing else.
+  const alpha = 0.12 + 0.88 * altFrac;
   for (const layer of [0.35, 0.7] as const) {
     const offY = cam.topAlt * layer;
     const x0 = Math.floor(cam.x / STAR_CELL) - 1;
@@ -107,11 +114,232 @@ function drawStars(
 }
 
 /**
- * THE PLANET'S LIMB — the curved blue rim of home, sinking off the bottom of
- * the frame as the climb takes it away. It is the launch feed's one
- * indispensable picture, and it doubles as the ground: at zero altitude the
- * glow fills the lower frame, so the first frame reads as "over the lawn"
- * without a lawn being drawn.
+ * THE LAUNCH SITE — the lawn the cutscene just lifted off, drawn at alt 0 so
+ * the first frame IS the first frame of the trip: the burnt house with its
+ * garage bay hard beside the pad, the charred trees, the scorch under the
+ * ship, and the night lawn going ordinary further out. It sinks off the
+ * bottom of the frame inside the opening seconds, which is exactly the point
+ * — the ground being RIGHT THERE and then visibly leaving is what makes 100 m
+ * read as 100 m instead of as space.
+ */
+function drawLaunchSite(
+  ctx: CanvasRenderingContext2D,
+  cam: SkyCamera,
+  sprites: GameAssets["sprites"],
+  viewW: number,
+  viewH: number,
+  nowMs: number,
+): void {
+  const groundY = cam.topAlt; // alt 0
+  // Gone once even the tallest tree (2× scale) is under the frame's edge.
+  if (groundY > viewH + 70) return;
+  const padX = FLIGHT.fieldW / 2; // where the ship lifted from
+
+  // The lot's soil (the cutscene lawn's own colour, so the cut lands on the
+  // ground it left), then a row of lawn along the line: scorched only where
+  // the ship stood, ash right around it, GREEN everywhere else — the scene's
+  // rule, "the far end of the lot never had a rocket lit on it".
+  ctx.fillStyle = "#20281c";
+  const soilTop = Math.max(0, groundY);
+  if (soilTop < viewH) ctx.fillRect(0, soilTop, viewW, viewH - soilTop);
+  const firstTile = Math.floor((cam.x - 16) / 16) * 16;
+  for (let wx = firstTile; wx < cam.x + viewW + 16; wx += 16) {
+    const d = Math.abs(wx + 8 - padX);
+    const flip = (wx / 16) & 1;
+    const name =
+      d < 50
+        ? `grass_charred_${flip}`
+        : d < 90
+          ? `grass_ashen_${flip}`
+          : `grass_${flip}`;
+    const tile = spriteByName(sprites, name);
+    if (!tile) continue;
+    const s = toScreen(cam, wx, 0);
+    ctx.drawImage(tile, s.x, s.y, 16, 16);
+  }
+
+  // THE ROAD the lot fronts onto — the cutscene's own two lanes, laid below
+  // the lawn line so the cut keeps the whole stage: house, lawn, road.
+  const roadLane = spriteByName(sprites, "road_lane");
+  if (roadLane) {
+    const firstLane = Math.floor((cam.x - 56) / 56) * 56;
+    for (let wx = firstLane; wx < cam.x + viewW + 56; wx += 56) {
+      const s = toScreen(cam, wx, 0);
+      if (s.y + 22 > viewH) continue;
+      ctx.drawImage(roadLane, s.x, s.y + 22);
+    }
+  }
+
+  // Night over the ground: the lawn tiles are the hub's daylight art, and the
+  // cutscene's lawn is dark — one wash brings the whole strip to its night.
+  ctx.fillStyle = "rgba(8,10,18,0.38)";
+  ctx.fillRect(0, soilTop, viewW, Math.max(0, viewH - soilTop));
+
+  // THE TREELINE ON THE HORIZON — hashed 1× silhouettes along the whole
+  // ground line beyond the lot: the same IN-LEAF trees the cutscene's first
+  // launch stands among (the char is what LATER fires leave, and this climb
+  // is happening while the first one burns).
+  const TREES = ["garage_tree", "lawn_tree"] as const;
+  const firstTree = Math.floor((cam.x - 48) / 48) * 48;
+  for (let wx = firstTree; wx < cam.x + viewW + 48; wx += 48) {
+    if (wx > padX - 240 && wx < padX + 180) continue; // the lot's own ground
+    const cell = wx / 48;
+    if (hash2(cell * 3 + 5, 11) > 0.7) continue;
+    const tree = spriteByName(
+      sprites,
+      TREES[Math.floor(hash2(cell, 29) * TREES.length) % TREES.length]!,
+    );
+    if (!tree) continue;
+    const s = toScreen(cam, wx + hash2(cell, 3) * 30, 0);
+    ctx.drawImage(tree, s.x, s.y - tree.height + 2);
+  }
+
+  // The dressing, at 2× so the lot reads at a glance from a climbing camera —
+  // the house's garage end sits beside the pad, as close as a man rolls a
+  // thing he built in there.
+  const props: readonly (readonly [string, number])[] = [
+    ["garage_tree", padX - 184],
+    ["garage_house_burnt", padX - 132],
+    ["garage_tree", padX + 46],
+    ["lawn_tree", padX + 124],
+  ];
+  for (const [name, wx] of props) {
+    const sprite = spriteByName(sprites, name);
+    if (!sprite) continue;
+    const s = toScreen(cam, wx, 0);
+    ctx.drawImage(
+      sprite,
+      s.x,
+      s.y - sprite.height * 2 + 2,
+      sprite.width * 2,
+      sprite.height * 2,
+    );
+  }
+
+  // THE HOUSE IS STILL BURNING — the launch just lit it, and the game takes
+  // over while it burns: flames out of the garage end's roof holes, smoke off
+  // the worse one, and a firelight glow the rain does not put out.
+  const houseLeft = padX - 132;
+  const glow = toScreen(cam, houseLeft + 70, 0);
+  const flicker = 0.16 + 0.07 * Math.sin(nowMs / 90 + Math.sin(nowMs / 37));
+  const fire = ctx.createRadialGradient(
+    glow.x,
+    glow.y - 30,
+    4,
+    glow.x,
+    glow.y - 30,
+    70,
+  );
+  fire.addColorStop(0, `rgba(255,150,40,${flicker.toFixed(3)})`);
+  fire.addColorStop(1, "rgba(255,150,40,0)");
+  ctx.fillStyle = fire;
+  ctx.fillRect(glow.x - 70, glow.y - 100, 140, 110);
+  const frame = Math.floor(nowMs / 140) % 2 === 0 ? "a" : "b";
+  const flames: readonly (readonly [string, number, number])[] = [
+    [`flame_4${frame}`, houseLeft + 62, 34],
+    [`flame_2${frame}`, houseLeft + 82, 30],
+  ];
+  for (const [name, wx, up] of flames) {
+    const flame = spriteByName(sprites, name);
+    if (!flame) continue;
+    const s = toScreen(cam, wx, 0);
+    ctx.drawImage(
+      flame,
+      s.x - flame.width,
+      s.y - up - flame.height * 2,
+      flame.width * 2,
+      flame.height * 2,
+    );
+  }
+  // One puff at a time, living a whole little life: born over the flames,
+  // rising as it turns over its three frames, gone before the next one.
+  const puffPhase = (nowMs % 780) / 780;
+  const smoke = spriteByName(
+    sprites,
+    `flame_smoke_${Math.floor(puffPhase * 3)}`,
+  );
+  if (smoke) {
+    const s = toScreen(cam, houseLeft + 66, 0);
+    ctx.globalAlpha = 0.7 * (1 - puffPhase * 0.7);
+    ctx.drawImage(smoke, s.x - smoke.width, s.y - 46 - puffPhase * 26);
+    ctx.globalAlpha = 1;
+  }
+
+  // The burn the ship left, still there under the climb.
+  const pad = toScreen(cam, padX, 0);
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  ctx.beginPath();
+  ctx.ellipse(pad.x, pad.y + 3, 34, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/** The weather the climb punches through — the night's clouds, hashed per
+ * world cell like the stars, thinning out where the troposphere does (the
+ * first ~18 km of a ~100 km course). World-anchored on purpose: a cloud
+ * whipping past at climb speed is the cheapest speedometer there is. */
+const CLOUD_SPRITES = [
+  "night_cloud_bank",
+  "night_cloud_puff",
+  "night_cloud_wisp",
+] as const;
+const CLOUD_CELL = 110;
+const CLOUD_FLOOR_ALT = 220;
+const CLOUD_TOP_ALT = 2400;
+
+function drawClouds(
+  ctx: CanvasRenderingContext2D,
+  cam: SkyCamera,
+  sprites: GameAssets["sprites"],
+  viewW: number,
+  viewH: number,
+): void {
+  const lowAlt = Math.max(CLOUD_FLOOR_ALT, cam.topAlt - viewH - 40);
+  const highAlt = Math.min(CLOUD_TOP_ALT, cam.topAlt + 40);
+  if (lowAlt >= highAlt) return;
+  const cy0 = Math.floor(lowAlt / CLOUD_CELL);
+  const cy1 = Math.ceil(highAlt / CLOUD_CELL);
+  const cx0 = Math.floor((cam.x - 80) / CLOUD_CELL);
+  const cx1 = Math.ceil((cam.x + viewW + 80) / CLOUD_CELL);
+  for (let cy = cy0; cy <= cy1; cy++) {
+    for (let cx = cx0; cx <= cx1; cx++) {
+      const alt = cy * CLOUD_CELL + hash2(cy, cx * 3) * CLOUD_CELL;
+      const thin =
+        1 - (alt - CLOUD_FLOOR_ALT) / (CLOUD_TOP_ALT - CLOUD_FLOOR_ALT);
+      if (alt < CLOUD_FLOOR_ALT || thin <= 0) continue;
+      // Dense at the bottom — the deck the storm lives in — thinning to
+      // stragglers where the air runs out.
+      if (hash2(cx * 5 + 1, cy * 11 + 7) > 0.34 + 0.42 * thin) continue;
+      const pick = CLOUD_SPRITES[Math.floor(hash2(cx, cy * 13) * 3) % 3]!;
+      const sprite = spriteByName(sprites, pick);
+      if (!sprite) continue;
+      const wx = cx * CLOUD_CELL + hash2(cx * 7, cy) * CLOUD_CELL;
+      const s = toScreen(cam, wx, alt);
+      if (s.y < -30 || s.y > viewH + 30) continue;
+      ctx.globalAlpha = 0.35 + 0.45 * thin;
+      ctx.drawImage(
+        sprite,
+        s.x - sprite.width,
+        s.y - sprite.height,
+        sprite.width * 2,
+        sprite.height * 2,
+      );
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+/** How far up the climb the planet's curve starts to be a thing the eye can
+ * see at all — nothing below this draws a limb, because a ship low enough to
+ * see its own house is not high enough to see the curvature of the Earth. */
+const LIMB_IN_FRAC = 0.3;
+
+/**
+ * THE PLANET'S LIMB — the curved blue rim of home, fading in near the top of
+ * the climb and sinking off the bottom of the frame as the last stretch takes
+ * it away. It is the launch feed's one indispensable picture, and it arrives
+ * LATE on purpose: the low sky belongs to the lawn and the clouds
+ * (`drawLaunchSite`, `drawClouds`), and the curve showing up is itself the
+ * altimeter saying "you are leaving".
  */
 function drawEarthLimb(
   ctx: CanvasRenderingContext2D,
@@ -119,16 +347,19 @@ function drawEarthLimb(
   viewH: number,
   altFrac: number,
 ): void {
-  // The limb's top edge walks down the screen with altitude and keeps going —
-  // fully gone a little past the shell's top.
-  const sink = altFrac / 0.9;
-  const top = viewH * (0.78 + 0.6 * sink);
+  if (altFrac <= LIMB_IN_FRAC) return;
+  const sink = (altFrac - LIMB_IN_FRAC) / (0.9 - LIMB_IN_FRAC);
+  // Fades in over its first stretch, then walks down the screen and keeps
+  // going — fully gone a little past the shell's top.
+  const appear = Math.min(1, sink / 0.2);
+  const top = viewH * (0.82 + 0.6 * sink);
   if (top > viewH + 80) return;
   const r = viewW * 2.2;
   const cx = viewW / 2;
   const cy = top + r;
   // The atmosphere's haze, then the limb, then the dark ground of home.
   ctx.save();
+  ctx.globalAlpha = appear;
   const glow = ctx.createRadialGradient(cx, cy, r * 0.985, cx, cy, r * 1.035);
   glow.addColorStop(0, "rgba(64,84,188,0.55)");
   glow.addColorStop(0.55, "rgba(64,84,188,0.18)");
@@ -145,6 +376,30 @@ function drawEarthLimb(
   ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.restore();
+}
+
+/** THE NIGHT MOON the launch cutscene hung over the lot — in the same corner
+ * of the sky from the minigame's first frame, BEHIND the storm deck, so the
+ * cut changes nothing about the sky. It washes out as the climb darkens and
+ * returns as the destination (`drawMoonAhead`) — the same rock, twice. */
+function drawNightMoon(
+  ctx: CanvasRenderingContext2D,
+  sprites: GameAssets["sprites"],
+  viewW: number,
+  altFrac: number,
+): void {
+  if (altFrac >= 0.32) return;
+  const night = spriteByName(sprites, "night_moon");
+  if (!night) return;
+  ctx.globalAlpha = 1 - altFrac / 0.32;
+  ctx.drawImage(
+    night,
+    viewW * 0.72 - night.width,
+    12,
+    night.width * 2,
+    night.height * 2,
+  );
+  ctx.globalAlpha = 1;
 }
 
 /** The destination, arriving: the moon grows through the top of the climb and
@@ -311,8 +566,9 @@ function drawMoonGround(
   }
 }
 
-/** The whole picture, in paint order: sky, stars, home, the moon, the field,
- * the ground, the craft. The fx layer draws over this on the same camera. */
+/** The whole picture, in paint order: sky, stars, the weather, home (the lawn
+ * low down, the limb high up), the moon, the field, the ground, the craft.
+ * The fx layer draws over this on the same camera. */
 export function drawFlight(
   ctx: CanvasRenderingContext2D,
   state: FlightState,
@@ -335,7 +591,19 @@ export function drawFlight(
   ctx.fillRect(0, viewH * 0.6, viewW, viewH * 0.4);
 
   drawStars(ctx, cam, viewW, viewH, altFrac);
-  if (!landing) drawEarthLimb(ctx, viewW, viewH, altFrac);
+  if (!landing) {
+    // The storm sits on the low sky like a lid — the night gets DARKER under
+    // the deck, and the ordinary ramp only takes over once the climb is out.
+    const storm = stormIntensity(state.craft.alt);
+    if (storm > 0) {
+      ctx.fillStyle = `rgba(6,7,12,${(0.3 * storm).toFixed(3)})`;
+      ctx.fillRect(0, 0, viewW, viewH);
+    }
+    drawNightMoon(ctx, assets.sprites, viewW, altFrac);
+    drawClouds(ctx, cam, assets.sprites, viewW, viewH);
+    drawEarthLimb(ctx, viewW, viewH, altFrac);
+    drawLaunchSite(ctx, cam, assets.sprites, viewW, viewH, nowMs);
+  }
   drawMoonAhead(ctx, assets.sprites, viewW, altFrac, landing);
 
   // THE SHELL'S TOP, MADE VISIBLE: a faint line of thinning haze at the

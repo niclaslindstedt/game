@@ -27,6 +27,7 @@ import {
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { drawRain } from "@ui/lib/rain.ts";
 import { wrapPage } from "@ui/lib/text-pager.ts";
 import { useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
@@ -357,6 +358,20 @@ function drawStage(
 
   for (const item of [...floorQueue, ...queue]) {
     paintOne(ctx, item, assets, cutscene, width);
+  }
+
+  // THE WEATHER, over everything and under the fade — a storm stage rains on
+  // the whole frame for the whole scene (`CutsceneStage.weather`), and the
+  // sheet is the shared one, so this rain and the rocket climb's are the same
+  // rain. The camera shift is handed in so the streaks live on the LOT: the
+  // ascent pan sends the storm down the frame with the ground it falls on.
+  if (def.stage.weather === "storm") {
+    drawRain(ctx, 0, 0, width, height, timeMs, {
+      intensity: 1,
+      slantPx: 2,
+      scrollX: shift.x,
+      scrollY: shift.y,
+    });
   }
 
   if (cutscene.fade > 0) {
