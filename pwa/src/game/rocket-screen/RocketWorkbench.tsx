@@ -4,8 +4,8 @@
 // cabinet.
 //
 // It mounts the same `RocketScreen` on the same `createFlight`; what it adds
-// is only what a run would have settled — the rung, the seed — plus the three
-// knobs a working session wants off the query string:
+// is only what a run would have settled — the rung, the seed — plus the knobs a
+// working session wants off the query string:
 //
 //   ?rocket                      the climb, medium, seed 1234
 //   &difficulty=jesus            the rung
@@ -16,10 +16,19 @@
 //                                collision (and the chain it lights) happens in
 //                                the first seconds instead of when the shell
 //                                deals one
+//   &launch=0                    skip the lift-off cutscene the first lap opens
+//                                on — what a harness that steers the sky wants,
+//                                since a held caption is a `window.__flight`
+//                                that never arrives
 //
 // IT LAPS FOREVER and never banks a board row — the screen is remounted per
 // lap with the seed in the `key`, which is also why `window.__flight` is not
 // cleaned up on unmount (`RocketScreen`'s own note).
+//
+// THE LAUNCH OPENS THE SITTING, NOT EVERY LAP. Sitting down at this workbench
+// is what a player sitting down at the cabinet gets, cutscene included; a lap
+// after that is a RE-FLIGHT, and a developer who has to watch the lawn burn
+// between every attempt stops using the workbench.
 
 import { useCallback, useEffect, useState } from "react";
 import type { ReactElement } from "react";
@@ -132,6 +141,7 @@ export function RocketWorkbench({
         stage={stagerFor(params)}
         heroPortrait={null}
         arcade
+        launch={lap === 0 && params.get("launch") !== "0"}
         onLanded={nextLap}
         onMenu={onClose}
       />

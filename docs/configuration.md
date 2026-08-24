@@ -802,10 +802,13 @@ ladder rung the sky is flown on, `&seed=<n>` pins the shell of junk,
 without a full climb), `&phase=landing` opens on the DROP, and
 `&stage=hit|chain` plants a satellite (or a chain of them) square in the
 nose's path so a strike, a blast or the chain reaction can be looked at twice.
-With `?debug`, the live `FlightState` is exposed as `window.__flight`. Landing
-rolls straight into the next lap on a fresh seed with the pre-flight card
-re-armed; ESC leaves. Developer tooling, folded out of a store build with the
-gallery.
+The first lap opens on the LAUNCH cutscene, exactly as the arcade cabinet does —
+`&launch=0` skips it, which is what a harness wants, since a held caption is a
+`window.__flight` that never arrives. With `?debug`, the live `FlightState` is
+exposed as `window.__flight`. Landing rolls straight into the next lap on a
+fresh seed with the pre-flight card re-armed (and no cutscene — a lap is a
+re-flight, not a fresh sitting); ESC leaves. Developer tooling, folded out of a
+store build with the gallery.
 
 **`?skytest`** — Planetarium test view of the title screen: strips the menu
 chrome (logo, menu, footer) so the sun-lit, rotating globes of all eight planets

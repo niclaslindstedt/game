@@ -7,11 +7,16 @@
 // and the `?rocket` workbench laps it forever. What differs between them
 // arrives as props — exactly `DriveScreen`'s contract.
 //
-// THREE THINGS PARK THE SKY: the intro cards, the pause card, and the board at
-// the end. The picture is painted under all three, so a card lifts onto a sky
-// that is already there. A LINE never parks anything — the hero's remarks are
-// barks over a climb that keeps climbing, which is also what leaves an
-// unattended flight nothing to be stuck on.
+// FOUR THINGS PARK THE SKY: the launch cutscene, the intro cards, the pause
+// card, and the board at the end. The picture is painted under all four, so a
+// card lifts onto a sky that is already there. A LINE never parks anything —
+// the hero's remarks are barks over a climb that keeps climbing, which is also
+// what leaves an unattended flight nothing to be stuck on.
+//
+// THE LAUNCH IS ONLY OURS WHEN NOBODY ELSE PLAYED IT (`launch`). A campaign
+// flight mounts on the black the moon run's prelude handed across and opens
+// straight on the cards; a cabinet and the workbench have no prelude behind
+// them, so they ask for the scene here (`RocketLaunch`).
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactElement } from "react";
@@ -75,6 +80,7 @@ import {
 } from "./dials.ts";
 import { flightThoughtPages } from "./voice.ts";
 import { RocketIntro } from "./RocketIntro.tsx";
+import { RocketLaunch } from "./RocketLaunch.tsx";
 import { RocketPause } from "./RocketPause.tsx";
 import {
   RocketScores,
@@ -106,6 +112,7 @@ export function RocketScreen({
   onMenu,
   auto = false,
   arcade = false,
+  launch = false,
 }: {
   params: FlightParams;
   assets: GameAssets;
@@ -124,6 +131,11 @@ export function RocketScreen({
   onMenu?: () => void;
   /** Nobody's hands: no cards, no board, no buzz — the attract loop's rules. */
   auto?: boolean;
+  /** PLAY THE LIFT-OFF FIRST — for a flight nothing else set up. The campaign
+   * leaves it false: its own prelude has already played the same scene on the
+   * lawn, and a second one would be the player watching the house burn twice.
+   * Ignored under `auto`, whose sky must never wait on a page-turn. */
+  launch?: boolean;
   /** A lap off the shelf: changes only the pause card's offer. */
   arcade?: boolean;
 }): ReactElement {
@@ -153,6 +165,12 @@ export function RocketScreen({
   const pausedRef = useRef(false);
   const [intro, setIntro] = useState(!auto);
   const introRef = useRef(!auto);
+  // STILL ON THE LAWN — the launch cutscene is up. It sits INSIDE the intro's
+  // hold rather than beside it (the card follows the scene, so `intro` is true
+  // for the whole of both), which is what leaves every park in this file
+  // reading `introRef` alone.
+  const [onPad, setOnPad] = useState(launch && !auto);
+  const onPadRef = useRef(launch && !auto);
   const [board, setBoard] = useState<FlightBoardResult | null>(null);
   const boardRef = useRef<FlightBoardResult | null>(null);
   const [hud, setHud] = useState<FlightDials>(() =>
@@ -212,6 +230,13 @@ export function RocketScreen({
     if (!introRef.current) return;
     introRef.current = false;
     setIntro(false);
+  }, []);
+
+  /** Off the lawn: the ship is in the air and the cards may open. */
+  const leavePad = useCallback(() => {
+    if (!onPadRef.current) return;
+    onPadRef.current = false;
+    setOnPad(false);
   }, []);
 
   const dropControls = useCallback(() => {
@@ -571,7 +596,14 @@ export function RocketScreen({
         <RocketScores font={assets.font} result={board} onDone={leaveBoard} />
       )}
 
-      {intro && <RocketIntro font={assets.font} onDone={endIntro} />}
+      {/* The lift-off, when this flight is the one playing it. The card behind
+          it is held back rather than layered under: `RocketIntro`'s title page
+          times ITSELF out, so a card mounted under the scene would have turned
+          to the controls page before the ship left the ground. */}
+      {intro && !onPad && <RocketIntro font={assets.font} onDone={endIntro} />}
+      {onPad && (
+        <RocketLaunch assets={assets} heroName={heroName} onDone={leavePad} />
+      )}
     </div>
   );
 }

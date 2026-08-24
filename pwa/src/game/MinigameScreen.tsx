@@ -112,6 +112,11 @@ export function MinigameScreen({
           // the doll from.
           heroPortrait={null}
           arcade
+          // THE LIFT-OFF IS THE OPENING. A campaign flight is handed the sky
+          // by the moon run's own prelude, which plays the launch on the lawn
+          // first; a cabinet has no prelude, so it plays the scene itself
+          // rather than starting the player mid-air.
+          launch
           onScreenshot={() => takeScreenshot("THE ROCKET")}
           // Down (or given up): back to the shelf either way — there is no
           // crossing waiting on an arcade sky.
