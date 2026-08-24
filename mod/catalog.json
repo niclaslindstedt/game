@@ -4079,10 +4079,13 @@
     "rocket_clang_b",
     "rocket_orbit",
     "rocket_poof",
+    "rocket_rain",
     "rocket_rumble",
     "rocket_stick_a",
     "rocket_stick_b",
     "rocket_stick_c",
+    "rocket_thunder_a",
+    "rocket_thunder_b",
     "rocket_touchdown",
     "rocket_warning",
     "scorch_burn",
@@ -5304,6 +5307,9 @@
     "rocket_poof": {
       "what": "ONE BREATH OF THE STEERING POOFS — a tiny cold-gas puff, rate-limited in the app's funnel (at most one per 90 ms however hard the stick is held). The quietest sound in the minigame on purpose: it fires constantly, and the balance is felt through it rather than listened to."
     },
+    "rocket_rain": {
+      "what": "ONE GRAIN OF THE DOWNPOUR — the storm the ship climbs out of, layered on the engine bed's own 190 ms clock while `stormIntensity` says the flight is still inside the weather. A noise grain has no hold, so the fuse comes from overlap instead: each grain runs ~2.5 cadences and the fading copies sum to a steady hiss. A high hiss for the rain on the hull and a soft lowpass patter under it; both quiet, because the bed never stops while it plays."
+    },
     "rocket_rumble": {
       "what": "ONE GRAIN OF THE ENGINE BED — the garage rocket's base burn, re-fired every 190 ms for the whole flight so the copies fuse into one continuous roar (`continuous-bed-needs-a-hold`: cadence ~half the hold). A low detuned saw under a lowpass rumble; the volumes are the SUM's over ~3 overlapping grains, so each is a third of the loudness the bed arrives at."
     },
@@ -5315,6 +5321,12 @@
     },
     "rocket_stick_c": {
       "what": "A bag landing on the hull, THIRD take — the lowest and wettest of the three: a slow flump with a late soft scuff, something soft-sided arriving whole."
+    },
+    "rocket_thunder_a": {
+      "what": "THE CLAP — thunder arriving seconds after the strike's flash, the near take: a bright crack, a saw dive to the floor, and a long black boom rolling off through the echo bus. Rare and big on purpose; the storm's strikes are the loudest thing in the climb short of the ship itself going up."
+    },
+    "rocket_thunder_b": {
+      "what": "THE CLAP, the far take — no crack, just the roll: a sub dive and two waves of lowpass pressure, the second arriving late, the way a distant strike reaches the hull as weather rather than as a blow."
     },
     "rocket_touchdown": {
       "what": "THE PADS MEETING REGOLITH, gently enough to keep — a soft lowpass crunch of dust taking the legs, then a small consonant chime up: relief, sized to a landing rather than a victory (the board after it is the fanfare)."
