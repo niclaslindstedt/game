@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_rumble
+description: >-
+  ONE GRAIN OF THE ENGINE BED — the garage rocket's base burn, re-fired every
+  190 ms for the whole flight so the copies fuse into one continuous roar
+  (`continuous-bed-needs-a-hold`: cadence ~half the hold). A low detuned saw
+  under a lowpass rumble; the volumes are the SUM's over ~3 overlapping
+  grains, so each is a third of the loudness the bed arrives at.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 58
+    to: 55
+    durationMs: 580
+    attackMs: 110
+    holdMs: 360
+    volume: 0.02
+    detuneCents: 11
+  - call: noise
+    durationMs: 420
+    volume: 0.012
+    filter:
+      type: lowpass
+      frequency: 220

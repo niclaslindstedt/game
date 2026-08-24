@@ -1,0 +1,35 @@
+name: orbit_junk_5
+family: orbit
+size: [10, 16]
+description: >
+  A white refrigerator with its door drifted ajar — a dark slit and the thin
+  door edge standing off the body.
+subject:
+  kind: orbital junk prop
+  build: a tall white box, freezer door above, main door hanging ajar
+  features: a dark opening slit with the pale door edge standing off the body, small handles
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  A: "#8d9196" # enamel shadow
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # chrome handle
+  W: "#f4f4f4" # white enamel
+  a: "#d6dce4" # door edge
+  b: "#3f4553" # dark interior slit
+grid: |
+  .OOOOOO...
+  .OWWWAO...
+  .OWWTAO...
+  .OWWWAO...
+  .OOOOOO...
+  .OWWWAOba.
+  .OWWTAOba.
+  .OWWWAOba.
+  .OWWWAOba.
+  .OWWWAOba.
+  .OWWWAOba.
+  .OWWWAOba.
+  .OWWWAOba.
+  .OWWWAOba.
+  .OOOOOOOO.
+  ..O...O...

@@ -393,10 +393,12 @@ describe("the title menu tree", () => {
     expect(buildMenu("main", beaten).map((row) => row.aria)).toContain(
       "main-minigames",
     );
-    // …and the shelf behind it lists the cabinet, with the two knobs under it —
-    // WHICH WAY it is played and what it weighs — and a BACK under those.
+    // …and the shelf behind it lists the cabinets, with the two knobs under
+    // them — WHICH WAY they are played and what they weigh — and a BACK under
+    // those.
     expect(buildMenu("minigames", beaten).map((row) => row.aria)).toEqual([
       "minigames-drive",
+      "minigames-rocket",
       "minigames-direction",
       "minigames-difficulty",
       "minigames-back",

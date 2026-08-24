@@ -752,6 +752,16 @@ export type GameEvent =
    * it only forwards the name the scene wrote down.
    */
   | { type: "cutsceneSound"; sfx: string }
+  /**
+   * A PRELUDE (or farewell) SCENE PLAYED OUT and the chain rolled — `id` is
+   * the finished scene's own (variant-resolved, so a `launch_hard` announces
+   * itself as that). Raised however the chain moved: the scene running out,
+   * or the player's tap turning its last beat. What hangs off it is the app's
+   * one fork between two chained scenes — the flight minigame standing in for
+   * `voyage_moon` when the launch ends (`rocket-screen/begin.ts`). A SKIP
+   * deliberately raises none: a chain thrown away whole is not a beat.
+   */
+  | { type: "sceneEnded"; id: string }
   /** A speaker took the stage: the run paused into the `dialogue` phase. */
   | { type: "dialogueStarted"; speaker: string }
   /**

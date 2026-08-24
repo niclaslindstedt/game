@@ -1,0 +1,36 @@
+name: orbit_sat_2
+family: orbit
+size: [22, 16]
+description: >
+  A GOODCO garbage-hauler satellite — white service body, an open-top hopper
+  bin aft, a chrome claw arm reaching forward.
+subject:
+  kind: GOODCO satellite
+  build: a long white body towing an open-top hopper bin, a jointed claw arm reaching forward
+  features: two claw prongs open around nothing, dark empty hopper mouth
+  accent: a cyan status light pair on the hull
+  flavor: the fleet that empties Earth's bins into Earth's sky
+palette:
+  A: "#8d9196" # hull shadow
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # chrome claw arm
+  a: "#d6dce4" # brand-white hull
+  b: "#3f4553" # dark hopper interior
+  e: "#8ccdd7" # cyan status light
+grid: |
+  ......................
+  ......................
+  ................O...O.
+  ................ObbbO.
+  ........OOOOOOOOObbbO.
+  ........OaaaaaaAObbbO.
+  ........OaeeaaaAObbbO.
+  OO.OOOOOOaeeaaaAObbbO.
+  .OOTTTTTOaaaaaaAObbbO.
+  OO.OOOOOOaaaaaaAObbbO.
+  ........OOOOOOOOOOOOO.
+  ......................
+  ......................
+  ......................
+  ......................
+  ......................

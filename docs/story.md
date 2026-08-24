@@ -265,9 +265,38 @@ out, and he never mentions it.
 
 ## Travel — THE VOYAGE, LEG ONE (cutscene)
 
-Deep space. Earth shrinks, he fights nausea, and the tracker pings from a place
-nobody goes to for chips and soda. **The crossing takes days and the game never
-says so** — that omission is the same joke as the road and the house.
+**The climb out is played, not cut**, and it is the road's joke stood on end.
+GOODCO makes the Earth clean — it says so on everything the company owns — and
+nobody down there asks how. Up here it is the whole sky: everything the company
+"recycles" goes up on a government disposal contract and stays, and thirty
+years of that is a shell of garbage around the planet that thickens all the way
+to the top. The billionaires left before the shell closed; everybody else is
+under it, which the hero learns with his hands full — a garage-built ship that
+never once wants to fly straight, boosters that feed the flip as fast as they
+feed the climb, and the company's own satellites, the other business, crossing
+the band with their lights on. Trash does not break the ship: it lands on it
+and rides, so he arrives everywhere wearing the company's garbage, and the
+scoreboard counts every bag and pays nothing for one. Satellites and rocks
+break the ship, and a satellite that goes up takes its neighbours with it, one
+fuse at a time. He says one flat line about the company on the way into the
+band, and when he punches out of the shell — the sky suddenly, conspicuously
+clean — one line of relief, and never mentions any of it again. Leaving Earth
+has quietly become hard, and he files it under road surface.
+
+**The other half is THE DROP**: the module, the marked pad, the moon's easy
+pull, and a machine that finally does what it is told — tilt goes where he puts
+it, and the only enemy is his own speed. Breaking the module restarts the drop,
+because being left for dead on the regolith is not a story this game tells; the
+clock keeps the crashes, because the board does not forgive them. The tracker
+beat rides the flight: her signal pings from the moon, and nobody goes there
+for chips and soda.
+
+**And the scene is the trip's film.** Deep space: Earth shrinks, he fights
+nausea, and the tracker pings from a place nobody goes to for chips and soda.
+**The crossing takes days and the game never says so** — that omission is the
+same joke as the road and the house. It plays when the flight is not flown
+(MINIGAMES off, a party aboard, nobody's hands on the run), and the flight
+replaces it when it is — same facts, said from the pilot's seat.
 
 ## Level 2 — THE MOON
 

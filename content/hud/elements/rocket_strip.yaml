@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE MISSION TIMELINE — the launch feed's event strip, across the top of the
+# picture: the whole trip as six stations and a marker crawling through them.
+#
+# THE MARKER IS STAGED (`rocket.progress`, rocket-screen/dials.ts): each leg of
+# the trip is mapped onto its own fifth of the bar, so the six evenly spaced
+# labels below it are TRUE — the marker crosses a station's label exactly as
+# the ship crosses the station. Each label lights as it is reached (a
+# judgement, so it is Lua), and the strip's right-hand end carries the one
+# tally mission control keeps that no instrument shows: the trash riding the
+# hull.
+region: rocket_strip
+order: 0
+kind: panel
+class: rocket-strip-box
+children:
+  - id: strip_bar
+    kind: bar
+    class: rocket-strip-bar
+    bind: rocket.progress
+    fill:
+      class: rocket-strip-fill
+  - id: strip_labels
+    kind: panel
+    class: rocket-strip-labels
+    children:
+      - id: evt_liftoff
+        kind: text
+        text: LIFTOFF
+        scale: 1
+        color:
+          script: rocket.evt_liftoff_color
+      - id: evt_shell
+        kind: text
+        text: JUNK SHELL
+        scale: 1
+        color:
+          script: rocket.evt_shell_color
+      - id: evt_clear
+        kind: text
+        text: ALL CLEAR
+        scale: 1
+        color:
+          script: rocket.evt_clear_color
+      - id: evt_orbit
+        kind: text
+        text: ORBIT
+        scale: 1
+        color:
+          script: rocket.evt_orbit_color
+      - id: evt_drop
+        kind: text
+        text: THE DROP
+        scale: 1
+        color:
+          script: rocket.evt_drop_color
+      - id: evt_down
+        kind: text
+        text: TOUCHDOWN
+        scale: 1
+        color:
+          script: rocket.evt_down_color
+  - id: strip_trash
+    kind: text
+    class: rocket-strip-trash
+    text:
+      script: rocket.trash_label
+    scale: 1
+    color: "#7d8899"

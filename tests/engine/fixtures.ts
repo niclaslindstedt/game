@@ -1324,6 +1324,14 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       // ladder's throttle, so a fixture rung never caps the wagon.
       topSpeedMph: 174,
     },
+    // Neutral: the engine suites measure the sky's physics, not the ladder's
+    // thumb on it.
+    flight: {
+      junkMult: 1,
+      hazardMult: 1,
+      tipMult: 1,
+      damageMult: 1,
+    },
   },
   medium: {
     id: "medium",
@@ -1388,6 +1396,14 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       // ladder's throttle, so a fixture rung never caps the wagon.
       topSpeedMph: 174,
     },
+    // Neutral: the engine suites measure the sky's physics, not the ladder's
+    // thumb on it.
+    flight: {
+      junkMult: 1,
+      hazardMult: 1,
+      tipMult: 1,
+      damageMult: 1,
+    },
   },
   hard: {
     id: "hard",
@@ -1451,6 +1467,14 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       // ladder's throttle, so a fixture rung never caps the wagon.
       topSpeedMph: 174,
     },
+    // Neutral: the engine suites measure the sky's physics, not the ladder's
+    // thumb on it.
+    flight: {
+      junkMult: 1,
+      hazardMult: 1,
+      tipMult: 1,
+      damageMult: 1,
+    },
   },
   nightmare: {
     id: "nightmare",
@@ -1504,6 +1528,14 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       // ladder's throttle, so a fixture rung never caps the wagon.
       topSpeedMph: 174,
     },
+    // Neutral: the engine suites measure the sky's physics, not the ladder's
+    // thumb on it.
+    flight: {
+      junkMult: 1,
+      hazardMult: 1,
+      tipMult: 1,
+      damageMult: 1,
+    },
   },
   jesus: {
     id: "jesus",
@@ -1555,6 +1587,14 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       // The whole dial: the engine suites measure the road's physics, not the
       // ladder's throttle, so a fixture rung never caps the wagon.
       topSpeedMph: 174,
+    },
+    // Neutral: the engine suites measure the sky's physics, not the ladder's
+    // thumb on it.
+    flight: {
+      junkMult: 1,
+      hazardMult: 1,
+      tipMult: 1,
+      damageMult: 1,
     },
   },
 };

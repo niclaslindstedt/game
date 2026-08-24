@@ -1,0 +1,30 @@
+name: orbit_junk_2
+family: orbit
+size: [8, 14]
+description: >
+  A green glass bottle drifting neck-up, a pale glint down its lit shoulder.
+subject:
+  kind: orbital junk prop
+  build: a long-necked bottle, round shoulders, flat base
+  accent: a pale cyan glint down the lit side
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  G: "#4a7a3e" # green glass
+  O: "#1a1c2c" # outline
+  g: "#3d6433" # dark green glass
+  x: "#c5e6ebe1" # glass glint
+grid: |
+  ..OOOO..
+  ..OGgO..
+  ..OGgO..
+  ..OGgO..
+  ..OGgO..
+  .OGGggO.
+  .OGGggO.
+  OGxGgggO
+  OGxGgggO
+  OGGGgggO
+  OGGGgggO
+  OgGGgggO
+  OggggggO
+  .OOOOOO.

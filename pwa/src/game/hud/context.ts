@@ -152,4 +152,10 @@ export type HudDriveContext = HudCommon & {
   surface: "drive";
 };
 
-export type HudContext = HudFieldContext | HudDriveContext;
+/** The flight's mission control — the same arrangement at the second cabinet:
+ * no run state, dials off the published values (`rocket-screen/dials.ts`). */
+export type HudRocketContext = HudCommon & {
+  surface: "rocket";
+};
+
+export type HudContext = HudFieldContext | HudDriveContext | HudRocketContext;

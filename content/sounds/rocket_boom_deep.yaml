@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_boom_deep
+description: >-
+  THE FLOOR UNDER THE BIG ONE — layered beneath a boom take when the SHIP
+  itself goes, never alone: a long two-stage sub dive and black lowpass
+  pressure, which is the whole difference the ear needs between "a satellite
+  died" and "I did".
+voices:
+  - call: tone
+    type: sine
+    from: 110
+    to: 19
+    durationMs: 1100
+    volume: 0.12
+  - call: noise
+    durationMs: 1200
+    volume: 0.05
+    filter:
+      type: lowpass
+      frequency: 180
+    echo: 0.4

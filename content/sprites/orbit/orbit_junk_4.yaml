@@ -1,0 +1,32 @@
+name: orbit_junk_4
+family: orbit
+size: [14, 12]
+description: >
+  An old CRT television, wood-brown cabinet, dead pale screen, two straight
+  aerials still up.
+subject:
+  kind: orbital junk prop
+  build: a boxy cabinet on stub feet with two straight aerials on top
+  features: a dead pale glass screen in a bezel, two chrome knobs beside it
+  accent: pale cyan screen glass
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  B: "#92643e" # wood-brown casing
+  E: "#5d4028" # dark casing shadow
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # chrome knob
+  b: "#3f4553" # screen shadow
+  x: "#c5e6ebe1" # dead screen glass
+grid: |
+  ...O......O...
+  ...O......O...
+  ...O......O...
+  .OOOOOOOOOOOO.
+  .OBBBBBBBBEEO.
+  .OBOOOOOOOBEO.
+  .OBOxxxxxOTEO.
+  .OBOxxxxbOBEO.
+  .OBOxxbbbOTEO.
+  .OBOOOOOOOBEO.
+  .OOOOOOOOOOOO.
+  ..OO......OO..

@@ -1,0 +1,26 @@
+name: orbit_junk_0
+family: orbit
+size: [10, 10]
+description: >
+  A knotted plastic trash bag adrift — a lumpy dark sack pinched at a tied
+  topknot with two loose ears.
+subject:
+  kind: orbital junk prop
+  build: a lumpy sack pinched to a tied topknot with two loose ears
+  accent: a slate sheen on the upper-left folds
+  flavor: household garbage GOODCO fired into orbit and called recycling
+palette:
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark bag plastic
+  v: "#60687e" # slate sheen
+grid: |
+  ..OO.OO...
+  .OvOOOvO..
+  ..OvvvO...
+  ...OvO....
+  ..OvvbO...
+  .OvvbbbO..
+  .OvbbbbbO.
+  .ObbbbbbO.
+  ..ObbbbO..
+  ...OOOO...

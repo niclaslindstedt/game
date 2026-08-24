@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE ALTITUDE DIAL — mission control's right hand, the velocity dial's twin.
+#
+# THE FACE CHANGES MEANING AT ORBIT, and says so in its own unit: miles of
+# climb on the way up (62 is the edge of space, and the top of the sweep), then
+# the drop's own countdown — height left over the regolith — on the way down,
+# where the arc runs the other errand: full at release, empty on the ground.
+# One dial, two trips, and the unit under the figure (`rocket.alt_unit`) is
+# what keeps the player from misreading the hand-over.
+region: rocket_dash
+order: 2
+kind: panel
+class: drive-dial
+children:
+  - id: alt_arc
+    kind: gauge
+    class: drive-dial-ring
+    bind: rocket.altFrac
+    sweep: 250
+    start: 235
+    thickness: 3.5
+    color:
+      script: rocket.alt_color
+    track: "#1b2431"
+
+  - id: alt_face
+    kind: panel
+    class: drive-dial-face
+    children:
+      - id: alt_number
+        kind: text
+        bind: rocket.altitude
+        scale: 3
+        color:
+          script: rocket.alt_color
+      - id: alt_unit
+        kind: text
+        text:
+          script: rocket.alt_unit
+        scale: 1
+        color: "#7d8899"
+
+  - id: alt_phase
+    kind: text
+    class: drive-dial-foot
+    bind: rocket.phase
+    scale: 1
+    color: "#7d8899"

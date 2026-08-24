@@ -59,7 +59,7 @@ import {
   stopMusic,
 } from "../music/index.ts";
 import { viewScaleFor } from "../render/view.ts";
-import { ageBark, openBark, turnBark, type Speech } from "./bark.ts";
+import { ageBark, openBark, turnBark, type Speech } from "../bark.ts";
 import {
   createWearTrail,
   driveBindings,

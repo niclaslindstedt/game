@@ -1,0 +1,35 @@
+name: orbit_sat_0
+family: orbit
+size: [20, 14]
+description: >
+  A GOODCO comms satellite — an upturned dish on a mast over a white body,
+  blue solar wings both sides, a cyan status light.
+subject:
+  kind: GOODCO satellite
+  build: an upturned dish on a short mast over a boxy body with a solar wing each side
+  features: chrome struts holding blue panel wings
+  accent: a cyan status light on the white hull
+  flavor: the same sleek fleet that hauled the garbage up here
+palette:
+  A: "#8d9196" # hull shadow
+  J: "#2d3b84" # dark panel blue
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # chrome strut
+  a: "#d6dce4" # brand-white hull
+  e: "#8ccdd7" # cyan status light
+  j: "#4054bc" # solar panel blue
+grid: |
+  .....OO.....OO......
+  .....OaaaaaaaO......
+  ......OaaaaaO.......
+  .......OOOOO........
+  .........OO.........
+  ......OOOOOOOO......
+  OOOOO.OaaaaaAO.OOOOO
+  OjjJOTOaaeeaAOTOjjJO
+  OjjJOTOaaeeaAOTOjjJO
+  OOOOO.OaaaaaAO.OOOOO
+  ......OaaaaaAO......
+  ......OOOOOOOO......
+  ....................
+  ....................

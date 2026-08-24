@@ -1,0 +1,28 @@
+name: orbit_junk_8
+family: orbit
+size: [10, 12]
+description: >
+  A porcelain toilet adrift — tank, open seat slab, bowl tapering to its
+  pedestal foot.
+subject:
+  kind: orbital junk prop
+  build: a tank atop a jutting seat slab, bowl tapering to a pedestal foot
+  accent: bright porcelain against the black
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # porcelain white
+  a: "#d6dce4" # porcelain shade
+grid: |
+  .OOOO.....
+  .OWWaO....
+  .OWWaO....
+  .OWWaOOOO.
+  .OWWWWWWaO
+  ..OWWWWaO.
+  ..OWWWaO..
+  ...OWaO...
+  ...OWaO...
+  ..OWWWaO..
+  ..OOOOOO..
+  ..........

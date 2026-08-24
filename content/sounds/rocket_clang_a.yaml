@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_clang_a
+description: >-
+  HARDWARE MEETING THE PAINTWORK — a satellite or a rock going through the
+  hull, first of two takes. A hard square strike with a metallic ring hanging
+  off it and a bandpass crack of contact: unmistakably METAL, where the trash
+  is unmistakably not.
+voices:
+  - call: tone
+    type: square
+    from: 720
+    to: 190
+    durationMs: 60
+    volume: 0.055
+  - call: tone
+    type: triangle
+    from: 1380
+    to: 1240
+    durationMs: 260
+    volume: 0.02
+    detuneCents: 14
+    echo: 0.18
+  - call: noise
+    durationMs: 40
+    volume: 0.04
+    filter:
+      type: bandpass
+      frequency: 2300

@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_boost
+description: >-
+  THE BOOSTERS OPENING — the brighter grain LAYERED over `rocket_rumble` on
+  the same 190 ms clock while the throttle is held: the engine opening up,
+  never speeding up (the bed's cadence rule). A harder saw a fifth above the
+  burn and a mid lowpass roar; still a bed grain, so it holds like one.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 88
+    to: 82
+    durationMs: 580
+    attackMs: 110
+    holdMs: 360
+    volume: 0.016
+    detuneCents: 9
+  - call: noise
+    durationMs: 420
+    volume: 0.012
+    filter:
+      type: lowpass
+      frequency: 640

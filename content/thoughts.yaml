@@ -207,6 +207,35 @@ thoughts:
     portrait: hero
     pages:
       - - HOME AT LAST. AND THERE SHE IS.
+  # ── THE FLIGHT'S FOUR BEATS (`rocket-screen/voice.ts`) ────────────────────
+  # Barks over a sky that keeps moving, one page each and short on purpose —
+  # they are read while balancing an inverted pendulum. The flight REPLACES
+  # the voyage cutscene when it is played (`begin.ts`), so the third beat
+  # carries that scene's tracker fact from the pilot's seat; nobody hears it
+  # twice. The first two are the whole of what the game ever says about WHERE
+  # the trash goes — said flat, in passing, and never raised again.
+  flight_up_junk:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - GOODCO MAKES THE EARTH CLEAN. NOBODY ASKS HOW. UP HERE, NOBODY HAS TO.
+  flight_shell_clear:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - CLEAR. THE RICH LEFT BEFORE THE SKY SHUT. THE REST OF US LEARN TO STEER.
+  flight_drop:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - HER TRACKER PINGS FROM THE MOON. NOBODY GOES THERE FOR CHIPS AND SODA.
+  # …and the one line the landing earns. The trash line is the scorecard's
+  # joke said out loud once, by the man who hauled it.
+  flight_touchdown:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - DOWN. THE TRASH RODE UP HERE FOR FREE.
   # …AND THAT IS THE LAST THING EITHER ROAD SAYS. A leg ends on a FADE with the
   # wagon still rolling: the minigame never parks the car, never switches the
   # engine off and never stands the man on the tarmac to be looked at, because

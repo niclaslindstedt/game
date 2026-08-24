@@ -1,0 +1,33 @@
+name: orbit_sat_1
+family: orbit
+size: [16, 12]
+description: >
+  A boxy GOODCO relay satellite — white cube body, twin blue solar panels,
+  one cyan status light, a stub antenna.
+subject:
+  kind: GOODCO satellite
+  build: a white cube body between twin outstretched solar panels
+  features: a stub antenna on top, chrome mounting struts
+  accent: one cyan status light blinking on the hull
+  flavor: the same sleek fleet that hauled the garbage up here
+palette:
+  A: "#8d9196" # hull shadow
+  J: "#2d3b84" # dark panel blue
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # chrome strut
+  a: "#d6dce4" # brand-white hull
+  e: "#8ccdd7" # cyan status light
+  j: "#4054bc" # solar panel blue
+grid: |
+  ................
+  .......OO.......
+  .....OOOOOO.....
+  OOOO.OaaaAO.OOOO
+  OjJOTOaaaAOTOjJO
+  OjJOTOeaaAOTOjJO
+  OjJO.OaaaAO.OjJO
+  OjJO.OaaaAO.OjJO
+  OOOO.OaaaAO.OOOO
+  .....OOOOOO.....
+  ................
+  ................

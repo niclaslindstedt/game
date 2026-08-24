@@ -1,0 +1,31 @@
+name: orbit_rock_1
+family: orbit
+size: [12, 12]
+description: >
+  A rounded pitted meteoroid — a lumpy grey-brown boulder cratered with dark
+  pocks.
+subject:
+  kind: space rock
+  build: a lumpy rounded boulder
+  features: two dark crater pocks, a rust-brown stain on the right flank
+  flavor: honest rock, the only thing up here GOODCO did not launch
+palette:
+  B: "#92643e" # rust-brown stain
+  E: "#5d4028" # dark crater pock
+  F: "#a2a4ad" # lit grey rock
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark rock shadow
+  f: "#888a96" # mid grey rock
+grid: |
+  ....OOOO....
+  ..OOFFFfOO..
+  .OFFFFfffBO.
+  .OFFfEEffbO.
+  OFFffEEfffbO
+  OFfffffffBbO
+  OFffEEfffBbO
+  OfffEEffbbbO
+  .OfffffbbbO.
+  .OffbbbbbbO.
+  ..OObbbbOO..
+  ....OOOO....

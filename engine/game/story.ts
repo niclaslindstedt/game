@@ -66,6 +66,14 @@ export {
  * room and the hub he lands in has nothing left to introduce (`openingPhase`).
  */
 export function advanceCutsceneChain(state: GameState): void {
+  // ANNOUNCE THE SCENE THAT JUST PLAYED OUT — queued rather than pushed
+  // straight into `state.events`, because this function is reached from a
+  // command between ticks as well as from the step, and the step clears the
+  // event pile before it would read one (see `GameState.scenesEnded`). The
+  // one thing hanging off it is the app's minigame fork on the launch.
+  if (state.cutscene) {
+    (state.scenesEnded ??= []).push(state.cutscene.defId);
+  }
   const next = state.cutsceneQueue.shift();
   if (next) {
     state.cutscene = createCutscene(cutsceneDef(next), state.cutsceneTags);

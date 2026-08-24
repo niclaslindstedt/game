@@ -328,7 +328,12 @@ The DRIVE is the whole simulation of a minigame; everything it is lives under
 `engine/game/drive/` and `pwa/src/game/drive-screen/`. The test that keeps it
 that way is blunt — **delete the two folders and nothing outside them should be
 left orphaned** — and the seam below is the list of what a deletion would then
-have to touch. A SECOND minigame is a row in the catalog, a case in the mount,
+have to touch. THE ROCKET (the flight between the lawn and the moon) is the
+second one, at `engine/game/rocket/` + `pwa/src/game/rocket-screen/`, wired
+through the same seams — with ONE seam of its own: it mounts over the MOON
+run's frozen prelude on the `sceneEnded` event (the launch), and lands by
+dropping the `voyage_moon` scene it stood in for (`skipScene`), never by a
+crossing. A THIRD minigame is a row in the catalog, a case in the mount,
 and its own two folders; anything it needs beyond that is the thing to fix
 rather than the thing to add.
 

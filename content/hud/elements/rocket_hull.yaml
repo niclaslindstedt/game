@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE HULL DIAL — where a launch feed keeps its propellant bars, this ship
+# keeps the one resource it actually spends: its skin.
+#
+# The damageometer's dial read the other way up: full is a whole ship, and the
+# sweep only ever comes DOWN — trash never touches it (bags cost handling, not
+# skin), satellites and rocks take a visible bite. Where it stops being a dent
+# and starts being the flight is a judgement, so the ladder is Lua and a mod
+# can move it.
+region: rocket_dash
+order: 3
+kind: panel
+class: drive-dial
+children:
+  - id: hull_arc
+    kind: gauge
+    class: drive-dial-ring
+    bind: rocket.hullFrac
+    sweep: 250
+    start: 235
+    thickness: 3.5
+    color:
+      script: rocket.hull_color
+    track: "#1b2431"
+
+  - id: hull_face
+    kind: panel
+    class: drive-dial-face
+    children:
+      - id: hull_number
+        kind: text
+        bind: rocket.hullFrac
+        format: percent
+        scale: 3
+        color:
+          script: rocket.hull_color
+      - id: hull_unit
+        kind: text
+        text: HULL
+        scale: 1
+        color: "#7d8899"
+
+  - id: hull_caption
+    kind: text
+    class: drive-dial-foot
+    text:
+      script: rocket.hull_label
+    scale: 1
+    color:
+      script: rocket.hull_color

@@ -1,0 +1,28 @@
+name: orbit_pad
+family: orbit
+size: [28, 8]
+description: >
+  The landing pad — a flat grey slab on the regolith, a hazard-tick band
+  along its edge, a cyan beacon post at each end.
+subject:
+  kind: landing marker
+  build: a long flat slab with a short beacon post standing at each end
+  features: an alternating hazard-tick band along the slab edge
+  accent: two cyan beacon lights
+  flavor: the one flat spot the hero gets to hit
+palette:
+  F: "#a2a4ad" # slab grey
+  O: "#1a1c2c" # outline
+  e: "#8ccdd7" # cyan beacon light
+  f: "#888a96" # slab shadow
+  h: "#e2c640" # hazard tick
+  k: "#342c26" # hazard gap
+grid: |
+  ............................
+  .OeO....................OeO.
+  ..O.......................O.
+  OOOOOOOOOOOOOOOOOOOOOOOOOOOO
+  OFFFFFFFFFFFFFFFFFFFFFFFFffO
+  OhkkhhkkhhkkhhkkhhkkhhkkhhkO
+  OOOOOOOOOOOOOOOOOOOOOOOOOOOO
+  ............................

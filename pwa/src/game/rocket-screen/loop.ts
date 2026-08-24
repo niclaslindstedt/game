@@ -1,0 +1,153 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// ONE TICK'S DRAIN — what the sim's events become on the way to the player's
+// eyes, ears and hands.
+//
+// THE ENGINE SAYS WHAT HAPPENED AND THIS FILE SAYS WHAT THAT IS LIKE, the
+// drive's own split: `stepFlight` leaves `events` and `strikes` full, and this
+// empties them into the fx layer, the sound bank and the speech box. Both the
+// screen and the `?rocket` workbench run it unchanged; what happens AFTER a
+// terminal beat is policy and lives in `end-flight.ts` instead.
+
+import { FLIGHT_OUTCOME, flightShellClear, type FlightState } from "@game/core";
+
+import { synth } from "../audio.ts";
+import { playFlightSound } from "../sfx/index.ts";
+import { FLIGHT_VOICE } from "./voice.ts";
+import {
+  BOOM_DEEP_SOUND,
+  BOOST_SOUND,
+  CLANG_SOUNDS,
+  ORBIT_SOUND,
+  POOF_SOUND,
+  RUMBLE_SOUND,
+  STICK_SOUNDS,
+  TOUCHDOWN_SOUND,
+  WARNING_SOUND,
+  boomFor,
+  takeAt,
+} from "./rocket-sounds.ts";
+import { boomFx, burstFx, poofFx, type RocketFxState } from "./rocket-fx.ts";
+
+/** The one-shot beats this drain owes exactly once per flight — the sim can
+ * only raise `orbit` once, but the shell-clear line is an EDGE the app reads,
+ * so the app keeps the latch. */
+export type FlightBeats = {
+  clearSaid: boolean;
+  monologueSaid: boolean;
+  descentSaid: boolean;
+};
+
+export function createFlightBeats(): FlightBeats {
+  return { clearSaid: false, monologueSaid: false, descentSaid: false };
+}
+
+/**
+ * Drain one tick. `say` raises a thought by id — the screen owns the box.
+ * Muted (`auto`) surfaces pass a no-op.
+ */
+export function drainFlight(
+  flight: FlightState,
+  fx: RocketFxState,
+  beats: FlightBeats,
+  say: (id: string) => void,
+): void {
+  const nowMs = flight.ms;
+
+  for (const event of flight.events) {
+    switch (event.type) {
+      case "stuck":
+        playFlightSound(synth, takeAt(STICK_SOUNDS, event.side * 40, nowMs));
+        break;
+      case "strike":
+        playFlightSound(synth, takeAt(CLANG_SOUNDS, event.x, event.alt));
+        break;
+      case "explosion":
+        boomFx(fx, event.x, event.alt, event.size, event.seed, nowMs);
+        playFlightSound(synth, boomFor(event.seed));
+        // The big one gets the floor under it — the layer that makes a ship
+        // going up read as bigger than a satellite going up.
+        if (event.size === "big") playFlightSound(synth, BOOM_DEEP_SOUND);
+        break;
+      case "wrecked":
+        // The explosion event beside it carries the picture and the noise;
+        // what the wreck itself owes is nothing — the hold and the restart
+        // are `end-flight.ts`'s.
+        break;
+      case "warning":
+        playFlightSound(synth, WARNING_SOUND);
+        break;
+      case "orbit":
+        playFlightSound(synth, ORBIT_SOUND);
+        break;
+      case "touchdown":
+        playFlightSound(synth, TOUCHDOWN_SOUND);
+        say(FLIGHT_VOICE.touchdown);
+        break;
+    }
+  }
+
+  // The garbage that came apart this tick — a blast core's work, mostly.
+  for (const strike of flight.strikes) {
+    burstFx(fx, strike.kind, strike.variant, strike.x, strike.alt, nowMs);
+  }
+
+  // ── THE EDGES THE APP READS ───────────────────────────────────────────────
+  if (!beats.monologueSaid && flight.phase === "ascent" && nowMs > 2600) {
+    beats.monologueSaid = true;
+    say(FLIGHT_VOICE.monologue);
+  }
+  if (
+    !beats.clearSaid &&
+    flight.phase === "ascent" &&
+    flight.outcome === FLIGHT_OUTCOME.flying &&
+    flightShellClear(flight)
+  ) {
+    beats.clearSaid = true;
+    playFlightSound(synth, ORBIT_SOUND);
+    say(FLIGHT_VOICE.clear);
+  }
+  if (!beats.descentSaid && flight.phase === "landing" && nowMs > 1400) {
+    beats.descentSaid = true;
+    say(FLIGHT_VOICE.descent);
+  }
+}
+
+/**
+ * THE CONTINUOUS PAIR — the booster's rumble and the poofs — fed from the
+ * INPUT rather than the events, because a held control is not an event.
+ * Called each tick with what the thumb is doing; both go through their own
+ * funnels so a held control is a note, never a drumroll.
+ */
+export function voiceFlightControls(
+  flight: FlightState,
+  fx: RocketFxState,
+  rumble: { nextMs: number },
+  throttle: number,
+  steer: number,
+): void {
+  const nowMs = flight.ms;
+  if (flight.outcome !== FLIGHT_OUTCOME.flying) return;
+  // A CONSTANT cadence — the bed rule (`continuous-bed-needs-a-hold`): the
+  // grains carry a hold sized to fuse at this spacing, and a cadence that
+  // moved with the throttle would make the RATE the thing the ear follows.
+  // The boost is a second, brighter grain LAYERED on the same clock instead —
+  // the engine opening up, not speeding up.
+  if (nowMs >= rumble.nextMs) {
+    rumble.nextMs = nowMs + 190;
+    playFlightSound(synth, RUMBLE_SOUND);
+    if (throttle > 0) playFlightSound(synth, BOOST_SOUND);
+  }
+  if (Math.abs(steer) > 0.25) {
+    // The poof leaves the OPPOSITE shoulder — the nozzle pushes the nose the
+    // way the thumb asked by venting the other way.
+    const vent: 1 | -1 = steer > 0 ? -1 : 1;
+    const fired = poofFx(
+      fx,
+      flight.craft.x + vent * 8,
+      flight.craft.alt + 6,
+      vent,
+      nowMs,
+    );
+    if (fired) playFlightSound(synth, POOF_SOUND);
+  }
+}

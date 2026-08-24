@@ -28,7 +28,7 @@ import {
   crawlMs,
   openBark,
   turnBark,
-} from "../pwa/src/game/drive-screen/bark.ts";
+} from "../pwa/src/game/bark.ts";
 
 /** The pages of a thought as the drive screen builds them — plain string rows;
  * none of the road's lines carries a `{ them: [...] }` block, because he is

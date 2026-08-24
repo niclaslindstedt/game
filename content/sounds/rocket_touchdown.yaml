@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_touchdown
+description: >-
+  THE PADS MEETING REGOLITH, gently enough to keep — a soft lowpass crunch of
+  dust taking the legs, then a small consonant chime up: relief, sized to a
+  landing rather than a victory (the board after it is the fanfare).
+voices:
+  - call: noise
+    durationMs: 180
+    volume: 0.045
+    filter:
+      type: lowpass
+      frequency: 480
+  - call: tone
+    type: triangle
+    from: 523
+    to: 523
+    durationMs: 160
+    volume: 0.032
+    delayMs: 200
+  - call: tone
+    type: triangle
+    from: 659
+    to: 659
+    durationMs: 260
+    volume: 0.032
+    delayMs: 340
+    echo: 0.22

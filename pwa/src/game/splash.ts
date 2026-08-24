@@ -108,6 +108,7 @@ const HARNESS_PARAMS = [
   "nosplash",
   "effects",
   "drive",
+  "rocket",
   "cutscene",
 ];
 

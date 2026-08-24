@@ -179,6 +179,50 @@ export const HUD_BINDINGS = {
   "drive.wearPercent": "number",
   "drive.failing": "flag",
   "drive.paused": "flag",
+  // THE FLIGHT. The rocket minigame's mission control is its own surface with
+  // its own dials, content for the road's reason — a re-skinned game gets to
+  // re-skin mission control too. Published by `rocket-screen/dials.ts`.
+  //
+  // The speed dial is PEGGED at the dashboard's last figure (the true number
+  // runs away in the vacuum over the shell), and the altitude pair changes
+  // MEANING with the half being flown: miles of climb on the ascent, px of
+  // drop left on the landing — `rocket.landing` is the flag a label reads to
+  // say which.
+  "rocket.mph": "number",
+  "rocket.speedFrac": "frac",
+  "rocket.altitude": "number",
+  "rocket.altFrac": "frac",
+  "rocket.hullPercent": "number",
+  "rocket.hullFrac": "frac",
+  "rocket.failing": "flag",
+  // THE ATTITUDE INDICATOR — the lean split into its two shoulders, each 0..1
+  // of the FLIP (not of the warning), so the pair of arcs fills toward the
+  // side the ship is falling over and full is the explosion. `leanFrac` is the
+  // worse of the two, for the colour ladder; `warn` is the engine's own
+  // warning line, already crossed.
+  "rocket.leanPortFrac": "frac",
+  "rocket.leanStarFrac": "frac",
+  "rocket.leanFrac": "frac",
+  "rocket.warn": "flag",
+  // The mission clock (`T+m:ss`) — formatted in the app (a clock is a format,
+  // not a judgement), raw beside it for the judgement that genuinely is one.
+  "rocket.clock": "text",
+  "rocket.clockMs": "number",
+  "rocket.clockStarted": "flag",
+  "rocket.dashLive": "flag",
+  /** Which half is being flown, as a caption prints it. */
+  "rocket.phase": "text",
+  "rocket.landing": "flag",
+  /** Bags riding the hull right now. */
+  "rocket.trash": "number",
+  /** The boosters are open — the throttle lamp. */
+  "rocket.boost": "flag",
+  // THE MISSION TIMELINE'S MARKER — STAGED 0..1, each leg of the trip mapped
+  // onto its own fifth so a strip with six evenly spaced event labels reads
+  // true (`missionProgress`, rocket-screen/dials.ts).
+  "rocket.progress": "frac",
+  "rocket.shellClear": "flag",
+  "rocket.paused": "flag",
   // VOICE CHAT. A session fact rather than a run fact — the engine's state
   // knows nothing about who is talking — but the HUD is where a player reads
   // it, so it is a binding group like any other. Empty on every run without
@@ -267,7 +311,7 @@ export const HUD_ROW_WIDGETS = { voiceCards: "speaker" };
  * and the road's dials are one catalog, authored the same way, mounted by two
  * different screens.
  */
-export const HUD_SURFACES = new Set(["field", "drive"]);
+export const HUD_SURFACES = new Set(["field", "drive", "rocket"]);
 
 /** What a press may do. Each is a verb the app owns; YAML decides which
  * element carries it, and `mod` elements may carry any of them. */

@@ -1,0 +1,33 @@
+name: orbit_junk_13
+family: orbit
+size: [12, 14]
+description: >
+  A washing machine adrift — white box, chrome dials, round dark porthole
+  with a glint.
+subject:
+  kind: orbital junk prop
+  build: an upright white box on stub feet with a big round porthole
+  features: two chrome dials on the top panel, a glint in the dark drum glass
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  A: "#8d9196" # enamel shadow
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # chrome dial
+  W: "#f4f4f4" # white enamel
+  b: "#3f4553" # dark drum glass
+  x: "#c5e6ebe1" # glass glint
+grid: |
+  .OOOOOOOOOO.
+  .OWWWWWWWAO.
+  .OWTWTWWWAO.
+  .OAAAAAAAAO.
+  .OWWWWWWWAO.
+  .OWWOOOOWAO.
+  .OWOxbbbOAO.
+  .OWObbbbOAO.
+  .OWObbbbOAO.
+  .OWWOOOOWAO.
+  .OWWWWWWWAO.
+  .OWWWWWWWAO.
+  .OOOOOOOOOO.
+  ..O......O..

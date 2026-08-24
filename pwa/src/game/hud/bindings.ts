@@ -213,6 +213,8 @@ export function scriptState(
     hud: {},
     ui: {},
     drive: {},
+    // The flight's mission control (`rocket-screen/dials.ts`).
+    rocket: {},
     voice: {},
     // The IN-GAME MENUS' own group (`../menus/bindings.ts`) — which window the
     // player is standing behind, and what is stacked over it.

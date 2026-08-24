@@ -1,0 +1,26 @@
+name: orbit_junk_9
+family: orbit
+size: [16, 10]
+description: >
+  A sagging green sofa — the back cushions dip in the middle, arms still
+  holding their corners.
+subject:
+  kind: orbital junk prop
+  build: a low couch, round arms both ends, backrest sagging in the middle
+  features: cushion seams down the back, a dark crease under the seat
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  G: "#4a7a3e" # worn green upholstery
+  O: "#1a1c2c" # outline
+  g: "#3d6433" # upholstery shadow
+grid: |
+  ................
+  ...OOOOOOOOOO...
+  ..OGGGOOOOGGGO..
+  OOOGGGGGGGGGGOOO
+  OGgGGGgGGGgGGgGO
+  OGgGGGgGGGgGGgGO
+  OGgggggggggggggO
+  OGGGGGGGgGGGGGGO
+  .OOOOOOOOOOOOOO.
+  ..OO........OO..

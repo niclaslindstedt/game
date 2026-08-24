@@ -162,3 +162,45 @@ regions:
     parent: drive
     order: 1
     class: drive-clock-slot
+
+  # ---------------------------------------------------------------------------
+  # THE FLIGHT — the rocket minigame's mission control, its own surface.
+  #
+  # THE LOOK IS A LAUNCH WEBCAST'S, in this game's own skin: twin dials along
+  # the bottom (speed and altitude) with the hull bar and the attitude
+  # indicator between them, a T+ clock in the cabinet's corner, and a mission
+  # timeline strip across the top with the trip's six events on it. A separate
+  # screen mounts it (`RocketScreen`); a mod re-skins mission control exactly
+  # as it re-skins the wagon's dashboard.
+  rocket:
+    surface: rocket
+    order: 0
+    wrap: none
+
+  # THE CONSOLE, along the bottom — the dashboard position, and the dashboard
+  # rules: tap-transparent (the whole picture is the flying thumb), centred,
+  # gated on the hand-over (`rocket.dashLive`) and sliding in off its own
+  # mount, which is why it wears the road's own `.drive-dash` animation class.
+  rocket_dash:
+    parent: rocket
+    order: 0
+    class: drive-dash rocket-dash
+    visible: rocket.dashLive
+
+  # THE MISSION TIMELINE, across the TOP — the launch feed's event strip:
+  # LIFTOFF → JUNK SHELL → ALL CLEAR → ORBIT → THE DROP → TOUCHDOWN, with the
+  # marker riding `rocket.progress` (staged so the evenly spaced labels read
+  # true). The top because the bottom is the console's, and because it is the
+  # machine narrating the trip rather than an instrument the ship has.
+  rocket_strip:
+    parent: rocket
+    order: 1
+    class: rocket-strip
+    visible: rocket.dashLive
+
+  # THE CLOCK, top right — the cabinet's corner, the road's rules: gated on the
+  # clock having started, tap answered (it is the touch player's PAUSE).
+  rocket_clock:
+    parent: rocket
+    order: 2
+    class: drive-clock-slot

@@ -1,0 +1,25 @@
+name: orbit_junk_18
+family: orbit
+size: [10, 8]
+description: >
+  A limp banana peel curled into a crescent, bruised dark at both ends.
+subject:
+  kind: orbital junk prop
+  build: a slim crescent curling up to a pointed tip
+  features: a bruised inner edge along the curl
+  accent: blackened tips at both ends
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  O: "#1a1c2c" # outline
+  h: "#e2c640" # banana yellow
+  k: "#342c26" # blackened tip
+  q: "#96762e" # bruised flesh
+grid: |
+  ..........
+  .......OkO
+  ......OhhO
+  .....OhhqO
+  ...OOhhqO.
+  .OOhhhqO..
+  OkhhqqO...
+  OOOOOO....

@@ -496,6 +496,16 @@ export type GameState = {
    */
   cutsceneThen: "intro" | "victory";
   /**
+   * SCENES THAT HAVE FINISHED, WAITING TO BE ANNOUNCED — drained into
+   * `sceneEnded` events at the top of the next step, the same relay the
+   * cutscene's own sounds ride and for the same reason: the chain can be
+   * rolled forward by a COMMAND between two ticks (`tapCutscene`), and an
+   * event pushed there would be swept with the pile the next step clears.
+   * Nearly always empty; the app's one reader is the minigame fork that hangs
+   * off the launch scene ending (`GameScreen.beginFlight`).
+   */
+  scenesEnded: string[];
+  /**
    * Which page of the level's opening monologue is on screen while
    * `phase === "intro"` — the hero's black-screen briefing dialogue. Turning
    * past the last page drops into the `title` card; unused in other phases.

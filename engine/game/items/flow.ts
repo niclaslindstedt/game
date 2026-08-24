@@ -4,10 +4,14 @@
 // the run's phase stays `playing` and the hero's own `screen` carries
 // what they are looking at), and the post-victory STAY choice.
 
-import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
+import {
+  advanceCutsceneBeat,
+  createCutscene,
+  finishCutscene,
+} from "@game/lib/cutscene.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
-import { introPages } from "../opening.ts";
+import { introPages, openingPhase } from "../opening.ts";
 import { heroInPlay } from "../party.ts";
 import { isPartyRun } from "../seating.ts";
 import { advanceCutsceneChain, outroPages } from "../story.ts";
@@ -183,6 +187,36 @@ export function tapCutscene(state: GameState): void {
   if (state.phase !== "cutscene" || !state.cutscene) return;
   advanceCutsceneBeat(state.cutscene, cutsceneDef(state.cutscene.defId));
   if (state.cutscene.done) advanceCutsceneChain(state);
+}
+
+/**
+ * END THE RUNNING SCENE ALONE — the chain rolls to the next queued scene, or
+ * hands over to the opening exactly as if the scene had played out. The one
+ * verb that can drop a SINGLE scene without bailing the story around it,
+ * which is what the flight minigame needs: it stands in for `voyage_moon`, so
+ * when the landing hands back, that one scene is owed a quiet exit and the
+ * intro monologue behind it still plays. (`skipCutscene` below is the
+ * player's SKIP and throws the whole opening away — a different promise.)
+ *
+ * Raises no `sceneEnded` for the dropped scene: it did not play, and the one
+ * consumer of that beat is the fork that just asked for this.
+ */
+export function skipScene(state: GameState): void {
+  if (state.phase !== "cutscene" || !state.cutscene) return;
+  finishCutscene(state.cutscene, cutsceneDef(state.cutscene.defId));
+  state.cutscene = null;
+  const next = state.cutsceneQueue.shift();
+  if (next) {
+    state.cutscene = createCutscene(cutsceneDef(next), state.cutsceneTags);
+    return;
+  }
+  if (state.cutsceneThen === "victory") {
+    const outro = outroPages(state);
+    state.phase =
+      !state.dialogueMuted && outro.length > 0 ? "outro" : "victory";
+    return;
+  }
+  state.phase = openingPhase(state);
 }
 
 /**

@@ -761,6 +761,7 @@ export function createGame(
         ? createCutscene(cutsceneDef(preludes[0]!), cutsceneTags)
         : null,
     cutsceneQueue: preludes.slice(1),
+    scenesEnded: [],
     cutsceneTags,
     cutsceneThen: "intro",
     introPage: 0,

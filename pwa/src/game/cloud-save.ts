@@ -80,6 +80,13 @@ import {
   type DriveScoreEntry,
 } from "./drive-scores.ts";
 import {
+  flightScoreKey,
+  flightScoresSnapshot,
+  mergeFlightScores,
+  trimFlightScores,
+  type FlightScoreEntry,
+} from "./rocket-scores.ts";
+import {
   coinLedger,
   mergeCoinLedgers,
   normalizeLedger,
@@ -130,6 +137,8 @@ export type CloudSave = {
   scores: Record<string, CampaignScore[]>;
   /** The DRIVE minigame's arcade board — one list, best first. */
   driveScores: DriveScoreEntry[];
+  /** …and the ROCKET's, same shape rules (rocket-scores.ts). */
+  rocketScores: FlightScoreEntry[];
 };
 
 /** Where the sync stands, for the SETTINGS → DATA status line. */
@@ -213,6 +222,7 @@ export function localSnapshot(): CloudSave {
     coins: coinLedger(),
     scores: campaignScoresSnapshot(),
     driveScores: driveScoresSnapshot(),
+    rocketScores: flightScoresSnapshot(),
   };
 }
 
@@ -264,6 +274,9 @@ export function parseCloudSave(raw: string | null): CloudSave | null {
     // never a refusal (see the format note at the top of this file).
     driveScores: Array.isArray(save.driveScores)
       ? trimDriveScores(save.driveScores)
+      : [],
+    rocketScores: Array.isArray(save.rocketScores)
+      ? trimFlightScores(save.rocketScores)
       : [],
   };
 }
@@ -370,6 +383,15 @@ export function mergeSaves(local: CloudSave, remote: CloudSave): CloudSave {
     ...remote.driveScores.filter((row) => !seenDrive.has(driveScoreKey(row))),
   ]);
 
+  const mineFlight = local.rocketScores;
+  const seenFlight = new Set(mineFlight.map(flightScoreKey));
+  const rocketScores = trimFlightScores([
+    ...mineFlight,
+    ...remote.rocketScores.filter(
+      (row) => !seenFlight.has(flightScoreKey(row)),
+    ),
+  ]);
+
   return {
     format: CLOUD_FORMAT,
     version: CLOUD_VERSION,
@@ -380,6 +402,7 @@ export function mergeSaves(local: CloudSave, remote: CloudSave): CloudSave {
     coins: mergeCoinLedgers(local.coins, remote.coins),
     scores,
     driveScores,
+    rocketScores,
   };
 }
 
@@ -398,6 +421,7 @@ export function applySave(save: CloudSave): void {
   setCoinLedger(save.coins);
   mergeCampaignScores(save.scores);
   mergeDriveScores(save.driveScores);
+  mergeFlightScores(save.rocketScores);
   // The hero this device had selected may have been deleted on another one.
   const active = getActiveCharacterId();
   if (active && !save.characters.some((c) => c.id === active)) {

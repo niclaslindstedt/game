@@ -178,9 +178,10 @@ export type HudRegionDef = {
   visible?: HudCondition;
 };
 
-/** The screens a HUD is drawn on: the fight (`GameScreen`) and the road's
- * minigame (`DriveScreen`). One catalog, two mounts. */
-export type HudSurface = "field" | "drive";
+/** The screens a HUD is drawn on: the fight (`GameScreen`), the road's
+ * minigame (`DriveScreen`) and the flight's (`RocketScreen`). One catalog,
+ * three mounts. */
+export type HudSurface = "field" | "drive" | "rocket";
 
 /** A HUD moment the app raises rather than a button — answered by a sound in
  * `content/hud/events.yaml`. The set is fixed: nothing would raise one the app

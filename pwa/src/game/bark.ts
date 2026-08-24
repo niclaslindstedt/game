@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE ROAD'S VOICE, AND ITS CLOCK — how long one of the hero's lines stays on
-// the screen, and how a two-page thought turns itself over.
+// A MINIGAME'S VOICE, AND ITS CLOCK — how long one of the hero's lines stays
+// on the screen, and how a two-page thought turns itself over. Shared by every
+// interlude with a speech box (the road's, the flight's); the drive is the
+// worked example the doc below speaks in.
 //
 // A LINE SAID AT SPEED IS A BARK, NOT A SCENE, and that is the design of nearly
 // all of the drive's voice. The hero's remark about minding how you go is funny

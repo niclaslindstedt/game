@@ -1,0 +1,31 @@
+name: orbit_junk_12
+family: orbit
+size: [10, 12]
+description: >
+  A rusty oil drum — blue steel, two dark hoop ribs, rust eating through the
+  paint.
+subject:
+  kind: orbital junk prop
+  build: an upright cylinder with two hoop ribs
+  accent: rust-brown patches eating through blue paint
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  B: "#92643e" # rust
+  E: "#5d4028" # deep rust
+  J: "#2d3b84" # dark blue shadow
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # lit rim
+  j: "#4054bc" # blue drum paint
+grid: |
+  .OOOOOOOO.
+  OTTTjjjJJO
+  OjjjjjjjJO
+  OjBBjjjjJO
+  OJJJJJJJJO
+  OjjjjBBjJO
+  OjjjjBEjJO
+  OjjjjjjjJO
+  OJJJJJJJJO
+  OjjjjjBBJO
+  OJJJJJJJJO
+  .OOOOOOOO.

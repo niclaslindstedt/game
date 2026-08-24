@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_boom_c
+description: >-
+  An explosion in the shell, THIRD take — the slow rolling one: the crack is
+  duller, the pressure longer, and a second late thump under the tail. The
+  take that makes a chain read as a chain instead of a stutter.
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.065
+    filter:
+      type: bandpass
+      frequency: 1100
+  - call: tone
+    type: sawtooth
+    from: 300
+    to: 26
+    durationMs: 680
+    volume: 0.082
+    detuneCents: 34
+    echo: 0.32
+  - call: noise
+    durationMs: 1050
+    volume: 0.055
+    filter:
+      type: lowpass
+      frequency: 260
+    echo: 0.38
+  - call: noise
+    durationMs: 240
+    volume: 0.04
+    delayMs: 300
+    filter:
+      type: bandpass
+      frequency: 640

@@ -298,6 +298,7 @@ export {
   advanceOutro,
   skipOutro,
   skipCutscene,
+  skipScene,
   skipStoryOpening,
   tapCutscene,
   ARMOR_SLOTS,
@@ -1171,6 +1172,52 @@ export type {
   TownSlot,
   WitnessScene,
 } from "./game/drive/index.ts";
+
+// THE FLIGHT — the playable interlude between the lawn and the moon: the
+// climb through GOODCO's orbital landfill, and the landing
+// (engine/game/rocket/). RUN-FACING ONLY, for the drive's reason: it must
+// never reach `engine/menu.ts` — the app imports it from the GAME screen,
+// never from the title.
+export {
+  FLIGHT,
+  FLIGHT_OUTCOME,
+  FLIGHT_WRECKS,
+  IDLE_FLIGHT_INPUT,
+  ORBIT_VARIANTS,
+  airFrac,
+  bandFrac,
+  beginDescent,
+  blastHash,
+  blastRoll,
+  createFlight,
+  flightAltFrac,
+  flightCoursePx,
+  flightHandsOff,
+  flightMph,
+  flightPar,
+  flightScore,
+  flightShellClear,
+  flightTripMs,
+  gravityAt,
+  restartFlight,
+  stepFlight,
+} from "./game/rocket/index.ts";
+export type {
+  FlightBlast,
+  FlightCraft,
+  FlightEvent,
+  FlightInput,
+  FlightOutcome,
+  FlightParams,
+  FlightPhase,
+  FlightScorecard,
+  FlightState,
+  FlightStrike,
+  FlightWreck,
+  OrbitKind,
+  OrbitObject,
+  StuckTrash,
+} from "./game/rocket/index.ts";
 
 // THE PLAYABLE INTERLUDES' own switch. Exported straight off the flag leaf
 // rather than through the system it gates (the way the dialogue and cutscene

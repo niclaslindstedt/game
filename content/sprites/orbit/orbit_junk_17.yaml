@@ -1,0 +1,27 @@
+name: orbit_junk_17
+family: orbit
+size: [10, 10]
+description: >
+  A traffic cone adrift — amber taper, white reflective band, square base
+  plate.
+subject:
+  kind: orbital junk prop
+  build: a tapered cone on a square base plate
+  accent: a white reflective band around the taper
+  flavor: household garbage GOODCO fired into orbit
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # reflective band
+  o: "#d6a842" # cone shadow
+  y: "#ffb02e" # amber cone
+grid: |
+  ....OO....
+  ...OyoO...
+  ...OyoO...
+  ..OWWWWO..
+  ..OyyooO..
+  .OyyyoooO.
+  .OyyyoooO.
+  OyyyyyyooO
+  OOOOOOOOOO
+  ..........
