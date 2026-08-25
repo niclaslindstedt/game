@@ -27,7 +27,11 @@
   "submit": {
     "production": {
       "ios": {
-        "metadataPath": "./store/store.config.json"
+        "metadataPath": "./store/store.config.json",
+        "appleTeamId": "8Z7JSMA9SB",
+        "ascApiKeyId": "$ASC_KEY_ID",
+        "ascApiKeyIssuerId": "$ASC_ISSUER_ID",
+        "ascApiKeyPath": "$ASC_KEY_PATH"
       }
     }
   }
