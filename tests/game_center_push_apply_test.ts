@@ -155,19 +155,19 @@ function stubServer(portal: Portal) {
       attributes: row.attributes,
     });
 
-    // GET /v1/gameCenterDetails?filter[app]=…
+    // GET /v1/apps/{id}/gameCenterDetail — the app's own to-one relationship,
+    // which is the ONLY read Apple offers: `gameCenterDetails` allows just
+    // CREATE, GET_INSTANCE and UPDATE, so a filtered collection GET is refused
+    // with a 403. An app with Game Center switched off answers 404 here.
     if (
       req.method === "GET" &&
-      parts[1]! === "gameCenterDetails" &&
-      parts.length === 2
+      parts[1]! === "apps" &&
+      parts[3]! === "gameCenterDetail" &&
+      parts.length === 4
     ) {
-      const wanted = url.searchParams.get("filter[app]");
-      return send(200, {
-        data:
-          wanted === APP_ID
-            ? [{ type: "gameCenterDetails", id: DETAIL_ID }]
-            : [],
-      });
+      return parts[2]! === APP_ID
+        ? send(200, { data: { type: "gameCenterDetails", id: DETAIL_ID } })
+        : send(404, { errors: [{ status: "404", code: "NOT_FOUND" }] });
     }
 
     // GET /v1/gameCenterDetails/{id}/{collection}
