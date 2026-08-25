@@ -138,18 +138,33 @@ if (/^[A-Z0-9]{10}$/i.test(String(iosSubmit.appleTeamId ?? ""))) {
 // EAS needs ONE way to authenticate the submission: an Apple Account, or the
 // App Store Connect API key. The key is preferred for the same reason fastlane
 // prefers it — no 2FA session to expire mid-upload.
+//
+// THE THREE KEY FIELDS ARE `$VAR` REFERENCES, AND THAT IS THE WHOLE POINT.
+// eas.json interpolates the process environment into exactly three iOS submit
+// fields — ascApiKeyPath, ascApiKeyId, ascApiKeyIssuerId — so the credential
+// stays out of a public tree while a --non-interactive submit still works.
+// Resolve them the same way here, or a `$ASC_KEY_ID` with nothing behind it
+// reads as configured and the gap surfaces as an EAS validation error instead.
+// The other two ids (ascAppId, appleTeamId) are NOT interpolated by EAS and
+// have no CLI flag, so they are committed literals — both are public.
+const easField = (value) =>
+  String(value ?? "").replace(
+    /\$\{?([A-Za-z0-9_]+)\}?/g,
+    (_, key) => process.env[key] ?? "",
+  );
 const easHasKey =
-  iosSubmit.ascApiKeyPath &&
-  iosSubmit.ascApiKeyId &&
-  iosSubmit.ascApiKeyIssuerId;
+  easField(iosSubmit.ascApiKeyPath) &&
+  easField(iosSubmit.ascApiKeyId) &&
+  easField(iosSubmit.ascApiKeyIssuerId);
 if (iosSubmit.appleId || easHasKey) {
   ok("eas submit has a way to authenticate");
 } else {
   warn(
-    "eas.json names neither an appleId nor an App Store Connect API key",
+    "eas.json names neither an appleId nor a resolvable App Store Connect key",
     "fine interactively (eas submit prompts and remembers), but a " +
       "--non-interactive run — the `native` workflow with submit: true — " +
-      "needs one of them, or the credentials uploaded via `eas credentials`.",
+      "needs ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_PATH exported into the " +
+      "environment EAS runs in. eas.json already references them.",
     "apple",
   );
 }

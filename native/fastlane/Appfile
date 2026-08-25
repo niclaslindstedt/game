@@ -3,9 +3,12 @@
 # fails if the two drift.
 app_identifier("se.agilator.adastrail")
 
-# Both come from the environment rather than the repo: the Apple Account email
-# is personal data and the team id is account-shaped, and neither belongs in a
-# public tree. Set them in native/.env (gitignored) or the shell.
+# The Apple Account email comes from the environment because it is personal
+# data. The team id is read the same way for symmetry rather than for secrecy —
+# it is not a credential, and eas.json has to commit the same value as a literal
+# because EAS interpolates no environment variable into `appleTeamId`. Set both
+# in native/.env (gitignored) or the shell; store-preflight fails if the team id
+# here and the one in eas.json disagree.
 apple_id(ENV["APPLE_ID"])
 itc_team_id(ENV["ASC_TEAM_ID"])
 team_id(ENV["APPLE_TEAM_ID"])
