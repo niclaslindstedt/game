@@ -440,6 +440,41 @@ describe("the title menu tree", () => {
     expect(ship?.value).toBe(minigameDef("rocket").variants[0]?.name);
   });
 
+  it("launches a lap carrying the cabinet page it was pressed on", () => {
+    // The lap comes back to the page it left, and the app cannot work out which
+    // of the two that was — so PLAY hands it up with the press. Getting this
+    // wrong lands a DEVELOPER lap on the PLAYER's cabinet, where the rungs are
+    // the campaigns this roster has beaten: for a roster that has beaten none,
+    // that page reads DIFFICULTY "-" and its PLAY only buzzes.
+    const launched: string[] = [];
+    const spy = (roster: Character[], cabinet: "drive" | "rocket") =>
+      ctxFor({
+        roster,
+        cabinet,
+        onMinigame: (_id, _difficulty, _variant, from) => launched.push(from),
+      });
+
+    const press = (screen: MenuScreen, ctx: MenuContext) =>
+      buildMenu(screen, ctx)
+        .find((row) => row.aria === `${screen}-play`)
+        ?.action();
+
+    press("minigame", spy([CHAMPION], "rocket"));
+    expect(launched).toEqual(["minigame"]);
+
+    // The developer twin plays the whole ladder with no campaign beaten first,
+    // so an EMPTY roster still starts a lap — and must return to this page.
+    launched.length = 0;
+    press("devminigame", spy([], "rocket"));
+    expect(launched).toEqual(["devminigame"]);
+
+    // …and the other half of why it matters: the SAME roster on the PLAYER's
+    // cabinet has no rung to play, so its PLAY buzzes instead of starting.
+    launched.length = 0;
+    press("minigame", spy([], "rocket"));
+    expect(launched).toEqual([]);
+  });
+
   it("greys a cabinet's DIFFICULTY row until a second rung is beaten", () => {
     // One campaign beaten is one rung to play on, so there is nothing to cycle
     // — but the row still says WHICH rung, and its grey is the thing that says

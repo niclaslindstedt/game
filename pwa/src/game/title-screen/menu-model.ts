@@ -78,6 +78,21 @@ export type MenuScreen =
   | "sessions"
   | "address";
 
+/**
+ * A CABINET'S OWN PAGE — the player's, and the developer twin behind
+ * PLAYGROUND. The pair is authored twice because a `dev: true` screen may not
+ * parent a plain one, and the two are NOT interchangeable at runtime: the
+ * player's offers only the rungs a beaten campaign earned, the developer's the
+ * whole ladder. So a lap carries the page it was launched from
+ * (`MenuContext.onMinigame`), and the title comes back up on that one — landing
+ * a developer lap on the player's page is a cabinet with no rung to play.
+ */
+export type CabinetScreen = Extract<MenuScreen, "minigame" | "devminigame">;
+
+/** Where the title mounts when it next shows, set by a lap of a minigame
+ * ending: the cabinet page it was started from, with PLAY under the cursor. */
+export type CabinetReturn = { screen: CabinetScreen; cabinet: MinigameId };
+
 export type MenuEntry = {
   label: string;
   aria: string;
@@ -309,6 +324,11 @@ export type MenuContext = {
      * the reason the rung is one: the screen behind a cabinet is built whole
      * from what it is handed. */
     variant: string,
+    /** WHICH OF THE TWO CABINET PAGES the press came from, so the title can
+     * come back up on it. It travels with the press because the far side
+     * cannot infer it: the two pages differ in the RUNGS they offer, and the
+     * developer twin's are the whole ladder rather than a beaten campaign's. */
+    from: CabinetScreen,
   ) => void;
   /** WHICH CABINET the player walked up to — the machine whose own page
    * (`minigame` / `devminigame`) is being laid out. A MODE rather than a place,
