@@ -13,8 +13,8 @@ repo root before any build so that bundle exists.
 
 Store identities are wired in [`app.config.js`](app.config.js):
 
-- iOS `ios.bundleIdentifier` — `se.niclaslindstedt.adastrail`
-- Android `android.package` — `se.niclaslindstedt.adastrail`
+- iOS `ios.bundleIdentifier` — `se.agilator.adastrail`
+- Android `android.package` — `se.agilator.adastrail`
 
 > **Licence note.** The repo uses PolyForm Noncommercial 1.0.0 plus the Ada's
 > Trail Feature Terms, which reserve player use of mods and multiplayer for an

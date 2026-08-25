@@ -3,7 +3,7 @@
 //! the one time that has to move.
 //!
 //! Tauri names the app-data directory after the bundle IDENTIFIER, which is a
-//! reverse-domain string nobody has ever seen (`se.niclaslindstedt.adastrail…`)
+//! reverse-domain string nobody has ever seen (`se.agilator.adastrail…`)
 //! while the executable is `adastrail` and the window says _Ada's Trail_. So the
 //! folder the player's things live in is DECLARED here instead, beside the
 //! app-data root rather than under the identifier, and it is the executable's

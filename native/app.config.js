@@ -15,9 +15,12 @@ const { version } = require("../package.json");
 // The Expo project this app builds under (from `eas init --id ...`).
 const EAS_PROJECT_ID = "180cff05-a398-48e3-ae63-a9b0bd408321";
 
-// Reverse-DNS app id, derived from the author domain. Kept identical on both
-// stores so the app is one product across platforms.
-const BUNDLE_ID = "se.niclaslindstedt.adastrail";
+// Reverse-DNS app id on the PUBLISHER's domain: Agilator AB is the entity that
+// holds the store agreements, the bank account and the trader registration, so
+// the permanent identifier is the company's rather than the author's. Kept
+// identical on both stores so the app is one product across platforms — and
+// UNCHANGEABLE once an app record ships under it.
+const BUNDLE_ID = "se.agilator.adastrail";
 
 const BRAND_BG = "#0b0d10"; // game.config theme_color / color-scheme: dark
 

@@ -1,7 +1,7 @@
 # Which app fastlane is talking about. The bundle id is the one source of truth
 # in app.config.js — kept in step by `fastlane metadata`'s preflight, which
 # fails if the two drift.
-app_identifier("se.niclaslindstedt.adastrail")
+app_identifier("se.agilator.adastrail")
 
 # Both come from the environment rather than the repo: the Apple Account email
 # is personal data and the team id is account-shaped, and neither belongs in a

@@ -53,7 +53,7 @@ const MOD_TOOLCHAIN_DEPS = Object.keys(
  * behind, which would have signed the macOS build under an id no store record
  * holds).
  */
-const BUNDLE_ID = "se.niclaslindstedt.adastrail";
+const BUNDLE_ID = "se.agilator.adastrail";
 
 /**
  * WHAT THE PACKAGE IS STAMPED WITH.
