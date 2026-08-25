@@ -36,6 +36,10 @@ export const FLIGHT_VOICE = {
   /** …and the first of somebody's canopies (a skydiver or a paraglider —
    * one thought covers the hobby). */
   hobbyist: "flight_hobbyist",
+  /** The first time the climb reaches the watch deck — the solar-winged
+   * machines that have been over everybody for years, and the one beat on the
+   * whole trip that is about being LOOKED AT. */
+  watched: "flight_watched",
 } as const;
 
 /** THE TIP-OVER ROTATION — the ship never stops trying, so a repeated scare

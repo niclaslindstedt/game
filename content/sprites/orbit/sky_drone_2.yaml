@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_drone_2
+family: orbit
+size: [26, 9]
+description: >
+  A solar-winged watchkeeper on the high deck — an enormously long thin wing
+  panelled edge to edge in solar cells, a slim pale pod slung under the middle
+  with a red camera eye, and a thin boom back to a small tail.
+subject:
+  kind: high-altitude surveillance drone
+  build: one very long straight thin wing far wider than anything hanging off it, a slim pod below its middle, a thin tail boom
+  features: solar cells panelled the full span, three motor pylons, a camera eye under the pod
+  accent: a red camera eye on the underside
+  flavor: months aloft over the same city, and nobody has to look at it
+palette:
+  O: "#1a1c2c" # outline
+  J: "#2d3b84" # dark solar cell
+  j: "#4054bc" # solar cell blue
+  T: "#c0c5cf" # rotor blur
+  a: "#d6dce4" # pod shell
+  A: "#8d9196" # shell shadow
+  R: "#ff5252" # camera eye
+grid: |
+  ..........................
+  ..OOOOOOOOOOOOOOOOOOOOOO..
+  .OJjJjJjJjJjJjJjJjJjJjJjO.
+  .OOOOOOOOOOOOOOOOOOOOOOOO.
+  ......OTO.......OTO.......
+  ..........OaaaaAO....OO...
+  ..........OaRaaAOOOOOTO...
+  ..........OOOOOOO...OOO...
+  ..........................

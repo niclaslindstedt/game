@@ -4538,6 +4538,16 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
+    "flight_watched": {
+      "id": "flight_watched",
+      "pages": [
+        [
+          "WINGS THE SIZE OF A STREET, ALL POINTED DOWN. SOMEBODY'S BEEN UP HERE A WHILE."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "garage_on_foot": {
       "id": "garage_on_foot",
       "pages": [

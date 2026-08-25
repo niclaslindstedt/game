@@ -164,14 +164,29 @@ Never ship a sprite you have not looked at. For each asset, loop:
    `_family.yaml`). Start from the silhouette: block the shape in one color,
    then add shading. New chars go in the sprite's own `palette` (concrete hex);
    put a color the family shares across sprites in `_family.yaml`.
-2. **Generate** — run:
+2. **Render — and NOT with `make assets` while you are iterating.**
+
+   ```sh
+   node scripts/sprite-author.mjs pose <name> --scale 10 --out /tmp/<name>.png
+   ```
+
+   `pose` reads the sprite's YAML directly and draws that ONE sprite on its
+   own family ground in about two seconds. `make assets` rebuilds the whole
+   content tree and repacks 2500 sprites — two and a half MINUTES, on every
+   loop, for a grid you are going to change again in thirty seconds. A sprite
+   typically takes three to five iterations; that is the difference between a
+   five-minute pass and a fifteen-minute one.
+
+   Run `make assets` at the END of the sprite, and whenever you need what only
+   it produces:
 
    ```sh
    make assets   # = node scripts/generate-assets.mjs
    ```
 
-   Read its warnings: orphan pixels, low ground contrast, and invisible
-   wound overlays are flagged here, before any eyes-on pass.
+   — the atlas, the family contact sheets, the derived wound variants, and the
+   generation-time LINT. Read its warnings: orphan pixels, low ground contrast
+   and invisible wound overlays are flagged there, and nowhere else.
 
 3. **Look** — open the generated previews with the Read tool (it renders
    images):

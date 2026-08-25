@@ -1111,6 +1111,10 @@ tracker beat instead — same facts, the film version. Nobody gets both._
 
 **ME (thinks):** THEY HAD THE WHOLE SKY. THEY PICKED MINE.
 
+### Into the watch deck — once, the first time the climb reaches the solar wings
+
+**ME (thinks):** WINGS THE SIZE OF A STREET, ALL POINTED DOWN. SOMEBODY'S BEEN UP HERE A WHILE.
+
 ### Punching out of the shell — the sky suddenly clean
 
 **ME (thinks):** CLEAR. THE RICH LEFT BEFORE THE SKY SHUT. THE REST OF US LEARN TO STEER.

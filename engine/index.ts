@@ -1186,6 +1186,8 @@ export {
   IDLE_FLIGHT_INPUT,
   JUNK_KG,
   ORBIT_VARIANTS,
+  PLANE_HULL_FRAC,
+  SKY_LAYERS,
   SOFT_KINDS,
   airFrac,
   bandFrac,
@@ -1208,8 +1210,13 @@ export {
   flightWindPx,
   gravityAt,
   junkKg,
+  kphPx,
   landingGates,
+  layerFrac,
+  layerPerKPx,
+  planeHullFrac,
   restartFlight,
+  skyZoneLabel,
   stepFlight,
 } from "./game/rocket/index.ts";
 export type {
@@ -1228,6 +1235,8 @@ export type {
   FlightWreck,
   OrbitKind,
   OrbitObject,
+  SkyBand,
+  SkyLayer,
 } from "./game/rocket/index.ts";
 
 // THE PLAYABLE INTERLUDES' own switch. Exported straight off the flag leaf

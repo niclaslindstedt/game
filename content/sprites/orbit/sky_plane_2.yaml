@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: sky_plane_2
+family: orbit
+size: [22, 10]
+description: >
+  A high-wing single down in the light-traffic lanes, nose left — a strutted
+  wing over a stubby white fuselage, a propeller blur at the nose, red trim on
+  the tail.
+subject:
+  kind: light aircraft
+  build: short white fuselage nose-left under a straight strutted high wing, fixed gear below
+  features: propeller blur at the nose, two cabin windows, a small swept tail fin
+  accent: red trim on the fin and along the belly
+  flavor: somebody's Sunday, four thousand feet under the airways
+palette:
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # propeller blur
+  a: "#d6dce4" # fuselage white
+  A: "#8d9196" # fuselage shadow
+  w: "#9aa1ad" # wing grey
+  g: "#8ccdd7" # cabin glass
+  j: "#b3402f" # trim red
+grid: |
+  ......................
+  ...OwwwwwwwwwwwwO.....
+  ...OOOOOOOOOOOOOO.....
+  ......O.....O...OOO...
+  .T..OOOOOOOOOOOOOjO...
+  .TOOaggaggaaaaaaajO...
+  .TOaaaaaaaaaaaAAjOOO..
+  .T.OOOOwwOOOOOOOO.....
+  ......OOwOO...........
+  ......................

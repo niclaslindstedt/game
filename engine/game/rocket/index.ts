@@ -30,9 +30,11 @@ import {
 import { detonate, stepBlasts } from "./blast.ts";
 import {
   bandFrac,
+  firstLayerDue,
   firstMarks,
   junkKg,
   landingGates,
+  planeHullFrac,
   stepField,
 } from "./field.ts";
 import type {
@@ -52,9 +54,9 @@ import type {
  */
 export function createFlight(params: FlightParams): FlightState {
   const rng = createRng(params.seed);
-  // The strays' own stream, derived from the same seed — see
-  // `FlightState.strayRng` for why it is not the shell's.
-  const strayRng = createRng((params.seed ^ 0x2545f491) >>> 0);
+  // The air traffic's own stream, derived from the same seed — see
+  // `FlightState.trafficRng` for why it is not the shell's.
+  const trafficRng = createRng((params.seed ^ 0x2545f491) >>> 0);
   const marks = firstMarks();
   const state: FlightState = {
     params: { ...params },
@@ -82,10 +84,10 @@ export function createFlight(params: FlightParams): FlightState {
     outcomeMs: 0,
     wreck: null,
     nextJunkAt: marks.junk,
-    nextSatelliteAt: marks.satellite,
-    nextRockAt: marks.rock,
-    nextStrayAt: marks.stray,
-    strayRng,
+    nextOrbitAt: marks.orbit,
+    nextTrafficAt: marks.traffic,
+    trafficRng,
+    layerDue: firstLayerDue(rng),
     gustPhase: rng() * Math.PI * 2,
     boosterAway: false,
     trashCount: 0,
@@ -280,13 +282,20 @@ function touches(
   return mx * mx + my * my <= (halfW + o.r) * (halfW + o.r);
 }
 
-/** What a hard hazard takes off the skin, by kind (fraction of the ship). */
+/**
+ * WHAT A HARD HAZARD TAKES OFF THE SKIN (fraction of the ship). Most kinds are
+ * one figure; an AIRCRAFT is priced per VARIANT (`PLANE_HULL_FRAC`), because a
+ * high-wing single and an airliner are the same kind and not remotely the same
+ * afternoon.
+ */
 function hazardHullFrac(
-  kind: "satellite" | "rock" | "plane" | "drone",
+  kind: "satellite" | "milsat" | "rock" | "plane" | "drone",
+  variant: number,
 ): number {
   const h = FLIGHT.hazard;
   if (kind === "satellite") return h.satelliteHullFrac;
-  if (kind === "plane") return h.planeHullFrac;
+  if (kind === "milsat") return h.milsatHullFrac;
+  if (kind === "plane") return planeHullFrac(variant);
   if (kind === "drone") return h.droneHullFrac;
   return h.rockHullFrac;
 }
@@ -370,7 +379,7 @@ function collideAscent(state: FlightState): void {
       });
     } else {
       const h = FLIGHT.hazard;
-      craft.hull -= hazardHullFrac(o.kind) * rung.damageMult;
+      craft.hull -= hazardHullFrac(o.kind, o.variant) * rung.damageMult;
       craft.vy *= h.speedKeep;
       craft.tiltVel += side * h.kickPerS;
       state.hullHits++;
@@ -380,7 +389,13 @@ function collideAscent(state: FlightState): void {
         x: o.x,
         alt: o.alt,
       });
-      state.events.push({ type: "strike", kind: o.kind, x: o.x, alt: o.alt });
+      state.events.push({
+        type: "strike",
+        kind: o.kind,
+        variant: o.variant,
+        x: o.x,
+        alt: o.alt,
+      });
       // Struck machinery is an explosion at arm's length: its own front
       // shoves the nearby garbage, knocks the ship's balance (`stepBlasts`),
       // and can light the chain. A rock just comes apart.
@@ -410,7 +425,16 @@ function stepAscent(state: FlightState, dt: number, input: FlightInput): void {
     // enough that GET READY is never interrupted by physics.
     craft.tiltVel += (-3 * craft.tilt - 2 * craft.tiltVel) * dt;
   } else {
-    const tip = a.tipPerS * rung.tipMult * (1 + a.boostTipFrac * throttle);
+    // THE INSTABILITY THIS TICK — the pendulum's own spring, plus what the
+    // throttle adds, plus the AIR's overturning moment (`aeroTipPerS`): a lean
+    // held at speed in thick air is fed by the square of that speed, which is
+    // max-Q and is why easing off low down is a real decision rather than
+    // timidity.
+    const speed = Math.hypot(craft.vx, craft.vy);
+    const q = Math.min(a.aeroCap, air * (speed / a.aeroRefPx) ** 2);
+    const tip =
+      a.tipPerS * rung.tipMult * (1 + a.boostTipFrac * throttle) +
+      a.aeroTipPerS * q;
     // The wandering bias — off-axis thrust from a garage build, so it only
     // PARTLY dies with the air: the ship is never done being corrected.
     const gust =
@@ -638,6 +662,7 @@ export {
   flightCoursePx,
   fuelMassMult,
   gravityAt,
+  kphPx,
   offCourseFrac,
   windAt,
 } from "./config.ts";
@@ -646,10 +671,20 @@ export { blastHash, blastRoll, detonate } from "./blast.ts";
 export {
   JUNK_KG,
   ORBIT_VARIANTS,
+  PLANE_HULL_FRAC,
   bandFrac,
   junkKg,
   landingGates,
+  planeHullFrac,
 } from "./field.ts";
+export {
+  SKY_LAYERS,
+  layerFrac,
+  layerPerKPx,
+  skyZoneLabel,
+  type SkyBand,
+  type SkyLayer,
+} from "./layers.ts";
 export { flightPar, flightScore, flightTripMs } from "./score.ts";
 export type { FlightScorecard } from "./score.ts";
 export { IDLE_FLIGHT_INPUT, SOFT_KINDS } from "./types.ts";

@@ -95,9 +95,10 @@ export function stepBlasts(state: FlightState, dtMs: number): void {
           alt: o.alt,
         });
         // Anything with tanks or batteries joins the chain — the company's
-        // hardware, an airliner's kerosene, a drone's lithium.
+        // hardware, the military's, an airliner's kerosene, a drone's lithium.
         if (
           o.kind === "satellite" ||
+          o.kind === "milsat" ||
           o.kind === "plane" ||
           o.kind === "drone"
         ) {

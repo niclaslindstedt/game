@@ -34,11 +34,18 @@ export const JUNK_SPRITES: readonly string[] = [
   "orbit_junk_19",
 ];
 
-/** The company's own hardware. */
+/** The company's own hardware — the internet constellation. */
 export const SATELLITE_SPRITES: readonly string[] = [
   "orbit_sat_0",
   "orbit_sat_1",
   "orbit_sat_2",
+];
+
+/** …and the military's, higher up: slate and gold where the company's fleet is
+ * white and cyan, so a glance up the sky says whose orbit this is. */
+export const MILSAT_SPRITES: readonly string[] = [
+  "orbit_milsat_0",
+  "orbit_milsat_1",
 ];
 
 /** The rocks that never asked anybody. */
@@ -48,12 +55,24 @@ export const ROCK_SPRITES: readonly string[] = [
   "orbit_rock_2",
 ];
 
-/** The airliners crossing their own lanes off the corridor. */
-export const PLANE_SPRITES: readonly string[] = ["sky_plane_0", "sky_plane_1"];
+/** Aircraft, in the order the layer table draws them: 0–1 the airliners at
+ * cruise, 2 the high-wing single down in the light-traffic lanes
+ * (`SKY_LAYERS`). The variant is also what a strike costs
+ * (`PLANE_HULL_FRAC`). */
+export const PLANE_SPRITES: readonly string[] = [
+  "sky_plane_0",
+  "sky_plane_1",
+  "sky_plane_2",
+];
 
-/** The delivery drones — it is an AI world, and somebody automated even this
- * altitude. */
-export const DRONE_SPRITES: readonly string[] = ["sky_drone_0", "sky_drone_1"];
+/** Drones, same idea: 0–1 the parcel quads over the rooftops, 2 the
+ * solar-winged watchkeeper on the high deck. It is an AI world, and somebody
+ * automated both errands. */
+export const DRONE_SPRITES: readonly string[] = [
+  "sky_drone_0",
+  "sky_drone_1",
+  "sky_drone_2",
+];
 
 /** A bird's two variants are its two WINGBEATS — the renderer alternates them
  * as the flap (`drawField`), so both are the same bird mid-stroke. */
@@ -69,9 +88,13 @@ export const PARAGLIDER_SPRITES: readonly string[] = [
   "sky_glider_1",
 ];
 
-const TABLES: Record<OrbitKind, readonly string[]> = {
+/** Every table, by kind — exported so the content test can walk the whole
+ * vocabulary instead of listing it by hand, which is how a new kind gets
+ * shipped with no sprite behind it. */
+export const ORBIT_SPRITE_TABLES: Record<OrbitKind, readonly string[]> = {
   junk: JUNK_SPRITES,
   satellite: SATELLITE_SPRITES,
+  milsat: MILSAT_SPRITES,
   rock: ROCK_SPRITES,
   plane: PLANE_SPRITES,
   drone: DRONE_SPRITES,
@@ -83,6 +106,6 @@ const TABLES: Record<OrbitKind, readonly string[]> = {
 /** The sprite a drifting thing wears. Clamped rather than trusted, so a mod's
  * shorter table degrades to its last sprite instead of to nothing. */
 export function orbitSprite(kind: OrbitKind, variant: number): string {
-  const table = TABLES[kind];
+  const table = ORBIT_SPRITE_TABLES[kind];
   return table[Math.min(table.length - 1, Math.max(0, variant))]!;
 }

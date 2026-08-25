@@ -1,16 +1,42 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE SHELL OF GARBAGE — how the sky is filled, one spawn mark per kind, laid
-// down by altitude as the climb unrolls.
+// WHAT IS UP THERE — how the sky is filled, on three running marks laid down
+// by altitude as the climb unrolls.
 //
-// THE FIELD IS LAID ONCE, AHEAD OF THE SHIP, exactly the way the drive lays
-// its crowd: each kind keeps a running mark (`nextJunkAt`, …) and the tick
-// tops the sky up to `aheadPx` above the craft, so the same seed always meets
-// the same bag at the same altitude — which is what makes a restart a lesson
-// instead of a reshuffle. Nothing here is spent from anybody's run.
+// THE SKY IS LAID ONCE, AHEAD OF THE SHIP, exactly the way the drive lays its
+// crowd: each mark walks upward, minting as it goes, and the tick tops the sky
+// up to `aheadPx` above the craft — so the same seed always meets the same
+// thing at the same altitude, which is what makes a restart a lesson instead
+// of a reshuffle. Nothing here is spent from anybody's run.
+//
+// THE THREE MARKS, and which population each deals:
+//
+//   nextJunkAt     GOODCO's shell of garbage, on its thickening profile
+//                  (`bandFrac`) — the ceiling the whole upper climb is under.
+//   nextOrbitAt    everything in ORBIT (`SKY_LAYERS`' orbital bands: the
+//                  constellation, the military's, the rocks). On the SHELL's
+//                  stream, on a stride NOTHING the player does can move.
+//   nextTrafficAt  the air traffic (`SKY_LAYERS`' atmospheric bands), on its
+//                  own stream, thickening with how far off the closed
+//                  corridor the ship has wandered.
+//
+// THE SPLIT BETWEEN THE LAST TWO IS LOAD-BEARING. A restart replays the same
+// seeded sky so the hardware that killed you is waiting where it was — which
+// only holds while the hardware's stride is independent of how the flight was
+// flown. Air traffic is dealt off its own stream for the same reason in
+// reverse: wandering may thicken the lanes and must never shift an orbit.
+
+import type { Rng } from "@game/lib/rng.ts";
 
 import { difficultyDef } from "../defs/difficulties.ts";
 import type { Difficulty } from "../types/core.ts";
-import { FLIGHT, flightCoursePx, offCourseFrac } from "./config.ts";
+import { FLIGHT, flightCoursePx, kphPx, offCourseFrac } from "./config.ts";
+import {
+  SKY_LAYERS,
+  layerFrac,
+  layerPerKPx,
+  type SkyBand,
+  type SkyLayer,
+} from "./layers.ts";
 import type { FlightState, OrbitKind, OrbitObject } from "./types.ts";
 
 /**
@@ -22,9 +48,12 @@ import type { FlightState, OrbitKind, OrbitObject } from "./types.ts";
 export const ORBIT_VARIANTS: Record<OrbitKind, number> = {
   junk: 20,
   satellite: 3,
+  milsat: 2,
   rock: 3,
-  plane: 2,
-  drone: 2,
+  // 0–1 the airliners at cruise, 2 the high-wing single in the light lanes.
+  plane: 3,
+  // 0–1 the parcel quads over the rooftops, 2 the watch deck's solar wing.
+  drone: 3,
   bird: 2,
   skydiver: 2,
   paraglider: 2,
@@ -67,6 +96,28 @@ export function junkKg(variant: number): number {
 }
 
 /**
+ * WHAT AN AIRCRAFT TAKES OFF THE SKIN, by variant (fraction of the whole
+ * ship) — the same shape as `JUNK_KG`, because it is the same kind of fact:
+ * what one of these weighs and how fast it was going.
+ *
+ * An airliner met in its own lane is very nearly the end of any ship; the
+ * high-wing single down in the light lanes is a fifth of that, which is what
+ * makes the low sky a place to LEARN the dodge before the airways ask for it.
+ */
+export const PLANE_HULL_FRAC: readonly number[] = [
+  0.7, // 0  the passenger line's
+  0.7, // 1  the cargo line's
+  0.28, // 2  a high-wing single
+];
+
+/** …the same clamp, for the same reason. */
+export function planeHullFrac(variant: number): number {
+  return PLANE_HULL_FRAC[
+    Math.min(PLANE_HULL_FRAC.length - 1, Math.max(0, variant))
+  ]!;
+}
+
+/**
  * THE THREE GATES A TOUCHDOWN PASSES, on THIS rung — the shipped limits worked
  * through `DifficultyDef.flight.gateMult`.
  *
@@ -95,8 +146,8 @@ function rungFlight(state: FlightState) {
 }
 
 /**
- * THE BAND PROFILE — how thick the shell is at this altitude, 0–1 against the
- * kind's peak density. It RAMPS toward the shell's top (`bandFloorFrac` at the
+ * THE SHELL'S PROFILE — how thick the garbage is at this altitude, 0–1 against
+ * its peak density. It RAMPS toward the shell's top (`bandFloorFrac` at the
  * bottom of the sky), because the fiction says so: the company fires its
  * garbage to where it stays, and thirty years of that is a ceiling, not a fog.
  * Above `shellTopFrac` it is ZERO — the finish is flying out of it.
@@ -109,67 +160,203 @@ export function bandFrac(alt: number, coursePx: number): number {
   return f.bandFloorFrac + (1 - f.bandFloorFrac) * t;
 }
 
-/** Px of climb between spawns of a kind at this altitude — the mark's stride,
- * derived from the peak density, the band and the rung. */
-function stridePx(
-  perKPx: number,
+/** Px of climb between spawns of the SHELL at this altitude — the mark's
+ * stride, derived from the peak density, the profile and the rung. */
+function shellStridePx(
   rungMult: number,
   alt: number,
   coursePx: number,
 ): number {
-  const density = perKPx * rungMult * bandFrac(alt, coursePx);
+  const density = FLIGHT.field.junkPerKPx * rungMult * bandFrac(alt, coursePx);
   return density <= 0 ? Number.POSITIVE_INFINITY : 1000 / density;
 }
 
-/** Where each kind's first mark sits on a fresh sky. */
+/** Where each mark sits on a fresh sky. The traffic mark opens right off the
+ * lawn — the birds are the first thing anybody meets — while the shell and the
+ * orbits are dealt from wherever their own layers begin. */
 export function firstMarks(): {
   junk: number;
-  satellite: number;
-  rock: number;
-  stray: number;
+  orbit: number;
+  traffic: number;
 } {
-  const start = FLIGHT.field.startAltPx;
-  // Staggered so the shell's three kinds never introduce themselves in the
-  // same breath: bags first (they only cost handling), the company's hardware
-  // a stretch later, rocks last. The strays' mark starts low — the birds are
-  // in the first stretch of real sky.
   return {
-    junk: start,
-    satellite: start * 1.6,
-    rock: start * 2.1,
-    stray: start * 0.4,
+    junk: FLIGHT.field.startAltPx,
+    orbit: lowestBandFloor("orbit"),
+    traffic: lowestBandFloor("traffic"),
   };
 }
 
-/** Mint one drifting thing of the SHELL's kinds at this altitude. Every roll
- * comes off the sky's own stream, and the x is dealt around the SHIP — the
- * shell is everywhere, so it follows a ship that has wandered off the
- * corridor instead of staying parked over the pad. */
-function mint(state: FlightState, kind: OrbitKind, alt: number): OrbitObject {
+/**
+ * EACH LAYER'S ACCOUNT AT THE START (see `walkBand`), opened part-paid off the
+ * sky's own stream — a debt starting at exactly zero puts every seed's first
+ * bird at the same altitude, which is the one thing a seeded sky should not
+ * make identical.
+ */
+export function firstLayerDue(rng: Rng): number[] {
+  return SKY_LAYERS.map(() => rng());
+}
+
+/** The bottom of the lowest layer on a mark — where that mark starts walking,
+ * fades included, so a band's first arrivals are not skipped. */
+function lowestBandFloor(band: SkyBand): number {
+  let floor = Number.POSITIVE_INFINITY;
+  for (const layer of SKY_LAYERS) {
+    if (layer.band !== band) continue;
+    floor = Math.min(floor, Math.max(0, layer.from - layer.fade));
+  }
+  return Number.isFinite(floor) ? floor : 0;
+}
+
+/** How thick ONE layer is at this altitude — spawns per 1000 px of climb,
+ * through its band profile, what wandering off the corridor adds, and the
+ * rung's hazard knob if it is a thing that can hole the ship. */
+function layerDensity(
+  layer: SkyLayer,
+  alt: number,
+  off: number,
+  hazardMult: number,
+): number {
+  const frac = layerFrac(layer, alt);
+  if (frac <= 0) return 0;
+  return (
+    layerPerKPx(layer) *
+    frac *
+    (1 + (layer.offCourseMult - 1) * off) *
+    (layer.hazard ? hazardMult : 1)
+  );
+}
+
+/**
+ * HOW FAR A BANDED MARK STEPS AT A TIME (px of climb) — and the reason the
+ * banded populations are walked in FIXED steps rather than on a stride the way
+ * the shell is.
+ *
+ * A stride is `1000 / density`, and in the thin tail of a fade the density is
+ * nearly zero, so the stride is enormous: one step out of the bottom of the
+ * constellation's fade lands the mark 35 000 px up, past the top of the sky,
+ * and every orbit above it is silently never dealt. Stepping a fixed distance
+ * and spawning by EXPECTATION over that step has no such tail — the count over
+ * a band comes out at its authored `perTrip` whatever shape the fade is.
+ *
+ * 40 px samples the narrowest band in the table about ten times over.
+ */
+const BAND_STEP_PX = 40;
+
+/**
+ * MINT ONE PIECE OF THE SHELL at this altitude. Every roll comes off the sky's
+ * own stream, and the x is dealt around the SHIP — the garbage is everywhere,
+ * so it follows a ship that has wandered off the corridor instead of staying
+ * parked over the pad.
+ *
+ * IT DRIFTS ALONG-TRACK AND IT DOES NOT FALL. A fridge fired into orbit is in
+ * orbit: what is left after the ship's own orbit is subtracted is a few tens
+ * of km/h of nothing much, nearly all of it sideways
+ * (`FLIGHT.field.junkRiseFrac`).
+ */
+function mintJunk(state: FlightState, alt: number): OrbitObject {
   const { rng } = state;
   const f = FLIGHT.field;
-  const variant = Math.floor(rng() * ORBIT_VARIANTS[kind]);
-  const x = state.craft.x + (rng() - 0.5) * (FLIGHT.fieldW - 40);
+  const drift = span(rng, f.junkKph);
+  return {
+    id: state.nextId++,
+    kind: "junk",
+    variant: Math.floor(rng() * ORBIT_VARIANTS.junk),
+    x: state.craft.x + (rng() - 0.5) * (FLIGHT.fieldW - 40),
+    alt,
+    vx: (rng() < 0.5 ? -1 : 1) * drift,
+    vy: (rng() * 2 - 1) * drift * f.junkRiseFrac,
+    angle: rng() * Math.PI * 2,
+    spin: (rng() * 2 - 1) * 0.55,
+    r: 5 + rng() * 3,
+  };
+}
+
+/** A roll inside an authored `[min, max]` pair. */
+function span(rng: () => number, range: readonly [number, number]): number {
+  return range[0] + rng() * (range[1] - range[0]);
+}
+
+/**
+ * MINT ONE THING OFF A LAYER — its kind and its art come from the layer, and
+ * its TRAJECTORY from what that thing actually is.
+ *
+ * The four ways of moving in this sky, and each one is a fact rather than a
+ * flourish: an AIRCRAFT cruises level and crosses the ship's column at lane
+ * speed; a BIRD flies level and bobs; a CANOPY is the only thing up here
+ * genuinely coming down, under a sink rate and a forward drive; a DRONE holds
+ * its route. And anything IN ORBIT does not fall at all — the constellation,
+ * the military's birds and the loose rock all cross ALONG-TRACK, because what
+ * is left when two orbits are subtracted is the angle between them, never a
+ * descent.
+ */
+function mintLayer(
+  state: FlightState,
+  layer: SkyLayer,
+  alt: number,
+  rng: () => number,
+): OrbitObject {
+  const t = FLIGHT.traffic;
+  const f = FLIGHT.field;
+  const kind = layer.kind;
+  const variant = layer.variants[Math.floor(rng() * layer.variants.length)]!;
+  const side: 1 | -1 = rng() < 0.5 ? -1 : 1;
+  let x = state.craft.x + (rng() - 0.5) * (FLIGHT.fieldW - 40);
+  // `vx` and `r` are set by every branch below; `vy` and `spin` are the two a
+  // level flier leaves alone.
   let vx: number;
-  let vy = 0;
   let r: number;
-  if (kind === "junk") {
-    vx = (rng() * 2 - 1) * f.junkDriftPx;
-    vy = (rng() * 2 - 1) * (f.junkDriftPx / 2);
-    r = 5 + rng() * 3;
-  } else if (kind === "satellite") {
-    // The one purposeful mover: crossing the sky on its own orbit, entering
-    // from whichever side the roll says.
-    const speed =
-      f.satellitePx[0] + rng() * (f.satellitePx[1] - f.satellitePx[0]);
+  let vy = 0;
+  let spin = 0;
+
+  if (kind === "plane") {
+    // Aircraft enter from a wing of the sky and cross the ship's column at
+    // lane speed, dead level. The high-wing single is a quarter the airliner.
+    const light = variant >= 2;
+    x = state.craft.x + side * t.entryPx;
+    vx = -side * kphPx(span(rng, light ? t.lightPlaneKph : t.planeKph));
+    r = light ? 8 : 13;
+  } else if (kind === "bird") {
+    x = state.craft.x + side * (t.entryPx * (0.4 + rng() * 0.6));
+    vx = -side * kphPx(span(rng, t.birdKph));
+    vy = (rng() * 2 - 1) * kphPx(span(rng, t.birdBobKph));
+    r = 3;
+  } else if (kind === "skydiver") {
+    vy = -kphPx(span(rng, t.diverSinkKph));
+    vx = (rng() * 2 - 1) * kphPx(span(rng, t.diverDriveKph));
+    r = 5;
+  } else if (kind === "paraglider") {
+    vx = (rng() < 0.5 ? -1 : 1) * kphPx(span(rng, t.gliderKph));
+    vy = -kphPx(span(rng, t.gliderSinkKph));
+    r = 6;
+  } else if (kind === "drone") {
+    // A parcel quad holds its route; the watch deck's solar wing tracks fast
+    // through thin air and is never in a hurry to be anywhere.
+    const watch = variant >= 2;
+    const speed = kphPx(span(rng, watch ? t.watchDroneKph : t.droneKph));
+    vx = (rng() < 0.5 ? -1 : 1) * speed;
+    vy = (rng() * 2 - 1) * speed * 0.15;
+    r = watch ? 9 : 5;
+  } else if (kind === "satellite" || kind === "milsat") {
+    // The fastest things the climb meets, and the only ones whose speed is
+    // an ANGLE rather than a throttle. They hold attitude — somebody paid for
+    // that — and they cross rather than descend.
+    const speed = kphPx(
+      span(rng, kind === "milsat" ? f.milsatKph : f.satelliteKph),
+    );
     vx = rng() < 0.5 ? speed : -speed;
-    r = 10;
+    vy = (rng() * 2 - 1) * speed * 0.05;
+    spin = (rng() * 2 - 1) * 0.06;
+    r = kind === "milsat" ? 12 : 10;
   } else {
-    const speed = f.rockPx[0] + rng() * (f.rockPx[1] - f.rockPx[0]);
-    vx = (rng() * 2 - 1) * speed;
-    vy = -speed * (0.4 + rng() * 0.6);
+    // A loose piece of orbital rock, tumbling: same frame, same rule — a
+    // different orbit is a different PLANE, not a fall.
+    const speed = kphPx(span(rng, f.rockKph));
+    vx = (rng() < 0.5 ? -1 : 1) * speed;
+    vy = (rng() * 2 - 1) * speed * f.rockRiseFrac;
+    spin = (rng() * 2 - 1) * 1.2;
     r = 5 + rng() * 4;
   }
+
   return {
     id: state.nextId++,
     kind,
@@ -178,99 +365,61 @@ function mint(state: FlightState, kind: OrbitKind, alt: number): OrbitObject {
     alt,
     vx,
     vy,
-    angle: rng() * Math.PI * 2,
-    // Floating garbage tumbles slowly; rocks a little faster; a satellite
-    // holds its attitude, because somebody paid for that.
-    spin:
-      kind === "satellite"
-        ? (rng() * 2 - 1) * 0.06
-        : (rng() * 2 - 1) * (kind === "rock" ? 1.2 : 0.55),
-    r,
-  };
-}
-
-/**
- * MINT ONE STRAY — the off-corridor sky's own population, off the strays'
- * stream. Which kind is the ALTITUDE's call (birds and hobbyists in the low
- * sky, airliners across their cruise lanes, drones most of the way up), and
- * everything upright-and-alive flies level rather than tumbling.
- */
-function mintStray(state: FlightState, alt: number): OrbitObject {
-  const rng = state.strayRng;
-  const s = FLIGHT.stray;
-  const coursePx = flightCoursePx(state.params);
-  const off = offCourseFrac(state.craft.x);
-
-  // The altitude's own cast list, weighted; a kind out of its band weighs 0.
-  const inPlaneBand = alt >= s.planeAlt[0] && alt <= s.planeAlt[1];
-  const weights: readonly (readonly [OrbitKind, number])[] = [
-    ["bird", alt <= s.birdTopAlt ? 1 : 0],
-    ["skydiver", alt <= s.diverTopAlt && off > 0.05 ? 0.7 : 0],
-    ["paraglider", alt <= s.diverTopAlt && off > 0.05 ? 0.6 : 0],
-    // The lanes are OFF the corridor — an airliner needs the ship to have
-    // properly left the closed column.
-    ["plane", inPlaneBand && off > 0.25 ? 1.2 : 0],
-    ["drone", alt <= coursePx * s.droneTopFrac ? 0.5 + off : 0],
-  ];
-  const total = weights.reduce((sum, [, w]) => sum + w, 0);
-  let pick: OrbitKind = "drone";
-  let roll = rng() * (total || 1);
-  for (const [kind, w] of weights) {
-    roll -= w;
-    if (roll <= 0 && w > 0) {
-      pick = kind;
-      break;
-    }
-  }
-
-  const side: 1 | -1 = rng() < 0.5 ? -1 : 1;
-  let x = state.craft.x + (rng() - 0.5) * (FLIGHT.fieldW - 40);
-  let vx: number;
-  let vy = 0;
-  let r: number;
-  const spin = 0;
-  if (pick === "plane") {
-    // Enters from a wing of the sky, crossing the ship's column at lane speed.
-    x = state.craft.x + side * s.entryPx;
-    vx = -side * (s.planePx[0] + rng() * (s.planePx[1] - s.planePx[0]));
-    r = 13;
-  } else if (pick === "bird") {
-    x = state.craft.x + side * (s.entryPx * (0.4 + rng() * 0.6));
-    vx = -side * (s.birdPx[0] + rng() * (s.birdPx[1] - s.birdPx[0]));
-    vy = (rng() * 2 - 1) * 12;
-    r = 3;
-  } else if (pick === "skydiver") {
-    vy = -(18 + rng() * 14);
-    vx = (rng() * 2 - 1) * 12;
-    r = 5;
-  } else if (pick === "paraglider") {
-    vx = (rng() < 0.5 ? -1 : 1) * (22 + rng() * 24);
-    vy = -(4 + rng() * 8);
-    r = 6;
-  } else {
-    // A drone holds its parcel line: a slow purposeful drift, no tumble.
-    vx = (rng() * 2 - 1) * 16;
-    vy = (rng() * 2 - 1) * 10;
-    r = 5;
-  }
-  return {
-    id: state.nextId++,
-    kind: pick,
-    variant: Math.floor(rng() * ORBIT_VARIANTS[pick]),
-    x,
-    alt,
-    vx,
-    vy,
-    angle: 0,
+    // Everything built or alive flies level; only what is adrift lies at an
+    // angle it did not choose.
+    angle: kind === "rock" ? rng() * Math.PI * 2 : 0,
     spin,
     r,
   };
 }
 
 /**
- * TOP THE SKY UP — advance every kind's mark to `aheadPx` above the craft,
- * minting as it goes, and sweep what has fallen `behindPx` below. Called every
- * tick of the ascent; the landing flies an empty sky.
+ * WALK ONE BAND'S MARK up to `ceiling`, minting as it goes. Returns where the
+ * mark ended up.
+ *
+ * EACH LAYER KEEPS ITS OWN RUNNING DEBT (`FlightState.layerDue`) rather than
+ * being picked out of a weighted hat, and that is the difference between "you
+ * usually meet the watch deck" and "you meet it". A hat rolls an independent
+ * coin per step, so a band authored at three deals none about one climb in
+ * twenty — and the one thing this table exists to promise is that every
+ * neighbourhood is flown through on every trip. A debt cannot come out zero:
+ * the density is integrated over the step, added to the layer's own account,
+ * and every whole unit in it is a thing in the sky. What stays random is
+ * WHERE it is, WHICH variant it wears, and how it is moving.
+ */
+function walkBand(
+  state: FlightState,
+  band: SkyBand,
+  mark: number,
+  ceiling: number,
+  rng: () => number,
+): number {
+  const off = offCourseFrac(state.craft.x);
+  const hazardMult = rungFlight(state).hazardMult;
+  let at = mark;
+  while (at < ceiling) {
+    for (let i = 0; i < SKY_LAYERS.length; i++) {
+      const layer = SKY_LAYERS[i]!;
+      if (layer.band !== band) continue;
+      const density = layerDensity(layer, at, off, hazardMult);
+      if (density <= 0) continue;
+      let due = (state.layerDue[i] ?? 0) + (density * BAND_STEP_PX) / 1000;
+      while (due >= 1) {
+        due -= 1;
+        const alt = at + rng() * BAND_STEP_PX;
+        state.field.push(mintLayer(state, layer, alt, rng));
+      }
+      state.layerDue[i] = due;
+    }
+    at += BAND_STEP_PX;
+  }
+  return at;
+}
+
+/**
+ * TOP THE SKY UP — advance every mark to `aheadPx` above the craft, minting as
+ * it goes, and sweep what has fallen `behindPx` below. Called every tick of
+ * the ascent; the landing flies an empty sky.
  */
 export function stepField(state: FlightState, dt: number): void {
   const f = FLIGHT.field;
@@ -284,48 +433,26 @@ export function stepField(state: FlightState, dt: number): void {
   );
 
   while (state.nextJunkAt < ceiling) {
-    state.field.push(mint(state, "junk", state.nextJunkAt));
+    state.field.push(mintJunk(state, state.nextJunkAt));
     state.nextJunkAt +=
-      stridePx(f.junkPerKPx, rung.junkMult, state.nextJunkAt, coursePx) *
-      (0.6 + state.rng() * 0.8);
-  }
-  while (state.nextSatelliteAt < ceiling) {
-    state.field.push(mint(state, "satellite", state.nextSatelliteAt));
-    state.nextSatelliteAt +=
-      stridePx(
-        f.satellitePerKPx,
-        rung.hazardMult,
-        state.nextSatelliteAt,
-        coursePx,
-      ) *
-      (0.6 + state.rng() * 0.8);
-  }
-  while (state.nextRockAt < ceiling) {
-    state.field.push(mint(state, "rock", state.nextRockAt));
-    state.nextRockAt +=
-      stridePx(f.rockPerKPx, rung.hazardMult, state.nextRockAt, coursePx) *
+      shellStridePx(rung.junkMult, state.nextJunkAt, coursePx) *
       (0.6 + state.rng() * 0.8);
   }
 
-  // ── THE STRAYS — the off-corridor sky, on their own stream and mark. ──────
-  // The stride reads how far off course the ship is RIGHT NOW, so wandering
-  // thickens the sky and coming home thins it — and none of it touches the
-  // shell's stream (`FlightState.nextStrayAt`).
-  const s = FLIGHT.stray;
-  const strayCeiling = Math.min(
-    state.craft.alt + f.aheadPx,
-    coursePx * f.shellTopFrac,
+  state.nextOrbitAt = walkBand(
+    state,
+    "orbit",
+    state.nextOrbitAt,
+    ceiling,
+    state.rng,
   );
-  while (state.nextStrayAt < strayCeiling) {
-    const off = offCourseFrac(state.craft.x);
-    state.field.push(mintStray(state, state.nextStrayAt));
-    const stride =
-      (s.strideMaxPx + (s.strideMinPx - s.strideMaxPx) * off) /
-      Math.max(0.2, rung.hazardMult);
-    state.nextStrayAt +=
-      (off > 0 ? stride : stride * s.onCourseStrideMult) *
-      (0.7 + state.strayRng() * 0.6);
-  }
+  state.nextTrafficAt = walkBand(
+    state,
+    "traffic",
+    state.nextTrafficAt,
+    ceiling,
+    state.trafficRng,
+  );
 
   // Drift, tumble, and wrap the crossers. The windows are the SHIP's — the
   // sky has no edges, so "gone" means far enough from the climb to never
@@ -339,7 +466,7 @@ export function stepField(state: FlightState, dt: number): void {
     o.alt += o.vy * dt;
     o.angle += o.spin * dt;
     const away = o.x - state.craft.x;
-    if (o.kind === "satellite") {
+    if (o.kind === "satellite" || o.kind === "milsat") {
       if (away < -wingPx && o.vx < 0) o.x = state.craft.x + wingPx;
       else if (away > wingPx && o.vx > 0) o.x = state.craft.x - wingPx;
     } else if (Math.abs(away) > wingPx + 200) {

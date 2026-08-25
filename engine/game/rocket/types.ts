@@ -24,11 +24,15 @@ export type FlightPhase = "ascent" | "landing";
 
 /**
  * WHAT IS ADRIFT IN THE SKY — the field's whole vocabulary, and the three
- * different afternoons a collision with each buys.
+ * different afternoons a collision with one buys: a BOUNCE (the garbage), a
+ * BURST (anything alive) or a HOLE (anything built).
  *
- * The engine does not know what any of them LOOK like: a `variant` indexes the
- * app's own art tables (`rocket-screen/`), the same fence every drive remain is
- * drawn along.
+ * WHICH OF THEM IS WHERE is `layers.ts` — every kind below flies in an
+ * authored band of altitude, and one kind can carry two neighbourhoods through
+ * its variants (a parcel quad and a solar-winged watchkeeper are both
+ * `drone`). The engine does not know what any of them LOOK like: a `variant`
+ * indexes the app's own art tables (`rocket-screen/`), the same fence every
+ * drive remain is drawn along.
  */
 export type OrbitKind =
   /** A piece of GOODCO's disposal business — thirty years of "recycling" fired
@@ -36,17 +40,22 @@ export type OrbitKind =
    * scuffs the paintwork, and shoves the balance by its own WEIGHT
    * (`JUNK_KG`) — a couch is a wallop, a crushed can is a tap. */
   | "junk"
-  /** A GOODCO satellite — the company's other business up here, and the only
-   * thing in the field that moves with any purpose. Holes the ship. */
+  /** A GOODCO satellite — the internet constellation, sold as connectivity
+   * for everybody and paid for by the people trapped under the shell. Holes
+   * the ship. */
   | "satellite"
+  /** A military bird, higher than the constellation and pointed the other
+   * way. Bigger, heavier and nobody's product; holes more. */
+  | "milsat"
   /** A rock that never asked anybody. Holes the ship for less. */
   | "rock"
-  /** An airliner crossing its own lane — the corridor was closed for this
-   * launch, the sky beside it was not. A stray (off-course) spawn; holes
-   * nearly the whole ship and goes up like the machine it is. */
+  /** An aircraft crossing its own lane — a high-wing single down in the
+   * light-traffic lanes, an airliner up at cruise. What it costs is the
+   * VARIANT's (`PLANE_HULL_FRAC`); either way it goes up like the machine it
+   * is. */
   | "plane"
-  /** A delivery drone running parcels — it is an AI world, and somebody
-   * automated even this altitude. A stray; a lithium firecracker. */
+  /** A drone: a parcel quad over the rooftops, or a solar-winged machine on
+   * the watch deck at 20 km. A lithium firecracker. */
   | "drone"
   /** A bird, up where birds are. SOFT: bursts across the hull. */
   | "bird"
@@ -100,8 +109,8 @@ export type FlightCraft = {
   /** Lean off vertical (rad, positive starboard) and its rate. */
   tilt: number;
   tiltVel: number;
-  /** What is left of the skin, 0–1. Trash never touches it; satellites and
-   * rocks do. */
+  /** What is left of the skin, 0–1. Trash never touches it and neither does
+   * anything alive; anything BUILT does. */
   hull: number;
   /**
    * WHAT IS LEFT IN THE TANKS, 0–1 — the ascent's weight, spent as the burn
@@ -136,7 +145,8 @@ export type FlightEvent =
   /** Something hard went through the paintwork. */
   | {
       type: "strike";
-      kind: "satellite" | "rock" | "plane" | "drone";
+      kind: "satellite" | "milsat" | "rock" | "plane" | "drone";
+      variant: number;
       x: number;
       alt: number;
     }
@@ -307,18 +317,32 @@ export type FlightState = {
   wreck: FlightWreck | null;
 
   // ── THE FIELD'S RUNNING MARKS ──────────────────────────────────────────────
-  /** How far up the next of each kind is due (world px of altitude) — one mark
-   * per kind, so the shell is laid down once as the climb unrolls rather than
-   * re-rolled every tick. */
+  /** How far up the next piece of the SHELL is due (world px of altitude) —
+   * a running mark, so the garbage is laid down once as the climb unrolls
+   * rather than re-rolled every tick. */
   nextJunkAt: number;
-  nextSatelliteAt: number;
-  nextRockAt: number;
-  /** …and the STRAYS' mark, with their own stream beside it: what an
-   * off-course sky feeds the climb must never shift the shell the corridor
-   * deals (`field.ts` — the stray stride reads how far off course the ship
-   * is, so its draws are the flying's own). */
-  nextStrayAt: number;
-  strayRng: Rng;
+  /** …and the same for everything in ORBIT (`SKY_LAYERS`' orbital bands: the
+   * constellation, the military's own, the rocks). On the SHELL's stream and
+   * on a stride nothing the player does can move — a restart replays the same
+   * sky, so the hardware that killed you has to be waiting in the same
+   * place. */
+  nextOrbitAt: number;
+  /** …and the AIR TRAFFIC's mark, with its own stream beside it: what a sky
+   * off the closed corridor feeds the climb must never shift the orbits
+   * everybody learns (`field.ts` — the traffic stride reads how far off course
+   * the ship is, so its draws are the flying's own). */
+  nextTrafficAt: number;
+  trafficRng: Rng;
+  /**
+   * EACH SKY LAYER'S RUNNING DEBT, in the order of `SKY_LAYERS` — how much of
+   * its next arrival the climb so far has already paid for.
+   *
+   * It is what makes "you meet every neighbourhood on every trip" a fact
+   * rather than a likelihood: a layer authored at three arrivals deals three,
+   * where a per-step coin would deal none about one climb in twenty. See
+   * `walkBand`.
+   */
+  layerDue: number[];
 
   // ── THE WANDER ─────────────────────────────────────────────────────────────
   /** Where this ship's bias torque started in its cycle (rad, seeded) — two

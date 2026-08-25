@@ -280,29 +280,45 @@ years of that is a shell of garbage around the planet that thickens all the way
 to the top. The billionaires left before the shell closed; everybody else is
 under it, which the hero learns with his hands full — a garage-built ship that
 never once wants to fly straight, boosters that feed the flip as fast as they
-feed the climb, a hull that gets lighter as the tanks drain and livelier the
-whole way up, real weather in layers (a breeze off the lawn, the jet stream
-shouldering him sideways where the air is fastest, nothing at all once it runs
-out), and the company's own satellites, the other business, crossing the band
-with their lights on. The launch corridor is his by permit and nothing beside
-it is: drift off course and the sky fills with everyone else's business —
-airliners on their own lanes, delivery drones running parcels most of the way
-up the shell (it is an AI world, and somebody automated even this), birds low
-down, and the odd skydiver or paraglider having a hobby — and the soft ones do
-not break the ship either; they come apart across it, the road's crowd met a
-thousand feet up. Trash does not break the ship: every piece of it has its own
+feed the climb, air that feeds it harder still the faster he goes (going fast
+low down is what tips a rocket over, so easing off through the thick of it is
+the trade the whole climb is built on), a hull that gets lighter as the tanks
+drain and livelier the whole way up, and real weather in layers — a breeze off
+the lawn, the jet stream shouldering him sideways where the air is fastest,
+nothing at all once it runs out.
+
+**And the sky is a ladder of other people's business, all the way up.** The
+climb passes through it neighbourhood by neighbourhood, and the dashboard names
+each one as he enters it: the birds first, with the parcel quads among them
+(it is an AI world, and somebody automated even that errand); then somebody's
+canopy and the small aircraft in their own low lanes; then the airliners at
+their cruise, crossing his column at the speed airliners actually cross; then
+the watch deck, where solar wings the size of a street have been holding
+station over everybody for years, pointed down; then the internet
+constellation, sold as connectivity for everyone and paid for by the people
+trapped under the shell; then the military's own orbits above it, slate and
+gold where the company's fleet is white and cyan, and pointed the other way.
+Only above ALL of that is the garbage — and only above the garbage is he clear.
+The launch corridor is his by permit and the permit is paperwork nobody reads:
+leaving it does not summon the traffic, it only thickens it. The soft ones do
+not break the ship; they come apart across it, the road's crowd met a thousand
+feet up. Trash does not break the ship either: every piece of it has its own
 honest weight, and it BOUNCES — a crushed can taps the paint, a thrown-out
 couch wrenches the whole climb onto the wrong shoulder — and every hit leaves
 its scuff on the hull, so he arrives everywhere wearing the marks of the
 company's garbage, and the scoreboard counts every bag — and every body — and
-pays nothing for any of them. Satellites,
-rocks, airliners and drones break the ship, and anything with tanks or
-batteries that goes up takes its neighbours with it, one fuse at a time.
+pays nothing for any of them. Anything BUILT breaks the ship — a satellite, a
+military bird, a rock, an aircraft met in its own lane — and anything with
+tanks or batteries that goes up takes its neighbours with it, one fuse at a
+time. Nothing up in orbit falls, either: it circulates, the way the ship does,
+so what crosses the frame is only the angle between two orbits — which is
+still the fastest thing he meets by a factor of ten.
 Everything he says up here he says INSIDE HIS OWN HEAD — a man alone in a
 homemade cockpit does not get a dialogue window, and the sky never stops for a
 line: one flat thought about the company on the way into the band, a dry one
 each first time the sky surprises him (a bird across the nose, somebody's
-canopy, the jet stream, his own wandering), a shorter one when the ship starts
+canopy, the jet stream, the watch deck's wings, his own wandering), a shorter
+one when the ship starts
 going over, and when he punches out of the shell — the sky suddenly,
 conspicuously clean — one thought of relief, and never mentions any of it
 again. Leaving Earth has quietly become hard, and he files it under road

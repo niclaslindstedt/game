@@ -23,6 +23,7 @@ import {
   flightOffCourse,
   flightShellClear,
   flightWindPx,
+  skyZoneLabel,
   type FlightState,
 } from "@game/core";
 
@@ -63,6 +64,13 @@ export type FlightDials = {
   dashLive: boolean;
   /** Which half is being flown, as the caption prints it. */
   phase: string;
+  /**
+   * WHAT THE SHIP IS FLYING THROUGH — the name of the neighbourhood at this
+   * altitude (`SKY_LAYERS`), which is the one thing on this dashboard that
+   * says what is about to be in the way. The drop has no sky to name and
+   * reads the half instead.
+   */
+  zone: string;
   landing: boolean;
   /** Bags met hull-first so far — the trip's tally, not a cargo count. */
   trash: number;
@@ -169,6 +177,9 @@ export function flightDials(
     clockStarted: state.clockMs > 0,
     dashLive: state.ms > FLIGHT.opening.handsOffMs * 0.5,
     phase: landing ? "THE DROP" : "ASCENT",
+    zone: landing
+      ? "THE DROP"
+      : skyZoneLabel(craft.alt, flightCoursePx(state.params)),
     landing,
     trash: state.trashCount,
     boost: throttle > 0 && !flightHandsOff(state) && state.outcome === "flying",
@@ -199,6 +210,7 @@ export function sameFlightDials(a: FlightDials, b: FlightDials): boolean {
     a.clockStarted === b.clockStarted &&
     a.dashLive === b.dashLive &&
     a.phase === b.phase &&
+    a.zone === b.zone &&
     a.trash === b.trash &&
     a.boost === b.boost &&
     a.progress === b.progress &&
@@ -255,6 +267,7 @@ export function flightBindings(d: FlightDials): HudValues {
     "rocket.clockStarted": d.clockStarted,
     "rocket.dashLive": d.dashLive,
     "rocket.phase": d.phase,
+    "rocket.zone": d.zone,
     "rocket.landing": d.landing,
     "rocket.trash": d.trash,
     "rocket.boost": d.boost,
