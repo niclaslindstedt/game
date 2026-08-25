@@ -17,6 +17,8 @@ import {
   FLIGHT_OUTCOME,
   FLIGHT_WRECKS,
   IDLE_FLIGHT_INPUT,
+  JUNK_KG,
+  ORBIT_VARIANTS,
   bandFrac,
   beginDescent,
   createFlight,
@@ -26,6 +28,7 @@ import {
   flightPar,
   flightScore,
   flightShellClear,
+  junkKg,
   restartFlight,
   stepFlight,
   type FlightInput,
@@ -251,38 +254,67 @@ describe("the shell", () => {
 });
 
 describe("what the sky costs", () => {
-  it("junk sticks: handling, not hull", () => {
+  it("junk bounces: a nudge and a mark's worth of event, never hull", () => {
     const flight = createFlight(PARAMS);
     handOver(flight);
-    plant(flight, "junk", 2, 4);
+    const bag = plant(flight, "junk", 2, 4);
     stepFlight(flight, STEP, IDLE_FLIGHT_INPUT);
-    expect(flight.trash.length).toBe(1);
     expect(flight.trashCount).toBe(1);
     expect(flight.craft.hull).toBe(1);
-    expect(flight.events.some((e) => e.type === "stuck")).toBe(true);
+    // The piece is gone from the field (it burst, it did not board).
+    expect(flight.field.some((o) => o.id === bag.id)).toBe(false);
+    expect(flight.strikes.some((s) => s.kind === "junk")).toBe(true);
+    const hit = flight.events.find((e) => e.type === "trashHit");
+    expect(hit).toBeDefined();
+    if (hit?.type === "trashHit") {
+      expect(hit.kg).toBe(JUNK_KG[0]);
+      expect(hit.side).toBe(1);
+    }
   });
 
-  it("a trashy ship answers the poofs like a barge", () => {
-    const clean = createFlight(PARAMS);
-    const dirty = createFlight(PARAMS);
-    for (const f of [clean, dirty]) {
+  it("every junk variant has a defined weight", () => {
+    expect(JUNK_KG.length).toBe(ORBIT_VARIANTS.junk);
+    for (const kg of JUNK_KG) expect(kg).toBeGreaterThan(0);
+    expect(junkKg(999)).toBe(JUNK_KG[JUNK_KG.length - 1]);
+    expect(junkKg(-1)).toBe(JUNK_KG[0]);
+  });
+
+  it("a heavy hit shoves harder than a light one, on the same shoulder", () => {
+    const couch = createFlight(PARAMS);
+    const can = createFlight(PARAMS);
+    for (const f of [couch, can]) {
       handOver(f);
-      f.craft.tilt = 0.4;
+      f.craft.vx = 0;
       f.craft.tiltVel = 0;
     }
-    for (let i = 0; i < 10; i++) {
-      dirty.trash.push({
-        id: 900 + i,
-        variant: 0,
-        along: 0,
-        across: 8,
-        angle: 0,
-      });
+    plant(couch, "junk", 3, 5).variant = 9; // the couch, 90 kg
+    plant(can, "junk", 3, 5).variant = 19; // the crushed can, 0.1 kg
+    stepFlight(couch, STEP, IDLE_FLIGHT_INPUT);
+    stepFlight(can, STEP, IDLE_FLIGHT_INPUT);
+    // Both bounced off the starboard shoulder: both shoved to port, the
+    // couch much harder — and the couch's twist dwarfs the can's.
+    expect(couch.craft.vx).toBeLessThan(0);
+    expect(Math.abs(couch.craft.vx)).toBeGreaterThan(
+      Math.abs(can.craft.vx) * 10,
+    );
+    expect(Math.abs(couch.craft.tiltVel)).toBeGreaterThan(
+      Math.abs(can.craft.tiltVel),
+    );
+  });
+
+  it("where it lands is the lever: a nose hit twists more than an amidships one", () => {
+    const nose = createFlight(PARAMS);
+    const mid = createFlight(PARAMS);
+    for (const f of [nose, mid]) {
+      handOver(f);
+      f.craft.tiltVel = 0;
     }
-    fly(clean, 30, { throttle: 0, steer: 1 });
-    fly(dirty, 30, { throttle: 0, steer: 1 });
-    expect(Math.abs(dirty.craft.tilt)).toBeGreaterThan(
-      Math.abs(clean.craft.tilt),
+    plant(nose, "junk", 3, FLIGHT.ascent.shipHalfH - 1).variant = 9;
+    plant(mid, "junk", 3, 0).variant = 9;
+    stepFlight(nose, STEP, IDLE_FLIGHT_INPUT);
+    stepFlight(mid, STEP, IDLE_FLIGHT_INPUT);
+    expect(Math.abs(nose.craft.tiltVel)).toBeGreaterThan(
+      Math.abs(mid.craft.tiltVel),
     );
   });
 
@@ -375,6 +407,66 @@ describe("the blasts", () => {
       .map((e) => (e.type === "explosion" ? e.seed : 0));
     expect(seeds.length).toBe(2);
     expect(seeds[0]).not.toBe(seeds[1]);
+  });
+});
+
+describe("the orbit sequence", () => {
+  /** Fly a whole climb to orbit, then return the flight mid-hold. */
+  function toOrbit(): FlightState {
+    const flight = createFlight(PARAMS);
+    for (
+      let i = 0;
+      i < 20000 && flight.outcome === FLIGHT_OUTCOME.flying;
+      i++
+    ) {
+      stepFlight(flight, STEP, pilot(flight));
+    }
+    expect(flight.outcome).toBe(FLIGHT_OUTCOME.toOrbit);
+    return flight;
+  }
+
+  it("settles, floats, drops the booster once, then pulls away", () => {
+    const flight = toOrbit();
+    const seq = FLIGHT.orbit;
+    // Through the settle and most of the float: the lean is worked off and
+    // the climb has bled down to a drift, with the booster still attached.
+    fly(flight, Math.floor((seq.settleMs + seq.floatMs) / STEP) - 4, pilot);
+    expect(Math.abs(flight.craft.tilt)).toBeLessThan(0.05);
+    expect(flight.craft.vy).toBeLessThan(seq.floatVy * 2);
+    expect(flight.boosterAway).toBe(false);
+    // The hinge: exactly one separation, then the departure burn runs away.
+    let separations = 0;
+    const vyAtFloat = flight.craft.vy;
+    for (let i = 0; i < Math.ceil(2000 / STEP); i++) {
+      stepFlight(flight, STEP, IDLE_FLIGHT_INPUT);
+      separations += flight.events.filter(
+        (e) => e.type === "separation",
+      ).length;
+    }
+    expect(separations).toBe(1);
+    expect(flight.boosterAway).toBe(true);
+    expect(flight.craft.vy).toBeGreaterThan(vyAtFloat + 100);
+  });
+});
+
+describe("the landing leg", () => {
+  const LANDING: FlightParams = { ...PARAMS, leg: "landing" };
+
+  it("opens on the drop, and a restart stays there", () => {
+    const flight = createFlight(LANDING);
+    expect(flight.phase).toBe("landing");
+    expect(flight.craft.alt).toBe(FLIGHT.landing.startAltPx);
+    fly(flight, 4000, IDLE_FLIGHT_INPUT);
+    expect(flight.outcome).toBe(FLIGHT_OUTCOME.wrecked);
+    const again = restartFlight(flight);
+    expect(again.phase).toBe("landing");
+    // The same drop: the pad has not moved between attempts.
+    expect(again.padX).toBe(flight.padX);
+  });
+
+  it("is measured against the drop's own par", () => {
+    expect(flightPar(LANDING)).toBe(FLIGHT.score.landingParMs);
+    expect(flightPar(PARAMS)).toBeGreaterThan(FLIGHT.score.landingParMs);
   });
 });
 

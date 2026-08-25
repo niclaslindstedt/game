@@ -239,22 +239,34 @@ export const FLIGHT = {
   },
 
   /**
-   * WHAT STICKS AND WHAT IT COSTS. Trash does not hole the hull — it LANDS on
-   * it and rides along, which is the joke ("making it trashy") and the
-   * handling penalty in one: every stuck bag adds inertia the poofs have to
-   * shove, so a filthy ship answers the stick like a barge.
+   * WHAT BOUNCES AND WHAT IT COSTS. Trash never holes the hull — it comes
+   * apart against it, leaves its mark on the paintwork, and SHOVES the ship
+   * by its own weight: every junk variant carries a defined mass (`JUNK_KG`,
+   * field.ts), and the bill below is priced per `refKg` of it. A crushed can
+   * is a tap the dials barely notice; a couch is a wallop that puts the whole
+   * climb on the wrong shoulder. WHERE it lands matters as much as what it
+   * weighs — the twist is a lever about the ship's centre, so a bag off the
+   * nose wrenches where the same bag amidships only shoves.
    */
   trash: {
-    /** Each stuck piece's share of the ship's handling — the poofs' authority
-     * is divided by `1 + count · massFrac`, so eight bags is roughly half the
-     * steering it launched with. */
-    massFrac: 0.09,
-    /** Climb speed kept on the thud (a fraction — the bag costs a nudge, not a
-     * crash). */
-    speedKeep: 0.985,
-    /** The lean it knocks in (rad/s, signed by which side it hit). */
-    kickPerS: 0.22,
-    /** How many pieces the hull has room to WEAR (the renderer's cap — past
+    /** The reference mass the three rates below are quoted at (kg) — a
+     * couch-class hit is one whole unit of each. */
+    refKg: 60,
+    /** The sideways shove at `refKg` (px/s, away from the side it hit). */
+    pushPx: 44,
+    /** The twist at `refKg` for a hit at the very nose or tail (rad/s) —
+     * scaled by the lever arm, so an amidships hit twists nothing. */
+    kickPerS: 0.5,
+    /** …and the knock every hit gives regardless of where it lands (rad/s at
+     * `refKg`, signed by side) — the thud's own share, so even an amidships
+     * couch is FELT on the balance. */
+    baseKickPerS: 0.12,
+    /** Climb speed lost at `refKg` (fraction of `vy`). */
+    speedLossFrac: 0.05,
+    /** The heaviest hit the arithmetic honours, as a multiple of `refKg` —
+     * a clamp, so no future variant can be authored into a one-hit flip. */
+    maxKgFrac: 1.5,
+    /** How many scuffs the hull has room to WEAR (the renderer's cap — past
      * this the count still climbs, the ship just has no clean panel left). */
     maxWorn: 12,
   },
@@ -433,11 +445,32 @@ export const FLIGHT = {
     craftKickPerS: 0.5,
   },
 
+  /**
+   * THE ORBIT BEAT — what the ship does with the win, staged over the hold:
+   * the planet lets go, the climb bleeds off to a FLOAT (the first stillness
+   * the trip has had), the spent booster is dropped, and the upper stage
+   * lights and pulls away toward the moon. The sim integrates all of it —
+   * where the hull is remains a sim fact even mid-celebration — and raises
+   * `separation` once, on the hinge.
+   */
+  orbit: {
+    /** Ms of SETTLE: lean and climb both worked toward the float. */
+    settleMs: 1100,
+    /** Ms of FLOAT after the settle — adrift, engine quiet, the breath. */
+    floatMs: 1500,
+    /** The drift the settle eases the climb down to (px/s, up). */
+    floatVy: 24,
+    /** The departure burn once the booster is away (px/s²) — the stage
+     * pulling out of frame is the beat's last picture. */
+    awayPx: 320,
+  },
+
   /** How long each terminal beat holds before the screen acts on it (ms):
-   * the wreck's smoke, the orbit-reached breath, and the landed module's
-   * moment of being looked at. */
+   * the wreck's smoke, the orbit sequence (settle, float, separation, the
+   * departure — see `orbit`), and the landed module's moment of being looked
+   * at. */
   wreckHoldMs: 2400,
-  orbitHoldMs: 2600,
+  orbitHoldMs: 5400,
   landedHoldMs: 3200,
 
   /**

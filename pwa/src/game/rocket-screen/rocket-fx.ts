@@ -16,7 +16,7 @@
 // frame never fast-forwards a spark and the pause card freezes the whole show
 // mid-bloom for free.
 
-import { blastRoll, type OrbitKind } from "@game/core";
+import { FLIGHT, blastRoll, type OrbitKind } from "@game/core";
 
 import { spriteByName, type GameAssets } from "../assets.ts";
 import { orbitSprite } from "./orbit-art.ts";
@@ -118,17 +118,20 @@ type SplatDrop = {
 };
 
 /**
- * WHAT A SOFT BODY LEFT ON THE PAINTWORK — a smear in the SHIP'S OWN frame
+ * WHAT THE SKY LEFT ON THE PAINTWORK — a mark in the SHIP'S OWN frame
  * (`along`/`across`, the engine's own impact coordinates), so it leans when
- * the ship leans exactly as the trash does. Kept until the flight ends or
- * restarts (`clearRocketFx`), because the drive's car wears its morning too.
+ * the ship leans. Two kinds wear the same record: a soft body's SPLAT and a
+ * bag's SCUFF — the dent-and-grime a weighted bounce leaves. Kept until the
+ * flight ends or restarts (`clearRocketFx`), because the drive's car wears
+ * its morning too.
  */
 export type HullSmear = {
+  kind: "splat" | "scuff";
   along: number;
   across: number;
   seed: number;
-  /** Red under the gore gate; the SFW dust read leaves no mark at all, so a
-   * smear only exists when it may be one. */
+  /** A splat is red under the gore gate (the SFW dust read leaves no mark at
+   * all); a scuff is its own greys. */
   color: string;
 };
 
@@ -150,6 +153,10 @@ export type RocketFxState = {
    * camera that followed the craft would leave the explosion behind within a
    * second. Cleared with the show (`clearRocketFx`). */
   wreckAt: { x: number; alt: number } | null;
+  /** THE DROPPED BOOSTER — latched at the separation event with where and how
+   * the ship stood, so its fall is t-driven from one record: the spent stage
+   * tumbles away below while the upper half pulls away above. */
+  booster: { x: number; alt: number; tilt: number; born: number } | null;
   /** The poof funnel's own clock — one breath per `POOF_GAP_MS`, however hard
    * the thumb is held. */
   lastPoofMs: number;
@@ -175,6 +182,7 @@ export function createRocketFx(): RocketFxState {
     shakeUntil: 0,
     shakeAmp: 0,
     wreckAt: null,
+    booster: null,
     lastPoofMs: 0,
     burnLevel: 0,
   };
@@ -194,6 +202,7 @@ export function clearRocketFx(fx: RocketFxState): void {
   fx.flashUntil = 0;
   fx.shakeUntil = 0;
   fx.wreckAt = null;
+  fx.booster = null;
   fx.burnLevel = 0;
 }
 
@@ -427,12 +436,45 @@ export function splatFx(
   // only when the gate lets a mark exist at all.
   if (red) {
     fx.smears.push({
+      kind: "splat",
       along: opts.along,
       across: opts.across,
       seed: Math.round(opts.x * 13 + opts.alt * 7),
       color: BLOOD_COLORS[Math.floor(h(7) * 3) % 3]!,
     });
   }
+}
+
+/** The greys a bag's bounce leaves — grime and bare-metal, never blood. */
+const SCUFF_COLORS = ["#23262e", "#3f4553", "#565e70"] as const;
+
+/**
+ * A BAG OFF THE PAINTWORK — the mark a weighted bounce leaves where the
+ * engine says it landed (`FlightEvent.trashHit`), riding the hull the way a
+ * splat does. The heavier the piece, the bigger the seed rolls the mark;
+ * past the cap the ship simply has no clean panel left and new hits mark
+ * nothing.
+ */
+export function scuffFx(
+  fx: RocketFxState,
+  along: number,
+  across: number,
+  kg: number,
+): void {
+  let scuffs = 0;
+  for (const smear of fx.smears) if (smear.kind === "scuff") scuffs++;
+  if (scuffs >= FLIGHT.trash.maxWorn) return;
+  const seed =
+    Math.round(Math.abs(along) * 31 + Math.abs(across) * 17 + kg * 7) | 0;
+  fx.smears.push({
+    kind: "scuff",
+    along,
+    across,
+    // The seed carries the WEIGHT class in its low bits — the renderer sizes
+    // the mark off it, so a couch leaves a dent and a can a fleck.
+    seed: seed * 4 + Math.min(3, Math.floor(kg / 25)),
+    color: SCUFF_COLORS[seed % SCUFF_COLORS.length]!,
+  });
 }
 
 /** Ease the plume's throat toward the throttle — called once per frame with

@@ -14,7 +14,9 @@
 
 import { blastHash } from "@game/core";
 
-/** A bag landing on the hull — soft, dead, a little embarrassing. */
+/** A bag bouncing off the hull — soft, dead, a little embarrassing. The ids
+ * keep their authored names (`content/sounds/rocket_stick_*.yaml`): renaming
+ * a shipped sound id orphans every mod routed onto it. */
 export const STICK_SOUNDS = [
   "rocket_stick_a",
   "rocket_stick_b",

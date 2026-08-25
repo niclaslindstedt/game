@@ -26,8 +26,11 @@ function forceOf(event: FlightState["events"][number]): number {
       return event.size === "big" ? 1 : 0.55;
     case "strike":
       return 0.4;
-    case "stuck":
-      return 0.15;
+    case "trashHit":
+      // The bounce buzzes by its weight — a couch is felt, a can is not.
+      return Math.min(0.35, 0.06 + (event.kg / FLIGHT.trash.refKg) * 0.2);
+    case "separation":
+      return 0.3;
     case "touchdown":
       return 0.35;
     case "warning":

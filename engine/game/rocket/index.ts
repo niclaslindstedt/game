@@ -7,7 +7,7 @@
 // the steering poofs are the player's whole grip on it. The landing is the
 // same controls on a craft with no instability at all — tilt goes where it is
 // put — which is what makes the second half read as relief instead of repeat.
-// Everything else (the field, the sticking trash, the score) hangs off those
+// Everything else (the field, the weighted trash, the score) hangs off those
 // two facts.
 
 import { createRng } from "@game/lib/rng.ts";
@@ -28,7 +28,7 @@ import {
   type FlightWreck,
 } from "./config.ts";
 import { detonate, stepBlasts } from "./blast.ts";
-import { bandFrac, firstMarks, stepField } from "./field.ts";
+import { bandFrac, firstMarks, junkKg, stepField } from "./field.ts";
 import type {
   FlightCraft,
   FlightInput,
@@ -41,6 +41,8 @@ import type {
  * Build a flight — the ascent, already climbing. The launch itself is the
  * cutscene's beat (the lawn, the soot, the trees), so the minigame opens in
  * the air with the controls held (`flightHandsOff`) and GET READY over it.
+ * A LANDING leg skips the climb whole: the same state, already dropped
+ * (`beginDescent`), which is also what makes its restarts free.
  */
 export function createFlight(params: FlightParams): FlightState {
   const rng = createRng(params.seed);
@@ -48,7 +50,7 @@ export function createFlight(params: FlightParams): FlightState {
   // `FlightState.strayRng` for why it is not the shell's.
   const strayRng = createRng((params.seed ^ 0x2545f491) >>> 0);
   const marks = firstMarks();
-  return {
+  const state: FlightState = {
     params: { ...params },
     rng,
     phase: "ascent",
@@ -67,7 +69,6 @@ export function createFlight(params: FlightParams): FlightState {
       hull: 1,
       fuel: 1,
     },
-    trash: [],
     field: [],
     ms: 0,
     clockMs: 0,
@@ -80,6 +81,7 @@ export function createFlight(params: FlightParams): FlightState {
     nextStrayAt: marks.stray,
     strayRng,
     gustPhase: rng() * Math.PI * 2,
+    boosterAway: false,
     trashCount: 0,
     hullHits: 0,
     softHits: 0,
@@ -94,6 +96,8 @@ export function createFlight(params: FlightParams): FlightState {
     events: [],
     nextId: 1,
   };
+  if (params.leg === "landing") beginDescent(state);
+  return state;
 }
 
 /**
@@ -126,7 +130,6 @@ export function beginDescent(state: FlightState): void {
     // a fixed authority (`landing.mainPx`) — so the gauge just reads full.
     fuel: 1,
   };
-  state.trash = [];
   state.field = [];
   state.ms = 0;
   state.outcome = FLIGHT_OUTCOME.flying;
@@ -277,8 +280,8 @@ function hazardHullFrac(
   return h.rockHullFrac;
 }
 
-/** The ascent's contacts: bags stick, soft bodies burst across the nose,
- * hardware holes — and everything knocks the balance. */
+/** The ascent's contacts: bags bounce off by their weight, soft bodies burst
+ * across the nose, hardware holes — and everything knocks the balance. */
 function collideAscent(state: FlightState): void {
   const a = FLIGHT.ascent;
   const rung = difficultyDef(state.params.difficulty).flight;
@@ -299,18 +302,36 @@ function collideAscent(state: FlightState): void {
       Math.min(a.shipHalfH, dx * ax + dy * ay),
     );
     if (o.kind === "junk") {
+      // THE WEIGHTED BOUNCE. Nothing sticks and nothing holes: the piece
+      // comes apart against the paintwork (the strike below is its burst),
+      // leaves a scuff where it landed (the event's `along`/`across`), and
+      // bills the ship an impulse priced by its own mass — a shove away from
+      // the side it hit, a twist through the LEVER of where it landed (a bag
+      // off the nose wrenches, the same bag amidships only shoves), and a
+      // bite out of the climb.
       const t = FLIGHT.trash;
-      state.trash.push({
-        id: o.id,
+      const kg = junkKg(o.variant);
+      const w = Math.min(t.maxKgFrac, kg / t.refKg);
+      const lever = along / a.shipHalfH;
+      craft.vx += -side * t.pushPx * w;
+      craft.vy *= 1 - t.speedLossFrac * w;
+      craft.tiltVel += -side * lever * t.kickPerS * w;
+      craft.tiltVel += side * t.baseKickPerS * w;
+      state.trashCount++;
+      state.strikes.push({
+        kind: o.kind,
         variant: o.variant,
+        x: o.x,
+        alt: o.alt,
+      });
+      state.events.push({
+        type: "trashHit",
+        variant: o.variant,
+        side,
         along,
         across: side * (a.shipHalfW - 1),
-        angle: o.angle,
+        kg,
       });
-      state.trashCount++;
-      craft.vy *= t.speedKeep;
-      craft.tiltVel += side * t.kickPerS;
-      state.events.push({ type: "stuck", variant: o.variant, side });
     } else if (
       o.kind === "bird" ||
       o.kind === "skydiver" ||
@@ -378,7 +399,6 @@ function stepAscent(state: FlightState, dt: number, input: FlightInput): void {
     // enough that GET READY is never interrupted by physics.
     craft.tiltVel += (-3 * craft.tilt - 2 * craft.tiltVel) * dt;
   } else {
-    const load = 1 + state.trash.length * FLIGHT.trash.massFrac;
     const tip = a.tipPerS * rung.tipMult * (1 + a.boostTipFrac * throttle);
     // The wandering bias — off-axis thrust from a garage build, so it only
     // PARTLY dies with the air: the ship is never done being corrected.
@@ -395,7 +415,7 @@ function stepAscent(state: FlightState, dt: number, input: FlightInput): void {
       (tip * Math.sin(craft.tilt) +
         gust +
         vane -
-        (a.steerPerS / load) * steer -
+        a.steerPerS * steer -
         a.tiltDampPerS * craft.tiltVel) *
       dt;
   }
@@ -555,11 +575,30 @@ export function stepFlight(
       }
       // A crashed module just lies there, which is the whole point of it.
     } else if (state.outcome === FLIGHT_OUTCOME.toOrbit) {
-      // The planet has let go: the ship eases out of the top of the frame,
-      // upright, while the beat is held.
-      craft.tilt -= craft.tilt * 1.5 * dt;
-      craft.vy = Math.max(craft.vy - 60 * dt, 120);
+      // THE ORBIT SEQUENCE (`FLIGHT.orbit`): the planet has let go, and the
+      // hold is a little film the sim still integrates — SETTLE (lean and
+      // climb worked off), FLOAT (adrift, the trip's first stillness), the
+      // SEPARATION (the spent booster dropped, raised once), and the upper
+      // stage lighting and pulling away.
+      const seq = FLIGHT.orbit;
+      craft.tilt -= craft.tilt * 3 * dt;
+      craft.tiltVel -= craft.tiltVel * 3 * dt;
+      if (state.outcomeMs < seq.settleMs + seq.floatMs) {
+        craft.vy += (seq.floatVy - craft.vy) * 1.8 * dt;
+        craft.vx -= craft.vx * 1.4 * dt;
+      } else {
+        if (!state.boosterAway) {
+          state.boosterAway = true;
+          state.events.push({
+            type: "separation",
+            x: craft.x,
+            alt: craft.alt,
+          });
+        }
+        craft.vy += seq.awayPx * dt;
+      }
       craft.alt += craft.vy * dt;
+      craft.x += craft.vx * dt;
       stepField(state, dt);
     }
     return;
@@ -586,7 +625,7 @@ export {
 } from "./config.ts";
 export type { FlightOutcome, FlightWreck } from "./config.ts";
 export { blastHash, blastRoll, detonate } from "./blast.ts";
-export { ORBIT_VARIANTS, bandFrac } from "./field.ts";
+export { JUNK_KG, ORBIT_VARIANTS, bandFrac, junkKg } from "./field.ts";
 export { flightPar, flightScore, flightTripMs } from "./score.ts";
 export type { FlightScorecard } from "./score.ts";
 export { IDLE_FLIGHT_INPUT, SOFT_KINDS } from "./types.ts";
@@ -600,11 +639,11 @@ export type {
   FlightCraft,
   FlightEvent,
   FlightInput,
+  FlightLeg,
   FlightParams,
   FlightPhase,
   FlightState,
   FlightStrike,
   OrbitKind,
   OrbitObject,
-  StuckTrash,
 } from "./types.ts";

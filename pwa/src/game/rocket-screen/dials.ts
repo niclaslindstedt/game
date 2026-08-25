@@ -64,7 +64,7 @@ export type FlightDials = {
   /** Which half is being flown, as the caption prints it. */
   phase: string;
   landing: boolean;
-  /** Bags riding the hull. */
+  /** Bags met hull-first so far — the trip's tally, not a cargo count. */
   trash: number;
   /** The boosters are open right now — the throttle indicator's light. */
   boost: boolean;
@@ -160,7 +160,7 @@ export function flightDials(
     dashLive: state.ms > FLIGHT.opening.handsOffMs * 0.5,
     phase: landing ? "THE DROP" : "ASCENT",
     landing,
-    trash: state.trash.length,
+    trash: state.trashCount,
     boost: throttle > 0 && !flightHandsOff(state) && state.outcome === "flying",
     progress: missionProgress(state),
     shellClear: flightShellClear(state),

@@ -42,6 +42,11 @@ export function flightCamera(
   /** Where the ship died, when it has (`RocketFxState.wreckAt`) — the wreck
    * camera's anchor. */
   wreckAt?: { x: number; alt: number },
+  /** Where the booster let go (`RocketFxState.booster`) — the separation
+   * camera's anchor: the frame plants itself on the beat so the upper stage
+   * visibly PULLS AWAY out of the top while the spent stage falls out of the
+   * bottom. A camera still glued to the craft would show neither. */
+  boosterAt?: { x: number; alt: number },
 ): SkyCamera {
   const { craft } = state;
   const halfSpan = Math.min(viewW, FLIGHT.fieldW);
@@ -63,6 +68,18 @@ export function flightCamera(
     // 0.72, not the middle: at climb speed the sky above the nose is the whole
     // of the player's warning, and every extra row of it is reaction time.
     cam = { x: craft.x - viewW / 2, topAlt: craft.alt + viewH * 0.72 };
+  }
+  if (state.outcome === "toOrbit" && boosterAt) {
+    // Eased in over the separation's first beats, exactly the wreck pan's
+    // arithmetic — deterministic off `outcomeMs`, so a paused frame holds.
+    const seq = FLIGHT.orbit;
+    const t = Math.min(
+      1,
+      Math.max(0, (state.outcomeMs - (seq.settleMs + seq.floatMs)) / 350),
+    );
+    const ease = t * (2 - t);
+    cam.x += (boosterAt.x - viewW / 2 - cam.x) * ease;
+    cam.topAlt += (boosterAt.alt + viewH * 0.45 - cam.topAlt) * ease;
   }
   if (state.outcome === "wrecked") {
     // A WRECK RE-CENTERS THE FRAME, ON THE WRECK. The working camera rides
@@ -558,10 +575,25 @@ const LANDER_PLUME: RocketExhaust = {
   flare: 7,
 };
 
-/** The ship (or the module), leaned to its real tilt, wearing its trash, its
- * smears, and the takeoff's own plume. `burn` is the smoothed throttle
- * (`easeBurn`, 0..1): the base burn is a live column, full boost is the
- * cutscene's takeoff. */
+/** WHERE THE SHIP SPLITS (px down the 24×32 `ship_*` art) — everything above
+ * is the upper stage that flies on after separation, everything below the
+ * spent booster that falls away. The line sits under the porthole band and
+ * above the engine skirt, so both halves read as themselves. */
+const SHIP_SPLIT_Y = 20;
+
+/** The upper stage's own engine after the split — a shorter throat at the
+ * crop's bottom edge. */
+const STAGE_PLUME: RocketExhaust = {
+  bellX: 12,
+  bellY: SHIP_SPLIT_Y - 1,
+  reach: 44,
+  flare: 7,
+};
+
+/** The ship (or the module), leaned to its real tilt, wearing its marks and
+ * the takeoff's own plume. `burn` is the smoothed throttle (`easeBurn`,
+ * 0..1): the base burn is a live column, full boost is the cutscene's
+ * takeoff. After separation only the upper crop flies on. */
 function drawCraft(
   ctx: CanvasRenderingContext2D,
   state: FlightState,
@@ -594,7 +626,8 @@ function drawCraft(
   // low sky gets the full bonfire, and as the air thins the bright core
   // shortens, the diamonds fade and the exhaust balloons into the faint wide
   // sheath a real engine wears up there. The moon's drop is all sheath.
-  const look = landing ? LANDER_PLUME : SHIP_PLUME;
+  const separated = !landing && state.boosterAway;
+  const look = landing ? LANDER_PLUME : separated ? STAGE_PLUME : SHIP_PLUME;
   const vacuum = landing
     ? 1
     : 1 - airFrac(craft.alt, flightCoursePx(state.params));
@@ -604,42 +637,101 @@ function drawCraft(
     drawPlume(ctx, look, nowMs, burn, Number.POSITIVE_INFINITY, vacuum);
     ctx.restore();
   }
-  ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
-  // WHAT THE SKY LEFT ON THE PAINTWORK — the soft bodies' smears, in the
-  // ship's own frame where the engine says they landed, under the trash the
-  // way paint is under cargo.
+  if (separated) {
+    // Only the upper stage flies on — the crop above the split line, in the
+    // sprite's own place so nothing on screen jumps at the moment of release.
+    ctx.drawImage(
+      sprite,
+      0,
+      0,
+      sprite.width,
+      SHIP_SPLIT_Y,
+      -sprite.width / 2,
+      -sprite.height / 2,
+      sprite.width,
+      SHIP_SPLIT_Y,
+    );
+  } else {
+    ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
+  }
+  // WHAT THE SKY LEFT ON THE PAINTWORK — in the ship's own frame where the
+  // engine says it landed: the soft bodies' splats, and the dents-and-grime
+  // the weighted trash scuffs in (`scuffFx` — a couch leaves a dent, a can a
+  // fleck; the seed's low bits carry the weight class).
   for (const smear of smears) {
     ctx.fillStyle = smear.color;
-    ctx.globalAlpha = 0.85;
-    const w = 2 + (smear.seed % 3);
-    const h = 3 + ((smear.seed >> 2) % 4);
-    ctx.fillRect(
-      Math.round(smear.across - w / 2),
-      Math.round(-smear.along),
-      w,
-      h,
-    );
+    if (smear.kind === "scuff") {
+      const heft = smear.seed & 3;
+      const roll = smear.seed >> 2;
+      const w = 2 + heft + (roll % 2);
+      const h = 1 + ((roll >> 1) % 2) + (heft >> 1);
+      ctx.globalAlpha = 0.9;
+      ctx.fillRect(
+        Math.round(smear.across - w / 2),
+        Math.round(-smear.along),
+        w,
+        h,
+      );
+      // The bare-metal glint along the streak's leading edge.
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = "#8a92a4";
+      ctx.fillRect(
+        Math.round(smear.across - w / 2),
+        Math.round(-smear.along),
+        1,
+        1,
+      );
+    } else {
+      ctx.globalAlpha = 0.85;
+      const w = 2 + (smear.seed % 3);
+      const h = 3 + ((smear.seed >> 2) % 4);
+      ctx.fillRect(
+        Math.round(smear.across - w / 2),
+        Math.round(-smear.along),
+        w,
+        h,
+      );
+    }
     ctx.globalAlpha = 1;
   }
-  // THE TRASH RIDES THE HULL — each bag drawn in the ship's own frame, where
-  // the sim stuck it, so a filthy ship leans filthy.
-  for (const t of state.trash) {
-    if (state.trash.indexOf(t) >= FLIGHT.trash.maxWorn) break;
-    const junk = spriteByName(sprites, orbitSprite("junk", t.variant));
-    if (!junk) continue;
-    ctx.save();
-    ctx.translate(t.across, -t.along);
-    ctx.rotate(t.angle);
-    const s2 = 0.8;
-    ctx.drawImage(
-      junk,
-      (-junk.width / 2) * s2,
-      (-junk.height / 2) * s2,
-      junk.width * s2,
-      junk.height * s2,
-    );
-    ctx.restore();
-  }
+  ctx.restore();
+}
+
+/**
+ * THE SPENT BOOSTER, FALLING — drawn from the separation latch
+ * (`RocketFxState.booster`), t-driven: the bottom crop of the ship's own art
+ * dropping away below the departing stage, tumbling slowly, gone off the
+ * frame inside the hold. Drawn with the craft rather than in the fx layer so
+ * the two halves of one ship come from one sprite on one camera.
+ */
+export function drawBooster(
+  ctx: CanvasRenderingContext2D,
+  booster: { x: number; alt: number; tilt: number; born: number },
+  cam: SkyCamera,
+  sprites: GameAssets["sprites"],
+  nowMs: number,
+): void {
+  const sprite = spriteByName(sprites, "ship_0");
+  if (!sprite) return;
+  const t = Math.max(0, (nowMs - booster.born) / 1000);
+  const wx = booster.x + 8 * t;
+  const wAlt = booster.alt - 26 * t - 0.5 * 34 * t * t;
+  const s = toScreen(cam, wx, wAlt);
+  const cropH = sprite.height - SHIP_SPLIT_Y;
+  ctx.save();
+  ctx.translate(s.x, s.y);
+  ctx.rotate(booster.tilt + 0.4 * t);
+  ctx.drawImage(
+    sprite,
+    0,
+    SHIP_SPLIT_Y,
+    sprite.width,
+    cropH,
+    -sprite.width / 2,
+    -sprite.height / 2 + SHIP_SPLIT_Y,
+    sprite.width,
+    cropH,
+  );
   ctx.restore();
 }
 

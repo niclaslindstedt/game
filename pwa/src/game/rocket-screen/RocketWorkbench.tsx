@@ -39,7 +39,6 @@ import type { ReactElement } from "react";
 
 import {
   DIFFICULTY_ORDER,
-  beginDescent,
   type Difficulty,
   type FlightParams,
   type FlightState,
@@ -47,7 +46,7 @@ import {
 
 import { loadGameAssets, peekGameAssets, type GameAssets } from "../assets.ts";
 import { LoadingScreen } from "../LoadingScreen.tsx";
-import { arcadeFlightParams } from "./begin.ts";
+import { MOON_LANDING_VARIANT, arcadeFlightParams } from "./begin.ts";
 import { resetControlsCard } from "./RocketIntro.tsx";
 import { RocketScreen } from "./RocketScreen.tsx";
 
@@ -57,29 +56,32 @@ function flightFromParams(params: URLSearchParams): FlightParams {
     DIFFICULTY_ORDER.includes(wanted as Difficulty) ? wanted : "medium"
   ) as Difficulty;
   const course = Number(params.get("course"));
+  // `phase=landing` is the shelf's MOON LANDING leg, so the drop opens with
+  // its own par, its own board and its own briefing — exactly what a session
+  // working on the landing wants to be working on.
+  const landing = (params.get("phase") ?? "").toLowerCase() === "landing";
   // Through the arcade door, so the gore gate is settled exactly as a shipped
   // lap settles it — a safe-mode capture harness must not meet a workbench
   // that bleeds anyway.
   return {
-    ...arcadeFlightParams(Number(params.get("seed")) || 1234, difficulty),
+    ...arcadeFlightParams(
+      Number(params.get("seed")) || 1234,
+      difficulty,
+      landing ? MOON_LANDING_VARIANT : undefined,
+    ),
     ...(Number.isFinite(course) && course > 0 ? { coursePx: course } : {}),
   };
 }
 
-/** The stager: jump to the drop, or plant hardware in the nose's path.
- * Everything is planted by hand rather than rolled, so the sky's own seeded
- * stream is untouched. */
+/** The stager: plant hardware in the nose's path. Everything is planted by
+ * hand rather than rolled, so the sky's own seeded stream is untouched. The
+ * drop itself needs no stager — `phase=landing` builds a landing LEG. */
 function stagerFor(
   params: URLSearchParams,
 ): ((flight: FlightState) => void) | undefined {
-  const landing = (params.get("phase") ?? "").toLowerCase() === "landing";
   const stage = (params.get("stage") ?? "").toLowerCase();
-  if (!landing && stage !== "hit" && stage !== "chain") return undefined;
+  if (stage !== "hit" && stage !== "chain") return undefined;
   return (flight) => {
-    if (landing) {
-      beginDescent(flight);
-      return;
-    }
     // One satellite square in the path, past the opening's hold; `chain` parks
     // two more beside it so the first blast lights them.
     const plant = (dx: number, dAlt: number) => {

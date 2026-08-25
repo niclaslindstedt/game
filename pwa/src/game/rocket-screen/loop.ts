@@ -40,6 +40,7 @@ import {
   boomFx,
   burstFx,
   poofFx,
+  scuffFx,
   splatFx,
   type RocketFxState,
 } from "./rocket-fx.ts";
@@ -96,8 +97,24 @@ export function drainFlight(
 
   for (const event of flight.events) {
     switch (event.type) {
-      case "stuck":
+      case "trashHit":
+        // A bag off the paintwork: the thud, and the scuff it leaves riding
+        // the hull (`scuffFx` sizes the mark by the weight). The piece
+        // itself tumbling away is the strike beside it, like everything else
+        // the sky loses.
         playFlightSound(synth, takeAt(STICK_SOUNDS, event.side * 40, nowMs));
+        scuffFx(fx, event.along, event.across, event.kg);
+        break;
+      case "separation":
+        // The booster let go: a clunk, a breath of the poofs at the split,
+        // and the spent stage latched for the renderer's t-driven fall.
+        playFlightSound(synth, takeAt(CLANG_SOUNDS, event.x, event.alt));
+        fx.booster = {
+          x: event.x,
+          alt: event.alt,
+          tilt: flight.craft.tilt,
+          born: nowMs,
+        };
         break;
       case "strike":
         playFlightSound(synth, takeAt(CLANG_SOUNDS, event.x, event.alt));

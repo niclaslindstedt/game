@@ -103,14 +103,20 @@ const MINIGAME_DEFS: Record<MinigameId, MinigameDef> = {
   },
   rocket: {
     id: "rocket",
-    // The road's own naming rule: the cabinet is the SHIP, and where it is
-    // pointed belongs to the row under it.
+    // The road's own naming rule: the cabinet is the SHIP, and what it is
+    // asked to fly belongs to the row under it.
     name: "THE ROCKET",
-    variantLabel: "DESTINATION",
-    // One way it can be played: up through the shell and down onto the moon.
-    // A single variant is a cabinet with no choice to offer, so no knob row is
-    // drawn under it and the label above goes unread until a second way exists.
-    variants: [{ id: "moon", name: "MOON" }],
+    variantLabel: "MISSION",
+    // The two ways it can be played: the whole trip — up through the shell,
+    // then down onto the moon — or the MOON LANDING alone, the drop as its
+    // own lap. Each id is what `arcadeFlightParams` builds the sky from
+    // (`rocket-screen/begin.ts` — the second one sets `FlightParams.leg`),
+    // and each ranks on its own ladder: a drop's clock and a trip's are not
+    // comparable.
+    variants: [
+      { id: "moon", name: "MOON" },
+      { id: "moon_landing", name: "MOON LANDING" },
+    ],
   },
 };
 

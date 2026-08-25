@@ -35,6 +35,7 @@ import {
   recordFlightScore,
   rememberFlightInitials,
   topFlightScores,
+  type FlightLeg,
   type FlightScoreEntry,
 } from "../rocket-scores.ts";
 import { playUiSound } from "../sfx/ui.ts";
@@ -52,8 +53,11 @@ const DIM = "#6f6a52";
 export type FlightBoardResult = {
   card: FlightScorecard;
   difficulty: string;
-  /** This flight's place in the whole ladder (0-based), or null when its
-   * clock never ran. */
+  /** Which cabinet's ladder this flight ranks in — the whole trip's or the
+   * MOON LANDING drop's. The two clocks are not comparable. */
+  leg: FlightLeg;
+  /** This flight's place in its leg's whole ladder (0-based), or null when
+   * its clock never ran. */
   rank: number | null;
   /** The head of the ladder as it stood BEFORE this flight. */
   before: FlightScoreEntry[];
@@ -63,12 +67,14 @@ export type FlightBoardResult = {
 export function flightBoardResult(
   card: FlightScorecard,
   difficulty: string,
+  leg: FlightLeg = "trip",
 ): FlightBoardResult {
   return {
     card,
     difficulty,
-    rank: flightTimeRank(card.ms),
-    before: topFlightScores(),
+    leg,
+    rank: flightTimeRank(card.ms, leg),
+    before: topFlightScores(ROCKET_BOARD_SIZE, leg),
   };
 }
 
@@ -128,6 +134,7 @@ export function RocketScores({
       const signed = signedInitials(name);
       rememberFlightInitials(signed);
       recordFlightScore({
+        ...(result.leg === "landing" ? { leg: "landing" as const } : {}),
         name: signed,
         score: card.score,
         ms: card.ms,
@@ -141,7 +148,7 @@ export function RocketScores({
       playUiSound(synth, "back");
     }
     onDone();
-  }, [card, entering, name, onDone, result.difficulty]);
+  }, [card, entering, name, onDone, result.difficulty, result.leg]);
 
   const onType = useCallback((e: Event) => {
     const el = e.currentTarget as HTMLInputElement;
@@ -321,17 +328,20 @@ export function RocketScores({
           )}
         </div>
 
-        {/* THE CABINET'S ONE FOOTNOTE — what the climb hauled up there, worth
-            nothing, itemised anyway. The drive prints its body count the same
-            way; this machine's shame is cargo. */}
-        <div className="drive-scores-hint">
-          <PixelText
-            font={font}
-            text={`TRASH CARRIED: ${card.trash} · WORTH: 0`}
-            scale={2}
-            color={DIM}
-          />
-        </div>
+        {/* THE CABINET'S ONE FOOTNOTE — every bag the climb met hull-first,
+            worth nothing, itemised anyway. The drive prints its body count
+            the same way; this machine's shame is the company's garbage. The
+            drop-only cabinet flies an empty sky and prints none. */}
+        {result.leg !== "landing" && (
+          <div className="drive-scores-hint">
+            <PixelText
+              font={font}
+              text={`TRASH HIT: ${card.trash} · WORTH: 0`}
+              scale={2}
+              color={DIM}
+            />
+          </div>
+        )}
 
         {entering && (
           <div className="drive-scores-hint">

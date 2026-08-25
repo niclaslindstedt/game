@@ -29,6 +29,42 @@ export const ORBIT_VARIANTS: Record<OrbitKind, number> = {
   paraglider: 2,
 };
 
+/**
+ * WHAT EACH PIECE OF JUNK WEIGHS (kg) — one entry per junk variant, in the
+ * art's own order (`rocket-screen/orbit-art.ts` names the cast). The weight
+ * is the whole of what a hit costs (`FLIGHT.trash` prices the shove per kg),
+ * so the table IS the difficulty of the field: household guesses, kept
+ * honest — a fridge is a fridge.
+ */
+export const JUNK_KG: readonly number[] = [
+  8, // 0  a tied trash bag
+  20, // 1  an empty steel drum
+  1, // 2  a bottle
+  9, // 3  a car tyre
+  30, // 4  a TV set, aerials and all
+  70, // 5  a fridge, door hanging ajar
+  75, // 6  a washing machine
+  25, // 7  a mattress
+  45, // 8  a toilet
+  90, // 9  a couch — the heaviest thing the company ever threw
+  2, // 10 a cardboard box
+  1, // 11 a fish skeleton
+  50, // 12 a water heater
+  65, // 13 a chest freezer with a porthole
+  5, // 14 a desk fan
+  4, // 15 a floor lamp
+  0.5, // 16 a shoe
+  4, // 17 a traffic cone
+  0.2, // 18 a banana peel
+  0.1, // 19 a crushed can
+];
+
+/** The weight a variant hits with — clamped rather than trusted, the sprite
+ * table's own rule, so a mod's shorter cast degrades to the last entry. */
+export function junkKg(variant: number): number {
+  return JUNK_KG[Math.min(JUNK_KG.length - 1, Math.max(0, variant))]!;
+}
+
 /** The rung's field knobs, off the ladder. */
 function rungFlight(state: FlightState) {
   return difficultyDef(state.params.difficulty).flight;

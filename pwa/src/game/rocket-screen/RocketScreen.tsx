@@ -24,6 +24,7 @@ import type { CSSProperties, ReactElement } from "react";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import {
   FLIGHT_OUTCOME,
+  beginDescent,
   createFlight,
   createFlightDriver,
   flightDriverInput,
@@ -52,9 +53,10 @@ import { DPAD_DEADZONE_PX, DPAD_RING_PX } from "../game-screen/player-input.ts";
 import { HudRoot } from "../hud/HudRoot.tsx";
 import type { HudContext } from "../hud/context.ts";
 
-import { drawFlight, flightCamera } from "./render.ts";
+import { drawBooster, drawFlight, flightCamera } from "./render.ts";
 import {
   boostFeel,
+  clearRocketFx,
   createRocketFx,
   drawRocketFx,
   easeBurn,
@@ -79,8 +81,9 @@ import {
   type FlightDials,
 } from "./dials.ts";
 import { flightThoughtPages } from "./voice.ts";
-import { RocketIntro } from "./RocketIntro.tsx";
+import { MoonLandingIntro, RocketIntro } from "./RocketIntro.tsx";
 import { RocketLaunch } from "./RocketLaunch.tsx";
+import { RocketVoyage } from "./RocketVoyage.tsx";
 import { RocketPause } from "./RocketPause.tsx";
 import {
   RocketScores,
@@ -166,14 +169,24 @@ export function RocketScreen({
   const speechRef = useRef<Speech | null>(null);
   const [paused, setPaused] = useState(false);
   const pausedRef = useRef(false);
-  const [intro, setIntro] = useState(!auto);
-  const introRef = useRef(!auto);
+  // A LANDING leg opens on the drop's own briefing instead of the climb's
+  // cards — the engine already built it dropped (`FlightParams.leg`).
+  const landingLeg = params.leg === "landing";
+  const [intro, setIntro] = useState(!auto && !landingLeg);
+  const introRef = useRef(!auto && !landingLeg);
+  // THE CABIN — the two window beats between orbit and the drop, and the
+  // MOON LANDING briefing after them. Each parks the sky exactly as the
+  // intro does; the refs are what the loop re-reads mid-batch.
+  const [voyage, setVoyage] = useState(false);
+  const voyageRef = useRef(false);
+  const [landingIntro, setLandingIntro] = useState(!auto && landingLeg);
+  const landingIntroRef = useRef(!auto && landingLeg);
   // STILL ON THE LAWN — the launch cutscene is up. It sits INSIDE the intro's
   // hold rather than beside it (the card follows the scene, so `intro` is true
   // for the whole of both), which is what leaves every park in this file
   // reading `introRef` alone.
-  const [onPad, setOnPad] = useState(launch && !auto);
-  const onPadRef = useRef(launch && !auto);
+  const [onPad, setOnPad] = useState(launch && !auto && !landingLeg);
+  const onPadRef = useRef(launch && !auto && !landingLeg);
   const [board, setBoard] = useState<FlightBoardResult | null>(null);
   const boardRef = useRef<FlightBoardResult | null>(null);
   const [hud, setHud] = useState<FlightDials>(() =>
@@ -249,6 +262,33 @@ export function RocketScreen({
     padOrigin = null;
   }, []);
 
+  /** The orbit hold has run out: park the sky and go inside the ship. */
+  const enterCabin = useCallback(() => {
+    if (voyageRef.current) return;
+    voyageRef.current = true;
+    setVoyage(true);
+    dropControls();
+  }, [dropControls]);
+
+  /** The cabin is behind us: the drop's briefing stands before the module. */
+  const leaveCabin = useCallback(() => {
+    voyageRef.current = false;
+    setVoyage(false);
+    landingIntroRef.current = true;
+    setLandingIntro(true);
+  }, []);
+
+  /** Briefed: the module is theirs. A landing leg is already dropped. */
+  const beginDrop = useCallback(() => {
+    landingIntroRef.current = false;
+    setLandingIntro(false);
+    const flight = flightRef.current;
+    if (flight.phase !== "landing") {
+      beginDescent(flight);
+      clearRocketFx(fxRef.current);
+    }
+  }, []);
+
   // Losing the window parks the ship — the drive's auto-pause, with the same
   // two exemptions (never over the board or the intro) and the same stuck-key
   // clear.
@@ -257,6 +297,9 @@ export function RocketScreen({
     const park = () => {
       dropControls();
       if (boardRef.current || introRef.current) return;
+      // The cabin and the briefing already park the sky — a pause card on
+      // top of either would be one curtain over another.
+      if (voyageRef.current || landingIntroRef.current) return;
       setPause(true);
     };
     const onVisibility = () => {
@@ -282,6 +325,7 @@ export function RocketScreen({
       const result = flightBoardResult(
         flightScore(flight),
         flight.params.difficulty,
+        flight.params.leg ?? "trip",
       );
       boardRef.current = result;
       setBoard(result);
@@ -310,6 +354,8 @@ export function RocketScreen({
       }
       if (boardRef.current) return;
       if (introRef.current) return;
+      // The cabin and the briefing own their own keys.
+      if (voyageRef.current || landingIntroRef.current) return;
       if (action === "pause" || e.code === "Escape") {
         setPause(!pausedRef.current);
         return;
@@ -381,8 +427,10 @@ export function RocketScreen({
       last = now;
       while (acc >= STEP_MS) {
         acc -= STEP_MS;
-        // Re-read each step: `endFlight` can raise the board mid-batch.
+        // Re-read each step: `endFlight` can raise the board — or the cabin —
+        // mid-batch.
         if (introRef.current || pausedRef.current || boardRef.current) break;
+        if (voyageRef.current || landingIntroRef.current) break;
         stepFlight(flight, STEP_MS, inputRef.current);
         drainFlight(flight, fxRef.current, beatsRef.current, say);
         voiceFlightControls(
@@ -395,7 +443,16 @@ export function RocketScreen({
         voiceStorm(flight, stormRef.current);
         ageSpeech(flight.ms);
         if (!auto) feelFlight(flight);
-        endFlight(flight, fxRef.current, beatsRef.current, clearSpeech, arrive);
+        endFlight(
+          flight,
+          fxRef.current,
+          beatsRef.current,
+          clearSpeech,
+          arrive,
+          // An unattended flight has nobody to read the cabin to — it drops
+          // straight on, the attract loop's rules.
+          auto ? undefined : enterCabin,
+        );
       }
 
       // ── PAINT ─────────────────────────────────────────────────────────────
@@ -411,6 +468,9 @@ export function RocketScreen({
       const flying = flight.outcome === FLIGHT_OUTCOME.flying;
       const boost =
         inputRef.current.throttle > 0 && !flightHandsOff(flight) && flying;
+      // The ORBIT beat stages the engine too: quiet through the settle and
+      // the float (the first stillness the trip has), relit for the
+      // departure once the booster is away.
       const wantBurn =
         flight.phase === "landing"
           ? boost
@@ -418,9 +478,13 @@ export function RocketScreen({
             : 0
           : flight.outcome === "wrecked"
             ? 0
-            : boost
-              ? 1
-              : 0.45;
+            : flight.outcome === FLIGHT_OUTCOME.toOrbit
+              ? flight.boosterAway
+                ? 1
+                : 0
+              : boost
+                ? 1
+                : 0.45;
       const burn = easeBurn(fxRef.current, wantBurn, frameDt);
       // The camera is shaken, not the context — everything reads one frame.
       // The boost's own feel rides beside the blast shake: a subtle rumble
@@ -431,6 +495,7 @@ export function RocketScreen({
         viewW,
         viewH,
         fxRef.current.wreckAt ?? undefined,
+        fxRef.current.booster ?? undefined,
       );
       const shake = shakeOffset(fxRef.current, flight.ms);
       const feel = boostFeel(burn, flight.phase === "landing", flight.ms);
@@ -451,6 +516,11 @@ export function RocketScreen({
         burn,
         fxRef.current.smears,
       );
+      // The spent stage, falling out of the orbit beat — same camera, so the
+      // two halves of one ship part on one picture.
+      if (fxRef.current.booster) {
+        drawBooster(ctx, fxRef.current.booster, cam, assets.sprites, flight.ms);
+      }
       drawRocketFx(ctx, fxRef.current, cam, flight.ms, viewW, viewH, assets);
       // The weather is between the camera and all of it — rain and the
       // lightning's flash go on last.
@@ -504,7 +574,7 @@ export function RocketScreen({
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [ageSpeech, arrive, assets, auto, clearSpeech, say]);
+  }, [ageSpeech, arrive, assets, auto, clearSpeech, enterCabin, say]);
 
   // The haptics' rate-limit clock is module state; a fresh mount starts it
   // fresh so a lap's first hit always lands.
@@ -527,6 +597,7 @@ export function RocketScreen({
     actions: {
       pauseGame: () => {
         if (boardRef.current || introRef.current) return;
+        if (voyageRef.current || landingIntroRef.current) return;
         dropControls();
         setPause(true);
       },
@@ -546,14 +617,19 @@ export function RocketScreen({
 
       {/* MISSION CONTROL — authored, like the fight's HUD and the road's dash
           (`content/hud/elements/rocket_*.yaml`): the twin dials, the hull bar,
-          the attitude indicator, the T+ clock and the mission timeline. */}
-      <div
-        className={
-          hud.dashLive ? "drive-hud-shelf drive-hud-in" : "drive-hud-shelf"
-        }
-      >
-        <HudRoot ctx={hudContext} />
-      </div>
+          the attitude indicator, the T+ clock and the mission timeline. Taken
+          down while the cabin or the drop's briefing is up — the inside of
+          the ship has its own console, and mission control has nothing to say
+          about a parked sky. */}
+      {!voyage && !landingIntro && (
+        <div
+          className={
+            hud.dashLive ? "drive-hud-shelf drive-hud-in" : "drive-hud-shelf"
+          }
+        >
+          <HudRoot ctx={hudContext} />
+        </div>
+      )}
 
       {/* The hands-off captions — the drive's GET READY beat, twice. */}
       {caption && (
@@ -643,6 +719,16 @@ export function RocketScreen({
               : undefined
           }
         />
+      )}
+
+      {/* THE CABIN — the two window beats between orbit and the drop, and
+          the MOON LANDING briefing behind them. A landing leg opens straight
+          on the briefing. */}
+      {voyage && (
+        <RocketVoyage assets={assets} heroName={heroName} onDone={leaveCabin} />
+      )}
+      {landingIntro && !voyage && (
+        <MoonLandingIntro font={assets.font} onDone={beginDrop} />
       )}
 
       {board && (

@@ -1115,13 +1115,37 @@ tracker beat instead — same facts, the film version. Nobody gets both._
 
 **ME (thinks):** CLEAR. THE RICH LEFT BEFORE THE SKY SHUT. THE REST OF US LEARN TO STEER.
 
+### The cabin, Earth in the porthole — after orbit and the booster's release
+
+_(A new kind of scene: the first time the game goes INSIDE the ship. The
+cabin, one big porthole with Earth shrinking in it, the hero floating loose
+and turning slowly, his garage's props adrift around him at their own depths.
+The scene is parked — a tap turns the page — and the lines print as his
+thoughts, no box, no portrait: `rocket-screen/RocketVoyage.tsx`, ids
+`flight_earth_away` / `flight_moon_close` in `content/thoughts.yaml`.)_
+
+**ME (thinks):** THAT'S EVERYTHING. THE HOUSE. THE ROAD. THE COUCH. GETTING SMALLER.
+
+**ME (thinks):** THE MOVIE IS STILL PAUSED. SHE ONLY WENT OUT FOR CHIPS AND SODA.
+
+**ME (thinks):** FIND ADA. FLY HOME. FINISH MOVIE NIGHT. I WAS LOOKING FORWARD TO THOSE CHIPS.
+
+### The cabin again, the moon filling the glass
+
+**ME (thinks):** THERE IT IS. BIGGER THAN IT LOOKS FROM THE LAWN.
+
+**ME (thinks):** NOBODY UP HERE IS GOING TO PARK THIS FOR ME. I NEED TO LAND.
+
+_(Then the card: MOON LANDING — GET READY, the drop's own briefing, and the
+module is his.)_
+
 ### The drop beginning, the moon under the module
 
 **ME (thinks):** HER TRACKER PINGS FROM THE MOON. NOBODY GOES THERE FOR CHIPS AND SODA.
 
 ### The pads meeting regolith
 
-**ME (thinks):** DOWN. THE TRASH RODE UP HERE FOR FREE.
+**ME (thinks):** DOWN. EVERY BAG UP THERE GOT ITS SWING IN.
 
 ## Travel — THE VOYAGE, LEG ONE (cutscene)
 

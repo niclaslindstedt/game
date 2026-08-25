@@ -395,13 +395,14 @@ describe("the title menu tree", () => {
       "main-minigames",
     );
     // …and the shelf behind it lists the cabinets, each followed by its OWN
-    // knob where it has one to offer — the road's DIRECTION, and nothing under
-    // the rocket, which goes one place — then the rung they are all weighed on
+    // knob — the road's DIRECTION, the rocket's MISSION (the whole trip or
+    // the MOON LANDING drop alone) — then the rung they are all weighed on
     // and a BACK under that.
     expect(buildMenu("minigames", beaten).map((row) => row.aria)).toEqual([
       "minigames-drive",
       "minigames-drive-variant",
       "minigames-rocket",
+      "minigames-rocket-variant",
       "minigames-difficulty",
       "minigames-back",
     ]);
@@ -427,19 +428,18 @@ describe("the title menu tree", () => {
     expect(two?.locked).toBe(false);
   });
 
-  it("gives each cabinet its OWN knob, and only where it has a choice", () => {
-    // WHICH WAY the road is driven belongs to the road: its row sits directly
-    // under its cabinet, wears the label the def gives it, and shows the end
-    // the next lap is bound for. The rocket goes one place, so it carries no
-    // such row at all — absent rather than greyed, because there is no sentence
-    // a grey could say about a machine that will never have a second way.
+  it("gives each cabinet its OWN knob, wearing its own vocabulary", () => {
+    // WHICH WAY a machine is played belongs to that machine: its row sits
+    // directly under its cabinet and wears the label the def gives it — the
+    // road picks a DIRECTION, the rocket a MISSION (the whole trip, or the
+    // MOON LANDING drop alone) — and each shows what the next lap would play.
     const rows = buildMenu("minigames", ctxFor({ roster: [CHAMPION] }));
-    const knob = rows.find((row) => row.aria === "minigames-drive-variant");
-    expect(knob?.label).toBe(minigameDef("drive").variantLabel);
-    expect(knob?.value).toBe(minigameDef("drive").variants[0]?.name);
-    expect(rows.map((row) => row.aria)).not.toContain(
-      "minigames-rocket-variant",
-    );
+    const drive = rows.find((row) => row.aria === "minigames-drive-variant");
+    expect(drive?.label).toBe(minigameDef("drive").variantLabel);
+    expect(drive?.value).toBe(minigameDef("drive").variants[0]?.name);
+    const rocket = rows.find((row) => row.aria === "minigames-rocket-variant");
+    expect(rocket?.label).toBe(minigameDef("rocket").variantLabel);
+    expect(rocket?.value).toBe(minigameDef("rocket").variants[0]?.name);
   });
 
   it("hides LOAD GAME until there is a hero to load", () => {

@@ -290,9 +290,12 @@ airliners on their own lanes, delivery drones running parcels most of the way
 up the shell (it is an AI world, and somebody automated even this), birds low
 down, and the odd skydiver or paraglider having a hobby — and the soft ones do
 not break the ship either; they come apart across it, the road's crowd met a
-thousand feet up. Trash does not break the ship: it lands on it and rides, so
-he arrives everywhere wearing the company's garbage, and the scoreboard counts
-every bag — and every body — and pays nothing for any of them. Satellites,
+thousand feet up. Trash does not break the ship: every piece of it has its own
+honest weight, and it BOUNCES — a crushed can taps the paint, a thrown-out
+couch wrenches the whole climb onto the wrong shoulder — and every hit leaves
+its scuff on the hull, so he arrives everywhere wearing the marks of the
+company's garbage, and the scoreboard counts every bag — and every body — and
+pays nothing for any of them. Satellites,
 rocks, airliners and drones break the ship, and anything with tanks or
 batteries that goes up takes its neighbours with it, one fuse at a time.
 Everything he says up here he says INSIDE HIS OWN HEAD — a man alone in a
@@ -304,6 +307,21 @@ going over, and when he punches out of the shell — the sky suddenly,
 conspicuously clean — one thought of relief, and never mentions any of it
 again. Leaving Earth has quietly become hard, and he files it under road
 surface.
+
+**Orbit is played, not stamped.** The climb ends the way a win should be
+watched: the planet lets go, the lean and the speed bleed off until the ship
+simply FLOATS — the first stillness the whole trip has had — then the spent
+booster is dropped and falls away below while the upper stage lights and pulls
+out of frame toward the moon. Then, for the first time in the game, the camera
+goes INSIDE: the homemade cabin, a single big porthole with Earth in it
+getting smaller, and the hero floating loose in his own cockpit, turning
+slowly, while the props of his garage life drift past at their own depths. He
+says the quiet part to nobody: down there the movie is still paused on the
+couch, Ada only went out for the chips — so the plan is the plan: find her,
+fly home, finish movie night. He was looking forward to those chips. A second
+cabin beat brings the moon up until it fills the glass; nobody up here is
+going to park this for him, so the game says MOON LANDING, tells him what is
+about to happen, and hands over the drop.
 
 **The other half is THE DROP**: the module, the marked pad, the moon's easy
 pull, and a machine that finally does what it is told — tilt goes where he puts
