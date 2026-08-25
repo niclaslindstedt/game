@@ -43,7 +43,7 @@ import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
 
-import { nativeEnv } from "./asset-tools/app-store-connect.mjs";
+import { nativeEnv, reviewPhone } from "./asset-tools/app-store-connect.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
@@ -341,15 +341,23 @@ if (listing.status === 0) {
   );
 }
 
-// Apple calls the review contact number. The shipped placeholder is not one.
+// Apple calls the review contact number, and this repository is public — so
+// the number lives in the environment rather than in the committed listing.
 const listingDoc = parse(
   readFileSync(path.join(native, "store", "listing.yaml"), "utf8"),
 );
-const phone = String(listingDoc?.apple?.review?.phone ?? "").trim();
-if (!phone || /0{6,}/.test(phone.replace(/[\s-]/g, ""))) {
+const phone = reviewPhone(root, listingDoc);
+if (!phone) {
   fail(
-    `native/store/listing.yaml → review.phone is a placeholder (${phone})`,
-    "App Store review needs a reachable number with a country code.",
+    "no App Store review phone (ASC_REVIEW_PHONE)",
+    "Apple rings this one, so it has to be reachable and carry a country " +
+      "code. Set ASC_REVIEW_PHONE in native/.env — NOT in listing.yaml, " +
+      "which is committed to a public repository.",
+  );
+} else if (!phone.startsWith("+")) {
+  fail(
+    `ASC_REVIEW_PHONE (${phone}) has no country code`,
+    "Apple requires the + prefix, e.g. +46701234567.",
   );
 } else {
   ok(`review contact ${phone}`);

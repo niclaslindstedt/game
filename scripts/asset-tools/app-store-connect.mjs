@@ -78,6 +78,35 @@ export function nativeEnv(root) {
 }
 
 /**
+ * A review phone that is really the shipped placeholder. Apple CALLS this
+ * number, so a run of zeros is not a number that has been filled in badly — it
+ * is the template, and treating it as set is how a listing reaches review with
+ * nobody on the other end.
+ */
+const placeholderPhone = (phone) => /0{6,}/.test(phone.replace(/[\s-]/g, ""));
+
+/**
+ * The App Store review contact number.
+ *
+ * It is the one listing field that behaves like a credential rather than like
+ * copy: Apple rings it, so it has to be a reachable personal or business line,
+ * and THIS REPOSITORY IS PUBLIC — committing one publishes it to everybody who
+ * ever clones the tree, permanently and in the history. So the authored YAML
+ * carries a placeholder on purpose and the real value arrives out of band,
+ * through `ASC_REVIEW_PHONE` in native/.env (gitignored) or the process
+ * environment, which is how CI hands one over from a repository secret.
+ *
+ * Returns "" when neither source has a real number, so every caller reports
+ * the gap instead of shipping the placeholder to Apple.
+ */
+export function reviewPhone(root, listingDoc) {
+  const fromEnv = nativeEnv(root).value("ASC_REVIEW_PHONE");
+  if (fromEnv) return placeholderPhone(fromEnv) ? "" : fromEnv;
+  const authored = String(listingDoc?.apple?.review?.phone ?? "").trim();
+  return placeholderPhone(authored) ? "" : authored;
+}
+
+/**
  * The App Store Connect API key, resolved exactly as fastlane resolves it: a
  * key id, an issuer id, and the `.p8` from either a path (relative to
  * `native/`, since that is where the lanes run) or a base64 blob for CI.

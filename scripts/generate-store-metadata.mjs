@@ -34,6 +34,8 @@ import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
 
+import { reviewPhone } from "./asset-tools/app-store-connect.mjs";
+
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 
 const LISTING = here("../native/store/listing.yaml");
@@ -88,6 +90,26 @@ if (!listing.apple?.info?.["en-US"]) {
     "generate-store-metadata: listing.yaml has no apple.info['en-US']",
   );
   process.exit(1);
+}
+
+// The review number comes from the environment, not from the committed YAML —
+// see `reviewPhone`. Resolving it HERE, onto the parsed document, is what keeps
+// the rest of this file (the country-code check, store.config.json, the
+// fastlane review_information tree) reading a single value. An unresolved one
+// is deleted rather than passed through: uploading a placeholder gives review a
+// number that rings nobody, which is worse than leaving the field for Apple to
+// ask about.
+if (listing.apple.review) {
+  const phone = reviewPhone(here(".."), listing);
+  if (phone) listing.apple.review.phone = phone;
+  else {
+    delete listing.apple.review.phone;
+    console.warn(
+      "generate-store-metadata: warning — no review phone. Set " +
+        "ASC_REVIEW_PHONE in native/.env (never in listing.yaml: this " +
+        "repository is public). `make store-preflight` fails until you do.",
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
