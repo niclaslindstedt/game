@@ -55,31 +55,34 @@ function portal(
 }
 
 /** THE CABIN — panels, rivets, tape, cables and a console that still blinks:
- * a garage build, seen from inside for the first time. */
+ * a garage build, seen from inside for the first time. LIT, on purpose — the
+ * cabin lights are on, the walls read as bright metal, and the porthole is
+ * the one dark thing in the frame, which is what makes space look like
+ * space instead of the room looking like a cave. */
 function drawCabin(
   ctx: CanvasRenderingContext2D,
   viewW: number,
   viewH: number,
   tMs: number,
 ): void {
-  ctx.fillStyle = "#12151e";
+  ctx.fillStyle = "#4a5263";
   ctx.fillRect(0, 0, viewW, viewH);
 
   // The panel grid — seams a shade darker, one panel a shade off (he ran out
-  // of the first sheet), rivets on the crossings.
+  // of the first sheet), rivets catching the light on the crossings.
   const P = 46;
   for (let py = 0; py * P < viewH + P; py++) {
     for (let px = 0; px * P < viewW + P; px++) {
       if (hash2(px * 3 + 1, py * 7 + 2) < 0.14) {
-        ctx.fillStyle = "#151924";
+        ctx.fillStyle = "#525a6e";
         ctx.fillRect(px * P, py * P, P, P);
       }
     }
   }
-  ctx.fillStyle = "#0c0f16";
+  ctx.fillStyle = "#363d4c";
   for (let x = 0; x < viewW; x += P) ctx.fillRect(x, 0, 1, viewH);
   for (let y = 0; y < viewH; y += P) ctx.fillRect(0, y, viewW, 1);
-  ctx.fillStyle = "#2a3040";
+  ctx.fillStyle = "#79839a";
   for (let x = 0; x < viewW; x += P) {
     for (let y = 0; y < viewH; y += P) {
       if (hash2(x, y) < 0.7) ctx.fillRect(x - 1, y - 1, 2, 2);
@@ -87,36 +90,37 @@ function drawCabin(
   }
 
   // DUCT TAPE — the build material, in honest strips over two of the seams.
-  ctx.fillStyle = "#4a4a42";
+  ctx.fillStyle = "#7d7968";
   ctx.fillRect(P * 2 - 4, P - 10, 8, 34);
   ctx.fillRect(viewW - P - 18, P * 3 - 4, 30, 8);
-  ctx.fillStyle = "#565650";
+  ctx.fillStyle = "#8f8b7a";
   ctx.fillRect(P * 2 - 4, P - 10, 8, 3);
   ctx.fillRect(viewW - P - 18, P * 3 - 4, 3, 8);
 
   // A cable looping between two staples along the top.
-  ctx.strokeStyle = "#1e2431";
+  ctx.strokeStyle = "#2e3442";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(viewW * 0.08, 8);
   ctx.quadraticCurveTo(viewW * 0.2, 40, viewW * 0.34, 12);
   ctx.stroke();
 
-  // THE CONSOLE — a low shelf of switches under the window, lights blinking
-  // on their own clocks because somebody wired every one by hand.
+  // THE CONSOLE — a low shelf of switches under the window, a step darker
+  // than the walls so the lamps carry, each blinking on its own clock
+  // because somebody wired every one by hand.
   const cy = viewH - 34;
-  ctx.fillStyle = "#0d1017";
+  ctx.fillStyle = "#2b3140";
   ctx.fillRect(0, cy, viewW, 34);
-  ctx.fillStyle = "#1b2230";
+  ctx.fillStyle = "#5b6478";
   ctx.fillRect(0, cy, viewW, 3);
   const LAMPS = ["#7ef0c8", "#ffd75e", "#e8635a", "#8ccdd7"] as const;
   for (let i = 0; i < 14; i++) {
     const lx = 16 + i * ((viewW - 32) / 13);
     const beat = 340 + (i % 5) * 190;
     const on = Math.floor((tMs + i * 137) / beat) % 2 === 0;
-    ctx.fillStyle = on ? LAMPS[i % LAMPS.length]! : "#232838";
+    ctx.fillStyle = on ? LAMPS[i % LAMPS.length]! : "#3a4150";
     ctx.fillRect(Math.round(lx), cy + 10, 2, 2);
-    ctx.fillStyle = "#232838";
+    ctx.fillStyle = "#3a4150";
     ctx.fillRect(Math.round(lx) - 1, cy + 18, 4, 6);
   }
 }
@@ -212,17 +216,17 @@ function drawWindow(
   ctx.restore();
 
   // THE RING — two tones of frame and six honest bolts, over the glass edge.
-  ctx.strokeStyle = "#2a3040";
+  ctx.strokeStyle = "#2e3442";
   ctx.lineWidth = 7;
   ctx.beginPath();
   ctx.arc(p.x, p.y, p.r + 3, 0, Math.PI * 2);
   ctx.stroke();
-  ctx.strokeStyle = "#3f4553";
+  ctx.strokeStyle = "#68718a";
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.arc(p.x, p.y, p.r + 6, 0, Math.PI * 2);
   ctx.stroke();
-  ctx.fillStyle = "#565e70";
+  ctx.fillStyle = "#8a92a4";
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2 + 0.26;
     ctx.fillRect(
@@ -338,19 +342,19 @@ function drawDrifters(
       }
     } else if (d.drawn === "tape") {
       const r = 7 * near;
-      ctx.fillStyle = "#4a4a42";
+      ctx.fillStyle = "#7d7968";
       ctx.beginPath();
       ctx.arc(0, 0, r, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#12151e";
+      ctx.fillStyle = "#4a5263";
       ctx.beginPath();
       ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2);
       ctx.fill();
     } else {
       const s = Math.max(2, 3 * near);
-      ctx.fillStyle = "#565e70";
+      ctx.fillStyle = "#8a92a4";
       ctx.fillRect(-s / 2, -s / 2, s, s);
-      ctx.fillStyle = "#2a3040";
+      ctx.fillStyle = "#363d4c";
       ctx.fillRect(-s / 6, -s / 6, s / 3, s / 3);
     }
     ctx.restore();
@@ -405,9 +409,12 @@ export function drawVoyage(
   drawDrifters(ctx, viewW, viewH, assets.sprites, travelMs);
   drawFloatingHero(ctx, viewW, viewH, assets.sprites, travelMs);
 
-  // The vignette that makes a bright window read as the room's only light.
+  // A whisper of shade at the frame's edges — enough to round the room off,
+  // never enough to un-light it — and a slightly firmer band low down, where
+  // the thought text sits, so the words keep their contrast on lit metal.
   const p = portal(viewW, viewH);
-  ctx.fillStyle = "rgba(4,5,9,0.32)";
+  ctx.fillStyle = "rgba(14,17,26,0.1)";
   ctx.fillRect(0, 0, viewW, Math.max(0, p.y - p.r - 12));
+  ctx.fillStyle = "rgba(14,17,26,0.28)";
   ctx.fillRect(0, p.y + p.r + 12, viewW, viewH);
 }
