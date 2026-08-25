@@ -134,6 +134,12 @@ function mixColor(a: string, b: string, t: number): string {
  * rather than snapping on at full size in one frame. */
 const SPOOL_MS = 520;
 
+/** The plume's per-scanline scratch (grow-only) — one trig pass per frame
+ * feeds all four band fills below, and a settled reach allocates nothing. */
+let plumeRowCx = new Float32Array(128);
+let plumeRowWide = new Float32Array(128);
+let plumeRowKnot = new Float32Array(128);
+
 /** One puff of pad fire, and one of pad smoke: how long each lives before its
  * slot loops round and throws another (ms). Fire is short and violent; smoke
  * outlives it by four times, which is what leaves a cloud standing. */
@@ -467,6 +473,16 @@ export function drawPlume(
   }
   ctx.globalAlpha = 1;
 
+  // One pass of math per scanline, then ONE filled path per band: the plume is
+  // additive (`lighter`) and a band's rows never overlap, so batching the ~4×len
+  // per-row fillRects (each with its own fillStyle swap) into four fills paints
+  // the identical column at a fraction of the canvas-call cost — this runs
+  // every frame of a whole climb, not just on the pad.
+  if (plumeRowCx.length < len) {
+    plumeRowCx = new Float32Array(len);
+    plumeRowWide = new Float32Array(len);
+    plumeRowKnot = new Float32Array(len);
+  }
   for (let i = 0; i < len; i++) {
     const u = i / len;
     // THE SPEARHEAD: the throat's own width, opening to the flare a third of
@@ -483,34 +499,41 @@ export function drawPlume(
         0.35 *
         (Math.sin(ageMs / 47 + u * 11) * 0.6 +
           Math.sin(ageMs / 31 + u * 23) * 0.4);
-    const wide = look.flare * shape * taper * lash * burn;
-    const y = Math.round(top + i);
+    plumeRowWide[i] = look.flare * shape * taper * lash * burn;
     // The column also SWINGS, more the further from the bells — a plume that
     // hangs perfectly straight reads as a painted triangle.
     const sway =
       u * u * 1.6 * Math.sin(ageMs / 90 + u * 4.5) * (0.6 + 0.4 * burn);
-    const cx = x + sway;
-
-    const run = (halfW: number, fill: string) => {
-      const w = Math.round(halfW * 2);
-      if (w < 1) return;
-      ctx.fillStyle = fill;
-      ctx.fillRect(Math.round(cx - w / 2), y, w, 1);
-    };
-    run(wide, fringe);
-    run(wide * 0.72, body);
+    plumeRowCx[i] = x + sway;
     // SHOCK DIAMONDS — the bright knots standing in a real supersonic exhaust,
     // and the one detail that makes a cone read as thrust. They stand still in
     // the column while the flame moves through them, so they are a function of
     // depth with only a slow breath on the clock — and they FADE with the air:
     // a diamond is the exhaust arguing with ambient pressure, and a vacuum
     // does not argue back.
-    const knot =
+    plumeRowKnot[i] =
       0.55 +
       0.45 * air * Math.sin(u * 17 - ageMs / 260) * Math.max(0, 1 - u * 1.6);
-    run(wide * 0.44 * knot, hot);
-    if (u < 0.62) run(wide * 0.26 * knot * (1 - u / 0.62), core);
   }
+  const band = (fill: string, halfAt: (i: number) => number) => {
+    ctx.fillStyle = fill;
+    ctx.beginPath();
+    for (let i = 0; i < len; i++) {
+      const w = Math.round(halfAt(i) * 2);
+      if (w < 1) continue;
+      ctx.rect(Math.round(plumeRowCx[i]! - w / 2), Math.round(top + i), w, 1);
+    }
+    ctx.fill();
+  };
+  band(fringe, (i) => plumeRowWide[i]!);
+  band(body, (i) => plumeRowWide[i]! * 0.72);
+  band(hot, (i) => plumeRowWide[i]! * 0.44 * plumeRowKnot[i]!);
+  band(core, (i) => {
+    const u = i / len;
+    return u < 0.62
+      ? plumeRowWide[i]! * 0.26 * plumeRowKnot[i]! * (1 - u / 0.62)
+      : 0;
+  });
   ctx.globalCompositeOperation = "source-over";
 }
 

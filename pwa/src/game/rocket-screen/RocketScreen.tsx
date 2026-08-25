@@ -54,6 +54,7 @@ import type { HudContext } from "../hud/context.ts";
 
 import { drawFlight, flightCamera } from "./render.ts";
 import {
+  boostFeel,
   createRocketFx,
   drawRocketFx,
   easeBurn,
@@ -403,10 +404,6 @@ export function RocketScreen({
       const unit = scale * dpr;
       ctx.imageSmoothingEnabled = false;
       ctx.setTransform(unit, 0, 0, unit, 0, 0);
-      // The camera is shaken, not the context — everything reads one frame.
-      const base = flightCamera(flight, viewW, viewH);
-      const shake = shakeOffset(fxRef.current, flight.ms);
-      const cam = { x: base.x + shake.dx, topAlt: base.topAlt + shake.dy };
       // THE PLUME'S THROAT. The base burn never stops on the climb, so the
       // column is always alive up there; the boosters open it to the
       // cutscene's full takeoff. The module burns only when the thumb says
@@ -425,6 +422,24 @@ export function RocketScreen({
               ? 1
               : 0.45;
       const burn = easeBurn(fxRef.current, wantBurn, frameDt);
+      // The camera is shaken, not the context — everything reads one frame.
+      // The boost's own feel rides beside the blast shake: a subtle rumble
+      // and a few px of lift while the boosters are open (`boostFeel`), off
+      // the same eased burn as the plume so frame and fire move together.
+      const base = flightCamera(
+        flight,
+        viewW,
+        viewH,
+        fxRef.current.wreckAt ?? undefined,
+      );
+      const shake = shakeOffset(fxRef.current, flight.ms);
+      const feel = boostFeel(burn, flight.phase === "landing", flight.ms);
+      const cam = {
+        x: base.x + shake.dx + feel.dx,
+        // Lift SUBTRACTS: a lower top-of-frame altitude sits the ship higher
+        // in the frame (`toScreen`: y = topAlt - alt).
+        topAlt: base.topAlt + shake.dy + feel.dy - feel.lift,
+      };
       drawFlight(
         ctx,
         flight,

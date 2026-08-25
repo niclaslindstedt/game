@@ -365,12 +365,19 @@ function drawStage(
   // sheet is the shared one, so this rain and the rocket climb's are the same
   // rain. The camera shift is handed in so the streaks live on the LOT: the
   // ascent pan sends the storm down the frame with the ground it falls on.
+  // The floor is handed in as the GROUND while it is in shot, so the drops
+  // land and splash across the lawn's whole depth instead of falling through
+  // it — and once the pan has taken the ground out of frame, the sheet goes
+  // back to open-sky rain.
   if (def.stage.weather === "storm") {
     drawRain(ctx, 0, 0, width, height, timeMs, {
       intensity: 1,
       slantPx: 2,
       scrollX: shift.x,
       scrollY: shift.y,
+      ...(floorY < height
+        ? { ground: { top: floorY + 2, bottom: height } }
+        : {}),
     });
   }
 

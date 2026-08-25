@@ -25,6 +25,7 @@ import {
 } from "@game/core";
 
 import { spriteByName, type GameAssets } from "../assets.ts";
+import { glowSprite } from "../render/caches.ts";
 import { drawPlume, type RocketExhaust } from "../render/rocket-exhaust.ts";
 import { orbitSprite } from "./orbit-art.ts";
 import { toScreen, type HullSmear, type SkyCamera } from "./rocket-fx.ts";
@@ -38,9 +39,13 @@ export function flightCamera(
   state: FlightState,
   viewW: number,
   viewH: number,
+  /** Where the ship died, when it has (`RocketFxState.wreckAt`) — the wreck
+   * camera's anchor. */
+  wreckAt?: { x: number; alt: number },
 ): SkyCamera {
   const { craft } = state;
   const halfSpan = Math.min(viewW, FLIGHT.fieldW);
+  let cam: SkyCamera;
   if (state.phase === "landing") {
     // The drop is a bounded stage, so its camera still respects the ground's
     // edges; the ground settles at 82% of the frame — ABOVE the console,
@@ -50,14 +55,30 @@ export function flightCamera(
       0,
       Math.min(FLIGHT.fieldW - halfSpan, craft.x - halfSpan / 2),
     );
-    return { x, topAlt: Math.max(viewH * 0.82, craft.alt + viewH * 0.42) };
+    cam = { x, topAlt: Math.max(viewH * 0.82, craft.alt + viewH * 0.42) };
+  } else {
+    // The climb's sky has NO edges — the camera simply follows the ship, which
+    // is also how the world-anchored clouds, stars and launch site get to say
+    // "you are drifting off course" without a single extra drawing.
+    // 0.72, not the middle: at climb speed the sky above the nose is the whole
+    // of the player's warning, and every extra row of it is reaction time.
+    cam = { x: craft.x - viewW / 2, topAlt: craft.alt + viewH * 0.72 };
   }
-  // The climb's sky has NO edges — the camera simply follows the ship, which
-  // is also how the world-anchored clouds, stars and launch site get to say
-  // "you are drifting off course" without a single extra drawing.
-  // 0.72, not the middle: at climb speed the sky above the nose is the whole
-  // of the player's warning, and every extra row of it is reaction time.
-  return { x: craft.x - viewW / 2, topAlt: craft.alt + viewH * 0.72 };
+  if (state.outcome === "wrecked") {
+    // A WRECK RE-CENTERS THE FRAME, ON THE WRECK. The working camera rides
+    // the ship low (the danger is above) — which parks the explosion half
+    // under the console — and the sim keeps the unseen hull FALLING through
+    // the hold, so a camera still following the craft drags the frame away
+    // from its own explosion inside a second. The blast site is the anchor
+    // instead, eased in over the wreck's first beats; `outcomeMs` drives the
+    // pan, so it is deterministic and a restart puts the frame straight back.
+    const at = wreckAt ?? { x: craft.x, alt: craft.alt };
+    const t = Math.min(1, state.outcomeMs / 350);
+    const ease = t * (2 - t);
+    cam.x += (at.x - viewW / 2 - cam.x) * ease;
+    cam.topAlt += (at.alt + viewH * 0.5 - cam.topAlt) * ease;
+  }
+  return cam;
 }
 
 /** The night → space ramp, sampled at one altitude fraction. */
@@ -228,18 +249,16 @@ function drawLaunchSite(
   const houseLeft = padX - 132;
   const glow = toScreen(cam, houseLeft + 70, 0);
   const flicker = 0.16 + 0.07 * Math.sin(nowMs / 90 + Math.sin(nowMs / 37));
-  const fire = ctx.createRadialGradient(
-    glow.x,
-    glow.y - 30,
-    4,
-    glow.x,
-    glow.y - 30,
-    70,
-  );
-  fire.addColorStop(0, `rgba(255,150,40,${flicker.toFixed(3)})`);
-  fire.addColorStop(1, "rgba(255,150,40,0)");
-  ctx.fillStyle = fire;
-  ctx.fillRect(glow.x - 70, glow.y - 100, 140, 110);
+  // The glow is a baked sprite under an alpha, never a per-frame gradient —
+  // minting a CanvasGradient every frame is a measurable slice of exactly the
+  // low-sky stretch this fire burns in. The bottom of the disc is cropped so
+  // the light stays off the lawn, as the old fillRect kept it.
+  const fire = glowSprite("255, 150, 40", 70);
+  if (fire) {
+    ctx.globalAlpha = flicker;
+    ctx.drawImage(fire, 0, 0, 140, 110, glow.x - 70, glow.y - 100, 140, 110);
+    ctx.globalAlpha = 1;
+  }
   const frame = Math.floor(nowMs / 140) % 2 === 0 ? "a" : "b";
   const flames: readonly (readonly [string, number, number])[] = [
     [`flame_4${frame}`, houseLeft + 62, 34],
@@ -339,6 +358,10 @@ function drawClouds(
  * see its own house is not high enough to see the curvature of the Earth. */
 const LIMB_IN_FRAC = 0.3;
 
+/** The limb's haze, baked per radius (`drawEarthLimb`) — origin-centered so a
+ * moving limb re-places it with a translate instead of a re-mint. */
+let limbGlow: { r: number; glow: CanvasGradient } | null = null;
+
 /**
  * THE PLANET'S LIMB — the curved blue rim of home, fading in near the top of
  * the climb and sinking off the bottom of the frame as the last stretch takes
@@ -363,21 +386,28 @@ function drawEarthLimb(
   const r = viewW * 2.2;
   const cx = viewW / 2;
   const cy = top + r;
-  // The atmosphere's haze, then the limb, then the dark ground of home.
+  // The atmosphere's haze, then the limb, then the dark ground of home. The
+  // haze gradient is minted once per radius and PLACED by translating the
+  // context — the limb walks down the screen every frame, and a fresh
+  // CanvasGradient per frame is the kind of allocation a phone feels.
   ctx.save();
   ctx.globalAlpha = appear;
-  const glow = ctx.createRadialGradient(cx, cy, r * 0.985, cx, cy, r * 1.035);
-  glow.addColorStop(0, "rgba(64,84,188,0.55)");
-  glow.addColorStop(0.55, "rgba(64,84,188,0.18)");
-  glow.addColorStop(1, "rgba(64,84,188,0)");
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, Math.max(0, top - viewH * 0.25), viewW, viewH);
+  if (!limbGlow || limbGlow.r !== r) {
+    const glow = ctx.createRadialGradient(0, 0, r * 0.985, 0, 0, r * 1.035);
+    glow.addColorStop(0, "rgba(64,84,188,0.55)");
+    glow.addColorStop(0.55, "rgba(64,84,188,0.18)");
+    glow.addColorStop(1, "rgba(64,84,188,0)");
+    limbGlow = { r, glow };
+  }
+  ctx.translate(cx, cy);
+  ctx.fillStyle = limbGlow.glow;
+  ctx.fillRect(-cx, Math.max(0, top - viewH * 0.25) - cy, viewW, viewH);
   ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
   ctx.fillStyle = "#101a38";
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
   ctx.strokeStyle = "rgba(140,205,215,0.7)";
   ctx.lineWidth = 1.5;
   ctx.stroke();
@@ -666,13 +696,21 @@ function drawMoonGround(
   }
 }
 
+/** The shimmer's scratch — the one canvas the wake region is copied INTO so
+ * the slivers never sample the live canvas. A drawImage whose source is its
+ * own destination snapshots the ENTIRE canvas first (iOS Safari above all),
+ * so per-sliver self-sampling costs ~30 full-frame copies a frame — the
+ * single read below is the whole difference between a slideshow and 60 fps. */
+let shimmerScratch: HTMLCanvasElement | null = null;
+
 /**
  * HEAT SHIMMER — the candle's trick: the column of hot exhaust bends the
  * light coming through it, so the sky BEHIND the wake wobbles. Faked the way
- * 2D has always faked it: thin slivers of the already-painted canvas redrawn
+ * 2D has always faked it: thin slivers of the already-painted picture redrawn
  * with a small sinusoidal sideways offset, each row on its own phase so the
- * wobble crawls. Horizontal offsets only, copied top-down, so no sliver ever
- * samples a row this pass already moved.
+ * wobble crawls. The wake region is copied out ONCE (`shimmerScratch`) and
+ * every sliver samples the copy — pristine by construction, and never a
+ * self-read per row.
  *
  * `strength` is REFRACTION'S OWN physics: it needs air to heat, so the caller
  * scales it by `airFrac` — strong over the lawn, gone in vacuum, the exact
@@ -694,6 +732,20 @@ function drawHeatShimmer(
   const halfW = 24;
   const tall = 92;
   const sliver = 3;
+  const rx = Math.max(0, Math.round((centerX - halfW) * unit));
+  const ry = Math.max(0, Math.round(topY * unit));
+  const rw = Math.min(canvas.width - rx, Math.round(halfW * 2 * unit));
+  const rh = Math.min(canvas.height - ry, Math.round(tall * unit));
+  if (rw <= 0 || rh <= 0) return;
+  shimmerScratch ??= document.createElement("canvas");
+  const scratch = shimmerScratch;
+  // Grow-only, so a settled resolution re-allocates nothing per frame.
+  if (scratch.width < rw) scratch.width = rw;
+  if (scratch.height < rh) scratch.height = rh;
+  const copy = scratch.getContext("2d");
+  if (!copy) return;
+  copy.globalCompositeOperation = "copy";
+  copy.drawImage(canvas, rx, ry, rw, rh, 0, 0, rw, rh);
   for (let row = 0; row < tall; row += sliver) {
     const y = topY + row;
     const deep = row / tall;
@@ -702,13 +754,13 @@ function drawHeatShimmer(
       strength * 1.7 * (1 - deep * 0.55) * Math.sin(nowMs / 55 + row * 0.31);
     if (Math.abs(amp) < 0.2) continue;
     const w = halfW * 2 * (1 - deep * 0.3);
-    const sx = Math.max(0, Math.round((centerX - w / 2) * unit));
-    const sy = Math.max(0, Math.round(y * unit));
-    const sw = Math.min(canvas.width - sx, Math.round(w * unit));
-    const sh = Math.min(canvas.height - sy, Math.round(sliver * unit));
-    if (sw <= 0 || sh <= 0) continue;
+    const sx = Math.max(0, Math.round((centerX - w / 2) * unit)) - rx;
+    const sy = Math.max(0, Math.round(y * unit)) - ry;
+    const sw = Math.min(rw - sx, Math.round(w * unit));
+    const sh = Math.min(rh - sy, Math.round(sliver * unit));
+    if (sx < 0 || sy < 0 || sw <= 0 || sh <= 0) continue;
     ctx.drawImage(
-      canvas,
+      scratch,
       sx,
       sy,
       sw,

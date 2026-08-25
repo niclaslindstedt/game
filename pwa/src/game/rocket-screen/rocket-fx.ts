@@ -145,6 +145,11 @@ export type RocketFxState = {
   flashPower: number;
   shakeUntil: number;
   shakeAmp: number;
+  /** WHERE THE SHIP DIED — the wreck event's own spot, latched for the
+   * camera: the sim keeps the unseen wreck falling through the hold, so a
+   * camera that followed the craft would leave the explosion behind within a
+   * second. Cleared with the show (`clearRocketFx`). */
+  wreckAt: { x: number; alt: number } | null;
   /** The poof funnel's own clock — one breath per `POOF_GAP_MS`, however hard
    * the thumb is held. */
   lastPoofMs: number;
@@ -169,6 +174,7 @@ export function createRocketFx(): RocketFxState {
     flashPower: 0,
     shakeUntil: 0,
     shakeAmp: 0,
+    wreckAt: null,
     lastPoofMs: 0,
     burnLevel: 0,
   };
@@ -187,14 +193,17 @@ export function clearRocketFx(fx: RocketFxState): void {
   fx.smears.length = 0;
   fx.flashUntil = 0;
   fx.shakeUntil = 0;
+  fx.wreckAt = null;
   fx.burnLevel = 0;
 }
 
 const POOF_GAP_MS = 90;
 
-/** Debris falls a little even up here — not physics, theatre: wreckage that
- * hangs is confetti, wreckage that drops is iron (px/s²). */
-const DEBRIS_G = 60;
+/** What pulls the wreckage back down (px/s²) — sized against the launch
+ * speeds below so a chunk thrown up at a wreck arcs over inside the wreck's
+ * own hold (`FLIGHT.wreckHoldMs`, 2.4 s): up, a visible turn, and down past
+ * the frame, burning the whole way. Wreckage that hangs is confetti. */
+const DEBRIS_G = 300;
 
 /**
  * ONE EXPLOSION, ROLLED WHOLE FROM ITS SEED. `big` is the ship (or the module)
@@ -214,26 +223,41 @@ export function boomFx(
   const big = size === "big";
   const scale = big ? 1 : 0.55;
 
-  // THE FIREBALLS — a cluster, never one ball: count, spread, stagger and heat
-  // all the seed's. The stagger is what makes a blast read as an EVENT rather
-  // than a stamp: the cluster blooms outward over a few frames.
-  const balls = (big ? 5 : 3) + Math.floor(roll(1) * (big ? 5 : 3));
+  // THE ANCHOR — the biggest ball, dead on the point that blew, no delay: the
+  // blast is CENTERED on the thing it destroys, whatever the cluster does
+  // around it. Without it the first visible frames are whichever offset balls
+  // rolled the shortest delays, and the explosion reads as beside the hull.
+  fx.fireballs.push({
+    x,
+    alt,
+    born: nowMs,
+    delayMs: 0,
+    lifeMs: 520 + roll(9) * (big ? 480 : 320),
+    r: (18 + roll(0) * 8) * scale,
+    heat: big ? 1 : roll(9) < 0.45 ? 2 : 0,
+  });
+
+  // THE FIREBALLS — a cluster blooming out of the anchor: count, spread,
+  // stagger and heat all the seed's. The stagger is what makes a blast read
+  // as an EVENT rather than a stamp — the cluster keeps erupting over most of
+  // a second, which is the "falling apart" half of a hull going.
+  const balls = (big ? 7 : 3) + Math.floor(roll(1) * (big ? 5 : 3));
   for (let i = 0; i < balls; i++) {
     const a = roll(10 + i) * Math.PI * 2;
-    const d = roll(20 + i) * (big ? 34 : 18);
+    const d = roll(20 + i) * (big ? 30 : 16);
     fx.fireballs.push({
       x: x + Math.cos(a) * d,
       alt: alt + Math.sin(a) * d,
       born: nowMs,
-      delayMs: roll(30 + i) * (big ? 260 : 140),
-      lifeMs: 380 + roll(40 + i) * 420,
+      delayMs: roll(30 + i) * (big ? 520 : 180),
+      lifeMs: 380 + roll(40 + i) * (big ? 640 : 420),
       r: (10 + roll(50 + i) * 16) * scale,
       heat: !big && roll(60 + i) < 0.45 ? 2 : roll(60 + i) < 0.3 ? 1 : 0,
     });
   }
 
   // THE SPARKS — fast, straight, gone in half a second.
-  const sparks = (big ? 14 : 8) + Math.floor(roll(2) * 12);
+  const sparks = (big ? 18 : 8) + Math.floor(roll(2) * 12);
   for (let i = 0; i < sparks; i++) {
     const a = roll(100 + i) * Math.PI * 2;
     const speed = (90 + roll(120 + i) * 260) * scale;
@@ -248,22 +272,25 @@ export function boomFx(
     });
   }
 
-  // THE IRON — tumbling chunks, some burning, arcing down.
-  const chunks = (big ? 5 : 3) + Math.floor(roll(3) * (big ? 6 : 3));
+  // THE IRON — tumbling chunks, most of them burning. The hull was CLIMBING
+  // when it came apart, so every piece keeps going UP first — fast enough to
+  // be seen rising — arcs over, and falls (`DEBRIS_G`), which is the shape
+  // that sells a wreck: an explosion, burning debris, coming down.
+  const chunks = (big ? 10 : 4) + Math.floor(roll(3) * (big ? 7 : 3));
   for (let i = 0; i < chunks; i++) {
     const a = roll(200 + i) * Math.PI * 2;
-    const speed = (50 + roll(220 + i) * 150) * scale;
+    const speed = (40 + roll(220 + i) * 120) * scale;
     fx.debris.push({
       x,
       alt,
       vx: Math.cos(a) * speed,
-      vy: Math.abs(Math.sin(a)) * speed * 0.9 + 30,
+      vy: (150 + roll(230 + i) * 240) * scale,
       spin: (roll(240 + i) - 0.5) * 14,
       angle: roll(260 + i) * Math.PI * 2,
       size: (2 + roll(280 + i) * 3) * (big ? 1.4 : 1),
       born: nowMs,
-      lifeMs: 900 + roll(300 + i) * 900,
-      burns: roll(320 + i) < (big ? 0.6 : 0.4),
+      lifeMs: 1700 + roll(300 + i) * 1100,
+      burns: roll(320 + i) < (big ? 0.85 : 0.55),
     });
   }
 
@@ -276,7 +303,7 @@ export function boomFx(
     lifeMs: big ? 520 : 380,
     maxR: (big ? 110 : 62) * (0.8 + roll(4) * 0.5),
   });
-  if (roll(5) < 0.4) {
+  if (roll(5) < (big ? 0.85 : 0.4)) {
     fx.rings.push({
       x,
       alt,
@@ -436,6 +463,33 @@ export function poofFx(
   return true;
 }
 
+/**
+ * THE BOOST IN THE HANDS — what holding the burn does to the CAMERA, so the
+ * thumb feels the engine answer: a subtle rumble, and the ship riding a few
+ * px higher in the frame while the boosters are open, settling back down when
+ * the thumb lets go. Driven off the same smoothed `burnLevel` as the plume,
+ * so the frame and the fire swell and settle together; measured from the
+ * phase's own base burn (the climb's column never closes), so the base engine
+ * moves nothing. Deliberately SMALL — it is a feel, not an effect — and it
+ * runs on the sim clock, so a paused sky holds still.
+ */
+export function boostFeel(
+  burn: number,
+  landing: boolean,
+  nowMs: number,
+): { dx: number; dy: number; lift: number } {
+  const base = landing ? 0 : 0.45;
+  const boost = Math.max(0, Math.min(1, (burn - base) / (1 - base)));
+  if (boost <= 0.01) return { dx: 0, dy: 0, lift: 0 };
+  // Busier frequencies than the blast shake's — an engine buzzes, a bomb
+  // rocks — at under a world px of throw.
+  return {
+    dx: Math.sin(nowMs * 0.127) * 0.8 * boost,
+    dy: Math.cos(nowMs * 0.151) * 0.6 * boost,
+    lift: 7 * boost,
+  };
+}
+
 /** The camera's tremble — decaying, deterministic per ms. */
 export function shakeOffset(
   fx: RocketFxState,
@@ -552,9 +606,14 @@ export function drawRocketFx(
     const wAlt = d.alt + d.vy * secs - 0.5 * DEBRIS_G * secs * secs;
     const s = toScreen(cam, wx, wAlt);
     const frac = t / d.lifeMs;
-    if (d.burns && frac < 0.8) {
-      // The tail: a short streak back along the travel, fire-coloured.
-      const tail = 6 + d.size * 2;
+    if (d.burns && frac < 0.92) {
+      // The flame streams back along the travel — up on the rise, over the
+      // top with the arc, trailing above on the fall — in two strokes, a
+      // long amber sheath around a short bright core, with a flicker on the
+      // clock (phased per chunk off its birth) so the fire lives instead of
+      // being a painted streak.
+      const flick = 0.75 + 0.25 * Math.sin(nowMs / 47 + (d.born % 97));
+      const tail = (10 + d.size * 3) * flick;
       const len = Math.hypot(d.vx, d.vy - DEBRIS_G * secs) || 1;
       const ux = (d.vx / len) * tail;
       const uy = ((d.vy - DEBRIS_G * secs) / len) * tail;
@@ -565,6 +624,13 @@ export function drawRocketFx(
       ctx.moveTo(s.x, s.y);
       ctx.lineTo(s.x - ux, s.y + uy);
       ctx.stroke();
+      ctx.globalAlpha = 0.7 * (1 - frac);
+      ctx.strokeStyle = "#fff3c8";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(s.x - ux * 0.4, s.y + uy * 0.4);
+      ctx.stroke();
     }
     ctx.globalAlpha = 1 - frac * 0.5;
     ctx.save();
@@ -572,6 +638,14 @@ export function drawRocketFx(
     ctx.rotate(d.angle + d.spin * secs);
     ctx.fillStyle = "#3f4553";
     ctx.fillRect(-d.size / 2, -d.size / 2, d.size, d.size);
+    if (d.burns && frac < 0.92) {
+      // The ember eating the chunk itself — the piece is on fire, not just
+      // towing fire.
+      ctx.fillStyle = "#ffb02e";
+      ctx.globalAlpha =
+        (1 - frac) * (0.5 + 0.5 * Math.sin(nowMs / 63 + (d.born % 53)));
+      ctx.fillRect(-d.size / 4, -d.size / 4, d.size / 2, d.size / 2);
+    }
     ctx.restore();
   }
   ctx.globalAlpha = 1;

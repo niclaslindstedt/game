@@ -17,6 +17,8 @@ import type { FlightState } from "@game/core";
 
 import { drawRain } from "@ui/lib/rain.ts";
 
+import { glowSprite } from "../render/caches.ts";
+
 import type { SkyCamera } from "./rocket-fx.ts";
 
 /** Where the weather stops (world px of altitude): full storm through the low
@@ -99,7 +101,9 @@ export function thunderDue(seed: number, window: number): number | null {
 
 /** The glow a strike puts INSIDE the deck — a wide soft ellipse of light at
  * the strike's spot, the clouds lit from within. No bolt: sheet lightning is
- * the whole vocabulary up here. */
+ * the whole vocabulary up here. The light is a baked sprite (`glowSprite`)
+ * stretched wider than tall — diffusing ALONG the deck, the way a cloud
+ * lights — under an alpha, never a per-frame CanvasGradient. */
 function drawStrikeGlow(
   ctx: CanvasRenderingContext2D,
   strike: StormStrike,
@@ -107,20 +111,13 @@ function drawStrikeGlow(
   viewH: number,
   flicker: number,
 ): void {
+  const glow = glowSprite("212, 224, 255", 150);
+  if (!glow) return;
   const gx = strike.sx * viewW;
   const gy = strike.sy * viewH;
-  const glow = ctx.createRadialGradient(gx, gy, 8, gx, gy, 150);
-  glow.addColorStop(0, `rgba(215,228,255,${(0.55 * flicker).toFixed(3)})`);
-  glow.addColorStop(0.5, `rgba(200,215,255,${(0.26 * flicker).toFixed(3)})`);
-  glow.addColorStop(1, "rgba(200,215,255,0)");
-  ctx.save();
-  // Wider than tall — light diffusing ALONG the deck, the way a cloud lights.
-  ctx.translate(gx, gy);
-  ctx.scale(1.7, 1);
-  ctx.translate(-gx, -gy);
-  ctx.fillStyle = glow;
-  ctx.fillRect(gx - 260, gy - 160, 520, 320);
-  ctx.restore();
+  ctx.globalAlpha = 0.55 * flicker;
+  ctx.drawImage(glow, gx - 150 * 1.7, gy - 150, 300 * 1.7, 300);
+  ctx.globalAlpha = 1;
 }
 
 /**
@@ -150,10 +147,17 @@ export function drawStorm(
     ctx.fillStyle = `rgba(208,222,255,${(0.14 * intensity * flicker).toFixed(3)})`;
     ctx.fillRect(0, 0, viewW, viewH);
   }
+  // While the lawn is still in shot its strip is the GROUND: the drops land
+  // and splash across it — the launch site keeps the cutscene's own weather —
+  // and once the climb has left it behind, the sheet is open-sky rain again.
+  const groundY = cam.topAlt; // alt 0
   drawRain(ctx, 0, 0, viewW, viewH, nowMs, {
     intensity,
     slantPx: 3,
     scrollX: -cam.x,
     scrollY: cam.topAlt,
+    ...(groundY > 4 && groundY < viewH
+      ? { ground: { top: groundY - 2, bottom: Math.min(viewH, groundY + 28) } }
+      : {}),
   });
 }
