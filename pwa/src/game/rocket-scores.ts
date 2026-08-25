@@ -18,9 +18,14 @@
 // SAME STORAGE POLICY AS ITS NEIGHBOURS: one namespaced localStorage key,
 // structurally validated on load, private mode degrades to memory.
 
-import type { FlightLeg } from "@game/core";
-
 import { storageKey } from "../identity.ts";
+
+/** Which slice of the trip a row timed — the engine's `FlightLeg`, restated
+ * here rather than imported: this store sits on the STARTUP path (cloud save
+ * reads it), and the reachability walk counts even a type-only `@game/core`
+ * import against the 170 KB budget (`tests/content/net_reachability_test.ts`).
+ * The two unions are structurally identical, so the seam never notices. */
+export type FlightLeg = "trip" | "landing";
 
 const STORAGE_KEY = storageKey("rocket-scores");
 /** The last name signed, shared question but its own key — a preference, not a

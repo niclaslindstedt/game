@@ -20,8 +20,6 @@ import { rallyClock } from "@ui/lib/format-number.ts";
 import { useAutoFocus } from "@ui/lib/auto-focus.ts";
 import type { FlightScorecard } from "@game/core";
 
-import type { FlightLeg } from "@game/core";
-
 import { synth } from "../audio.ts";
 import {
   INITIALS_LENGTH,
@@ -37,6 +35,7 @@ import {
   recordFlightScore,
   rememberFlightInitials,
   topFlightScores,
+  type FlightLeg,
   type FlightScoreEntry,
 } from "../rocket-scores.ts";
 import { playUiSound } from "../sfx/ui.ts";
