@@ -28,6 +28,7 @@
     "production": {
       "ios": {
         "metadataPath": "./store/store.config.json",
+        "ascAppId": "6805189168",
         "appleTeamId": "8Z7JSMA9SB",
         "ascApiKeyId": "$ASC_KEY_ID",
         "ascApiKeyIssuerId": "$ASC_ISSUER_ID",

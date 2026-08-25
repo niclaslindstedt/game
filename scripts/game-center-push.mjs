@@ -189,19 +189,33 @@ async function mapPool(items, limit, fn) {
   await Promise.all(workers);
 }
 
+/**
+ * The app's Game Center detail, which every achievement and leaderboard below
+ * hangs off.
+ *
+ * READ IT THROUGH THE APP, NOT AS A COLLECTION. `gameCenterDetails` allows only
+ * CREATE, GET_INSTANCE and UPDATE — a filtered collection GET is refused with a
+ * 403 naming the operation rather than the credential, which reads like an
+ * un-entitled key and is not one. The app's own to-one relationship is the
+ * documented read, and it answers 404 while Game Center has never been switched
+ * on for the record.
+ */
 async function gameCenterDetailId(api, id) {
-  const { data } = await api.list("/v1/gameCenterDetails", {
-    "filter[app]": id,
-    limit: 1,
-  });
-  if (data.length === 0) {
+  let body = null;
+  try {
+    body = await api.get(`/v1/apps/${id}/gameCenterDetail`);
+  } catch (error) {
+    if (error?.status !== 404) throw error;
+  }
+  const detailId = body?.data?.id;
+  if (!detailId) {
     throw new Error(
       `app ${id} has no Game Center detail — enable Game Center on the app ` +
         "record first (App Store Connect → your app → Game Center). See " +
         "native/RELEASING.md §1.3.",
     );
   }
-  return data[0].id;
+  return detailId;
 }
 
 /**
