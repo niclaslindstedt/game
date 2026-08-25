@@ -187,18 +187,21 @@ stage:
     - { sprite: road_lane, at: { x: 140, y: 116 }, ground: true }
     - { sprite: road_lane, at: { x: 196, y: 116 }, ground: true }
 actors:
-  # HE OPENS IN FRONT OF HIS OWN CAR — nearer the camera than it, so the wagon
-  # is the thing standing behind him — and walks from there up the drive to the
-  # pad. The stage sorts back to front, so "in front of" is a y BELOW the car's
-  # and not merely a matching x: parked level with it he read as a man who
-  # happened to be on the same street. The scene used to
+  # HE OPENS BEHIND HIS OWN CAR — at its TAIL, which on a wagon nosed at the
+  # road is the right-hand end of it — and walks from there up to the pad.
+  #
+  # Behind it and CLEAR OF IT, so that nothing stands over the car. That is the
+  # whole point of assembling it rather than drawing one: the panels the road
+  # bent, the wheel it lost and whatever is still on the paint are the last
+  # minute of play, and a man standing at the wing covers the half of it the
+  # scene is there to show. The scene used to
   # start him over by the front door, which was a man leaving a house; starting
   # him at the wagon makes it a man who has just got out of one, which is what
   # the last minute of play actually was. He is also still WEARING it: the blood
   # travels with him out of the level (`hero-soak.ts`) and the stage lays it over
   # whichever art the actor is drawn as, so a man who left GOODCO red is red on
   # his own lawn.
-  - { id: hero, name: "{HERO}", sprite: hero_tee, at: { x: 57, y: 107 } }
+  - { id: hero, name: "{HERO}", sprite: hero_tee, at: { x: 86, y: 100 } }
   # The garage ship — the Mars level's parked `starship`, ten years younger.
   # Poses to `ship_fire` when the engine lights.
   - { id: ship, sprite: ship, at: { x: 108, y: 88 } }
@@ -208,12 +211,12 @@ beats:
   - kind: caption
     text:
       - TEN YEARS OF WEEKENDS IN THE GARAGE. SHE ONLY EVER NEEDED ONE MORE PART.
-  - { kind: move, actor: hero, to: { x: 80, y: 96 }, speed: 40 }
+  - { kind: move, actor: hero, to: { x: 95, y: 95 }, speed: 40 }
   - kind: say
     actor: hero
     text:
       - ENGINE. FUEL. DUCT TAPE. AND THE PART THEY SAID I COULDN'T HAVE.
-  - { kind: move, actor: hero, to: { x: 98, y: 90 }, speed: 40 }
+  - { kind: move, actor: hero, to: { x: 101, y: 90 }, speed: 40 }
   - { kind: wait, ms: 350 }
   - { kind: exit, actor: hero }
   - { kind: wait, ms: 700 }

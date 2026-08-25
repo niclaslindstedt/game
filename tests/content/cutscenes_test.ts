@@ -143,20 +143,32 @@ describe("the launch scene stands on the garage lot", () => {
     const drive = props().find((prop) => prop.kind === "garage_drive");
     expect(wagon!.pos.y).toBeGreaterThan(drive!.pos.y);
     expect(wagon!.pos.y).toBeLessThanOrEqual(kerb);
-    // …and the hero opens IN FRONT OF IT and walks up the lot to the pad,
-    // rather than out of the front door: he has just got out of that car.
+    // …and the hero opens AT ITS TAIL and walks up the lot to the pad, rather
+    // than out of the front door: he has just got out of that car.
     //
-    // "In front of" is a fact about DEPTH, not about being nearby — the stage
-    // paints back to front, so a hero at a y ABOVE the car's is a hero the car
-    // is painted over, which reads as a man who happens to be on the same
-    // street. Assert the sort order and the shared column, or the mark drifts
-    // back to beside-it the next time something else on the lot moves.
+    // BEHIND THE CAR, and clear of it. The wagon is nosed at the road (`flip`),
+    // so its tail is the right-hand end and his mark is to the RIGHT of the
+    // car's — far enough right that the two never overlap. Nothing may stand
+    // over the wagon at all: a car assembled from the night's own damage is
+    // only worth assembling if the whole of it can be seen, and the panels the
+    // road bent are the last minute of play. The gap is measured against the
+    // car's own drawn width at this stage's gauge (~24 px), so a body 16 px
+    // wide beside it still leaves daylight.
     const hero = CUTSCENE_DEFS.launch!.actors.find((a) => a.id === "hero");
-    expect(hero!.at.y, "the car paints over him").toBeGreaterThan(wagon!.pos.y);
     expect(
-      Math.abs(hero!.at.x - wagon!.pos.x),
-      "he is beside it, not in front",
-    ).toBeLessThan(8);
+      hero!.at.x - wagon!.pos.x,
+      "the hero is standing over the car",
+    ).toBeGreaterThan(22);
+    // …and everything else on the lot sorts BEHIND it (`ground` art is painted
+    // with the floor, under the standing queue, so it can never cover
+    // anything).
+    for (const prop of props()) {
+      if (prop.wagon || prop.ground) continue;
+      expect(
+        prop.pos.y,
+        `"${prop.kind}" is painted over the wagon`,
+      ).toBeLessThanOrEqual(wagon!.pos.y);
+    }
   });
 
   it("runs the road off both edges of the frame, lane by lane", () => {
