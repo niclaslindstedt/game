@@ -200,21 +200,41 @@ async function mapPool(items, limit, fn) {
  * documented read, and it answers 404 while Game Center has never been switched
  * on for the record.
  */
-async function gameCenterDetailId(api, id) {
+async function gameCenterDetailId(api, id, apply) {
   let body = null;
   try {
     body = await api.get(`/v1/apps/${id}/gameCenterDetail`);
   } catch (error) {
     if (error?.status !== 404) throw error;
   }
-  const detailId = body?.data?.id;
+  const existing = body?.data?.id;
+  if (existing) return existing;
+
+  // ENABLING GAME CENTER *IS* CREATING THIS RESOURCE. The portal page renders
+  // for any app, so "the Game Center screen is there" says nothing — the detail
+  // is what leaderboards and achievements hang off, and until it exists the app
+  // has none. CREATE is one of the three operations Apple allows on the
+  // resource, so the switch is ours to throw rather than a UI step to hunt for.
+  if (!apply) {
+    console.log(
+      `app ${id} has no Game Center detail — it would be CREATED (this is ` +
+        "what enabling Game Center means). Re-run with --apply.",
+    );
+    return null;
+  }
+  const created = await api.post("/v1/gameCenterDetails", {
+    data: {
+      type: "gameCenterDetails",
+      relationships: { app: { data: { type: "apps", id } } },
+    },
+  });
+  const detailId = created?.data?.id;
   if (!detailId) {
     throw new Error(
-      `app ${id} has no Game Center detail — enable Game Center on the app ` +
-        "record first (App Store Connect → your app → Game Center). See " +
-        "native/RELEASING.md §1.3.",
+      `app ${id} has no Game Center detail and creating one returned no id`,
     );
   }
+  console.log(`enabled Game Center — created gameCenterDetail ${detailId}`);
   return detailId;
 }
 
@@ -513,7 +533,8 @@ async function main(opts) {
   const api = new AppStoreConnect(credentials, {
     ...(process.env.GIS_ASC_HOST ? { host: process.env.GIS_ASC_HOST } : {}),
   });
-  const detailId = await gameCenterDetailId(api, id);
+  const detailId = await gameCenterDetailId(api, id, opts.apply);
+  if (!detailId) return;
   console.log(
     `app ${id} · gameCenterDetail ${detailId} · locale ${locale}` +
       `${opts.apply ? "" : " · DRY RUN, nothing is written"}`,
