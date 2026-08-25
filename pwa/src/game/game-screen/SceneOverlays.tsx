@@ -14,6 +14,9 @@
 // frozen engine state (bumpUi). The end-of-run splashes stay in GameScreen —
 // they reach into run/session machinery this stack doesn't know about.
 
+import { runCarDamage } from "../car-condition.ts";
+import { heroSoak } from "./hero-soak.ts";
+import { bodyCoat } from "../render/soak-ladder.ts";
 import { localHero } from "../local-seat.ts";
 import type { MutableRefObject, ReactNode } from "react";
 
@@ -89,6 +92,8 @@ export function SceneOverlays({
           assets={assets}
           font={font}
           heroName={heroName}
+          car={runCarDamage(state)}
+          soak={bodyCoat(heroSoak(state))}
           revealRef={cutsceneRevealRef}
           onBlip={() => {
             playUiSound(synth, "blip");

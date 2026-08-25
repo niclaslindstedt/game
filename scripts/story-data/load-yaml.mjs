@@ -130,13 +130,18 @@ function sceneDef(doc, id) {
         "weather",
       ]),
       props: (stage.props ?? []).map((prop) => ({
-        kind: prop.sprite,
+        // A WAGON PROP NAMES NO SPRITE (`CutsceneProp.wagon`) — the car is
+        // assembled from its panels — so its kind is empty and the renderer
+        // reads the flag rather than the name.
+        kind: prop.sprite ?? "",
         pos: prop.at,
         // A labelled prop keeps its label as the id beats address it by.
         ...(prop.label === undefined ? {} : { id: prop.label }),
         ...pick(prop, [
           "parallax",
           "wrap",
+          "flip",
+          "wagon",
           "ground",
           "hidden",
           "needs",

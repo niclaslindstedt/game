@@ -210,7 +210,22 @@ export type FlightBlast = {
 export type FlightInput = {
   /** The boosters, held: 0–1. There is no brake — the burn never stops. */
   throttle: number;
-  /** The steering poofs: −1 (port) .. 1 (starboard). */
+  /**
+   * WHICH NOZZLE IS OPEN: −1 (the PORT poof, wide open) .. 1 (the STARBOARD
+   * one). It names the THRUSTER, not a heading — this is a ship, and a ship is
+   * steered by venting gas out of one side of it.
+   *
+   * SO A POOF PUSHES THE NOSE THE OTHER WAY, and both legs of the flight obey
+   * it: `+1` vents to starboard, which swings the nose to port, which leans the
+   * burn to port, which is how the craft ends up going left. That is one rule
+   * for the whole trip, and it is why the ascent and the drop must never be
+   * read as two conventions — a stick that means one thing on the way up and
+   * the mirror of it on the way down is the fastest way to lose a landing.
+   *
+   * The poof FX is drawn on the side that FIRED (`voiceFlightControls`), so
+   * what the player sees leaving the hull always agrees with which way the
+   * ship then swings.
+   */
   steer: number;
 };
 

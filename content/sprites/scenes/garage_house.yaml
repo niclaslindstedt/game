@@ -2,12 +2,13 @@ name: garage_house
 family: scenes
 size: [48, 19]
 description: >
-  The hero's suburban home side-on: a small peaked-roof house with a warm
-  amber-lit window, joined to the open garage bay where he built the ship.
+  The hero's suburban home side-on: a small peaked-roof house with the front
+  door at the far end and a warm amber-lit window to the RIGHT of it, joined to
+  the garage bay where he built the ship, its door up on a dark interior.
 subject:
   kind: scene backdrop / building
   build: a single-storey house under a peaked roof on the left, joined to an open garage bay on the right
-  features: a warm amber-lit window and a small dark window on the house; the garage door open on a dark interior
+  features: the front door at the far end of the house wall and a warm amber-lit living-room window to the RIGHT of it — the same hand round as the room seen from inside in the opening scene, which is the mirror of it; the garage door up on a dark interior, with a course of wall left as a reveal on every side of the opening
   accent: the amber glow of the lit living-room window
   flavor: the garage where he spent ten years of weekends building the ship, drawn against the night
 palette:
@@ -16,7 +17,7 @@ palette:
   N: "#303444" # dark garage interior
   O: "#1a1c2c" # outline
   b: "#3f4553" # slate garage-door panel
-  k: "#342c26" # dark house window
+  k: "#342c26" # dark front door
   w: "#c6c6c6" # grey wall siding
   y: "#ffb02e" # amber lit window
 grid: |
@@ -30,12 +31,12 @@ grid: |
   OOOOOOOOOOOOOOOOOOOOOOOOOEEEEEEEEEEEEEEEEEEEEOO.
   O.wwwwwwwwwwwwwwwwwwwww.OOOOOOOOOOOOOOOOOOOOOOO.
   O.wwwwwwwwwwwwwwwwwwwww.O.wwwwwwwwwwwwwwwwwww.O.
-  O.wwOOOOOOwwwwwwwwwwwww.O.wwObbbbbbbbbbbbOwww.O.
-  O.wwOyyyyOwwwwwwwwwwwww.O.wwObbbbbbbbbbbbOwww.O.
-  O.wwOyyyyOwwwOOOOOOwwww.O.wwONNNNNNNNNNNNOwww.O.
-  O.wwOyyyyOwwwOkkkkOwwww.O.wwONNNNNNNNNNNNOwww.O.
-  O.wwOOOOOOwwwOkkkkOwwww.O.wwONNNNNNNNNNNNOwww.O.
-  O.wwwwwwwwwwwOkkOkOwwww.O.wwONNNNNNNNNNNNOwww.O.
-  O.wwwwwwwwwwwOkkkkOwwww.O.wwONNNNNNNNNNNNOwww.O.
-  O.wwwwwwwwwwwOkkkkOwwww.O.wwONNNNNNNNNNNNOwww.O.
+  O.wwwwwwwwwwwOOOOOOwwww.O.wwwwwwwwwwwwwwwwwww.O.
+  O.wwwwwwwwwwwOyyyyOwwww.O.wwwObbbbbbbbbbOwwww.O.
+  O.wwOOOOOOwwwOyyyyOwwww.O.wwwObbbbbbbbbbOwwww.O.
+  O.wwOkkkkOwwwOyyyyOwwww.O.wwwONNNNNNNNNNOwwww.O.
+  O.wwOkkkkOwwwOOOOOOwwww.O.wwwONNNNNNNNNNOwwww.O.
+  O.wwOkkOkOwwwwwwwwwwwww.O.wwwONNNNNNNNNNOwwww.O.
+  O.wwOkkkkOwwwwwwwwwwwww.O.wwwONNNNNNNNNNOwwww.O.
+  O.wwOkkkkOwwwwwwwwwwwww.O.wwwONNNNNNNNNNOwwww.O.
   OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.

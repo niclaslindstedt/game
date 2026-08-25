@@ -1331,6 +1331,8 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       hazardMult: 1,
       tipMult: 1,
       damageMult: 1,
+      gateMult: 1,
+      dropMult: 1,
     },
   },
   medium: {
@@ -1403,6 +1405,8 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       hazardMult: 1,
       tipMult: 1,
       damageMult: 1,
+      gateMult: 1,
+      dropMult: 1,
     },
   },
   hard: {
@@ -1474,6 +1478,8 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       hazardMult: 1,
       tipMult: 1,
       damageMult: 1,
+      gateMult: 1,
+      dropMult: 1,
     },
   },
   nightmare: {
@@ -1535,6 +1541,8 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       hazardMult: 1,
       tipMult: 1,
       damageMult: 1,
+      gateMult: 1,
+      dropMult: 1,
     },
   },
   jesus: {
@@ -1595,6 +1603,8 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       hazardMult: 1,
       tipMult: 1,
       damageMult: 1,
+      gateMult: 1,
+      dropMult: 1,
     },
   },
 };

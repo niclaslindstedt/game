@@ -14,6 +14,7 @@
 // scoreboard the way the drive's body count is, itemised and worthless.
 
 import { FLIGHT, flightCoursePx } from "./config.ts";
+import { landingGates } from "./field.ts";
 import type { FlightLeg, FlightState } from "./types.ts";
 
 /**
@@ -87,7 +88,6 @@ export function flightTripMs(state: FlightState): number {
  */
 export function flightScore(state: FlightState): FlightScorecard {
   const S = FLIGHT.score;
-  const l = FLIGHT.landing;
   const parMs = flightPar(state.params);
   const tripMs = flightTripMs(state);
   // Floored at zero: par is a bonus a hot pilot earns, never a fine a careful
@@ -98,8 +98,13 @@ export function flightScore(state: FlightState): FlightScorecard {
   // growing would make the clear stretch worth more than the game.
   const topSpeedMph = Math.min(FLIGHT.orbitalMph, Math.round(state.topSpeed));
   const intact = Math.max(0, Math.min(1, state.hullAtOrbit));
-  // A feather is the whole bonus, the legal limit is none of it.
-  const gentle = Math.max(0, 1 - state.touchdownVy / l.safeVyPx);
+  // A feather is the whole bonus, the legal limit is none of it — the RUNG's
+  // limit (`landingGates`), so "gentle" means the same fraction of what was
+  // ASKED on every rung rather than being free on the loose ones.
+  const gentle = Math.max(
+    0,
+    1 - state.touchdownVy / landingGates(state.params.difficulty).vyPx,
+  );
 
   const arrival = S.arrival;
   const time = Math.round(underS * S.perSecondUnderPar);

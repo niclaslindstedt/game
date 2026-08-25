@@ -166,13 +166,12 @@ function drawWindow(
       const w = earth.width * scale;
       const cx = p.x - w / 2 + p.r * 0.22 * easeOut(t);
       const cy = p.y - w / 2 + p.r * 0.3 * easeOut(t);
-      // The atmosphere's halo, scaled with it.
-      ctx.globalAlpha = 0.25;
-      ctx.fillStyle = "#4054bc";
-      ctx.beginPath();
-      ctx.arc(cx + w / 2, cy + w / 2, w * 0.62, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
+      // NO ATMOSPHERE DISC BEHIND IT. The globe does not sit in the middle of
+      // its own 16×16 cell (`sky_earth` — it is drawn up and to the left), so a
+      // circle centred on the CELL hangs out past the planet on the low side
+      // and nowhere on the high one; and a flat-alpha arc has a hard antialiased
+      // edge, which beside a pixel globe reads as a second object rather than as
+      // air. The sprite carries its own shaded rim.
       ctx.drawImage(earth, cx, cy, w, w);
     }
   } else {

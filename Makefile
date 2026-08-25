@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town gallery sheet song unsong audition album mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench flight-bench town gallery sheet song unsong audition album mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
 
 build:
 	npm run build
@@ -121,6 +121,15 @@ sim-bench:
 # `make drive-bench ARGS="--straight 0.8"` is the same road with NOBODY steering.
 drive-bench:
 	node scripts/drive-bench.mjs $(ARGS)
+
+# Measure THE FLIGHT — N seeds a rung, flown by the shipped auto-pilot,
+# reporting what share of climbs made orbit, the hull they arrived in, and what
+# share of drops landed on the pad. The closing loop of any change to the sky,
+# the ship or the ladder's four multipliers.
+# `make flight-bench ARGS="--seeds 200 --leg landing"`
+# `make flight-bench ARGS="--idle"` is the same sky with NOBODY at the stick.
+flight-bench:
+	node scripts/flight-bench.mjs $(ARGS)
 
 # LOOK AT THE TOWN on the road to GOODCO — the real planner, at five stops along
 # the leg, composed the way the game composes it and written as a sheet PNG. The

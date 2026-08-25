@@ -19,6 +19,8 @@ import { distance, moveToward, type Vec2 } from "./vec.ts";
  * opposite edge instead of scrolling off (star fields under a long drift).
  */
 export type CutsceneProp = {
+  /** The sprite this piece is drawn from — empty for a {@link wagon}, which is
+   * assembled rather than named. */
   kind: string;
   pos: Vec2;
   /**
@@ -30,6 +32,25 @@ export type CutsceneProp = {
   parallax?: number;
   /** Wrap around the stage horizontally instead of leaving it. */
   wrap?: boolean;
+  /** Draw it MIRRORED. The scene art has one profile each — nothing here
+   * rotates — so a thing that can face either way (a parked car nosed out at
+   * the road rather than in at the house) says which way round it is here. */
+  flip?: boolean;
+  /**
+   * THIS PIECE IS THE HERO'S OWN WAGON, and it carries no `kind` because it is
+   * not a sprite: the car is a MACHINE assembled from its panels, and what it
+   * looks like on any given night is whatever the road left of it — bent
+   * panels, a shot wheel, a bumper working free, and whoever it went through
+   * still on the paint.
+   *
+   * The HOST answers it, exactly as it answers the tags: a scene says "his car
+   * is parked here", and what condition that car is in is the run's business
+   * (`CarDamage` on the run, the blood in the app's own carrier — see
+   * AGENTS.md → THE WAGON IS ONE OBJECT ACROSS THE WHOLE NIGHT). A host with no
+   * car to show draws it factory-straight rather than leaving a hole in the
+   * scene.
+   */
+  wagon?: boolean;
   /**
    * Art that LIES ON THE GROUND (paving, a road, a painted marking) rather
    * than standing on it. Ground props are painted with the floor, under

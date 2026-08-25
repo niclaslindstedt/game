@@ -57,6 +57,7 @@ make lua-vm        # compile engine/lib/lua/ for the SHIPPED mod compiler
 make unique-check  # audit every named relic — bases, ilvl, armor ladder, drop homes (CI gate)
 make sim-bench     # benchmark the headless simulator (best-of-N, digest-checked)
 make drive-bench   # measure the DRIVE — N seeds a rung, played by the auto-driver
+make flight-bench  # measure the ROCKET — N seeds a rung, flown by the auto-pilot
 make town          # LOOK at the DRIVE's town, five stops along the road to GOODCO
 make town ARGS="--site home"   # …and at what a leg ARRIVES at, either end
 make gallery       # LOOK at any EFFECT — the effects gallery as a filmstrip PNG

@@ -588,6 +588,7 @@ export {
   carRoad,
   enterCar,
   exitCar,
+  createCar,
   readCarDamage,
   applyCarDamage,
   shedPart,
@@ -1207,6 +1208,7 @@ export {
   flightWindPx,
   gravityAt,
   junkKg,
+  landingGates,
   restartFlight,
   stepFlight,
 } from "./game/rocket/index.ts";

@@ -36,6 +36,7 @@ import {
   offCourseFrac,
   windAt,
 } from "./config.ts";
+import { landingGates } from "./field.ts";
 import { flightHandsOff } from "./index.ts";
 import type { FlightInput, FlightState, OrbitKind } from "./types.ts";
 
@@ -246,7 +247,7 @@ function flyAscent(driver: FlightDriver, state: FlightState): FlightInput {
   );
 
   // ── THE STICK ─────────────────────────────────────────────────────────────
-  // Positive steer pushes the tilt negative (`stepAscent`), so the servo's
+  // Positive steer pushes the tilt negative (`FlightInput`), so the servo's
   // sign reads "how far past the wanted lean is it".
   const steer = Math.max(
     -1,
@@ -267,7 +268,6 @@ function flyAscent(driver: FlightDriver, state: FlightState): FlightInput {
 
 /** One tick of the DROP: kill the drift toward the pad, feather the fall. */
 function flyLanding(state: FlightState): FlightInput {
-  const l = FLIGHT.landing;
   const { craft } = state;
   // Chase the marked pad while there is height to spend; hold level for the
   // last stretch — the gates are speed, drift and lean, and a lean spent on
@@ -279,13 +279,20 @@ function flyLanding(state: FlightState): FlightInput {
           Math.min(0.28, (state.padX - craft.x) * 0.004 - craft.vx * 0.02),
         )
       : Math.max(-0.06, Math.min(0.06, -craft.vx * 0.01));
+  // Positive steer pushes the tilt negative (`FlightInput`), the ascent's
+  // servo and this one reading the same way round: "how far PAST the wanted
+  // lean is it".
   const steer = Math.max(
     -1,
-    Math.min(1, (chase - craft.tilt) * 4 - craft.tiltVel * 1.5),
+    Math.min(1, (craft.tilt - chase) * 4 + craft.tiltVel * 1.5),
   );
-  // The descent profile: quicker high up, a feather at the ground, never
-  // past the legal limit's comfortable half.
-  const wantVy = -Math.min(l.safeVyPx * 0.55, 6 + craft.alt * 0.11);
+  // The descent profile: quicker high up, a feather at the ground, never past
+  // the legal limit's comfortable half — the RUNG's limit (`landingGates`), so
+  // a tight rung is flown to its own gate rather than to the shipped one.
+  const wantVy = -Math.min(
+    landingGates(state.params.difficulty).vyPx * 0.55,
+    6 + craft.alt * 0.11,
+  );
   return { throttle: craft.vy < wantVy ? 1 : 0, steer };
 }
 

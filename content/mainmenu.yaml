@@ -690,35 +690,69 @@ screens:
   # MINIGAMES — the arcade shelf: the cabinets a BEATEN CAMPAIGN has earned,
   # played on their own for the score and nothing else.
   #
-  # THE CABINETS COME FROM THE CATALOG, not from here, and they stand ABOVE the
-  # one authored row: a screen opened to play something should open with the
-  # cursor already on the thing to play. DIFFICULTY sits under them because it
-  # is an adjustment to the next go rather than a destination — it decides what
-  # the road WEIGHS, which is the only thing a rung changes about a minigame
-  # (engine/game/drive/index.ts), and the board it feeds is one board for every
-  # rung and tags each row with the one it was set on.
+  # THE SHELF CARRIES NOTHING BUT CABINETS, and it authors none of them: the
+  # rows come from the catalog (`pwa/src/game/minigames.ts`), so a third machine
+  # appears here by being added there. A shelf is a list of things to walk up
+  # to; every question about HOW one is played is asked at the machine itself,
+  # on the screen a press opens (`minigame`, below).
   #
-  # AND IT OFFERS ONLY WHAT HAS BEEN FINISHED: a rung is on this row once the
-  # whole campaign has been beaten on it, which is the same key that put the
-  # shelf on the front door. With one rung earned there is nothing to cycle and
-  # the row greys.
+  # That is why no knob is left standing here. A knob at the foot of a shelf
+  # reads as a knob every machine answers to, and the two on offer do not even
+  # share a vocabulary — the road picks a DIRECTION and the ship picks a
+  # MISSION. Only the rung means the same thing on both, and a lone rung row
+  # under two cabinets asks the player to remember which machine they set it for.
   #
-  # NOT A LINE OF HELP ON THE SCREEN, deliberately. Every row here says what it
-  # is in its own label and its own value — a cabinet's name, a rung — and a
-  # grey second line under each of them was clutter around a list of three
-  # things. The front door above it makes the same call for the same reason.
+  # NOT A LINE OF HELP ON THE SCREEN, deliberately. A cabinet's name is the
+  # whole of what the row says, and a grey second line under each of two names
+  # was clutter around a list of two things. The front door above it makes the
+  # same call for the same reason.
   # =========================================================================
   minigames:
     title: MINIGAMES
     parent: main
     tone: player
     form: menu
+    rows: []
+
+  # -------------------------------------------------------------------------
+  # MINIGAMES -> a CABINET — one machine, and the terms the next lap is played
+  # on. WHICH machine is a MODE rather than a place (`MenuContext.cabinet`,
+  # set by the shelf row on the way in), exactly as the developer WARP is: the
+  # tree cannot carry a screen per catalog row, and a third minigame must not
+  # owe this file an entry.
+  #
+  # PLAY LEADS, because it is what the screen was opened for — the knobs under
+  # it are adjustments to the go rather than destinations, and both are
+  # remembered, so the common visit is a press and out.
+  #
+  # THE VARIANT ROW IS NOT AUTHORED. Which way the road is driven and which
+  # mission the ship flies are the CABINET's own question, labelled out of its
+  # def (`MinigameDef.variantLabel`) and absent entirely on a machine with one
+  # way to play. DIFFICULTY is authored because a rung means the same thing on
+  # every machine in the arcade: it is the campaign's own ladder, and the board
+  # it feeds is one board for every rung with each row tagged by the one it was
+  # set on.
+  #
+  # AND IT OFFERS ONLY WHAT HAS BEEN FINISHED: a rung is on that row once the
+  # whole campaign has been beaten on it, which is the same key that put the
+  # shelf on the front door. With one rung earned there is nothing to cycle and
+  # the row greys.
+  #
+  # `home: dynamic` — the shelf above has no authored row to land BACK on,
+  # because every row on it comes from the catalog.
+  # -------------------------------------------------------------------------
+  minigame:
+    # Stood in for by the cabinet's own name whenever one is open
+    # (`headingFor`); this is what the compiled tree says for a page opened
+    # with no machine picked, which the UI cannot do.
+    title: MINIGAME
+    parent: minigames
+    home: dynamic
+    tone: player
+    form: menu
     rows:
-      # WHICH WAY a cabinet is played is the CABINET's own knob and is built
-      # beside it from the catalog (`menus-minigames.ts`) — the road picks a
-      # DIRECTION and nothing else on the shelf answers to it. The rung is the
-      # one setting that means the same on every machine, so it is the one
-      # authored here, under them all.
+      - id: play
+        label: PLAY
       - id: difficulty
         label: DIFFICULTY
 
@@ -1109,17 +1143,19 @@ screens:
       - id: select-level
         label: SELECT LEVEL
         help: WARP TO ANY DIFFICULTY & MISSION - SKIPS THE INTRO
-      - id: bot-view
-        label: BOT VIEW
-        help: WATCH THE AUTOPILOT PLAY ANY LEVEL WITH A REAL HERO
       # The arcade shelf with its lock off: every cabinet, every rung, no
       # campaign to beat first. The player's own MINIGAMES screen offers only
       # what has been earned, which is exactly what makes it useless for working
-      # ON a minigame.
+      # ON a minigame. It sits beside SELECT LEVEL because the two are the same
+      # verb — warp straight to a thing and play it — and BOT VIEW is the odd
+      # one out: a run played FOR you rather than by you.
       - id: minigames
         label: MINIGAMES
         help: PLAY ANY MINIGAME ON ANY RUNG - NOTHING TO EARN FIRST
         opens: devminigames
+      - id: bot-view
+        label: BOT VIEW
+        help: WATCH THE AUTOPILOT PLAY ANY LEVEL WITH A REAL HERO
       - id: auto-level-stats
         label: AUTO LEVEL STATS
         help:
@@ -1142,7 +1178,7 @@ screens:
   # DEVELOPER -> PLAYGROUND -> MINIGAMES — the same shelf the player has, with
   # the two gates off: every cabinet is listed whether or not a campaign has
   # been beaten, and DIFFICULTY cycles the whole ladder rather than the rungs
-  # somebody finished. Same rows, same builder, same screen behind them, so
+  # somebody finished. Same rows, same builders, same screens behind them, so
   # what is judged here is what ships.
   # -------------------------------------------------------------------------
   devminigames:
@@ -1151,7 +1187,22 @@ screens:
     tone: dev
     form: menu
     dev: true
+    rows: []
+
+  # The developer twin of a cabinet's own page. A `dev: true` screen may not
+  # parent a plain one (it would survive into the store build), so the pair is
+  # authored twice and built once.
+  # -------------------------------------------------------------------------
+  devminigame:
+    title: MINIGAME
+    parent: devminigames
+    home: dynamic
+    tone: dev
+    form: menu
+    dev: true
     rows:
+      - id: play
+        label: PLAY
       - id: difficulty
         label: DIFFICULTY
 

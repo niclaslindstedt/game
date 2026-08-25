@@ -9,7 +9,7 @@ subject:
   kind: scene backdrop / building
   build: a single-storey house under a peaked roof on the left, joined to an open garage bay on the right — the same frontage as before it burned
   features: a scorched roof with two holes eaten through the flat garage end; siding merely dusty at the house end and heavily sooted at the garage end, with dark streaks running up the wall; the garage door panel scorched dark
-  accent: the amber lit window still burning at the clean end
+  accent: the amber lit window still burning between the front door and the garage
   flavor: the house survived the first launch, the garage nearly did not
 palette:
   C: "#4a3f37" # charred roof
@@ -19,7 +19,7 @@ palette:
   T: "#3d3833" # soot streak up the wall
   c: "#2b2320" # burnt roof shadow / eaves
   d: "#2e3038" # scorched garage-door panel
-  k: "#342c26" # dark house window
+  k: "#342c26" # dark front door
   s: "#9a958e" # dusty wall siding, house end
   y: "#ffb02e" # amber lit window
 grid: |
@@ -33,12 +33,12 @@ grid: |
   OOOOOOOOOOOOOOOOOOOOOOOOOcccccOOccccccOOcccccOO.
   O.sssssssssssssssssssss.OOOOOOOOOOOOOOOOOOOOOOO.
   O.sssssssssssssssssssss.O.TSSSSSSSSSSSSSSSSTS.O.
-  O.ssOOOOOOsssssssssssss.O.TSOddddddddddddOSTS.O.
-  O.ssOyyyyOsssssssssssss.O.TSOddddddddddddOSTS.O.
-  O.ssOyyyyOsssOOOOOOssss.O.SSONNNNNNNNNNNNOSSS.O.
-  O.ssOyyyyOsssOkkkkOssss.O.SSONNNNNNNNNNNNOSSS.O.
-  O.ssOOOOOOsssOkkkkOssss.O.SSONNNNNNNNNNNNOSSS.O.
-  O.sssssssssssOkkOkOssss.O.SSONNNNNNNNNNNNOSSS.O.
-  O.sssssssssssOkkkkOssss.O.SSONNNNNNNNNNNNOSSS.O.
-  O.sssssssssssOkkkkOssss.O.SSONNNNNNNNNNNNOSSS.O.
+  O.sssssssssssOOOOOOssss.O.TSSSSSSSSSSSSSSSSTS.O.
+  O.sssssssssssOyyyyOssss.O.TSSOddddddddddOSSTS.O.
+  O.ssOOOOOOsssOyyyyOssss.O.SSSOddddddddddOSSSS.O.
+  O.ssOkkkkOsssOyyyyOssss.O.SSSONNNNNNNNNNOSSSS.O.
+  O.ssOkkkkOsssOOOOOOssss.O.SSSONNNNNNNNNNOSSSS.O.
+  O.ssOkkOkOsssssssssssss.O.SSSONNNNNNNNNNOSSSS.O.
+  O.ssOkkkkOsssssssssssss.O.SSSONNNNNNNNNNOSSSS.O.
+  O.ssOkkkkOsssssssssssss.O.SSSONNNNNNNNNNOSSSS.O.
   OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.

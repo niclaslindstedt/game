@@ -107,6 +107,7 @@ make test                                # the full test suite
 | `make map LEVEL=<id>` / `map-layout`  | Render a level's annotated map / its clean layout blueprint                                        |
 | `make sim-bench`                      | Benchmark the headless simulator (best-of-N, digest-checked)                                       |
 | `make drive-bench`                    | Measure the DRIVE minigame — N seeds a rung, played by the auto-driver                             |
+| `make flight-bench`                   | Measure the ROCKET minigame — N seeds a rung, flown by the auto-pilot                              |
 | `make town`                           | Render the DRIVE's town at five stops along the road — and `ARGS="--site home"` what it arrives at |
 | `make gallery`                        | LOOK at any effect — the effects gallery, captured as a filmstrip PNG                              |
 | `make sheet ARGS="<track>"`           | LOOK at a score — a `content/music/` track engraved as sheet music, one staff per voice            |

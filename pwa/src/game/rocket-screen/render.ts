@@ -42,11 +42,6 @@ export function flightCamera(
   /** Where the ship died, when it has (`RocketFxState.wreckAt`) — the wreck
    * camera's anchor. */
   wreckAt?: { x: number; alt: number },
-  /** Where the booster let go (`RocketFxState.booster`) — the separation
-   * camera's anchor: the frame plants itself on the beat so the upper stage
-   * visibly PULLS AWAY out of the top while the spent stage falls out of the
-   * bottom. A camera still glued to the craft would show neither. */
-  boosterAt?: { x: number; alt: number },
 ): SkyCamera {
   const { craft } = state;
   const halfSpan = Math.min(viewW, FLIGHT.fieldW);
@@ -69,18 +64,12 @@ export function flightCamera(
     // of the player's warning, and every extra row of it is reaction time.
     cam = { x: craft.x - viewW / 2, topAlt: craft.alt + viewH * 0.72 };
   }
-  if (state.outcome === "toOrbit" && boosterAt) {
-    // Eased in over the separation's first beats, exactly the wreck pan's
-    // arithmetic — deterministic off `outcomeMs`, so a paused frame holds.
-    const seq = FLIGHT.orbit;
-    const t = Math.min(
-      1,
-      Math.max(0, (state.outcomeMs - (seq.settleMs + seq.floatMs)) / 350),
-    );
-    const ease = t * (2 - t);
-    cam.x += (boosterAt.x - viewW / 2 - cam.x) * ease;
-    cam.topAlt += (boosterAt.alt + viewH * 0.45 - cam.topAlt) * ease;
-  }
+  // SEPARATION KEEPS THE SHIP. The camera does NOT plant itself on the point
+  // the stages parted: a frame anchored there watches the spent booster fall
+  // through it while the thing the player flew for a minute leaves out of the
+  // top, which is the wrong half of the beat to be looking at. Staying on the
+  // craft puts the booster's drop in the bottom of the frame as something
+  // falling AWAY from the ship — the picture the beat is for.
   if (state.outcome === "wrecked") {
     // A WRECK RE-CENTERS THE FRAME, ON THE WRECK. The working camera rides
     // the ship low (the danger is above) — which parks the explosion half

@@ -34,6 +34,7 @@ import {
 
 import { botViewSpec } from "../bot-view-specs.ts";
 import { washCar } from "../car-condition.ts";
+import { resetHeroSoak } from "./hero-soak.ts";
 import { cloneGameState } from "../checkpoint.ts";
 import {
   characterCacheSlots,
@@ -394,6 +395,12 @@ export function createRunSession(deps: {
   // left alone: both hold a car that is already whatever the run made of it.
   if (!resumed && !checkpoint && deps.arrivalCarRef?.current === undefined) {
     washCar();
+    // …AND THE MAN IS WASHED WITH HIS CAR, at the same seam and for the same
+    // reason. Between LEVELS he carries the night's work on him (`hero-soak.ts`
+    // — he walks out of GOODCO red and is still red on his own lawn), so the
+    // only thing that ever cleans him is the same fresh start that mints a
+    // factory-straight wagon.
+    resetHeroSoak();
   }
   // One arrival, one seat: consumed here so the next visit to the hub is on
   // foot like every other.

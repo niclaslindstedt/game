@@ -9,6 +9,7 @@
 // instead of a reshuffle. Nothing here is spent from anybody's run.
 
 import { difficultyDef } from "../defs/difficulties.ts";
+import type { Difficulty } from "../types/core.ts";
 import { FLIGHT, flightCoursePx, offCourseFrac } from "./config.ts";
 import type { FlightState, OrbitKind, OrbitObject } from "./types.ts";
 
@@ -63,6 +64,29 @@ export const JUNK_KG: readonly number[] = [
  * table's own rule, so a mod's shorter cast degrades to the last entry. */
 export function junkKg(variant: number): number {
   return JUNK_KG[Math.min(JUNK_KG.length - 1, Math.max(0, variant))]!;
+}
+
+/**
+ * THE THREE GATES A TOUCHDOWN PASSES, on THIS rung — the shipped limits worked
+ * through `DifficultyDef.flight.gateMult`.
+ *
+ * ONE RESOLVER, read by everything that has an opinion about a landing: the sim
+ * that judges it, the auto-pilot that flies a profile inside it, and the score
+ * that pays for a gentle one. Three copies of `safe * mult` is three places for
+ * a rung to mean three different things.
+ */
+export function landingGates(difficulty: Difficulty): {
+  vyPx: number;
+  vxPx: number;
+  tiltRad: number;
+} {
+  const l = FLIGHT.landing;
+  const mult = difficultyDef(difficulty).flight.gateMult;
+  return {
+    vyPx: l.safeVyPx * mult,
+    vxPx: l.safeVxPx * mult,
+    tiltRad: l.safeTiltRad * mult,
+  };
 }
 
 /** The rung's field knobs, off the ladder. */

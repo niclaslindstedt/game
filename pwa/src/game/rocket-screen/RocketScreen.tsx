@@ -22,6 +22,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactElement } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
+import { usePixelWrapRem } from "@ui/lib/pixel-wrap.ts";
 import {
   FLIGHT_OUTCOME,
   beginDescent,
@@ -166,6 +167,12 @@ export function RocketScreen({
   const padDragRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
   const padTypeRef = useRef<string>("touch");
   const [speech, setSpeech] = useState<Speech | null>(null);
+  // The thought's wrap, MEASURED against the live viewport rather than authored
+  // as a fixed rem: a PixelText canvas is sized in rem, so a fixed cap grows
+  // with every UI scale tier while the screen it has to fit inside does not.
+  // 20 is the ceiling, and `.rocket-thought`'s own `min(84vw, 22rem)` is the
+  // box the wrapped block sits in.
+  const wrapRem = usePixelWrapRem(0.8, 20);
   const speechRef = useRef<Speech | null>(null);
   const [paused, setPaused] = useState(false);
   const pausedRef = useRef(false);
@@ -495,7 +502,6 @@ export function RocketScreen({
         viewW,
         viewH,
         fxRef.current.wreckAt ?? undefined,
-        fxRef.current.booster ?? undefined,
       );
       const shake = shakeOffset(fxRef.current, flight.ms);
       const feel = boostFeel(burn, flight.phase === "landing", flight.ms);
@@ -704,7 +710,7 @@ export function RocketScreen({
               // the player squints at while flying an inverted pendulum.
               scale={2}
               color="#9fe8d2"
-              maxWidth={20}
+              maxWidth={wrapRem}
               align="center"
             />
           ))}

@@ -37,6 +37,7 @@ export type MenuScreen =
   | "main"
   | "extras"
   | "minigames"
+  | "minigame"
   | "difficulty"
   | "levels"
   | "botspeed"
@@ -54,6 +55,7 @@ export type MenuScreen =
   | "developer"
   | "playground"
   | "devminigames"
+  | "devminigame"
   | "cheats"
   | "galleries"
   | "visuals"
@@ -308,6 +310,13 @@ export type MenuContext = {
      * from what it is handed. */
     variant: string,
   ) => void;
+  /** WHICH CABINET the player walked up to — the machine whose own page
+   * (`minigame` / `devminigame`) is being laid out. A MODE rather than a place,
+   * exactly as `warp` is: the tree cannot hold a screen per catalog row, and a
+   * third minigame must not owe `content/mainmenu.yaml` an entry. Null off
+   * those two screens. */
+  cabinet: MinigameId | null;
+  setCabinet: (id: MinigameId | null) => void;
   // The campaign picker's carried state (difficulty → levels → botspeed).
   difficulty: Difficulty;
   setDifficulty: (difficulty: Difficulty) => void;
