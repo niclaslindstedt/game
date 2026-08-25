@@ -143,10 +143,20 @@ describe("the launch scene stands on the garage lot", () => {
     const drive = props().find((prop) => prop.kind === "garage_drive");
     expect(wagon!.pos.y).toBeGreaterThan(drive!.pos.y);
     expect(wagon!.pos.y).toBeLessThanOrEqual(kerb);
-    // …and the hero opens BESIDE it and walks up the lot to the pad, rather
-    // than out of the front door: he has just got out of that car.
+    // …and the hero opens IN FRONT OF IT and walks up the lot to the pad,
+    // rather than out of the front door: he has just got out of that car.
+    //
+    // "In front of" is a fact about DEPTH, not about being nearby — the stage
+    // paints back to front, so a hero at a y ABOVE the car's is a hero the car
+    // is painted over, which reads as a man who happens to be on the same
+    // street. Assert the sort order and the shared column, or the mark drifts
+    // back to beside-it the next time something else on the lot moves.
     const hero = CUTSCENE_DEFS.launch!.actors.find((a) => a.id === "hero");
-    expect(Math.abs(hero!.at.y - wagon!.pos.y)).toBeLessThan(10);
+    expect(hero!.at.y, "the car paints over him").toBeGreaterThan(wagon!.pos.y);
+    expect(
+      Math.abs(hero!.at.x - wagon!.pos.x),
+      "he is beside it, not in front",
+    ).toBeLessThan(8);
   });
 
   it("runs the road off both edges of the frame, lane by lane", () => {

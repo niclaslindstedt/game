@@ -187,15 +187,18 @@ stage:
     - { sprite: road_lane, at: { x: 140, y: 116 }, ground: true }
     - { sprite: road_lane, at: { x: 196, y: 116 }, ground: true }
 actors:
-  # HE OPENS AT HIS OWN CAR — a step up the kerb from where he left it, and
-  # walks from there up the drive to the pad. The scene used to
+  # HE OPENS IN FRONT OF HIS OWN CAR — nearer the camera than it, so the wagon
+  # is the thing standing behind him — and walks from there up the drive to the
+  # pad. The stage sorts back to front, so "in front of" is a y BELOW the car's
+  # and not merely a matching x: parked level with it he read as a man who
+  # happened to be on the same street. The scene used to
   # start him over by the front door, which was a man leaving a house; starting
   # him at the wagon makes it a man who has just got out of one, which is what
   # the last minute of play actually was. He is also still WEARING it: the blood
   # travels with him out of the level (`hero-soak.ts`) and the stage lays it over
   # whichever art the actor is drawn as, so a man who left GOODCO red is red on
   # his own lawn.
-  - { id: hero, name: "{HERO}", sprite: hero_tee, at: { x: 32, y: 97 } }
+  - { id: hero, name: "{HERO}", sprite: hero_tee, at: { x: 57, y: 107 } }
   # The garage ship — the Mars level's parked `starship`, ten years younger.
   # Poses to `ship_fire` when the engine lights.
   - { id: ship, sprite: ship, at: { x: 108, y: 88 } }
@@ -205,7 +208,7 @@ beats:
   - kind: caption
     text:
       - TEN YEARS OF WEEKENDS IN THE GARAGE. SHE ONLY EVER NEEDED ONE MORE PART.
-  - { kind: move, actor: hero, to: { x: 80, y: 93 }, speed: 40 }
+  - { kind: move, actor: hero, to: { x: 80, y: 96 }, speed: 40 }
   - kind: say
     actor: hero
     text:
