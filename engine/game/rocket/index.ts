@@ -28,7 +28,13 @@ import {
   type FlightWreck,
 } from "./config.ts";
 import { detonate, stepBlasts } from "./blast.ts";
-import { bandFrac, firstMarks, junkKg, stepField } from "./field.ts";
+import {
+  bandFrac,
+  firstMarks,
+  junkKg,
+  landingGates,
+  stepField,
+} from "./field.ts";
 import type {
   FlightCraft,
   FlightInput,
@@ -113,6 +119,11 @@ export function createFlight(params: FlightParams): FlightState {
  */
 export function beginDescent(state: FlightState): void {
   const l = FLIGHT.landing;
+  // HOW HARD THE HAND-OVER IS is the rung's (`DifficultyDef.flight.dropMult`):
+  // the module is always released off-pad and always crooked, and what the
+  // ladder decides is how much of both there is — and how little sky there is
+  // to fix them in. The pull and the engine are the moon's and do not move.
+  const drop = difficultyDef(state.params.difficulty).flight.dropMult;
   const rng = createRng((state.params.seed ^ 0x9e3779b9) >>> 0);
   state.phase = "landing";
   state.padX = 60 + rng() * (FLIGHT.fieldW - 120);
@@ -120,10 +131,10 @@ export function beginDescent(state: FlightState): void {
     // Dropped off-pad on purpose: a module released over its own mark would be
     // a game about waiting, and the drift to kill is the game.
     x: 60 + rng() * (FLIGHT.fieldW - 120),
-    alt: l.startAltPx,
-    vx: (rng() * 2 - 1) * l.startVxPx,
+    alt: l.startAltPx / drop,
+    vx: (rng() * 2 - 1) * l.startVxPx * drop,
     vy: -l.startVyPx,
-    tilt: (rng() * 2 - 1) * 0.12,
+    tilt: (rng() * 2 - 1) * l.startTiltRad * drop,
     tiltVel: 0,
     hull: 1,
     // The module's own tank never enters the physics — its descent engine is
@@ -496,7 +507,10 @@ function stepLanding(state: FlightState, dt: number, input: FlightInput): void {
 
   // A craft with no instability: tilt goes where the poofs put it and the
   // trim slowly walks it back upright — patience is the whole game down here.
-  craft.tiltVel += (l.steerPerS * steer - l.tiltDampPerS * craft.tiltVel) * dt;
+  // The poof pushes the nose AWAY from the nozzle that fired (`FlightInput`),
+  // which is the same sign the climb reads it with — one stick, one meaning,
+  // all the way from the lawn to the regolith.
+  craft.tiltVel += (-l.steerPerS * steer - l.tiltDampPerS * craft.tiltVel) * dt;
   craft.tilt += craft.tiltVel * dt;
   craft.tilt -= craft.tilt * 0.4 * dt;
 
@@ -518,10 +532,14 @@ function stepLanding(state: FlightState, dt: number, input: FlightInput): void {
   // ── TOUCHDOWN, OR NOT ─────────────────────────────────────────────────────
   const impact = -craft.vy;
   craft.alt = 0;
+  // HOW GOOD IT HAD TO BE is the rung's — one resolver, so the sim, the
+  // auto-pilot's descent profile and the score's gentle bonus can never
+  // disagree about what a legal touchdown is (`landingGates`).
+  const gate = landingGates(state.params.difficulty);
   const safe =
-    impact <= l.safeVyPx &&
-    Math.abs(craft.vx) <= l.safeVxPx &&
-    Math.abs(craft.tilt) <= l.safeTiltRad;
+    impact <= gate.vyPx &&
+    Math.abs(craft.vx) <= gate.vxPx &&
+    Math.abs(craft.tilt) <= gate.tiltRad;
   if (!safe) {
     wreckOut(state, FLIGHT_WRECKS.crashed);
     return;
@@ -625,7 +643,13 @@ export {
 } from "./config.ts";
 export type { FlightOutcome, FlightWreck } from "./config.ts";
 export { blastHash, blastRoll, detonate } from "./blast.ts";
-export { JUNK_KG, ORBIT_VARIANTS, bandFrac, junkKg } from "./field.ts";
+export {
+  JUNK_KG,
+  ORBIT_VARIANTS,
+  bandFrac,
+  junkKg,
+  landingGates,
+} from "./field.ts";
 export { flightPar, flightScore, flightTripMs } from "./score.ts";
 export type { FlightScorecard } from "./score.ts";
 export { IDLE_FLIGHT_INPUT, SOFT_KINDS } from "./types.ts";

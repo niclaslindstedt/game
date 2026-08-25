@@ -256,9 +256,10 @@ export function voiceFlightControls(
     }
   }
   if (Math.abs(steer) > 0.25) {
-    // The poof leaves the OPPOSITE shoulder — the nozzle pushes the nose the
-    // way the thumb asked by venting the other way.
-    const vent: 1 | -1 = steer > 0 ? -1 : 1;
+    // The poof leaves the shoulder that FIRED — `steer` names the nozzle
+    // (`FlightInput`), and the nose then swings away from it. Drawing the gas
+    // on the far side would show a ship being pushed by nothing.
+    const vent: 1 | -1 = steer > 0 ? 1 : -1;
     const fired = poofFx(
       fx,
       flight.craft.x + vent * 8,

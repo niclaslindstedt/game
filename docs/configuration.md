@@ -115,14 +115,16 @@ you want is found by what KIND of thing it does rather than by reading a column
 of a dozen unrelated tools:
 
 - **PLAYGROUND** — the next run. **SELECT LEVEL** (the warp picker — pick any
-  difficulty and mission regardless of unlock state, skipping the intro), **BOT
-  VIEW** (hand any level to the autopilot with a real hero, then pick a GAME
-  SPEED and a BOT SPEC), **MINIGAMES** (the arcade shelf with its lock off:
-  every cabinet on every rung, where the player's own MINIGAMES screen offers
-  only what a beaten campaign earned), the one term a run is built on — **AUTO
-  LEVEL STATS** (read when a level is BUILT, so a change lands on the next run
-  rather than one in progress), **LEGACY MAP GENERATOR** (read the same way —
-  below) — and **DEBUG MODE**, the one thing drawn OVER a run.
+  difficulty and mission regardless of unlock state, skipping the intro),
+  **MINIGAMES** (the arcade shelf with its lock off: every cabinet on every
+  rung, where the player's own MINIGAMES screen offers only what a beaten
+  campaign earned — the two sit together because they are the same verb, warp
+  straight to a thing and play it), **BOT VIEW** (hand any level to the
+  autopilot with a real hero, then pick a GAME SPEED and a BOT SPEC), the one
+  term a run is built on — **AUTO LEVEL STATS** (read when a level is BUILT, so
+  a change lands on the next run rather than one in progress), **LEGACY MAP
+  GENERATOR** (read the same way — below) — and **DEBUG MODE**, the one thing
+  drawn OVER a run.
 - **CHEATS** — what a run would otherwise have to earn: **SEED CHARACTERS**,
   **GRANT 10B COINS**, and **FORCE STORE** (which belongs here rather than among
   the build flags because the packs it surfaces are granted free).

@@ -585,6 +585,12 @@ Three things are worth knowing about the format:
   filters it to ids the active catalog actually holds: a conversion that replaces
   the thoughts without authoring a rotation gets silence rather than a throw the
   first time a player out-levels a map.
+- **One piece of scenery knows what the player has been doing.** A prop with
+  `wagon: true` and no `sprite:` is the HERO'S OWN CAR, assembled from its
+  panels wearing whatever the night left on it — bent bodywork, a wheel it lost,
+  and the blood off the road. Every other prop is art the scene names; this one
+  is the run, standing on the stage. (`flip: true` mirrors any prop, which is
+  what a car nosed out at the road needs.)
 - **A mod's story answers to the schema and to nothing else.** The three-tier
   chain that makes `docs/manuscript.md` the authority on every line the campaign
   speaks stops at the mod folder's edge (see AGENTS.md, and the note at the top of

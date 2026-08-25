@@ -60,6 +60,11 @@ describe("cutscene sprites", () => {
   for (const [id, def] of Object.entries(CUTSCENE_DEFS)) {
     it(`${id}: every prop and actor resolves in the atlas`, () => {
       for (const prop of def.stage.props) {
+        // A WAGON NAMES NO ART. It is the hero's own car, assembled from its
+        // panels at paint time (`CutsceneProp.wagon`), so there is no atlas
+        // entry for it to resolve — the panels themselves are covered by the
+        // vehicle suites.
+        if (prop.wagon) continue;
         expect(
           resolves(prop.kind),
           `prop "${prop.kind}" missing — run \`make assets\``,
@@ -122,16 +127,70 @@ describe("the launch scene stands on the garage lot", () => {
     }
   });
 
-  it("runs the road off both edges of the frame", () => {
+  it("parks the hero's own wagon at the kerb, nosed at the road", () => {
+    // The car the player has just driven home from GOODCO, standing on the
+    // street outside his own house — ASSEMBLED rather than pictured, so it
+    // carries the panels the road bent and whoever it went through. `flip` is
+    // what noses it out at the road: the art has one profile and nothing
+    // rotates it.
+    const wagon = props().find((prop) => prop.wagon);
+    expect(wagon, "no wagon on the launch lot").toBeDefined();
+    expect(wagon!.kind, "a wagon names no art").toBe("");
+    expect(wagon!.flip).toBe(true);
+    // On the STREET: past the drive's own foot, in the road's far lane.
+    const lanes = props().filter((prop) => prop.kind === "road_lane");
+    const kerb = Math.min(...lanes.map((lane) => lane.pos.y));
+    const drive = props().find((prop) => prop.kind === "garage_drive");
+    expect(wagon!.pos.y).toBeGreaterThan(drive!.pos.y);
+    expect(wagon!.pos.y).toBeLessThanOrEqual(kerb);
+    // …and the hero opens AT ITS TAIL and walks up the lot to the pad, rather
+    // than out of the front door: he has just got out of that car.
+    //
+    // BEHIND THE CAR, and clear of it. The wagon is nosed at the road (`flip`),
+    // so its tail is the right-hand end and his mark is to the RIGHT of the
+    // car's — far enough right that the two never overlap. Nothing may stand
+    // over the wagon at all: a car assembled from the night's own damage is
+    // only worth assembling if the whole of it can be seen, and the panels the
+    // road bent are the last minute of play. The gap is measured against the
+    // car's own drawn width at this stage's gauge (~24 px), so a body 16 px
+    // wide beside it still leaves daylight.
+    const hero = CUTSCENE_DEFS.launch!.actors.find((a) => a.id === "hero");
+    expect(
+      hero!.at.x - wagon!.pos.x,
+      "the hero is standing over the car",
+    ).toBeGreaterThan(22);
+    // …and everything else on the lot sorts BEHIND it (`ground` art is painted
+    // with the floor, under the standing queue, so it can never cover
+    // anything).
+    for (const prop of props()) {
+      if (prop.wagon || prop.ground) continue;
+      expect(
+        prop.pos.y,
+        `"${prop.kind}" is painted over the wagon`,
+      ).toBeLessThanOrEqual(wagon!.pos.y);
+    }
+  });
+
+  it("runs the road off both edges of the frame, lane by lane", () => {
     const stage = CUTSCENE_DEFS.launch!.stage;
     const lanes = props().filter((p) => p.kind === "road_lane");
-    const xs = lanes.map((p) => p.pos.x).sort((a, b) => a - b);
-    // 56 px of tarmac per tile, laid end to end across the whole 224.
+    // TWO ROWS OF TILES, one per lane — the description has always said two
+    // lanes with a painted line between them, and the second row is also what
+    // carries the tarmac on down behind the dialogue box.
+    const rows = new Map<number, number[]>();
+    for (const lane of lanes) {
+      rows.set(lane.pos.y, [...(rows.get(lane.pos.y) ?? []), lane.pos.x]);
+    }
+    expect(rows.size, "the road is one lane wide").toBeGreaterThan(1);
+    // 56 px of tarmac per tile, laid end to end across the whole stage.
     const span = 56;
-    expect(xs[0]! - span / 2).toBeLessThanOrEqual(0);
-    expect(xs.at(-1)! + span / 2).toBeGreaterThanOrEqual(stage.width);
-    for (let i = 1; i < xs.length; i++) {
-      expect(xs[i]! - xs[i - 1]!, "a gap in the tarmac").toBe(span);
+    for (const xs of rows.values()) {
+      xs.sort((a, b) => a - b);
+      expect(xs[0]! - span / 2).toBeLessThanOrEqual(0);
+      expect(xs.at(-1)! + span / 2).toBeGreaterThanOrEqual(stage.width);
+      for (let i = 1; i < xs.length; i++) {
+        expect(xs[i]! - xs[i - 1]!, "a gap in the tarmac").toBe(span);
+      }
     }
   });
 

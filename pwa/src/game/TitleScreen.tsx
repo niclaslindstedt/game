@@ -216,6 +216,11 @@ export function TitleScreen({
   // so every level is reachable regardless of progress and picking one skips
   // the intro.
   const [warp, setWarp] = useState(false);
+  // WHICH CABINET the arcade shelf was walked into — the machine whose own page
+  // (MINIGAMES → THE ROAD / THE ROCKET) is up. A mode rather than a place, for
+  // the reason `warp` is one: the cabinets come from a catalog, and the menu
+  // tree cannot carry a screen per catalog row.
+  const [cabinet, setCabinet] = useState<MinigameId | null>(null);
   // BOT VIEW: the warp pickers were opened via DEVELOPER → PLAYGROUND → BOT VIEW, so picking a
   // level hands the run to the engine autopilot (a realistic arrival hero) rather
   // than starting a normal playable run. Rides on top of `warp` (same pickers).
@@ -544,6 +549,8 @@ export function TitleScreen({
       onLoadGame,
       onHowToPlay,
       onMinigame,
+      cabinet,
+      setCabinet,
       difficulty,
       setDifficulty,
       warp,
@@ -614,6 +621,7 @@ export function TitleScreen({
     onLoadGame,
     onHowToPlay,
     onMinigame,
+    cabinet,
     settingsTick,
     bumpSettings,
     captureBind,
@@ -885,7 +893,7 @@ export function TitleScreen({
   // the top of the column, and the PAGE TITLE is what leads the screen.
   const onMain = screen === "main";
   const headerScale = onMain ? logoScale : compact ? 3 : 4;
-  const heading = headingFor(screen, warp, mods);
+  const heading = headingFor(screen, warp, mods, cabinet);
   // The SETTINGS tree renders as a stable form: a fixed-width column (so a
   // value change never shifts the right-aligned controls) with each row's help
   // text hoisted OUT of the row to a single bottom help line (so toggling a

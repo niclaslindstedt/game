@@ -17,6 +17,7 @@ import type { CSSProperties, ReactElement } from "react";
 
 import { withHeroNameLines } from "@game/core";
 import { PixelText } from "@ui/lib/PixelText.tsx";
+import { usePixelWrapRem } from "@ui/lib/pixel-wrap.ts";
 
 import type { GameAssets } from "../assets.ts";
 import { synth } from "../audio.ts";
@@ -144,6 +145,11 @@ export function RocketVoyage({
   }, [assets, beat]);
 
   const lines = pages[Math.min(page, pages.length - 1)] ?? [];
+  // MEASURED, NOT AUTHORED. A fixed rem cap is a share of the root font size
+  // and no share at all of the screen, so 26rem is 416 px on a phone that is
+  // 390 px wide — a caption centred on nothing, spilling off both edges. 26 is
+  // the ceiling for a screen with room for it.
+  const wrapRem = usePixelWrapRem(0.84, 26);
   return (
     <div style={SHELL} onPointerDown={advance} role="presentation">
       <canvas ref={canvasRef} style={CANVAS} />
@@ -161,7 +167,7 @@ export function RocketVoyage({
             text={line}
             scale={2}
             color="#9fe8d2"
-            maxWidth={26}
+            maxWidth={wrapRem}
             align="center"
           />
         ))}
@@ -192,6 +198,10 @@ const THOUGHT: CSSProperties = {
   left: "50%",
   bottom: "16%",
   transform: "translateX(-50%)",
+  // The same share the wrap is measured against, so a line the font could not
+  // break (one very long word) is clipped by the box rather than by the screen.
+  width: "84vw",
+  maxWidth: "26rem",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",

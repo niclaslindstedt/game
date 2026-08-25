@@ -491,14 +491,35 @@ describe("the landing", () => {
     // last stretch.
     const wantTilt =
       craft.alt > 60 ? Math.max(-0.3, Math.min(0.3, -craft.vx * 0.02)) : 0;
+    // Positive steer opens the STARBOARD nozzle and swings the nose to port
+    // (`FlightInput`), so the servo reads "how far past the wanted lean is it".
     return {
       throttle: craft.vy < wantVy ? 1 : 0,
       steer: Math.max(
         -1,
-        Math.min(1, (wantTilt - craft.tilt) * 4 - craft.tiltVel * 1.5),
+        Math.min(1, (craft.tilt - wantTilt) * 4 + craft.tiltVel * 1.5),
       ),
     };
   }
+
+  it("steers the drop the way the climb steers", () => {
+    // ONE STICK, ONE MEANING. `steer` names the NOZZLE, so a starboard poof
+    // swings the nose to port and the burn then carries the craft that way —
+    // on both legs of the trip. The two used to disagree, which made the drop
+    // feel mirrored to anyone who had just flown the climb, and nothing in this
+    // suite noticed.
+    const drop_ = createFlight(PARAMS);
+    drop(drop_);
+    fly(drop_, 60, { throttle: 1, steer: 1 });
+    expect(drop_.craft.tilt).toBeLessThan(0);
+    expect(drop_.craft.vx).toBeLessThan(0);
+
+    const climb = createFlight(PARAMS);
+    handOver(climb);
+    fly(climb, 60, { throttle: 1, steer: 1 });
+    expect(climb.craft.tilt).toBeLessThan(0);
+    expect(climb.craft.vx).toBeLessThan(0);
+  });
 
   it("a module nobody catches meets the moon too hard", () => {
     const flight = createFlight(PARAMS);

@@ -7,6 +7,7 @@
 // goes — is `content/mainmenu.yaml`, read through menu-tree.ts. This file only
 // says which builder owns which screen.
 
+import { minigameDef, type MinigameId } from "../minigames.ts";
 import {
   backRow,
   type MenuContext,
@@ -32,7 +33,9 @@ import {
 } from "./menus-developer.ts";
 import { buildExtrasMenu, buildMainMenu } from "./menus-main.ts";
 import {
+  buildDevMinigameMenu,
   buildDevMinigamesMenu,
+  buildMinigameMenu,
   buildMinigamesMenu,
 } from "./menus-minigames.ts";
 import {
@@ -71,11 +74,20 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (screen === "main") return buildMainMenu(ctx);
   if (screen === "extras") return buildExtrasMenu(ctx);
   if (screen === "minigames") return buildMinigamesMenu(ctx);
-  // The same shelf with its lock off, under DEVELOPER → PLAYGROUND. Gated on
-  // `__DEV_TOOLS__` like every other developer screen, so the store build folds
-  // the branch (and the row that opens it) away.
+  // A cabinet's own page needs to know WHICH cabinet, and that rides on the
+  // context rather than on the tree. With none picked the screen is
+  // unreachable, so the fall-through's lone BACK row is the honest answer.
+  if (screen === "minigame" && ctx.cabinet) {
+    return buildMinigameMenu(ctx, ctx.cabinet);
+  }
+  // The same two screens with their lock off, under DEVELOPER → PLAYGROUND.
+  // Gated on `__DEV_TOOLS__` like every other developer screen, so the store
+  // build folds the branch (and the row that opens it) away.
   if (__DEV_TOOLS__ && screen === "devminigames") {
     return buildDevMinigamesMenu(ctx);
+  }
+  if (__DEV_TOOLS__ && screen === "devminigame" && ctx.cabinet) {
+    return buildDevMinigameMenu(ctx, ctx.cabinet);
   }
   if (screen === "store") return buildStoreMenu(ctx);
   if (screen === "storeconfirm") return buildStoreConfirmMenu(ctx);
@@ -124,17 +136,19 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
 }
 
 /**
- * A sub-screen's header, with the two variants the tree cannot carry: MOD INFO
- * is titled by the mod it is showing (a name that arrives over a bridge, so no
- * compiled tree could hold it), and the campaign pickers say something
- * different when they were opened by the developer WARP, which is a mode rather
- * than a place. The warp variant folds away with the rest of the tooling —
- * nothing can set `warp` without it.
+ * A sub-screen's header, with the three variants the tree cannot carry: MOD
+ * INFO is titled by the mod it is showing (a name that arrives over a bridge,
+ * so no compiled tree could hold it), a CABINET's page is titled by the
+ * machine, which comes from a catalog rather than from the tree, and the
+ * campaign pickers say something different when they were opened by the
+ * developer WARP, which is a mode rather than a place. The warp variant folds
+ * away with the rest of the tooling — nothing can set `warp` without it.
  */
 export function headingFor(
   screen: MenuScreen,
   warp: boolean,
   mods?: ModsMenuState,
+  cabinet?: MinigameId | null,
 ): ScreenHeading | null {
   // MOD INFO is a page ABOUT one mod, so the mod names it — the tree's own
   // title is the fallback for a page opened with nothing on it, which the UI
@@ -147,6 +161,14 @@ export function headingFor(
       mod.folder.split(/[/\\]/).filter(Boolean).pop() ??
       mod.key;
     return { title: title.toUpperCase(), trail: "MODS", tone: "player" };
+  }
+  // The machine names its own page. Only the TITLE is the cabinet's — the trail
+  // and the tone stay the tree's, so the developer twin keeps its full
+  // breadcrumb and its dev colour. The tree's own MINIGAME is the fallback for
+  // a page opened with no cabinet picked, which the UI cannot do.
+  if ((screen === "minigame" || screen === "devminigame") && cabinet) {
+    const base = screenHeading(screen);
+    return base ? { ...base, title: minigameDef(cabinet).name } : base;
   }
   if (__DEV_TOOLS__ && warp && screen === "difficulty") {
     return { title: "DIFFICULTY", trail: "WARP", tone: "dev" };

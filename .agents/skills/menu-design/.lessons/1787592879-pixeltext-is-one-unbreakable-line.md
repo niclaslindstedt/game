@@ -23,7 +23,10 @@ make that work and both are easy to miss:
   against `.menu-heading-line`'s `max-width: 84vw`; the fit predicts the layout
   the browser is about to perform (`crumbTail` walks the crumbs the way
   `flex-wrap` does), so the two drifting apart makes the fit wrong rather than
-  merely conservative. Mirror the flex `gap` too.
+  merely conservative. Mirror the flex `gap` too. Where the budget is just a
+  share of the viewport, take it from `usePixelWrapRem`
+  (`@ui/lib/pixel-wrap.ts`) rather than authoring a rem number: a fixed
+  `maxWidth` is a share of the ROOT FONT, which the UI scale tiers double.
 
 Judge it from a screenshot at the SMALL-PHONE floor (375x667) and the portrait
 phone, not from the landscape reference — a header wide enough to overrun fits

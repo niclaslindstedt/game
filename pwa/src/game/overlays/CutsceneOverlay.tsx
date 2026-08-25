@@ -17,10 +17,14 @@ import {
 } from "react";
 
 import {
+  applyCarDamage,
+  createCar,
   currentLine,
+  HERO_NAME_TOKEN,
   cutsceneDef,
   withHeroName,
   withHeroNameLines,
+  type CarDamage,
   type CutsceneProp,
   type CutsceneState,
 } from "@game/core";
@@ -33,6 +37,10 @@ import { useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteByName, spriteCursor, type GameAssets } from "../assets.ts";
+import { carriedCarCoat } from "../car-condition.ts";
+import { drawCoatedSprite } from "../render/hero-coat.ts";
+import type { CoatLayer } from "../render/soak-ladder.ts";
+import { drawCarAssembly } from "../render/vehicles.ts";
 import { sootedSprite, spriteCrown } from "../render/caches.ts";
 import { drawNightSky } from "../render/night-sky.ts";
 import {
@@ -58,6 +66,9 @@ import {
 export type CutsceneReveal = { done: boolean; skip: () => void };
 
 const EMPTY_LINE: string[] = [];
+
+/** A hero who has been nowhere — no composite, no scratch canvas. */
+const NO_COAT: readonly CoatLayer[] = [];
 
 /** CSS pixels per stage pixel — scenes zoom in closer than gameplay. */
 const STAGE_SCALE = 3;
@@ -172,6 +183,13 @@ function drawStage(
   cutscene: CutsceneState,
   assets: GameAssets,
   timeMs: number,
+  /** What the run's wagon has been through, for a scene that parks it on
+   * stage. Null off a run — the workbench and the gallery play these scenes
+   * with no car anywhere, and draw a factory-straight one. */
+  car: CarDamage | null,
+  /** …and what the MAN is wearing, for the actor the scene casts as the hero.
+   * Empty off a run, and empty for a hero who has not been near anything. */
+  soak: readonly CoatLayer[],
 ): void {
   const def = cutsceneDef(cutscene.defId);
   const { width, height } = def.stage;
@@ -294,7 +312,8 @@ function drawStage(
       sprite: prop.kind,
       x,
       y: prop.pos.y + shift.y * depth,
-      flip: false,
+      flip: prop.flip ?? false,
+      ...(prop.wagon ? { wagon: true } : {}),
       wrap: prop.wrap ?? false,
       jitter: 0,
       lift: 0,
@@ -330,8 +349,13 @@ function drawStage(
     // pad — which rides the camera at full depth like the ground it is part of.
     // Read off the actor's OWN sprite, never the framed name above: a rocket
     // that is off the ground is asked for a jump frame no rocket table knows.
-    const pad = def.actors.find((a) => a.id === actor.id)?.at.y;
+    const authored = def.actors.find((a) => a.id === actor.id);
+    const pad = authored?.at.y;
     const exhaust = rocketExhaustLook(actor.sprite);
+    // WHO ON THIS STAGE IS THE PLAYER: the actor the scene casts as `{HERO}`,
+    // which is the same marker `withHeroName` reads. He is the only one who has
+    // been anywhere, so he is the only one who wears any of it.
+    const isHero = authored?.name === HERO_NAME_TOKEN;
     queue.push({
       sprite: `${actor.sprite}_${frame}`,
       x: actor.pos.x,
@@ -341,6 +365,7 @@ function drawStage(
       jitter: actor.shake,
       lift: actor.lift,
       alt: `${actor.sprite}_0`,
+      ...(isHero && soak.length > 0 ? { coat: soak } : {}),
       ...(exhaust === undefined || pad === undefined
         ? {}
         : {
@@ -365,7 +390,7 @@ function drawStage(
   queue.sort((a, b) => a.y - b.y);
 
   for (const item of [...floorQueue, ...queue]) {
-    paintOne(ctx, item, assets, cutscene, width);
+    paintOne(ctx, item, assets, cutscene, width, car, timeMs);
   }
 
   // THE WEATHER, over everything and under the fade — a storm stage rains on
@@ -434,6 +459,17 @@ type Placed = {
    */
   rocket?: { ageMs: number; padY: number; look: RocketExhaust };
   /**
+   * WHAT THE MAN IS WEARING — the blood film the hero walked off the last level
+   * in (`render/soak-ladder.ts`), masked to whatever art this actor is drawn
+   * as. Only ever set on the actor the scene casts as `{HERO}`: nobody else on
+   * a stage has been anywhere.
+   */
+  coat?: readonly CoatLayer[];
+  /** THE HERO'S OWN WAGON (`CutsceneProp.wagon`), which is not a sprite: the
+   * car is assembled from its panels at paint time, wearing whatever the night
+   * has done to it. Carries no art name — `sprite` is empty on it. */
+  wagon?: boolean;
+  /**
    * WHAT THE BLAST IS DOING TO THIS PIECE OF SCENERY: how far its middle stands
    * from the lit rocket (signed — the sign is which face is taking it), how
    * long that rocket has been burning, and the reach to scale both against.
@@ -456,6 +492,118 @@ type Placed = {
   };
 };
 
+/**
+ * THE HERO'S OWN WAGON, PARKED ON A STAGE — the same car the road hands back
+ * and the same one the garage bay holds, assembled from its panels rather than
+ * drawn as a sprite (`CutsceneProp.wagon`).
+ *
+ * ASSEMBLED, NOT PICTURED, because the whole point of standing it here is that
+ * it is THIS car on THIS night: the bent panels and the shot wheel are the
+ * simulation's (`CarDamage`, carried on the run) and the blood is the app's
+ * (`car-condition.ts`), and a scene showing a clean hatchback after a leg that
+ * cost thirty people would be the game contradicting itself in the establishing
+ * shot. A host that hands over no damage draws it factory-straight, which is
+ * exactly right for a scene played with no run under it (the workbench, the
+ * gallery).
+ *
+ * PARKED AND COLD. The engine is off (no shiver, no idle), and the lamps throw
+ * no cone: a stage has its own night wash and a beam laid over it would light
+ * ground the scene has already lit.
+ *
+ * The MIRROR is a transform rather than a second set of art — the car has one
+ * profile and nothing in the game rotates it — so a wagon nosed out at the road
+ * is the same assembly reflected about its own mark.
+ */
+function paintWagon(
+  ctx: CanvasRenderingContext2D,
+  item: Placed,
+  assets: GameAssets,
+  car: CarDamage | null,
+  timeMs: number,
+): void {
+  const pad = wagonScratch();
+  if (!pad) return;
+  pad.ctx.clearRect(0, 0, WAGON_PAD, WAGON_PAD);
+  const parked = createCar({ x: WAGON_PAD / 2, y: WAGON_PAD - WAGON_FEET }, 0);
+  if (car) applyCarDamage(parked, car);
+  const filth = carriedCarCoat();
+  drawCarAssembly(
+    pad.ctx,
+    parked,
+    assets.sprites,
+    ZERO_CAMERA,
+    timeMs,
+    filth.panels,
+    filth.wheels,
+    // Parked and COLD: no idle shiver, and the lamps throw no cone — a stage
+    // has its own night wash, and a beam laid over it would light ground the
+    // scene has already lit.
+    false,
+    false,
+  );
+  const span = WAGON_PAD * WAGON_GAUGE;
+  const x = Math.round(item.x - span / 2);
+  const y = Math.round(item.y - item.lift - (span - WAGON_FEET * WAGON_GAUGE));
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (item.flip) {
+    ctx.translate(Math.round(item.x) * 2, 0);
+    ctx.scale(-1, 1);
+  }
+  ctx.drawImage(pad.canvas, x, y, span, span);
+  ctx.restore();
+}
+
+/**
+ * HALF. The stage is a DIORAMA rather than a slice of the world: the hero is
+ * drawn a size up (16 px against a 48 px house), and every piece of scenery on
+ * the lot — the trees, the ship, the building — sits at about half the gauge he
+ * does. The car assembly is authored at the WORLD's gauge, where a 48 px
+ * hatchback is the right size beside a 16 px man, so dropped onto this stage at
+ * 1:1 it comes out as wide as the house it is parked in front of.
+ *
+ * Halving is a plain 2:1 nearest-neighbour blit with smoothing off, which is
+ * what the rest of the atlas would look like drawn at this size. The detail it
+ * costs is detail nobody could read at 24 px across anyway; what it keeps is
+ * the whole point of assembling the car rather than drawing one — the
+ * silhouette of the panels the road bent, a wheel that is not there, and the
+ * colour of what is on the paint.
+ */
+const WAGON_GAUGE = 0.5;
+/** The scratch the assembly is drawn into before it is halved — square, and big
+ * enough for the widest the wagon ever gets (a bumper hanging off one end). */
+const WAGON_PAD = 72;
+/** How far up the pad the car's wheels are seated, so the halved blit can be
+ * bottom-anchored on the prop's own mark the way every other piece is. */
+const WAGON_FEET = 8;
+
+let wagonPad: {
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+} | null = null;
+
+/** One scratch canvas for the whole app, minted on first use: the wagon is
+ * drawn at most once a frame, and a canvas per frame is an allocation per frame
+ * in a render loop. */
+function wagonScratch(): {
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+} | null {
+  if (wagonPad) return wagonPad;
+  const canvas = document.createElement("canvas");
+  canvas.width = WAGON_PAD;
+  canvas.height = WAGON_PAD;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.imageSmoothingEnabled = false;
+  wagonPad = { canvas, ctx };
+  return wagonPad;
+}
+
+/** The scratch draws in its own space, so the assembly's world camera is the
+ * origin and the car's `pos` is its seat on the pad. */
+const ZERO_CAMERA = { x: 0, y: 0 };
+
 /** One drawing off a stage queue: its art, whatever it carries, its wrap. */
 function paintOne(
   ctx: CanvasRenderingContext2D,
@@ -463,7 +611,15 @@ function paintOne(
   assets: GameAssets,
   cutscene: CutsceneState,
   width: number,
+  /** The wagon's condition, for the one piece that is assembled rather than
+   * named — see `paintWagon`. */
+  car: CarDamage | null,
+  timeMs: number,
 ): void {
+  if (item.wagon) {
+    paintWagon(ctx, item, assets, car, timeMs);
+    return;
+  }
   const sprite =
     spriteByName(assets.sprites, item.sprite) ??
     spriteByName(assets.sprites, `${item.sprite}_0`) ??
@@ -513,7 +669,14 @@ function paintOne(
         item.rocket.padY - (item.y - sprite.height - item.lift),
       );
     }
-    ctx.drawImage(sprite, 0, 0);
+    // THE NIGHT'S WORK, STILL ON HIM. Masked to the art rather than painted
+    // over it (`drawCoatedSprite`), so the same film works over a t-shirt and
+    // over an EVA suit — and a clean hero costs no composite at all.
+    if (item.coat && item.coat.length > 0) {
+      drawCoatedSprite(ctx, assets.sprites, sprite, 0, 0, false, item.coat);
+    } else {
+      ctx.drawImage(sprite, 0, 0);
+    }
     // …AND WHAT THE BLAST HAS DONE TO IT SINCE, over the art and masked by it.
     // The gap is to the NEAR WALL: a frontage is measured from the face that
     // took the fire, not from the middle of the building.
@@ -573,10 +736,21 @@ export function CutsceneOverlay({
   onBlip,
   revealRef,
   heroName,
+  car,
+  soak,
 }: {
   cutscene: CutsceneState;
   assets: GameAssets;
   font: PixelFont;
+  /** THE RUN'S OWN WAGON, for a scene that stands it on the lot
+   * (`CutsceneProp.wagon`). Omitted off a run: the workbench and the effects
+   * gallery play these scenes with nothing driving, and the car comes out as
+   * it left the factory. */
+  car?: CarDamage | null;
+  /** THE BLOOD THE HERO IS STILL WEARING, laid over the actor the scene casts
+   * as him (`render/soak-ladder.ts`). Omitted off a run, and empty for a man
+   * who has not been near anything. */
+  soak?: readonly CoatLayer[];
   /** The name the player gave this hero — the caption header over his own
    * beats (the scenes cast him as `{HERO}`) and what an authored `{HERO}` in
    * a spoken line resolves to. */
@@ -634,6 +808,16 @@ export function CutsceneOverlay({
     if (revealRef) revealRef.current = { done, skip };
   }, [revealRef, done, skip]);
 
+  // THE WAGON'S CONDITION RIDES A REF, not the effect's dependency list. It is a
+  // fresh record every render (the run's car is read, not held), so listing it
+  // would tear down and restart the draw loop on every frame the run ticks.
+  const carRef = useRef<CarDamage | null>(car ?? null);
+  const soakRef = useRef<readonly CoatLayer[]>(soak ?? NO_COAT);
+  useEffect(() => {
+    carRef.current = car ?? null;
+    soakRef.current = soak ?? NO_COAT;
+  }, [car, soak]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -643,7 +827,7 @@ export function CutsceneOverlay({
 
     let raf = 0;
     const draw = (timeMs: number) => {
-      drawStage(ctx, cutscene, assets, timeMs);
+      drawStage(ctx, cutscene, assets, timeMs, carRef.current, soakRef.current);
       setBeat(cutscene.beat);
       raf = requestAnimationFrame(draw);
     };

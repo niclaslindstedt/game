@@ -16,7 +16,7 @@ stage:
   # from where the ship is parked, exactly as the soot on the house is
   # (`render/rocket-exhaust.ts`), so the two can never disagree about how far
   # the damage reaches.
-  palette: { wall: "#0e1020", floor: "#20281c", trim: "#0a0c14", floorY: 88 }
+  palette: { wall: "#0e1020", floor: "#20281c", trim: "#0a0c14", floorY: 76 }
   # IT IS POURING. Leaving is not a happy occasion — the night he lights the
   # rocket is a storm night, and the rain keeps falling on the lot while the
   # ship climbs out of frame. The minigame that takes over above this scene
@@ -64,20 +64,20 @@ stage:
     # worse, and nobody in the game ever mentions it.
     - {
         sprite: garage_house,
-        at: { x: 46, y: 98 },
+        at: { x: 46, y: 86 },
         label: house,
         until: "cleared:moon",
       }
     - {
         sprite: garage_house_burnt2,
-        at: { x: 46, y: 98 },
+        at: { x: 46, y: 86 },
         label: house_burnt,
         needs: "cleared:moon",
         until: "cleared:mars",
       }
     - {
         sprite: garage_house_burnt3,
-        at: { x: 46, y: 98 },
+        at: { x: 46, y: 86 },
         label: house_gutted,
         needs: "cleared:mars",
       }
@@ -103,39 +103,39 @@ stage:
     # by distance from the pad). The art is what the LAST ones left.
     - {
         sprite: garage_tree,
-        at: { x: 132, y: 100 },
+        at: { x: 132, y: 88 },
         label: tree_near,
         until: "cleared:moon",
       }
     - {
         sprite: garage_tree_charred,
-        at: { x: 132, y: 100 },
+        at: { x: 132, y: 88 },
         label: tree_near_charred,
         needs: "cleared:moon",
         until: "cleared:mars",
       }
     - {
         sprite: garage_tree_ashen,
-        at: { x: 132, y: 100 },
+        at: { x: 132, y: 88 },
         label: tree_near_ashen,
         needs: "cleared:mars",
       }
     - {
         sprite: garage_tree,
-        at: { x: 178, y: 96 },
+        at: { x: 178, y: 84 },
         label: tree_far,
         until: "cleared:moon",
       }
     - {
         sprite: garage_tree_charred,
-        at: { x: 178, y: 96 },
+        at: { x: 178, y: 84 },
         label: tree_far_charred,
         needs: "cleared:moon",
         until: "cleared:mars",
       }
     - {
         sprite: garage_tree_ashen,
-        at: { x: 178, y: 96 },
+        at: { x: 178, y: 84 },
         label: tree_far_ashen,
         needs: "cleared:mars",
       }
@@ -148,32 +148,75 @@ stage:
     # queue — a slab is anchored at its NEAR edge, so sorted normally it would
     # come out in front of the hero walking over it.
     #
-    # The drive runs from the door's threshold (the house's base, y 98) down
-    # to the road's kerb at y 114, flaring as it goes, and the road's four
-    # tiles lay the bottom 12 rows of the stage end to end (56 px each,
-    # centred at 28/84/140/196 = the full 224).
-    - { sprite: garage_drive, at: { x: 57, y: 114 }, ground: true }
-    - { sprite: road_lane, at: { x: 28, y: 126 }, ground: true }
-    - { sprite: road_lane, at: { x: 84, y: 126 }, ground: true }
-    - { sprite: road_lane, at: { x: 140, y: 126 }, ground: true }
-    - { sprite: road_lane, at: { x: 196, y: 126 }, ground: true }
+    # …AND THE WHOLE LOT SITS HIGH IN THE FRAME, which is not a composition
+    # choice: the dialogue box floats over the bottom fifth of the stage for most
+    # of the scene, so anything below about y 103 is under it. The road used to
+    # lie in exactly that band and was never once seen. Everything is pulled up
+    # so the street clears the box, and the road gets its second row of tiles —
+    # TWO LANES, as the description always claimed — with the near one running on
+    # down behind the box where nothing needs to be read.
+    #
+    # The drive runs from the door's threshold (the house's base, y 86) down to
+    # the kerb at y 92; the road's eight tiles lay two 12-row lanes end to end
+    # (56 px each, centred at 28/84/140/196 = the full 224).
+    - { sprite: garage_drive, at: { x: 57, y: 92 }, ground: true }
+    # ── AND HIS OWN CAR, AT THE FOOT OF IT ────────────────────────────────
+    # `wagon: true` is not a sprite: the hatchback is ASSEMBLED from its panels
+    # in whatever condition the night has left it (`CutsceneProp.wagon`), so
+    # what stands here is the car the player has just driven back from GOODCO —
+    # the bent panels the road put in it, the wheel it lost, and whoever it went
+    # through still on the paint. A scene that showed a clean one would be the
+    # game contradicting the last minute of play in its own establishing shot.
+    #
+    # PARKED NOSE-OUT, which is what `flip:` is for. The art has one profile and
+    # nothing rotates it, so a wagon backed onto its own drive and pointed at
+    # the road is the same assembly mirrored — and it is pointed at the road
+    # because that is how a man who is not coming back parks.
+    #
+    # AT THE KERB, ON THE STREET — not up the drive. The drive is the ship's
+    # ground: it is what the pad blast washes over and what the hero walks up,
+    # and a car parked on it is a car standing in the way of the shot. This is
+    # the far lane, outside his own gate, nosed at the road he came in off.
+    - { wagon: true, at: { x: 57, y: 102 }, flip: true }
+    - { sprite: road_lane, at: { x: 28, y: 104 }, ground: true }
+    - { sprite: road_lane, at: { x: 84, y: 104 }, ground: true }
+    - { sprite: road_lane, at: { x: 140, y: 104 }, ground: true }
+    - { sprite: road_lane, at: { x: 196, y: 104 }, ground: true }
+    - { sprite: road_lane, at: { x: 28, y: 116 }, ground: true }
+    - { sprite: road_lane, at: { x: 84, y: 116 }, ground: true }
+    - { sprite: road_lane, at: { x: 140, y: 116 }, ground: true }
+    - { sprite: road_lane, at: { x: 196, y: 116 }, ground: true }
 actors:
-  - { id: hero, name: "{HERO}", sprite: hero_tee, at: { x: 32, y: 102 } }
+  # HE OPENS BEHIND HIS OWN CAR — at its TAIL, which on a wagon nosed at the
+  # road is the right-hand end of it — and walks from there up to the pad.
+  #
+  # Behind it and CLEAR OF IT, so that nothing stands over the car. That is the
+  # whole point of assembling it rather than drawing one: the panels the road
+  # bent, the wheel it lost and whatever is still on the paint are the last
+  # minute of play, and a man standing at the wing covers the half of it the
+  # scene is there to show. The scene used to
+  # start him over by the front door, which was a man leaving a house; starting
+  # him at the wagon makes it a man who has just got out of one, which is what
+  # the last minute of play actually was. He is also still WEARING it: the blood
+  # travels with him out of the level (`hero-soak.ts`) and the stage lays it over
+  # whichever art the actor is drawn as, so a man who left GOODCO red is red on
+  # his own lawn.
+  - { id: hero, name: "{HERO}", sprite: hero_tee, at: { x: 86, y: 100 } }
   # The garage ship — the Mars level's parked `starship`, ten years younger.
   # Poses to `ship_fire` when the engine lights.
-  - { id: ship, sprite: ship, at: { x: 94, y: 100 } }
+  - { id: ship, sprite: ship, at: { x: 108, y: 88 } }
 beats:
   - { kind: fade, to: 1, ms: 0 }
   - { kind: fade, to: 0, ms: 900 }
   - kind: caption
     text:
       - TEN YEARS OF WEEKENDS IN THE GARAGE. SHE ONLY EVER NEEDED ONE MORE PART.
-  - { kind: move, actor: hero, to: { x: 70, y: 102 }, speed: 40 }
+  - { kind: move, actor: hero, to: { x: 95, y: 95 }, speed: 40 }
   - kind: say
     actor: hero
     text:
       - ENGINE. FUEL. DUCT TAPE. AND THE PART THEY SAID I COULDN'T HAVE.
-  - { kind: move, actor: hero, to: { x: 84, y: 102 }, speed: 40 }
+  - { kind: move, actor: hero, to: { x: 101, y: 90 }, speed: 40 }
   - { kind: wait, ms: 350 }
   - { kind: exit, actor: hero }
   - { kind: wait, ms: 700 }
@@ -188,7 +231,7 @@ beats:
   # …liftoff: the roar opens out over the ignition's own tail (it is authored to
   # layer, not to replace) and the ship climbs into the sky…
   - { kind: sound, sound: rocket_liftoff }
-  - { kind: move, actor: ship, to: { x: 94, y: 46 }, speed: 42 }
+  - { kind: move, actor: ship, to: { x: 108, y: 40 }, speed: 42 }
   # …and the camera follows it up: house, lawn, drive and road fall away at full
   # depth, taking the skyline's own country with them, and the frame is left
   # hanging in the same night with the rocket burning and trembling.

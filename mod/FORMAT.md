@@ -2237,7 +2237,16 @@ and paint over their feet.
 **A prop's art is `sprite:`.** The renderer draws it by name, falling back to
 `<name>_0`. An actor's `sprite` names a two-frame FAMILY: `<name>_0` standing,
 alternating `_1` while a `move` beat walks it. Yours and the game's work
-identically.
+identically. **`flip: true` draws it mirrored** — scene art has one profile each
+and nothing here rotates, so a thing that can face either way (a car nosed out at
+the road rather than in at the house) says which way round it is on the prop.
+
+**`wagon: true` is the HERO'S OWN CAR**, and it takes no `sprite:` at all: the
+hatchback is assembled from its panels in whatever condition the night has left
+it — the ones the road bent, a wheel it lost, and whoever it went through still
+on the paint. It is the one piece of scenery that knows what the player has been
+doing. Stand it wherever a parked car belongs; a scene played with no run under
+it (the workbench, the gallery) draws a factory-straight one.
 
 ### The beats
 

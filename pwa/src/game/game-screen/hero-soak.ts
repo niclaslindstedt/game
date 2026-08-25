@@ -178,10 +178,24 @@ export function resetHeroSoak(): void {
   };
 }
 
+/**
+ * A NEW RUN IS A NEW LEVEL, NOT A NEW MAN. What he is wearing crosses the
+ * boundary with him: a hero who walks out of GOODCO covered in the night's work
+ * is still covered in it on his own lawn an hour later, which is the same rule
+ * the WAGON obeys (`car-condition.ts` — the dents and the blood are one object
+ * across the whole night). Only a new campaign, a retry off a checkpoint's
+ * build or a level picked from the menu washes him, and that is `resetHeroSoak`
+ * called at the seam `washCar` is (`run-setup.ts`).
+ *
+ * The GEAR baseline is re-taken, though, and it has to be: `worn` holds item
+ * INSTANCE ids and the carry-over may re-mint them, so a comparison against the
+ * last run's ids would read as "he swapped everything" and wash every zone. So
+ * the mess is lifted over the re-baseline rather than surviving it.
+ */
 function ensureRun(state: GameState): void {
   if (owner === state) return;
+  const night = { ...soak };
   owner = state;
-  soak = { ...CLEAN };
   worn = {
     head: null,
     chest: null,
@@ -191,6 +205,7 @@ function ensureRun(state: GameState): void {
     weapon: null,
   };
   syncHeroGear(state);
+  soak = night;
 }
 
 /**

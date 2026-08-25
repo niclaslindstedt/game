@@ -14,7 +14,10 @@ import { describe, expect, it } from "vitest";
 
 import { difficultyDef } from "@game/menu";
 
-import { MENU_SCREENS } from "../../pwa/src/game/title-screen/menu-tree.ts";
+import {
+  MENU_SCREENS,
+  screenHeading,
+} from "../../pwa/src/game/title-screen/menu-tree.ts";
 import type {
   MenuContext,
   MenuEntry,
@@ -22,7 +25,10 @@ import type {
 } from "../../pwa/src/game/title-screen/menu-model.ts";
 import type { Character } from "../../pwa/src/game/characters.ts";
 import { minigameDef } from "../../pwa/src/game/minigames.ts";
-import { buildMenu } from "../../pwa/src/game/title-screen/menus.ts";
+import {
+  buildMenu,
+  headingFor,
+} from "../../pwa/src/game/title-screen/menus.ts";
 import { setDevicePolicyForTest } from "../../pwa/src/app/device-policy.ts";
 import { updateSettings } from "../../pwa/src/game/settings.ts";
 import { ALL_GORE_ON } from "../gore-settings.ts";
@@ -36,6 +42,7 @@ const UNION: MenuScreen[] = [
   "main",
   "extras",
   "minigames",
+  "minigame",
   "difficulty",
   "levels",
   "botspeed",
@@ -53,6 +60,7 @@ const UNION: MenuScreen[] = [
   "developer",
   "playground",
   "devminigames",
+  "devminigame",
   "cheats",
   "galleries",
   "visuals",
@@ -115,6 +123,8 @@ function ctxFor(overrides: Partial<MenuContext> = {}): MenuContext {
     onLoadGame: () => {},
     onHowToPlay: () => {},
     onMinigame: () => {},
+    cabinet: null,
+    setCabinet: () => {},
     difficulty: "medium",
     setDifficulty: () => {},
     warp: false,
@@ -394,52 +404,78 @@ describe("the title menu tree", () => {
     expect(buildMenu("main", beaten).map((row) => row.aria)).toContain(
       "main-minigames",
     );
-    // …and the shelf behind it lists the cabinets, each followed by its OWN
-    // knob — the road's DIRECTION, the rocket's MISSION (the whole trip or
-    // the MOON LANDING drop alone) — then the rung they are all weighed on
-    // and a BACK under that.
+    // …and the shelf behind it carries NOTHING BUT CABINETS. Every knob is
+    // asked at the machine, on the page a press opens, so the shelf never
+    // shows a setting one of the two does not answer to.
     expect(buildMenu("minigames", beaten).map((row) => row.aria)).toEqual([
       "minigames-drive",
-      "minigames-drive-variant",
       "minigames-rocket",
-      "minigames-rocket-variant",
-      "minigames-difficulty",
       "minigames-back",
     ]);
   });
 
-  it("greys the shelf's DIFFICULTY row until a second rung is beaten", () => {
+  it("asks a cabinet's own page what the next lap plays", () => {
+    // PLAY leads — it is what the page was opened for — then the machine's OWN
+    // way-to-play row wearing the label its def gives it (the road picks a
+    // DIRECTION, the ship a MISSION), then the rung, which is the one setting
+    // on the page that means the same on every machine in the arcade.
+    const beaten = ctxFor({ roster: [CHAMPION], cabinet: "drive" });
+    expect(buildMenu("minigame", beaten).map((row) => row.aria)).toEqual([
+      "minigame-play",
+      "minigame-variant",
+      "minigame-difficulty",
+      "minigame-back",
+    ]);
+    const road = buildMenu("minigame", beaten).find(
+      (row) => row.aria === "minigame-variant",
+    );
+    expect(road?.label).toBe(minigameDef("drive").variantLabel);
+    expect(road?.value).toBe(minigameDef("drive").variants[0]?.name);
+
+    const ship = buildMenu(
+      "minigame",
+      ctxFor({ roster: [CHAMPION], cabinet: "rocket" }),
+    ).find((row) => row.aria === "minigame-variant");
+    expect(ship?.label).toBe(minigameDef("rocket").variantLabel);
+    expect(ship?.value).toBe(minigameDef("rocket").variants[0]?.name);
+  });
+
+  it("greys a cabinet's DIFFICULTY row until a second rung is beaten", () => {
     // One campaign beaten is one rung to play on, so there is nothing to cycle
     // — but the row still says WHICH rung, and its grey is the thing that says
     // what would open it. That is the exception the "absent beats greyed" rule
     // is for: a dead row that teaches something the player can act on.
-    const one = buildMenu("minigames", ctxFor({ roster: [CHAMPION] })).find(
-      (row) => row.aria === "minigames-difficulty",
-    );
+    const one = buildMenu(
+      "minigame",
+      ctxFor({ roster: [CHAMPION], cabinet: "drive" }),
+    ).find((row) => row.aria === "minigame-difficulty");
     expect(one?.locked).toBe(true);
     expect(one?.value).toBe(difficultyDef("medium").name);
 
     const two = buildMenu(
-      "minigames",
+      "minigame",
       ctxFor({
         roster: [CHAMPION, { ...CHAMPION, id: "b", beaten: ["hard"] }],
+        cabinet: "drive",
       }),
-    ).find((row) => row.aria === "minigames-difficulty");
+    ).find((row) => row.aria === "minigame-difficulty");
     expect(two?.locked).toBe(false);
   });
 
-  it("gives each cabinet its OWN knob, wearing its own vocabulary", () => {
-    // WHICH WAY a machine is played belongs to that machine: its row sits
-    // directly under its cabinet and wears the label the def gives it — the
-    // road picks a DIRECTION, the rocket a MISSION (the whole trip, or the
-    // MOON LANDING drop alone) — and each shows what the next lap would play.
-    const rows = buildMenu("minigames", ctxFor({ roster: [CHAMPION] }));
-    const drive = rows.find((row) => row.aria === "minigames-drive-variant");
-    expect(drive?.label).toBe(minigameDef("drive").variantLabel);
-    expect(drive?.value).toBe(minigameDef("drive").variants[0]?.name);
-    const rocket = rows.find((row) => row.aria === "minigames-rocket-variant");
-    expect(rocket?.label).toBe(minigameDef("rocket").variantLabel);
-    expect(rocket?.value).toBe(minigameDef("rocket").variants[0]?.name);
+  it("titles a cabinet's page with the machine, keeping the tree's trail", () => {
+    // The tree cannot hold a screen per catalog row, so the page is one screen
+    // and the MACHINE names it. Only the title is the cabinet's — the trail and
+    // the tone stay the tree's, which is what keeps the developer twin wearing
+    // its full breadcrumb.
+    expect(headingFor("minigame", false, undefined, "rocket")).toEqual({
+      ...screenHeading("minigame"),
+      title: minigameDef("rocket").name,
+    });
+    // No cabinet picked is unreachable from the UI, and falls back to the
+    // tree's own title rather than to nothing.
+    expect(headingFor("minigame", false, undefined, null)).toEqual(
+      screenHeading("minigame"),
+    );
   });
 
   it("hides LOAD GAME until there is a hero to load", () => {

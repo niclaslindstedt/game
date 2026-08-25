@@ -24,9 +24,10 @@ stage:
   width: 224
   height: 126
   backdrop: garageNight
-  # The launch's lot, unchanged — same night sky, same floor line, same scorched
-  # patch derived from where the ship is parked.
-  palette: { wall: "#0e1020", floor: "#20281c", trim: "#0a0c14", floorY: 88 }
+  # The launch's lot, unchanged — same night sky, same ground plan (pulled high
+  # in the frame so the street clears the dialogue box; see the launch), same
+  # scorched patch derived from where the ship is parked.
+  palette: { wall: "#0e1020", floor: "#20281c", trim: "#0a0c14", floorY: 76 }
   props:
     # THE HOUSE, ONE FIRE ON. This scene is the only place the first burn is
     # ever LOOKED at from the outside: the moon's launch left it like this and
@@ -35,13 +36,13 @@ stage:
     # of this landing finds the gutted frontage the third launch left.
     - {
         sprite: garage_house_burnt,
-        at: { x: 46, y: 98 },
+        at: { x: 46, y: 86 },
         label: house_burnt,
         until: "cleared:mars",
       }
     - {
         sprite: garage_house_burnt3,
-        at: { x: 46, y: 98 },
+        at: { x: 46, y: 86 },
         label: house_gutted,
         needs: "cleared:mars",
       }
@@ -52,48 +53,52 @@ stage:
     # down on its own exhaust to do it again.
     - {
         sprite: garage_tree_charred,
-        at: { x: 132, y: 100 },
+        at: { x: 132, y: 88 },
         label: tree_near_charred,
         until: "cleared:mars",
       }
     - {
         sprite: garage_tree_ashen,
-        at: { x: 132, y: 100 },
+        at: { x: 132, y: 88 },
         label: tree_near_ashen,
         needs: "cleared:mars",
       }
     - {
         sprite: garage_tree_charred,
-        at: { x: 178, y: 96 },
+        at: { x: 178, y: 84 },
         label: tree_far_charred,
         until: "cleared:mars",
       }
     - {
         sprite: garage_tree_ashen,
-        at: { x: 178, y: 96 },
+        at: { x: 178, y: 84 },
         label: tree_far_ashen,
         needs: "cleared:mars",
       }
     # The lot's own ground, exactly as the launch lays it (`ground: true` paints
     # it WITH the floor, under everything standing).
-    - { sprite: garage_drive, at: { x: 57, y: 114 }, ground: true }
-    - { sprite: road_lane, at: { x: 28, y: 126 }, ground: true }
-    - { sprite: road_lane, at: { x: 84, y: 126 }, ground: true }
-    - { sprite: road_lane, at: { x: 140, y: 126 }, ground: true }
-    - { sprite: road_lane, at: { x: 196, y: 126 }, ground: true }
+    - { sprite: garage_drive, at: { x: 57, y: 92 }, ground: true }
+    - { sprite: road_lane, at: { x: 28, y: 104 }, ground: true }
+    - { sprite: road_lane, at: { x: 84, y: 104 }, ground: true }
+    - { sprite: road_lane, at: { x: 140, y: 104 }, ground: true }
+    - { sprite: road_lane, at: { x: 196, y: 104 }, ground: true }
+    - { sprite: road_lane, at: { x: 28, y: 116 }, ground: true }
+    - { sprite: road_lane, at: { x: 84, y: 116 }, ground: true }
+    - { sprite: road_lane, at: { x: 140, y: 116 }, ground: true }
+    - { sprite: road_lane, at: { x: 196, y: 116 }, ground: true }
 actors:
   # THE SHIP, COMING DOWN ON ITS OWN EXHAUST — posed to `ship_fire` from the
   # first frame (this is the retro burn, not an ignition), and standing 120 px
   # off the pad it is authored on, which puts the hull just above the frame and
   # its plume already in it. The engine cuts on touchdown.
-  - { id: ship, sprite: ship_fire, at: { x: 94, y: 100 }, lift: 120 }
+  - { id: ship, sprite: ship_fire, at: { x: 108, y: 88 }, lift: 120 }
   # …and the man inside it, in the suit he wore on the regolith. He steps out
   # after the engine dies, which is why he opens off-stage.
   - {
       id: hero,
       name: "{HERO}",
       sprite: hero_suit,
-      at: { x: 88, y: 102 },
+      at: { x: 102, y: 90 },
       hidden: true,
     }
 beats:
@@ -116,17 +121,17 @@ beats:
   - { kind: shake, actor: ship, amp: 0 }
   - { kind: wait, ms: 900 }
   - { kind: enter, actor: hero }
-  - { kind: move, actor: hero, to: { x: 74, y: 102 }, speed: 40 }
+  - { kind: move, actor: hero, to: { x: 78, y: 92 }, speed: 40 }
   - kind: say
     actor: hero
     text:
       - HOME. SAME LAWN. SAME SKY. SAME SMELL OF SOMETHING BURNING.
-  - { kind: move, actor: hero, to: { x: 52, y: 102 }, speed: 36 }
+  - { kind: move, actor: hero, to: { x: 52, y: 94 }, speed: 36 }
   - kind: say
     actor: hero
     text:
       - ...THAT ONE'S ME, ISN'T IT.
-  - { kind: move, actor: hero, to: { x: 36, y: 102 }, speed: 36 }
+  - { kind: move, actor: hero, to: { x: 34, y: 95 }, speed: 36 }
   - { kind: exit, actor: hero }
   - kind: caption
     text:

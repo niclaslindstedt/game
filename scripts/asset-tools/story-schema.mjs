@@ -254,7 +254,22 @@ export function validateCutscene(doc, refs) {
         stageProps.add(prop.label);
       }
     }
-    checkSprite(prop.sprite, `${where}.sprite`, refs, err);
+    // THE HERO'S OWN WAGON IS NOT A SPRITE. It is the car assembled from its
+    // panels in whatever condition the night has left it (`CutsceneProp.wagon`),
+    // so it names none — and a piece that is both would be a scene saying two
+    // different things about one mark.
+    if (prop.wagon !== undefined && typeof prop.wagon !== "boolean") {
+      err(`${where}.wagon must be a boolean (the hero's own car, assembled)`);
+    } else if (prop.wagon) {
+      if (prop.sprite !== undefined) {
+        err(`${where}.wagon draws the hero's car — it takes no \`sprite:\``);
+      }
+    } else {
+      checkSprite(prop.sprite, `${where}.sprite`, refs, err);
+    }
+    if (prop.flip !== undefined && typeof prop.flip !== "boolean") {
+      err(`${where}.flip must be a boolean (draw it mirrored)`);
+    }
     if (!isVec(prop.at)) err(`${where}.at must be ${VEC}`);
     if (
       prop.parallax !== undefined &&
@@ -316,6 +331,8 @@ export function validateCutscene(doc, refs) {
           "at",
           "parallax",
           "wrap",
+          "flip",
+          "wagon",
           "ground",
           "hidden",
           "needs",

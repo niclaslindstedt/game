@@ -175,7 +175,8 @@ for (const vp of VIEWPORTS) {
   // photograph.
   //
   // The cabinet itself is a minute of driving, so this photographs the SHELF and
-  // stops there; the road's own surfaces have their own harness (`?drive`).
+  // the machine's own page behind it and stops there; the road's own surfaces
+  // have their own harness (`?drive`).
   const beatCampaign = (won) =>
     page.evaluate(
       ([key, beaten]) => {
@@ -199,6 +200,10 @@ for (const vp of VIEWPORTS) {
       await click("main-minigames");
       await page.getByRole("button", { name: "minigames-drive" }).waitFor();
       await shot("minigames");
+      // …and one machine's own page: PLAY, its way-to-play row, the rung.
+      await click("minigames-drive");
+      await page.getByRole("button", { name: "minigame-play" }).waitFor();
+      await shot("minigame");
     } finally {
       await beatCampaign(false);
       await page.goto(`${url}/?debug`);

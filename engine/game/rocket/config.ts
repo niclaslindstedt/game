@@ -413,8 +413,12 @@ export const FLIGHT = {
     /** The marked pad (half-width px, position seeded per flight) — landing is
      * legal anywhere flat, the pad just pays (`score.pad`). */
     padHalfW: 34,
-    /** Sideways drift the module starts with (px/s, seeded ±). */
+    /** Sideways drift the module starts with (px/s, seeded ±), and the lean it
+     * is handed with it (rad, seeded ±). Both are scaled by the rung
+     * (`DifficultyDef.flight.driftMult`) — the mess the drop opens on is half
+     * of what makes one rung's drop harder than another's. */
     startVxPx: 20,
+    startTiltRad: 0.12,
   },
 
   /**

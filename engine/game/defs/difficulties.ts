@@ -669,6 +669,38 @@ export type DifficultyDef = {
     tipMult: number;
     /** Multiplies what a satellite or rock takes off the hull. */
     damageMult: number;
+    /**
+     * HOW GOOD A LANDING HAS TO BE — multiplies all three touchdown gates
+     * together (`FLIGHT.landing.safeVyPx` / `safeVxPx` / `safeTiltRad`).
+     *
+     * THE DROP IS A RUNG TOO, and it needs its own pair because NOTHING above
+     * reaches it: the shell, the hardware and the ship's tippiness are all the
+     * CLIMB's, and the module drops through an empty sky. Without these two the
+     * MOON LANDING cabinet ranks five boards that are the same game, and a
+     * JESUS drop is a MEDIUM drop with a different word over it.
+     *
+     * The gates are the honest lever because they are a property of the RUNG
+     * rather than of the moon: the pull, the descent engine and the poofs are
+     * the same everywhere (a mod may move them, a difficulty may not), and what
+     * a rung decides is how neatly the thing has to be set down.
+     */
+    gateMult: number;
+    /**
+     * HOW HARD THE HAND-OVER IS — one number, because the three things that
+     * make a drop hard are the same fact said three ways: the module is handed
+     * over with `startVxPx`·this of drift and `startTiltRad`·this of lean, and
+     * `startAltPx`÷this of sky to fix both in. Above 1 is harder.
+     *
+     * THE SKY IS THE HALF THAT BINDS, and it is why the gates alone were not a
+     * ladder: the descent engine has enormous lateral authority against the
+     * moon's pull, so from 640 px up ANY opening drift is killed with fifteen
+     * seconds to spare and every rung lands feathered. Take the height away and
+     * the drift is suddenly a problem with a deadline, which is the game.
+     *
+     * Never the pull or the engine — those are the moon's, and a difficulty
+     * that moved them would be a different moon rather than a harder night.
+     */
+    dropMult: number;
   };
 };
 
@@ -818,6 +850,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       hazardMult: 0.55,
       tipMult: 0.8,
       damageMult: 0.75,
+      gateMult: 1.4,
+      dropMult: 0.7,
     },
   },
   medium: {
@@ -916,6 +950,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       hazardMult: 1,
       tipMult: 1,
       damageMult: 1,
+      gateMult: 1,
+      dropMult: 1,
     },
   },
   hard: {
@@ -1001,6 +1037,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       hazardMult: 1.4,
       tipMult: 1.1,
       damageMult: 1.2,
+      gateMult: 0.82,
+      dropMult: 1.75,
     },
   },
   nightmare: {
@@ -1087,6 +1125,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       hazardMult: 1.8,
       tipMult: 1.2,
       damageMult: 1.5,
+      gateMult: 0.66,
+      dropMult: 2.4,
     },
   },
   jesus: {
@@ -1178,6 +1218,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       hazardMult: 2.4,
       tipMult: 1.3,
       damageMult: 2,
+      gateMult: 0.52,
+      dropMult: 3.1,
     },
   },
 };

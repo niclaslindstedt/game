@@ -35,7 +35,12 @@
 // shortcut: the mess is a memory of one drive, and a wash is what a night of it
 // would have got anyway.
 
-import type { CarPanelId } from "@game/core";
+import {
+  readCarDamage,
+  type CarDamage,
+  type CarPanelId,
+  type GameState,
+} from "@game/core";
 
 import {
   carCoat,
@@ -73,6 +78,21 @@ export function carriedCarFilth(): CarFilth {
  */
 export function washCar(): void {
   filth = { soak: cleanCar(), tyre: 0 };
+}
+
+/**
+ * WHAT THE RUN'S OWN WAGON HAS BEEN THROUGH — the DAMAGE half, read off the car
+ * standing in this run (`GameState.vehicles`), or null for a run with no car in
+ * it at all.
+ *
+ * The blood beside it is this module's own singleton; the damage is not, and
+ * that split is the whole shape of the file: bent panels are simulation and
+ * ride the run, and a cutscene that stands the car on stage needs BOTH halves
+ * to draw the wagon the player actually drove home.
+ */
+export function runCarDamage(state: GameState): CarDamage | null {
+  const car = state.vehicles.find((vehicle) => vehicle.kind === "car");
+  return car ? readCarDamage(car) : null;
 }
 
 /**
