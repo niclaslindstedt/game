@@ -26,7 +26,9 @@
 // STARTUP PATH: nothing here may reach `@game/core`. A minigame is STARTED by
 // handing its id up to the app (`ctx.onMinigame`), which mounts the lazy screen
 // that owns the simulation — the same rule every other play verb on this menu
-// follows.
+// follows. THE PAGE GOES UP WITH IT, because the app cannot infer which of the
+// two it was: the lap comes back to the cabinet it was launched from, and the
+// player's cabinet would offer a developer lap rungs nobody has earned.
 
 import { DIFFICULTY_ORDER, difficultyDef, type Difficulty } from "@game/menu";
 
@@ -45,6 +47,7 @@ import {
   actionRow,
   assembleRows,
   backRow,
+  type CabinetScreen,
   type MenuContext,
   type MenuEntry,
   type MenuScreen,
@@ -83,7 +86,7 @@ export function buildDevMinigameMenu(
 function shelf(
   ctx: MenuContext,
   screen: MenuScreen,
-  into: MenuScreen,
+  into: CabinetScreen,
 ): MenuEntry[] {
   return [
     ...MINIGAME_ORDER.map((id): MenuEntry => ({
@@ -103,7 +106,7 @@ function shelf(
 
 function cabinet(
   ctx: MenuContext,
-  screen: MenuScreen,
+  screen: CabinetScreen,
   id: MinigameId,
   rungs: Difficulty[],
 ): MenuEntry[] {
@@ -128,7 +131,11 @@ function cabinet(
         return;
       }
       playUiSound(synth, "start");
-      ctx.onMinigame(id, rung, variant.id);
+      // THIS PAGE travels with the press, so the lap comes back to the cabinet
+      // it was started from. A developer lap landing on the player's cabinet is
+      // a page offering rungs nobody earned: DIFFICULTY reads "-" and PLAY only
+      // buzzes.
+      ctx.onMinigame(id, rung, variant.id, screen);
     }),
     difficulty: {
       ...actionRow(

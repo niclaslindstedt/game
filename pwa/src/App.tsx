@@ -36,6 +36,7 @@ import {
   type ParkedRun,
 } from "./game/saved-run.ts";
 import { initCoinStore } from "./game/store.ts";
+import type { CabinetReturn } from "./game/title-screen/menu-model.ts";
 import { TitleScreen } from "./game/TitleScreen.tsx";
 import { UpdateModal } from "./game/UpdateModal.tsx";
 
@@ -173,7 +174,7 @@ export function App() {
   // and the rung the shelf offered it at, or null on the menu. It is not a run
   // and touches nothing a run touches — no hero, no parked state, no roster
   // bookkeeping — so it sits beside `run` rather than inside it, and leaving one
-  // drops back onto the shelf it was started from.
+  // drops back onto the cabinet page it was started from.
   //
   // THE RUNG ARRIVES WITH THE PRESS rather than being read again here: which
   // rungs a player may grind on is the shelf's own question (it is the set of
@@ -186,13 +187,17 @@ export function App() {
      * resolved against this cabinet's own list (`pickVariant`). */
     variant: string;
   } | null>(null);
-  // …and whether the title should mount on that shelf when it next shows,
-  // which is what makes a second go one press rather than three.
-  const [startOnMinigames, setStartOnMinigames] = useState(false);
+  // …and WHICH CABINET PAGE the title should mount on when it next shows, which
+  // is what makes a second go one press rather than three. The page, not just
+  // the machine: the player's cabinet and the developer twin behind PLAYGROUND
+  // offer different rungs, and a lap has to come back to the one it left.
+  const [startOnCabinet, setStartOnCabinet] = useState<CabinetReturn | null>(
+    null,
+  );
   // IT IS A ONE-SHOT LANDING, and it is spent by the next thing the player does
   // from the title — every handoff below clears it, exactly as they clear the
   // "open on the ladder" intent beside it. Otherwise a run that ends an hour
-  // later would drop them onto the arcade shelf instead of the front door.
+  // later would drop them onto a cabinet page instead of the front door.
 
   // The pending run: the difficulty and starting level chosen on the menu.
   // null = still on the menu (or roster).
@@ -504,7 +509,7 @@ export function App() {
   // above it, it stands apart from a run — no hero of its own to mint, no
   // parked-run bookkeeping, nothing banked but the cabinet's high-score board —
   // so it is checked before the active character's run and leaves by simply
-  // clearing the flag, landing back on the shelf it was started from.
+  // clearing the flag, landing back on the cabinet page it was started from.
   if (minigame) {
     return (
       <ErrorBoundary
@@ -713,10 +718,10 @@ export function App() {
           // Starting fresh abandons whatever was parked (in memory and storage).
           setParked(null);
           clearSavedRun();
-          // Consume the "open on the ladder" (and "open on the shelf") intents
+          // Consume the "open on the ladder" (and "open on the cabinet") intents
           // so returning to the title after this run lands on the main menu.
           setStartOnDifficulty(false);
-          setStartOnMinigames(false);
+          setStartOnCabinet(null);
           setRun({
             difficulty,
             levelId,
@@ -739,7 +744,7 @@ export function App() {
           // real field mounts (@ui/lib/auto-focus.ts).
           armSoftKeyboard();
           setStartOnDifficulty(false);
-          setStartOnMinigames(false);
+          setStartOnCabinet(null);
           setPickCreating(true);
           setPicking("play");
         }}
@@ -753,27 +758,27 @@ export function App() {
           // above: the keyboard belongs to the press, not to the field.
           if (creating) armSoftKeyboard();
           setStartOnDifficulty(false);
-          setStartOnMinigames(false);
+          setStartOnCabinet(null);
           setPickCreating(creating);
           setPicking("play");
         }}
         onHowToPlay={() => {
-          setStartOnMinigames(false);
+          setStartOnCabinet(null);
           setDemo(true);
         }}
         // MINIGAMES → a cabinet. It touches no run and no hero, so nothing is
-        // parked or cleared on the way in; the shelf is remembered so the title
-        // comes back up on it when the lap is over.
-        onMinigame={(id, difficulty, variant) => {
-          setStartOnMinigames(true);
+        // parked or cleared on the way in; the PAGE the press came from is
+        // remembered so the title comes back up on it when the lap is over.
+        onMinigame={(id, difficulty, variant, from) => {
+          setStartOnCabinet({ screen: from, cabinet: id });
           setMinigame({ id, difficulty, variant });
         }}
-        startOnMinigames={startOnMinigames}
+        startOnCabinet={startOnCabinet}
         // JOIN GAME / JOIN BY ADDRESS: watch somebody else's session. It never
         // touches the parked run — a player who ducks out of their own game to
         // watch a friend's comes back to their own exactly where it was.
         onJoin={(intent) => {
-          setStartOnMinigames(false);
+          setStartOnCabinet(null);
           setJoin(intent);
         }}
         startOnDifficulty={startOnDifficulty}
@@ -785,7 +790,7 @@ export function App() {
           parked.characterId === character.id &&
           !character.dead
             ? () => {
-                setStartOnMinigames(false);
+                setStartOnCabinet(null);
                 setRun({
                   difficulty: parked.difficulty,
                   levelId: parked.levelId,

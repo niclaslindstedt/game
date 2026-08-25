@@ -67,6 +67,8 @@ import {
 } from "./title-screen/menu-highlight.ts";
 import {
   unlockAudio,
+  type CabinetReturn,
+  type CabinetScreen,
   type MenuContext,
   type MenuEntry,
   type MenuScreen,
@@ -144,7 +146,7 @@ export function TitleScreen({
   onJoin,
   onMinigame,
   startOnDifficulty = false,
-  startOnMinigames = false,
+  startOnCabinet = null,
 }: {
   /** The active hero, or null when none is selected yet (the menu still opens
    * on the title; PLAY then routes through character select). The difficulty
@@ -186,10 +188,14 @@ export function TitleScreen({
     difficulty: Difficulty,
     /** The shelf's DIRECTION row, resolved against the cabinet's own list. */
     variant: string,
+    /** Which cabinet page the press came from, so the lap can come back to it. */
+    from: CabinetScreen,
   ) => void;
-  /** Mount straight on the arcade shelf — set coming back off a cabinet, so
-   * another go is one press on the row the cursor is already on. */
-  startOnMinigames?: boolean;
+  /** Mount straight on a cabinet's own page — set coming back off a lap, so
+   * another go is one press on the row the cursor is already on. It names the
+   * PAGE as well as the machine because the player's and the developer's are
+   * two different offers, and a lap must return to the one it left. */
+  startOnCabinet?: CabinetReturn | null;
   /** Go and watch somebody else's session (JOIN GAME / JOIN BY ADDRESS). The
    * menu never connects: joining is a RUN, and a run belongs to the app. */
   onJoin: (intent: JoinIntent) => void;
@@ -198,13 +204,11 @@ export function TitleScreen({
   const [screen, setScreen] = useState<MenuScreen>(
     startOnDifficulty && character
       ? "difficulty"
-      : startOnMinigames
-        ? "minigames"
-        : "main",
+      : (startOnCabinet?.screen ?? "main"),
   );
   // Cursor position per screen; the difficulty ladder opens on the hero's
-  // furthest-unlocked rung (see furthestUnlockedDifficulty). The arcade shelf
-  // opens on its first cabinet, which is where it already opens by default.
+  // furthest-unlocked rung (see furthestUnlockedDifficulty). A cabinet's page
+  // opens on PLAY, which is row 0 — where every other screen opens anyway.
   const [cursor, setCursor] = useState(() =>
     startOnDifficulty && character ? furthestUnlockedDifficulty(character) : 0,
   );
@@ -219,8 +223,11 @@ export function TitleScreen({
   // WHICH CABINET the arcade shelf was walked into — the machine whose own page
   // (MINIGAMES → THE ROAD / THE ROCKET) is up. A mode rather than a place, for
   // the reason `warp` is one: the cabinets come from a catalog, and the menu
-  // tree cannot carry a screen per catalog row.
-  const [cabinet, setCabinet] = useState<MinigameId | null>(null);
+  // tree cannot carry a screen per catalog row. Set from the off when a lap has
+  // just ended, because the page it lands on is that machine's own.
+  const [cabinet, setCabinet] = useState<MinigameId | null>(
+    startOnCabinet?.cabinet ?? null,
+  );
   // BOT VIEW: the warp pickers were opened via DEVELOPER → PLAYGROUND → BOT VIEW, so picking a
   // level hands the run to the engine autopilot (a realistic arrival hero) rather
   // than starting a normal playable run. Rides on top of `warp` (same pickers).
