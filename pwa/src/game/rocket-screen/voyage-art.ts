@@ -97,14 +97,6 @@ function drawCabin(
   ctx.fillRect(P * 2 - 4, P - 10, 8, 3);
   ctx.fillRect(viewW - P - 18, P * 3 - 4, 3, 8);
 
-  // A cable looping between two staples along the top.
-  ctx.strokeStyle = "#2e3442";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(viewW * 0.08, 8);
-  ctx.quadraticCurveTo(viewW * 0.2, 40, viewW * 0.34, 12);
-  ctx.stroke();
-
   // THE CONSOLE — a low shelf of switches under the window, a step darker
   // than the walls so the lamps carry, each blinking on its own clock
   // because somebody wired every one by hand.
@@ -184,20 +176,8 @@ function drawWindow(
       ctx.drawImage(earth, cx, cy, w, w);
     }
   } else {
-    // THE MOON, ARRIVING — the same curve run the other way, and home a
-    // marble in the corner behind it for the whole beat.
-    const earth = spriteByName(sprites, "sky_earth");
-    if (earth) {
-      ctx.globalAlpha = 0.9;
-      ctx.drawImage(
-        earth,
-        p.x - p.r * 0.62,
-        p.y - p.r * 0.66,
-        earth.width * 0.9,
-        earth.height * 0.9,
-      );
-      ctx.globalAlpha = 1;
-    }
+    // THE MOON, ARRIVING — the same curve run the other way. The moon alone:
+    // this window faces the way the ship is going, and home is behind us.
     const moon = spriteByName(sprites, "sky_moon");
     if (moon) {
       const small = 1.6;
