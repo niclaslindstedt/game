@@ -176,7 +176,12 @@ apple:
     firstName: Niclas
     lastName: Lindstedt
     email: niclas@agilator.se
-    # Apple requires a reachable number with a country-code prefix.
+    # A PLACEHOLDER ON PURPOSE — the real number comes from ASC_REVIEW_PHONE
+    # in native/.env (gitignored), because this repository is public and Apple
+    # rings this number. `reviewPhone()` in
+    # scripts/asset-tools/app-store-connect.mjs resolves the pair, and the
+    # value below is never uploaded: the generator deletes the field rather
+    # than hand review a number that rings nobody.
     phone: "+46000000000"
     demoRequired: false
     notes: |
