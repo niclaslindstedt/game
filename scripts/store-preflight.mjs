@@ -147,17 +147,29 @@ if (/^[A-Z0-9]{10}$/i.test(String(iosSubmit.appleTeamId ?? ""))) {
 // reads as configured and the gap surfaces as an EAS validation error instead.
 // The other two ids (ascAppId, appleTeamId) are NOT interpolated by EAS and
 // have no CLI flag, so they are committed literals — both are public.
+// Resolved through `envValue`, the same reader the CREDENTIALS section uses,
+// so one report cannot say "ASC_KEY_ID set" in one section and "no resolvable
+// key" in another about the same value.
 const easField = (value) =>
-  String(value ?? "").replace(
-    /\$\{?([A-Za-z0-9_]+)\}?/g,
-    (_, key) => process.env[key] ?? "",
+  String(value ?? "").replace(/\$\{?([A-Za-z0-9_]+)\}?/g, (_, key) =>
+    envValue(key),
   );
+const easKeyVars = ["ASC_KEY_PATH", "ASC_KEY_ID", "ASC_ISSUER_ID"];
 const easHasKey =
   easField(iosSubmit.ascApiKeyPath) &&
   easField(iosSubmit.ascApiKeyId) &&
   easField(iosSubmit.ascApiKeyIssuerId);
 if (iosSubmit.appleId || easHasKey) {
-  ok("eas submit has a way to authenticate");
+  // …but EAS itself reads only the PROCESS environment. fastlane loads
+  // native/.env on its own; `eas submit` does not, so a value that lives only
+  // in the file is configured for one and invisible to the other.
+  const unexported = easKeyVars.filter((key) => !process.env[key]);
+  ok(
+    unexported.length
+      ? `eas submit key configured — export ${unexported.join(", ")} before ` +
+          "running it (eas reads the process environment, not native/.env)"
+      : "eas submit has a way to authenticate",
+  );
 } else {
   warn(
     "eas.json names neither an appleId nor a resolvable App Store Connect key",
