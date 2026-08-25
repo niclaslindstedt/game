@@ -426,7 +426,12 @@ export function RocketScreen({
       // The boost's own feel rides beside the blast shake: a subtle rumble
       // and a few px of lift while the boosters are open (`boostFeel`), off
       // the same eased burn as the plume so frame and fire move together.
-      const base = flightCamera(flight, viewW, viewH);
+      const base = flightCamera(
+        flight,
+        viewW,
+        viewH,
+        fxRef.current.wreckAt ?? undefined,
+      );
       const shake = shakeOffset(fxRef.current, flight.ms);
       const feel = boostFeel(burn, flight.phase === "landing", flight.ms);
       const cam = {

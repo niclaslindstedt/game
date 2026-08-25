@@ -39,6 +39,9 @@ export function flightCamera(
   state: FlightState,
   viewW: number,
   viewH: number,
+  /** Where the ship died, when it has (`RocketFxState.wreckAt`) — the wreck
+   * camera's anchor. */
+  wreckAt?: { x: number; alt: number },
 ): SkyCamera {
   const { craft } = state;
   const halfSpan = Math.min(viewW, FLIGHT.fieldW);
@@ -62,15 +65,18 @@ export function flightCamera(
     cam = { x: craft.x - viewW / 2, topAlt: craft.alt + viewH * 0.72 };
   }
   if (state.outcome === "wrecked") {
-    // A WRECK RE-CENTERS THE FRAME. The working camera rides the ship low
-    // (the danger is above) — which parks the explosion half under the
-    // console and the frame's bottom edge. A wrecked ship IS the picture, so
-    // the camera eases up over its first beats until the blast plays
-    // mid-frame; `outcomeMs` drives it, so the pan is deterministic and a
-    // restart puts the frame straight back.
+    // A WRECK RE-CENTERS THE FRAME, ON THE WRECK. The working camera rides
+    // the ship low (the danger is above) — which parks the explosion half
+    // under the console — and the sim keeps the unseen hull FALLING through
+    // the hold, so a camera still following the craft drags the frame away
+    // from its own explosion inside a second. The blast site is the anchor
+    // instead, eased in over the wreck's first beats; `outcomeMs` drives the
+    // pan, so it is deterministic and a restart puts the frame straight back.
+    const at = wreckAt ?? { x: craft.x, alt: craft.alt };
     const t = Math.min(1, state.outcomeMs / 350);
     const ease = t * (2 - t);
-    cam.topAlt += (craft.alt + viewH * 0.5 - cam.topAlt) * ease;
+    cam.x += (at.x - viewW / 2 - cam.x) * ease;
+    cam.topAlt += (at.alt + viewH * 0.5 - cam.topAlt) * ease;
   }
   return cam;
 }

@@ -141,8 +141,11 @@ export function drainFlight(
       }
       case "wrecked":
         // The explosion event beside it carries the picture and the noise;
-        // what the wreck itself owes is nothing — the hold and the restart
-        // are `end-flight.ts`'s.
+        // the hold and the restart are `end-flight.ts`'s. What the wreck
+        // itself leaves is the SPOT, latched for the camera — the sim keeps
+        // the unseen hull falling, and the show must not be dragged off with
+        // it.
+        fx.wreckAt = { x: event.x, alt: event.alt };
         break;
       case "warning":
         playFlightSound(synth, WARNING_SOUND);

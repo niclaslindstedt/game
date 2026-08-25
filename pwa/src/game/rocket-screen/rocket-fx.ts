@@ -145,6 +145,11 @@ export type RocketFxState = {
   flashPower: number;
   shakeUntil: number;
   shakeAmp: number;
+  /** WHERE THE SHIP DIED — the wreck event's own spot, latched for the
+   * camera: the sim keeps the unseen wreck falling through the hold, so a
+   * camera that followed the craft would leave the explosion behind within a
+   * second. Cleared with the show (`clearRocketFx`). */
+  wreckAt: { x: number; alt: number } | null;
   /** The poof funnel's own clock — one breath per `POOF_GAP_MS`, however hard
    * the thumb is held. */
   lastPoofMs: number;
@@ -169,6 +174,7 @@ export function createRocketFx(): RocketFxState {
     flashPower: 0,
     shakeUntil: 0,
     shakeAmp: 0,
+    wreckAt: null,
     lastPoofMs: 0,
     burnLevel: 0,
   };
@@ -187,6 +193,7 @@ export function clearRocketFx(fx: RocketFxState): void {
   fx.smears.length = 0;
   fx.flashUntil = 0;
   fx.shakeUntil = 0;
+  fx.wreckAt = null;
   fx.burnLevel = 0;
 }
 
