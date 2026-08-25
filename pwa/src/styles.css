@@ -834,10 +834,12 @@ html.app-locked body {
   pointer-events: none;
   filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.85));
 }
-/* Portrait hides the strip's station labels, so the cluster rides higher. */
+/* Portrait drops the strip to its own line under the clock, and the vane rides
+   under all of it — the same offset the strip took, plus the strip's own
+   height. */
 @media (orientation: portrait) {
   .rocket-vane-slot {
-    top: calc(max(0.5rem, env(safe-area-inset-top)) + 1.9rem);
+    top: calc(max(0.5rem, env(safe-area-inset-top)) + 5.6rem);
   }
 }
 
@@ -910,13 +912,27 @@ html.app-locked body {
   align-self: flex-end;
   opacity: 0.85;
 }
-/* Portrait has no room for six stations — the bar alone still narrates — nor
-   for the trash tally, whose corner is the clock caption's on a phone that
-   narrow. */
+/* PORTRAIT HANGS THE STRIP UNDER THE CLOCK INSTEAD OF BESIDE IT. A phone held
+   upright is ~390 px across and the T+ clock owns a third of that corner, so a
+   strip centred on the same line runs straight under the figure: the bar's
+   right end disappears behind the digits and the stations under it are gone
+   with it. There is no arrangement of one row that fits both.
+
+   So the corner stays the clock's — it is the same corner on every screen and
+   the touch player's PAUSE — and the strip drops to its own line beneath, at
+   the full width the labels want. `3.2rem` is the clock block: its caption at
+   scale 2, the gap, and the figure at scale 5. The vane below moves down by
+   the same amount (see `.rocket-vane-slot`), so the column under the ship
+   stays a column.
+
+   The five stations fit: at scale 1 they measure 157 px of glyphs against the
+   ~360 px this leaves, which is why they are shown here rather than hidden. */
 @media (orientation: portrait) {
-  .rocket-strip-labels,
-  .rocket-strip-trash {
-    display: none;
+  .rocket-strip {
+    top: calc(max(0.5rem, env(safe-area-inset-top)) + 3.2rem);
+  }
+  .rocket-strip-box {
+    width: calc(100vw - 1.5rem);
   }
 }
 

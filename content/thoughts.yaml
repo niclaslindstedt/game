@@ -259,6 +259,11 @@ thoughts:
     portrait: hero
     pages:
       - - THEY HAD THE WHOLE SKY. THEY PICKED MINE.
+  flight_watched:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - WINGS THE SIZE OF A STREET, ALL POINTED DOWN. SOMEBODY'S BEEN UP HERE A WHILE.
   flight_shell_clear:
     speaker: "{HERO}"
     portrait: hero

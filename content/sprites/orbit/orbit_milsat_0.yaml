@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: orbit_milsat_0
+family: orbit
+size: [22, 16]
+description: >
+  A military reconnaissance satellite — a dark slate bus wrapped in gold foil,
+  a wide telescope tube pointing straight down at whoever is under it, plain
+  grey solar panels on struts and one red light.
+subject:
+  kind: military reconnaissance satellite
+  build: a dark slate bus with a wide telescope tube below it and a plain grey solar panel on a strut each side
+  features: a gold foil blanket banding the bus, an open black aperture at the bottom of the tube, a short mast on top
+  accent: one red status light on the hull
+  flavor: nobody sells these, and nothing on it is white
+palette:
+  O: "#1a1c2c" # outline
+  v: "#60687e" # lit slate
+  b: "#3f4553" # slate hull
+  D: "#2a2e3a" # slate shadow
+  h: "#e2c640" # gold foil
+  o: "#d6a842" # gold foil shadow
+  F: "#a2a4ad" # panel highlight
+  V: "#9095a5" # panel grey
+  f: "#888a96" # panel frame
+  T: "#c0c5cf" # strut
+  R: "#ff5252" # status light
+grid: |
+  ......................
+  .........OvvO.........
+  .........ObbO.........
+  .......OOOOOOOO.......
+  .OOOO..OvvvbbDO..OOOO.
+  OfVFOffOvvvbbDOffOfVFO
+  OfVFO..OhhoobDO..OfVFO
+  OfVFO..OvRvbbDO..OfVFO
+  OfVFOffOvvvbbDOffOfVFO
+  OfVFO..OhhoobDO..OfVFO
+  .OOOO..OvvvbbDO..OOOO.
+  .......OOvvbbDO.......
+  ........OvvbDO........
+  ........OvvbDO........
+  ........OOOOOO........
+  ......................

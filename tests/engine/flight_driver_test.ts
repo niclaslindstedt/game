@@ -119,6 +119,6 @@ describe("the flight auto-pilot", () => {
     }
     // Only reads happened: the un-flown twin's next draws match exactly.
     expect(flown.rng()).toBe(idle.rng());
-    expect(flown.strayRng()).toBe(idle.strayRng());
+    expect(flown.trafficRng()).toBe(idle.trafficRng());
   });
 });

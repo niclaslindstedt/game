@@ -471,9 +471,9 @@ function drawMoonAhead(
 }
 
 /** Everything adrift — each piece its own art, tumbling on its own angle, the
- * satellites and drones blinking their lights because somebody still pays for
- * them, the birds flapping between their two poses, everything that flies
- * with a nose FACING the way it flies. */
+ * hardware blinking its lights because somebody still pays for it (the
+ * company's in cyan, the military's in red), the birds flapping between their
+ * two poses, everything that flies with a nose FACING the way it flies. */
 function drawField(
   ctx: CanvasRenderingContext2D,
   state: FlightState,
@@ -502,7 +502,10 @@ function drawField(
     // Whatever flies on purpose faces its own travel — the art's noses point
     // left, so a rightward crosser is mirrored.
     if (
-      (o.kind === "plane" || o.kind === "bird" || o.kind === "paraglider") &&
+      (o.kind === "plane" ||
+        o.kind === "drone" ||
+        o.kind === "bird" ||
+        o.kind === "paraglider") &&
       o.vx > 0
     ) {
       ctx.scale(-1, 1);
@@ -512,6 +515,12 @@ function drawField(
     if (o.kind === "satellite" && Math.floor(nowMs / 500) % 2 === 0) {
       ctx.fillStyle = "#8ccdd7";
       ctx.fillRect(Math.round(s.x), Math.round(s.y) - 1, 1, 1);
+    }
+    // The military's blinks RED and slower than the company's — nothing up
+    // here is trying to be seen, and the colour is the tell at a glance.
+    if (o.kind === "milsat" && Math.floor(nowMs / 900) % 2 === 0) {
+      ctx.fillStyle = "#ff5252";
+      ctx.fillRect(Math.round(s.x), Math.round(s.y) - 2, 1, 1);
     }
     // A drone's little status light — green, faster than the satellite's,
     // because the parcel is late.

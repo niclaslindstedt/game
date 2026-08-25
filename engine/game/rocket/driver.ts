@@ -14,7 +14,7 @@
 // human pilot makes, no artificial handicaps and no cheating either. It holds
 // the ship upright first (on an inverted pendulum everything else is optional),
 // leans INTO the wind the way a pilot crabs a crosswind, keeps the launch
-// corridor (an off-course sky is a thicker sky — `stray`), threads the gaps in
+// corridor (an off-course sky is a thicker sky — `layers.ts`), threads the gaps in
 // the shell instead of praying through them, and only opens the boosters when
 // the lean is caught and the next seconds look survivable.
 //
@@ -120,6 +120,8 @@ function kindCost(kind: OrbitKind): number {
   switch (kind) {
     case "plane":
       return 3.2;
+    case "milsat":
+      return 2.8;
     case "satellite":
       return 2.4;
     case "rock":

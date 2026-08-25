@@ -41,9 +41,15 @@ children:
         scale: 1
         color: "#7d8899"
 
-  - id: alt_phase
+  # THE FOOT NAMES THE SKY, not the half. Which half is being flown is already
+  # on the face — the unit under the figure changes at the hand-over, and the
+  # mission strip's marker says it again across the top. What no instrument
+  # said is the thing this dial is actually FOR: which neighbourhood of the
+  # climb the ship is in, and therefore what is about to be in the way
+  # (`SKY_LAYERS`). On the drop there is no sky to name and it reads THE DROP.
+  - id: alt_zone
     kind: text
     class: drive-dial-foot
-    bind: rocket.phase
+    bind: rocket.zone
     scale: 1
     color: "#7d8899"

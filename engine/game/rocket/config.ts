@@ -26,9 +26,47 @@
  * around the planet. The billionaires left before the shell closed. Everybody
  * else is trapped under the company's trash, which is why the junk THICKENS
  * with altitude (`bandFloorFrac`): the low sky is merely dirty and the top of
- * the climb is a wall of it. The satellites are GOODCO's other business up
- * here, and the only things in the field that move with any purpose.
+ * the climb is a wall of it.
+ *
+ * UNDER IT THE SKY IS STILL SOMEBODY'S. The climb passes through the birds,
+ * the parcel quads, a hobbyist's canopy, the light-aircraft lanes, the
+ * airliners at cruise and the solar-winged machines watching everybody from 20
+ * km — and above all of that the internet constellation and the military's own
+ * orbits over it. Each of those is an authored band of altitude in
+ * `layers.ts`; this file prices what a collision with one costs.
  */
+/**
+ * WHAT A WORLD PX IS WORTH (m) — the one exchange rate every instrument reads.
+ * The climb tops out at a 100-mile orbit (low LEO — the bottom of where a junk
+ * shell actually lives), so `coursePx` is 160 934 m and a px is this.
+ */
+const METERS_PER_PX = 11.9;
+
+/**
+ * HOW MUCH FASTER THE SKY RUNS THAN THE SKY. A real ascent takes the better
+ * part of ten minutes and this one takes half of one, so the whole minigame is
+ * played at this compression — which the speed dial already knows about
+ * (`climbMph` divides by it, or the hand-over would read thousands of mph a
+ * second off the lawn).
+ */
+const TELEMETRY_LAPSE = 8;
+
+/**
+ * A REAL SPEED, IN THE SKY'S OWN UNITS: km/h → world px/s, through the scale
+ * and the same compression the dial reads. It is what makes the tables below
+ * CHECKABLE — an airliner is authored at 900 km/h rather than at 168, and
+ * anybody can tell whether 900 is right.
+ *
+ * AND EVERY ONE OF THEM IS RELATIVE TO THE SHIP. Down in the air that is the
+ * same as a ground speed, because the ship is climbing rather than travelling;
+ * up in orbit it is not, and it is the only honest frame there — a satellite's
+ * 27 000 km/h and the ship's are very nearly the same 27 000 km/h, and what
+ * crosses the frame is the difference their orbits' angle leaves.
+ */
+export function kphPx(v: number): number {
+  return (v / 3.6) * (TELEMETRY_LAPSE / METERS_PER_PX);
+}
+
 export const FLIGHT = {
   /**
    * HOW HIGH SAFETY IS (world px of climb) — the top of the ascent, and the
@@ -47,15 +85,11 @@ export const FLIGHT = {
    * down, for the same reason the drive's demo leg is short: a title screen
    * has fifteen seconds to show somebody what this minigame is. */
   attractCoursePx: 4600,
-  /**
-   * WHAT A WORLD PX IS WORTH (m) — the one exchange rate every instrument
-   * reads. The climb tops out at a 100-mile orbit (low LEO — the bottom of
-   * where a junk shell actually lives), so `coursePx` is 160 934 m and a px is
-   * this. The altitude dial, the speed telemetry and the launch-site comments
-   * all derive from it; a second, disagreeing scale is the bug this constant
-   * exists to prevent.
-   */
-  metersPerPx: 11.9,
+  /** The world's scale — see `METERS_PER_PX`. The altitude dial, the speed
+   * telemetry, every band in `layers.ts` and every speed in the tables below
+   * derive from it; a second, disagreeing scale is the bug it exists to
+   * prevent. */
+  metersPerPx: METERS_PER_PX,
   /**
    * HOW WIDE ONE SCREENFUL OF SKY IS (world px) — the window the shell is
    * laid across, centred on the SHIP. It is not a wall: the sky has no edges
@@ -67,11 +101,13 @@ export const FLIGHT = {
 
   /**
    * THE LAUNCH CORRIDOR — the column of closed airspace over the pad, and the
-   * price of leaving it. Inside `halfPx` of the pad's line the sky is the
-   * shell and nothing else; drift further and the ship is over somebody
-   * else's sky, ramping to fully OFF COURSE over `rampPx` — where the stray
-   * spawner (`stray`) starts feeding it the traffic the corridor was closed
-   * against. The dashboard's OFF COURSE lamp reads the same ramp.
+   * price of leaving it. Inside `halfPx` of the pad's line the sky is only as
+   * busy as the sky is; drift further and the ship is over somebody else's,
+   * ramping to fully OFF COURSE over `rampPx`, where every layer of air
+   * traffic thickens by its own `offCourseMult` (`layers.ts`). The notice was
+   * filed and the corridor was closed; nobody reads GOODCO's notices, so the
+   * corridor is a discount rather than a wall. The dashboard's OFF COURSE lamp
+   * reads the same ramp.
    */
   course: {
     halfPx: 320,
@@ -96,17 +132,21 @@ export const FLIGHT = {
    * is a dead instrument, and the HUD's says so.
    */
   wind: {
-    /** The fastest layer the profile ever deals (px/s, ± by layer). */
-    maxPx: 46,
+    /** The fastest layer the profile ever deals (± by layer) — a jet core at
+     * its worst, which is what the dashboard's SHEAR rung is naming. */
+    maxPx: kphPx(400),
     /** Where the profile reaches full strength (world px of altitude). */
     jetAltPx: 900,
     /** How thick one layer of sky is (px) — samples are lerped between. */
     layerPx: 500,
     /** How hard the air drags the hull toward the wind's own speed (per s). */
-    pullPerS: 0.9,
+    pullPerS: 1.3,
     /** The weathervane torque at the reference wind (rad/s² at `maxPx`,
-     * before the air scales it) — the tail catching the crosswind. */
-    tipPerS: 0.35,
+     * before the air scales it) — the tail catching the crosswind, and the
+     * half of the weather the player has to FLY rather than ride. Set against
+     * the poofs (`steerPerS`): a jet core is about a fifth of full deflection,
+     * so it is held off with the thumb and never with a shrug. */
+    tipPerS: 0.62,
   },
 
   opening: {
@@ -194,10 +234,41 @@ export const FLIGHT = {
      * the ship.
      */
     tipPerS: 1.0,
-    /** How much the throttle feeds the flip — boost multiplies the instability
+    /**
+     * HOW MUCH THE THROTTLE FEEDS THE FLIP — boost multiplies the instability
      * by `1 + boostTipFrac`, which is the minigame's one trade: more speed IS
-     * less balance, and the player's thumb is the exchange rate. */
-    boostTipFrac: 0.85,
+     * less balance, and the player's thumb is the exchange rate.
+     *
+     * It is only HALF the price of speed, and the smaller half — the other is
+     * the air's (`aeroTipPerS`), which bills the speed itself rather than the
+     * thumb holding the throttle.
+     */
+    boostTipFrac: 1.25,
+    /**
+     * THE OVERTURNING MOMENT (rad/s² at the reference airspeed in thick air) —
+     * the AIR's own vote on the lean, and the honest reason a real ascent
+     * throttles DOWN through max-Q.
+     *
+     * A rocket flying fast at an angle to its own airflow is a weathercock
+     * held the wrong way round: the push on the flank acts ahead of where the
+     * ship pivots, so it does not straighten the lean, it feeds it — and by
+     * the SQUARE of the airspeed. That is the difference between the two
+     * halves of the climb, and the whole shape of the decision the player is
+     * being asked for: down in the soup, going fast is what tips you over and
+     * the answer is to ease off; up where the air has gone the same speed
+     * costs nothing and the throttle is free.
+     *
+     * Bought with air like everything the weather does, so it is GONE above
+     * the shell — the clear stretch is the one place a ship can run away.
+     */
+    aeroTipPerS: 1.35,
+    /** The airspeed the figure above is quoted at (px/s) — a brisk climb. */
+    aeroRefPx: 420,
+    /** …and the most of it the arithmetic honours, as a multiple. A ship in
+     * vacuum at five times the reference is not five times as unstable; it is
+     * in vacuum. The cap is what stops the term running away before the air
+     * has finished thinning. */
+    aeroCap: 2.6,
     /** The steering poofs (rad/s² at full deflection) — comfortably stronger
      * than the instability, so a caught lean is always recoverable and a lost
      * one was lost seconds ago. */
@@ -253,16 +324,19 @@ export const FLIGHT = {
      * couch-class hit is one whole unit of each. */
     refKg: 60,
     /** The sideways shove at `refKg` (px/s, away from the side it hit). */
-    pushPx: 44,
+    pushPx: 66,
     /** The twist at `refKg` for a hit at the very nose or tail (rad/s) —
-     * scaled by the lever arm, so an amidships hit twists nothing. */
-    kickPerS: 0.5,
+     * scaled by the lever arm, so an amidships hit twists nothing. A
+     * couch off the nose is most of the way to the warning line on its own,
+     * which is the point: the garbage is harmless to the HULL and is still
+     * the thing that ends most climbs. */
+    kickPerS: 0.8,
     /** …and the knock every hit gives regardless of where it lands (rad/s at
      * `refKg`, signed by side) — the thud's own share, so even an amidships
      * couch is FELT on the balance. */
-    baseKickPerS: 0.12,
+    baseKickPerS: 0.22,
     /** Climb speed lost at `refKg` (fraction of `vy`). */
-    speedLossFrac: 0.05,
+    speedLossFrac: 0.07,
     /** The heaviest hit the arithmetic honours, as a multiple of `refKg` —
      * a clamp, so no future variant can be authored into a one-hit flip. */
     maxKgFrac: 1.5,
@@ -272,21 +346,21 @@ export const FLIGHT = {
   },
 
   /**
-   * WHAT DOES NOT STICK. A GOODCO satellite is a van-sized machine on its own
-   * orbit and a rock never asked anybody; both of them HOLE the ship, and both
-   * knock it off its balance — which on this ship is the worse half of the
-   * bill. The strays off the corridor hole it too, each at its own price: an
-   * AIRLINER is the end of nearly any ship, a delivery DRONE is a lithium
-   * firecracker.
+   * WHAT DOES NOT STICK. Anything BUILT holes the ship, and knocks it off its
+   * balance — which on this ship is the worse half of the bill. What each one
+   * costs the skin is what it weighs and how fast it was going: a delivery
+   * quad is a lithium firecracker, a comms box is a van at orbital speed, a
+   * military bird is a bus, and an aircraft met in its own lane is very nearly
+   * the end of any ship.
    */
   hazard: {
-    /** Hull taken by a satellite (fraction of the whole ship). Three of these
-     * is a short flight. */
+    /** Hull taken by a satellite off the constellation (fraction of the whole
+     * ship). Three of these is a short flight. */
     satelliteHullFrac: 0.34,
+    /** …and by a military bird: bigger, heavier, and nobody's product. */
+    milsatHullFrac: 0.46,
     /** …and by a rock. */
     rockHullFrac: 0.2,
-    /** …by an airliner met off the corridor — one is nearly the whole ship. */
-    planeHullFrac: 0.75,
     /** …and by a drone: cheap, and there are always more. */
     droneHullFrac: 0.12,
     /** The lean a hit knocks in (rad/s, signed by side) — the reason a hit at
@@ -314,52 +388,70 @@ export const FLIGHT = {
   },
 
   /**
-   * THE STRAYS — what an OFF-COURSE sky feeds the climb, on its own seeded
-   * stream and its own altitude mark (so wandering off the corridor never
-   * shifts the shell everybody else learns). The corridor was CLOSED for this
-   * launch; the sky beside it was not: airliners cross their own lanes, the
-   * delivery drones are everywhere (it is an AI world), and the birds and
-   * hobbyists never read the notice. Density ramps with how far off course
-   * the ship is (`course.rampPx`), scaled by the rung's hazard knob.
+   * HOW THE SKY'S TRAFFIC MOVES — the speeds and the entry geometry every
+   * flying thing is minted with, authored in km/h so the table can be
+   * ARGUED WITH. WHERE each of them flies is not here: the bands are in
+   * `layers.ts`, because the altitude of an airliner is a fact about the
+   * world and a crossing speed is a fact about the machine.
+   *
+   * AND HOW IT MOVES IS ITS OWN FACT TOO. An aircraft cruises LEVEL; a bird
+   * flies level and bobs; a canopy is the only thing in the sky that is
+   * genuinely coming DOWN; a quad holds station. What is in orbit does not
+   * fall at all — that is what an orbit is — so the shell and its rocks drift
+   * ALONG-TRACK with barely any vertical to them at all.
    */
-  stray: {
-    /** Px of climb between strays when fully off course… */
-    strideMinPx: 240,
-    /** …and when merely brushing the corridor's edge. */
-    strideMaxPx: 1100,
-    /** ON-course strides are this many times longer — the corridor still has
-     * the odd bird in it, so the sky reads as alive before it reads as a
-     * punishment. */
-    onCourseStrideMult: 4,
-    /** How far to the side of the ship a stray enters (px). */
+  traffic: {
+    /** How far to the side of the ship a crosser enters (px). */
     entryPx: 420,
-    /** The bands each kind lives in (world px of altitude). Birds top out
-     * where the air gets thin for wings; the hobbyists under them; airliners
-     * cross their cruise lanes; drones run parcels most of the way up the
-     * shell, because somebody automated even this. */
-    birdTopAlt: 1600,
-    diverTopAlt: 1900,
-    planeAlt: [500, 2300] as const,
-    droneTopFrac: 0.7,
-    /** Airliner crossing speed (px/s) — the fastest thing in the low sky. */
-    planePx: [165, 235] as const,
-    /** Bird crossing speed (px/s). */
-    birdPx: [42, 80] as const,
+    /** Airliner cruise. */
+    planeKph: [850, 950] as const,
+    /** …and a high-wing single, which is a quarter of it. */
+    lightPlaneKph: [180, 260] as const,
+    /** A gull crossing. Next to a climbing rocket this is standing still,
+     * which is exactly what it looks like out of the window. */
+    birdKph: [40, 80] as const,
+    /** …and how much it rises and falls doing it. */
+    birdBobKph: [0, 25] as const,
+    /** A parcel quad on its route. */
+    droneKph: [40, 90] as const,
+    /** …and a solar-winged watchkeeper, which flies fast up there because the
+     * air is thin, and is never in a hurry to be anywhere. */
+    watchDroneKph: [90, 160] as const,
+    /** A canopy's sink rate, and how much of a forward drive it is flying
+     * with — the two numbers a parachute actually has. */
+    diverSinkKph: [14, 25] as const,
+    diverDriveKph: [0, 40] as const,
+    /** A paraglider's: faster across, and barely sinking at all. */
+    gliderKph: [25, 45] as const,
+    gliderSinkKph: [3, 8] as const,
   },
 
   /**
-   * THE FIELD — how thick the sky is with GOODCO's disposal business, laid
-   * down by altitude as the climb unrolls (one spawn mark per kind, exactly
-   * the drive's crowd marks). Densities are per 1000 px of climb at the band's
-   * PEAK; the rung multiplies them (`DifficultyDef.flight`).
+   * THE SHELL — how thick the sky is with GOODCO's disposal business, laid
+   * down by altitude as the climb unrolls on its own running mark, exactly the
+   * drive's crowd marks.
+   *
+   * IT IS THE ONE POPULATION THAT IS NOT A NEIGHBOURHOOD. Everything else that
+   * flies owns a band of sky (`layers.ts`); the garbage is a CEILING the whole
+   * upper climb is under, so it keeps its own thickening profile here rather
+   * than a from/to. The density is per 1000 px of climb at the band's PEAK;
+   * the rung multiplies it (`DifficultyDef.flight.junkMult`).
    */
   field: {
-    /** Nothing in the first stretch — the low sky is the cutscene's, and the
-     * player gets the controls before the first bag arrives. */
-    startAltPx: 900,
-    junkPerKPx: 9,
-    satellitePerKPx: 1.6,
-    rockPerKPx: 1.1,
+    /**
+     * WHERE THE GARBAGE STARTS (world px of altitude) — above the airways, at
+     * about 31 km. Nothing the company fired up there came back down this far,
+     * and keeping the shell off the bottom of the sky is what lets the low
+     * climb be the neighbourhoods it is: birds, parcel quads, somebody's
+     * canopy and the lanes, with the first bag arriving only once the ship is
+     * genuinely out of the weather. The mission strip's JUNK SHELL station
+     * reads the same line (`missionProgress`).
+     */
+    startAltPx: 2600,
+    /** Pieces per 1000 px of climb at the band's PEAK. Sized so the last
+     * stretch under the shell's top is a WALL rather than a scatter — which is
+     * the whole fiction, and the reason leaving is the hard part. */
+    junkPerKPx: 16,
     /** The band's floor: density at the bottom of the sky as a fraction of the
      * top. The shell THICKENS with altitude — leaving is the hard part. */
     bandFloorFrac: 0.35,
@@ -370,19 +462,39 @@ export const FLIGHT = {
      * conspicuously empty: the player has exited the garbage, knows it at a
      * glance, and flies the clear stretch to the top with nothing left to hit.
      * "Safe from the floating garbage" is the finish; the line is where safe
-     * begins.
+     * begins. Nothing in `layers.ts` is laid above it either.
      */
     shellTopFrac: 0.85,
     /** How far above the ship the field is laid and how far below it is swept
      * (px) — the sky only exists around the climb. */
     aheadPx: 900,
     behindPx: 320,
-    /** Sideways drift a junk piece floats with (px/s, ±). */
-    junkDriftPx: 9,
-    /** …a satellite crosses with (px/s, the one purposeful mover up here). */
-    satellitePx: [62, 130] as const,
-    /** …and a rock falls diagonally with (px/s, each axis its own roll). */
-    rockPx: [22, 55] as const,
+    /**
+     * HOW THE GARBAGE MOVES — along-track drift relative to the ship (km/h,
+     * ±). It is in ORBIT: it is not falling, and it is not going anywhere the
+     * ship is not already going. What is left after the two orbits cancel is
+     * this, a few tens of km/h of nothing much, which is why a bag hangs in
+     * the frame long enough to be steered around.
+     */
+    junkKph: [20, 130] as const,
+    /** …and how much of that is vertical: almost none. An orbit that fell
+     * would not be an orbit. */
+    junkRiseFrac: 0.18,
+    /**
+     * A SATELLITE CROSSING (km/h, relative). Both orbits are doing about
+     * 27 000 km/h and the difference is the ANGLE between them, so a few
+     * degrees of inclination is the whole of this figure — and it is still
+     * the fastest thing the climb meets by a factor of ten.
+     */
+    satelliteKph: [900, 2000] as const,
+    /** …and a military bird's, which is steeper: those orbits go over the
+     * poles, and the ship's does not. */
+    milsatKph: [1400, 2600] as const,
+    /** …and a loose piece of orbital rock, somewhere between the two. */
+    rockKph: [500, 1500] as const,
+    /** How much of a rock's speed is vertical — a different orbit is a
+     * different PLANE, not a fall. */
+    rockRiseFrac: 0.22,
   },
 
   landing: {
@@ -497,7 +609,7 @@ export const FLIGHT = {
    * seconds into its burn — and the ramp to five digits is the trip's.
    */
   orbitalMph: 17060,
-  telemetryLapse: 8,
+  telemetryLapse: TELEMETRY_LAPSE,
   downrangeExp: 1.6,
 
   score: {

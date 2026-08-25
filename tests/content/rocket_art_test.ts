@@ -13,16 +13,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { ORBIT_VARIANTS } from "../../engine/game/rocket/index.ts";
-import {
-  BIRD_SPRITES,
-  DRONE_SPRITES,
-  JUNK_SPRITES,
-  PARAGLIDER_SPRITES,
-  PLANE_SPRITES,
-  ROCK_SPRITES,
-  SATELLITE_SPRITES,
-  SKYDIVER_SPRITES,
-} from "../../pwa/src/game/rocket-screen/orbit-art.ts";
+import { ORBIT_SPRITE_TABLES } from "../../pwa/src/game/rocket-screen/orbit-art.ts";
 import { FLIGHT_SOUND_IDS } from "../../pwa/src/game/rocket-screen/rocket-sounds.ts";
 import { GENERATED_SOUNDS } from "../../pwa/src/generated/sounds.ts";
 
@@ -52,27 +43,21 @@ const NAMED = [
 ];
 
 describe("the flight's sprite tables", () => {
+  // WALKED, NEVER LISTED. A hand-written line per kind passes for every kind
+  // somebody remembered — which is exactly the kinds that already worked. The
+  // whole vocabulary is `ORBIT_VARIANTS`, so both checks read it.
+  const KINDS = Object.keys(ORBIT_VARIANTS) as (keyof typeof ORBIT_VARIANTS)[];
+
   it("answers every variant the sim can roll", () => {
-    expect(JUNK_SPRITES).toHaveLength(ORBIT_VARIANTS.junk);
-    expect(SATELLITE_SPRITES).toHaveLength(ORBIT_VARIANTS.satellite);
-    expect(ROCK_SPRITES).toHaveLength(ORBIT_VARIANTS.rock);
-    expect(PLANE_SPRITES).toHaveLength(ORBIT_VARIANTS.plane);
-    expect(DRONE_SPRITES).toHaveLength(ORBIT_VARIANTS.drone);
-    expect(BIRD_SPRITES).toHaveLength(ORBIT_VARIANTS.bird);
-    expect(SKYDIVER_SPRITES).toHaveLength(ORBIT_VARIANTS.skydiver);
-    expect(PARAGLIDER_SPRITES).toHaveLength(ORBIT_VARIANTS.paraglider);
+    const lengths = Object.fromEntries(
+      KINDS.map((kind) => [kind, ORBIT_SPRITE_TABLES[kind].length]),
+    );
+    expect(lengths).toEqual({ ...ORBIT_VARIANTS });
   });
 
   it("names only sprites the shipped atlas actually has", () => {
     const all = [
-      ...JUNK_SPRITES,
-      ...SATELLITE_SPRITES,
-      ...ROCK_SPRITES,
-      ...PLANE_SPRITES,
-      ...DRONE_SPRITES,
-      ...BIRD_SPRITES,
-      ...SKYDIVER_SPRITES,
-      ...PARAGLIDER_SPRITES,
+      ...KINDS.flatMap((kind) => ORBIT_SPRITE_TABLES[kind]),
       ...NAMED,
     ];
     const missing = all.filter((name) => !(name in ATLAS));

@@ -11,9 +11,11 @@
 import {
   FLIGHT,
   FLIGHT_OUTCOME,
+  SKY_LAYERS,
   flightOffCourse,
   flightShellClear,
   flightWindPx,
+  layerFrac,
   type FlightState,
 } from "@game/core";
 
@@ -51,6 +53,10 @@ import { STRIKE_WINDOW_MS, stormIntensity, thunderDue } from "./storm.ts";
 const JET_LINE_FRAC = 0.8;
 /** …and how far off the corridor earns the off-course line. */
 const OFF_COURSE_LINE_FRAC = 0.5;
+/** The layer the WATCHED line belongs to — held by its stable id rather than
+ * by the caption the dashboard prints, so rewording a zone never moves a
+ * spoken beat. */
+const WATCH_LAYER = SKY_LAYERS.find((layer) => layer.id === "watch");
 
 /** The one-shot beats this drain owes exactly once per flight — the sim can
  * only raise `orbit` once, but the shell-clear line is an EDGE the app reads,
@@ -64,6 +70,7 @@ export type FlightBeats = {
   descentSaid: boolean;
   birdSaid: boolean;
   hobbyistSaid: boolean;
+  watchedSaid: boolean;
   jetSaid: boolean;
   offCourseSaid: boolean;
   /** How many tip-over scares have spoken — the rotation's cursor. */
@@ -77,6 +84,7 @@ export function createFlightBeats(): FlightBeats {
     descentSaid: false,
     birdSaid: false,
     hobbyistSaid: false,
+    watchedSaid: false,
     jetSaid: false,
     offCourseSaid: false,
     tips: 0,
@@ -222,6 +230,19 @@ export function drainFlight(
   ) {
     beats.offCourseSaid = true;
     say(FLIGHT_VOICE.offCourse);
+  }
+  // …and the sky's own: the first time the climb is properly inside the watch
+  // deck. Keyed on the LAYER rather than on the zone caption, because the
+  // caption is what the dashboard prints and a line should not move when a
+  // label is reworded.
+  if (
+    !beats.watchedSaid &&
+    flight.phase === "ascent" &&
+    WATCH_LAYER &&
+    layerFrac(WATCH_LAYER, flight.craft.alt) >= 1
+  ) {
+    beats.watchedSaid = true;
+    say(FLIGHT_VOICE.watched);
   }
 }
 

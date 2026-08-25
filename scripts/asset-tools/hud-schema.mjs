@@ -212,6 +212,9 @@ export const HUD_BINDINGS = {
   "rocket.dashLive": "flag",
   /** Which half is being flown, as a caption prints it. */
   "rocket.phase": "text",
+  // What the ship is flying through — the sky's neighbourhood at this
+  // altitude (BIRDS, THE AIRWAYS, CONSTELLATION, THE SHELL…), or THE DROP.
+  "rocket.zone": "text",
   "rocket.landing": "flag",
   /** Bags riding the hull right now. */
   "rocket.trash": "number",
