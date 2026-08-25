@@ -208,6 +208,58 @@ describe("cutscene player", () => {
     expect(cs.shift.x).toBeCloseTo(-20, 0); // …while the field streams
   });
 
+  it("a drift beat keeps the camera moving under every beat after it", () => {
+    const CLIMB: CutsceneDef = {
+      id: "test_climb",
+      stage: { width: 320, height: 180, backdrop: "test", props: [] },
+      actors: [],
+      beats: [
+        { kind: "drift", by: { x: 0, y: 20 } },
+        { kind: "caption", text: ["STILL GOING UP."] },
+        { kind: "drift", by: { x: 0, y: 0 } },
+        { kind: "caption", text: ["AND STOPPED."] },
+      ],
+    };
+    const cs = createCutscene(CLIMB);
+    // The drift is INSTANT: the first step is already parked on the caption
+    // it precedes, with the camera rising underneath it.
+    for (let t = 0; t < 1000; t += DT) stepCutscene(cs, CLIMB, DT);
+    expect(currentLine(cs, CLIMB)?.text).toEqual(["STILL GOING UP."]);
+    expect(cs.shift.y).toBeCloseTo(20, 0);
+    // …and switching it off leaves the camera exactly where it stopped, for
+    // as long as the next line is held.
+    advanceCutsceneBeat(cs, CLIMB);
+    const parked = cs.shift.y;
+    for (let t = 0; t < 1000; t += DT) stepCutscene(cs, CLIMB, DT);
+    expect(currentLine(cs, CLIMB)?.text).toEqual(["AND STOPPED."]);
+    expect(cs.shift.y).toBe(parked);
+  });
+
+  it("a drift beat replaces the stage's own opening velocity", () => {
+    const TRANSIT: CutsceneDef = {
+      id: "test_transit",
+      stage: {
+        width: 320,
+        height: 180,
+        backdrop: "test",
+        props: [],
+        drift: { x: -10, y: 0 },
+      },
+      actors: [],
+      beats: [
+        { kind: "wait", ms: 1000 },
+        { kind: "drift", by: { x: -40, y: 0 } },
+        { kind: "caption", text: ["FASTER."] },
+      ],
+    };
+    const cs = createCutscene(TRANSIT);
+    for (let t = 0; t < 1000; t += DT) stepCutscene(cs, TRANSIT, DT);
+    expect(cs.shift.x).toBeCloseTo(-10, 0);
+    for (let t = 0; t < 1000; t += DT) stepCutscene(cs, TRANSIT, DT);
+    // A second's worth at the new velocity, not at the sum of the two.
+    expect(cs.shift.x).toBeCloseTo(-50, 0);
+  });
+
   it("shake beats set and clear an actor's tremble instantly", () => {
     const SHAKE: CutsceneDef = {
       id: "test_shake",

@@ -336,6 +336,10 @@
           "ms": 700
         },
         {
+          "kind": "sound",
+          "sound": "rocket_ignition"
+        },
+        {
           "actor": "ship",
           "kind": "pose",
           "sprite": "ship_fire"
@@ -348,6 +352,10 @@
         {
           "kind": "wait",
           "ms": 1200
+        },
+        {
+          "kind": "sound",
+          "sound": "rocket_liftoff"
         },
         {
           "actor": "ship",
@@ -365,6 +373,13 @@
           },
           "kind": "pan",
           "ms": 3200
+        },
+        {
+          "by": {
+            "x": 0,
+            "y": 22
+          },
+          "kind": "drift"
         },
         {
           "kind": "caption",

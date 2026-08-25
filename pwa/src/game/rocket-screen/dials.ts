@@ -70,10 +70,10 @@ export type FlightDials = {
   boost: boolean;
   /**
    * THE MISSION TIMELINE'S MARKER, 0–1 — STAGED, not raw altitude: the
-   * authored strip spaces its six event labels evenly, so each leg of the trip
-   * is mapped onto its own fifth and the marker crosses a label exactly as the
-   * ship crosses the event. LIFTOFF → JUNK SHELL → ALL CLEAR → ORBIT → THE
-   * DROP → TOUCHDOWN.
+   * authored strip spaces its five event labels evenly, so each leg of the
+   * trip is mapped onto its own quarter and the marker crosses a label exactly
+   * as the ship crosses the event. LIFTOFF → JUNK SHELL → ALL CLEAR → ORBIT →
+   * TOUCHDOWN.
    */
   progress: number;
   /** Out of the shell — the timeline's ALL CLEAR lamp. */
@@ -102,11 +102,16 @@ function missionClock(ms: number): string {
 
 /** Where the timeline's marker stands — see `FlightDials.progress`. */
 export function missionProgress(state: FlightState): number {
-  const seg = 1 / 5;
+  // FOUR LEGS, ONE PER STATION PAST THE FIRST: LIFTOFF → JUNK SHELL → ALL
+  // CLEAR → ORBIT → TOUCHDOWN. The descent takes the last quarter whole,
+  // because between orbit and it there is a cutscene and a fresh sitting at
+  // the cabinet — a fifth leg for THE DROP was a quarter of the bar the
+  // marker could only ever cross in one cut.
+  const seg = 1 / 4;
   if (state.phase === "landing") {
     if (state.outcome === "landed") return 1;
     const fallen = 1 - state.craft.alt / FLIGHT.landing.startAltPx;
-    return 4 * seg + Math.min(1, Math.max(0, fallen)) * seg;
+    return 3 * seg + Math.min(1, Math.max(0, fallen)) * seg;
   }
   const coursePx = flightCoursePx(state.params);
   const shellIn = FLIGHT.field.startAltPx;
@@ -132,7 +137,12 @@ export function flightDials(
   const lean = craft.tilt / FLIGHT.ascent.flipRad;
   const hull = Math.max(0, Math.min(1, craft.hull));
   const mph = flightMph(state);
-  const windPx = flightWindPx(state);
+  // NO AIR, NO READING — and the FIGURE has to agree with the word under it.
+  // Once the ship is out of the shell the meter's last word is VACUUM, and a
+  // residual push rounding up to the figure's own 5 mph step printed "5 MPH"
+  // beside it. The wind is what the hull can FEEL; past the air there is
+  // nothing to feel, so the whole instrument reads nothing.
+  const windPx = flightShellClear(state) ? 0 : flightWindPx(state);
   return {
     mph,
     // The arc IS the figure: one telemetry (`flightMph`), so the needle and

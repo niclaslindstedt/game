@@ -2175,7 +2175,7 @@ stage:
     grain: boards # optional: `bands` (default) or `boards` — see below
     ceiling: "#060c14" # optional, with ceilingY: the room has a top
     ceilingY: 26
-  drift: { x: -14, y: 0 } # optional: constant camera velocity, px/s (a transit)
+  drift: { x: -14, y: 0 } # optional: opening camera velocity, px/s (a transit)
   props:
     - { sprite: sky_earth, at: { x: 34, y: 34 }, parallax: 0.06 }
     - { sprite: ship, at: { x: 196, y: 100 } }
@@ -2256,11 +2256,31 @@ a tap cuts them short. Instant beats settle and roll straight into the next one.
 | `exit`    | `actor`                       | Take an actor off.                                                                  |
 | `fade`    | `to` (0–1), `ms`              | Fade the frame toward black (`1`) or clear (`0`).                                   |
 | `pan`     | `by: {x,y}`, `ms`             | Glide the camera; props follow scaled by their parallax, actors do not.             |
+| `drift`   | `by: {x,y}`                   | Re-set the camera's running velocity in px/s; `{x: 0, y: 0}` stops it.              |
 | `shake`   | `actor`, `amp`                | Tremble amplitude in px, until switched off with `amp: 0`.                          |
 | `jump`    | `actor`, `lift`, `ms`         | Ease the actor `lift` px off the ground (`0` puts it back down).                    |
 | `hold`    | `actor`, `sprite?`, `at?`     | Put a sprite in the actor's hands at `at`; no `sprite` empties them.                |
 | `prop`    | `prop`, `hidden`              | Take a labelled stage prop off the stage, or put it back.                           |
 | `sound`   | `sound`                       | Play a sound by id — yours or the game's. An id nothing answers to fails the build. |
+
+**`pan` is a move with a length; `drift` is a state the scene is left in.** A
+pan glides the camera `by` so much over `ms` and then the camera stops. A
+`drift` beat says the same thing the stage's own `drift:` says, mid-scene: a
+velocity that keeps being spent under every beat after it, INCLUDING a caption
+or a line holding for the player's tap. That is what it is for — a scene whose
+world freezes the moment the narration arrives reads as a paused game, and the
+one place it shows worst is a climb, where the frame is nothing but sky and a
+ship parked in the middle of it. Give the climb a slow drift and the sky slides
+past the held line instead:
+
+```yaml
+- { kind: pan, by: { x: 0, y: 180 }, ms: 3200 } # the ascent, on the clock…
+- { kind: drift, by: { x: 0, y: 18 } } # …and it never quite stops
+- kind: caption
+  text:
+    - FIRST FLIGHT. NO TEST RUNS.
+- { kind: drift, by: { x: 0, y: 0 } } # back to a still camera
+```
 
 **A leap is TWO jumps, and the grab happens between them.** A rise decelerates
 into its apex and a fall accelerates out of it — which half a `jump` is, is

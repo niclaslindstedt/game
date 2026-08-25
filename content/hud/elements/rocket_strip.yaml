@@ -1,10 +1,18 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 #
 # THE MISSION TIMELINE — the launch feed's event strip, across the top of the
-# picture: the whole trip as six stations and a marker crawling through them.
+# picture: the trip as five stations and a marker crawling through them.
+#
+# FIVE, AND NOT THE SIX THIS SCREEN CAN REACH. THE DROP used to stand between
+# ORBIT and TOUCHDOWN, and it is not a station on this flight at all: the
+# descent is its own sitting at the cabinet with a cutscene between the two, so
+# the strip was advertising a leg that could not be flown from here and holding
+# a whole fifth of the bar open for it. The marker jumped that gap in one cut,
+# which is exactly how it looked. What is left is the climb's own four legs and
+# the moon at the end of them.
 #
 # THE MARKER IS STAGED (`rocket.progress`, rocket-screen/dials.ts): each leg of
-# the trip is mapped onto its own fifth of the bar, so the six evenly spaced
+# the trip is mapped onto its own quarter of the bar, so the five evenly spaced
 # labels below it are TRUE — the marker crosses a station's label exactly as
 # the ship crosses the station. Each label lights as it is reached (a
 # judgement, so it is Lua), and the strip's right-hand end carries the one
@@ -49,12 +57,6 @@ children:
         scale: 1
         color:
           script: rocket.evt_orbit_color
-      - id: evt_drop
-        kind: text
-        text: THE DROP
-        scale: 1
-        color:
-          script: rocket.evt_drop_color
       - id: evt_down
         kind: text
         text: TOUCHDOWN

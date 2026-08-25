@@ -134,6 +134,53 @@ describe("the launch scene stands on the garage lot", () => {
       expect(xs[i]! - xs[i - 1]!, "a gap in the tarmac").toBe(span);
     }
   });
+
+  // …AND IT MAKES A NOISE WHEN IT GOES. Ten years of weekends ending in
+  // silence is the one thing about this shot nobody would forgive, and a
+  // `sound` beat is the only way a scene can ask for one.
+  it("lights and leaves the pad audibly", () => {
+    const beats = CUTSCENE_DEFS.launch!.beats;
+    const ignite = beats.findIndex(
+      (b) => b.kind === "sound" && b.sound === "rocket_ignition",
+    );
+    const lift = beats.findIndex(
+      (b) => b.kind === "sound" && b.sound === "rocket_liftoff",
+    );
+    expect(ignite, "no ignition sound").toBeGreaterThanOrEqual(0);
+    expect(lift, "no lift-off sound").toBeGreaterThan(ignite);
+    // The crack has to land on the frame the flame appears in, not a beat
+    // later — so the pose that lights the engine is the beat straight after.
+    expect(beats[ignite + 1]).toMatchObject({
+      kind: "pose",
+      actor: "ship",
+      sprite: "ship_fire",
+    });
+    // …and the roar on the one that takes her off the pad.
+    expect(beats[lift + 1]).toMatchObject({ kind: "move", actor: "ship" });
+  });
+
+  // AND THE CLIMB OUTLIVES THE PAN. The closing caption holds until the player
+  // taps it; with the ascent's `pan` spent and nothing running underneath, the
+  // shot arrives at a rocket parked in mid-air in a sky that has stopped.
+  it("keeps rising under the caption the ascent ends on", () => {
+    const beats = CUTSCENE_DEFS.launch!.beats;
+    const ascent = beats.findIndex((b) => b.kind === "pan");
+    expect(ascent, "no ascent pan").toBeGreaterThanOrEqual(0);
+    const after = beats.slice(ascent + 1);
+    const drift = after.find((b) => b.kind === "drift");
+    expect(drift, "the ascent stops dead at the end of its pan").toBeDefined();
+    if (drift?.kind !== "drift") throw new Error("unreachable");
+    // Still climbing — and slower than the pan it follows, which is a shot
+    // settling rather than a second ascent.
+    expect(drift.by.y).toBeGreaterThan(0);
+    const pan = beats[ascent];
+    if (pan?.kind !== "pan") throw new Error("unreachable");
+    expect(drift.by.y).toBeLessThan((pan.by.y / pan.ms) * 1000);
+    // …and it is set going BEFORE the line that holds, or it buys nothing.
+    expect(after.findIndex((b) => b.kind === "drift")).toBeLessThan(
+      after.findIndex((b) => b.kind === "caption"),
+    );
+  });
 });
 
 // AND THE PRELUDE'S HERO WALKS ROUND THE FLOOR LAMP RATHER THAN THROUGH IT.

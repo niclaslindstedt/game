@@ -116,11 +116,11 @@ export type CutsceneStage = {
   palette?: CutsceneBackdrop;
   props: CutsceneProp[];
   /**
-   * Constant camera velocity in world px/s, accumulated into
-   * `CutsceneState.shift` for the whole scene — the space transits stream
-   * their star props past the ship with this (parallax makes the depths).
-   * Runs UNDER the beat timeline, so the world keeps moving through held
-   * dialogue. Omitted = a static camera.
+   * The camera's OPENING velocity in world px/s, accumulated into
+   * `CutsceneState.shift` — the space transits stream their star props past
+   * the ship with this (parallax makes the depths). Runs UNDER the beat
+   * timeline, so the world keeps moving through held dialogue. Omitted = a
+   * static camera, which a `drift` BEAT can still set going later.
    */
   drift?: Vec2;
   /**
@@ -228,6 +228,17 @@ export type CutsceneBeat =
    * climbing ship.
    */
   | { kind: "pan"; by: Vec2; ms: number }
+  /**
+   * Re-set the camera's running velocity in world px/s — the stage's own
+   * `drift` said again, mid-scene. Instant, and it keeps running under every
+   * later beat until switched off with `{ x: 0, y: 0 }`, which is what
+   * separates it from `pan`: a pan is a MOVE with a length, this is a state
+   * the scene is left in. The launch's ascent is the case it exists for — the
+   * ship keeps climbing through the caption that holds for the player's tap,
+   * so the sky slides past it instead of hanging still around a rocket
+   * parked in mid-air.
+   */
+  | { kind: "drift"; by: Vec2 }
   /** Set an actor's tremble amplitude in world px (0 stops it). Instant —
    *  the rumble runs under later beats until switched off. */
   | { kind: "shake"; actor: string; amp: number };
@@ -304,11 +315,14 @@ export type CutsceneState = {
    */
   sounds: string[];
   /**
-   * The camera's accumulated shift in world px (stage `drift` + `pan`
+   * The camera's accumulated shift in world px (the running `drift` + `pan`
    * beats). The renderer offsets each prop by `shift × its parallax`;
    * actors are screen-pinned and unaffected.
    */
   shift: Vec2;
+  /** The camera's running velocity in world px/s — the stage's `drift` until
+   * a `drift` beat says otherwise. Spent every step, under the timeline. */
+  drift: Vec2;
   done: boolean;
 };
 
@@ -362,6 +376,7 @@ export function createCutscene(
       .map((p) => p.id as string),
     sounds: [],
     shift: { x: 0, y: 0 },
+    drift: { x: def.stage.drift?.x ?? 0, y: def.stage.drift?.y ?? 0 },
     done: def.beats.length === 0,
   };
 }
@@ -408,6 +423,9 @@ function settleBeat(state: CutsceneState, beat: CutsceneBeat): void {
       break;
     case "shake":
       actor(state, beat.actor).shake = beat.amp;
+      break;
+    case "drift":
+      state.drift = { ...beat.by };
       break;
     case "jump":
       actor(state, beat.actor).lift = beat.lift;
@@ -461,6 +479,7 @@ function beginBeat(state: CutsceneState, def: CutsceneDef): void {
     beat.kind === "enter" ||
     beat.kind === "exit" ||
     beat.kind === "shake" ||
+    beat.kind === "drift" ||
     beat.kind === "hold" ||
     beat.kind === "prop" ||
     beat.kind === "sound"
@@ -485,12 +504,11 @@ export function stepCutscene(
   }
   state.timeMs += dtMs;
   for (const a of state.actors) a.poseMs += dtMs;
-  // The stage drift runs UNDER the beat timeline — the parallax field keeps
-  // streaming while a held line idles the beats.
-  if (def.stage.drift) {
-    state.shift.x += (def.stage.drift.x * dtMs) / 1000;
-    state.shift.y += (def.stage.drift.y * dtMs) / 1000;
-  }
+  // The camera's running velocity is spent UNDER the beat timeline — the
+  // parallax field keeps streaming, and the launch keeps climbing, while a
+  // held line idles the beats.
+  state.shift.x += (state.drift.x * dtMs) / 1000;
+  state.shift.y += (state.drift.y * dtMs) / 1000;
   const beatWasMs = state.beatMs;
   state.beatMs += dtMs;
 

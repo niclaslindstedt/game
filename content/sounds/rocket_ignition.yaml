@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_ignition
+description: >-
+  THE ENGINE CATCHING ON THE PAD — a homemade rocket lighting twelve feet from
+  the garage it was built in. The igniter cracks, a low whump goes through the
+  ground, and the burn comes up UNDER it rather than arriving: a held sub and a
+  detuned saw swelling for a second and a half while the hull rattles. It is the
+  bed's `rocket_rumble` said once, loud, with a front on it — the flight's
+  running roar takes over from where this settles.
+voices:
+  # The igniter: a dry bright crack, over before anything else has started.
+  - call: noise
+    durationMs: 90
+    volume: 0.036
+    filter:
+      type: bandpass
+      frequency: 1900
+  # The whump through the concrete — held at its peak so it reads as pressure
+  # rather than as a kick (a tone is a tenth of its peak a quarter of the way
+  # through `durationMs`).
+  - call: tone
+    type: sine
+    from: 76
+    to: 34
+    durationMs: 1200
+    attackMs: 40
+    holdMs: 420
+    volume: 0.079
+  # …doubled an octave up and detuned, so the gesture survives a phone speaker
+  # that cannot reach the fundamental at all.
+  - call: tone
+    type: triangle
+    from: 152
+    to: 68
+    durationMs: 1000
+    attackMs: 40
+    holdMs: 340
+    volume: 0.025
+    detuneCents: 9
+  # The thrust building: a saw climbing INTO the burn, slow attack, so the
+  # engine is heard opening up rather than being switched on.
+  - call: tone
+    type: sawtooth
+    from: 38
+    to: 62
+    durationMs: 1400
+    attackMs: 320
+    holdMs: 520
+    volume: 0.043
+    detuneCents: 14
+  # The flame itself — a dark broadband wash under all of it, two overlapping
+  # grains so it does not fade before the swell above it has arrived.
+  - call: noise
+    durationMs: 900
+    volume: 0.022
+    delayMs: 60
+    filter:
+      type: lowpass
+      frequency: 340
+  - call: noise
+    durationMs: 1100
+    volume: 0.025
+    delayMs: 520
+    filter:
+      type: lowpass
+      frequency: 420
+    echo: 0.25

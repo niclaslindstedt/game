@@ -1,42 +1,57 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 #
-# THE WIND METER — under the attitude indicator, because the two are one
-# instrument really: the wind is the weather the lean is fighting, and the
-# vane's arrow lights on the shoulder the push is coming FROM so the
-# correction reads straight off it.
+# THE WIND VANE — top centre, on the ship's own column, and the instrument the
+# climb is actually flown off: the ship's lean the player can see for himself,
+# the air that is causing it he cannot.
 #
-# The figure is what the ship can FEEL (`rocket.windMph` — the layer's wind
+# AN ARROW BLOWING THE WAY THE WIND BLOWS, with the reading under it. The
+# arrow points the way the air is PUSHING the ship and grows as long as the
+# wind is strong, with streaks blowing through it; past the SHEAR rung the
+# whole instrument trembles, because 90 MPH and 190 MPH are two different
+# numbers and only one of them is an emergency — which a figure alone never
+# said. The correction the thumb owes is the arrow read backwards.
+#
+# THE ARROW IS THE ONE PIECE THAT IS CODE (`widget: windVane`), because every
+# part of it is a HISTORY rather than a value — a shaft that lags its reading,
+# streaks at a phase, a tremble reseeded per frame. Everything else here is
+# content's as usual: where it sits, the colour ladder it wears, and the words
+# under it.
+#
+# THE FIGURE OWES ITS UNIT. It is a speed, it is one of three numbers on this
+# HUD (MPH, MI, HULL %) and the other two are labelled — a bare 45 over a
+# picture of moving air is a number the player has to guess the meaning of.
+# What it counts is what the ship can FEEL (`rocket.windMph` — the layer's wind
 # bought down by the air), which is why the meter dies on the climb: by the
-# shell there is no air left for the wind to push with, and the label's last
-# word is VACUUM. The ladder (calm through jet stream) is a judgement and
-# lives in Lua.
-region: rocket_attitude
-order: 1
+# shell there is no air left for the wind to push with, and the named weather
+# under it reads VACUUM. That ladder (calm through jet stream) is a judgement
+# and lives in Lua.
+region: rocket_vane
+order: 0
 kind: panel
 class: rocket-wind
 children:
+  - id: wind_vane
+    kind: widget
+    widget: windVane
+    class: rocket-vane
+    color:
+      script: rocket.wind_color
   - id: wind_row
     kind: panel
     class: rocket-wind-row
     children:
-      - id: wind_port
-        kind: text
-        text: "◀"
-        scale: 1
-        color:
-          script: rocket.wind_port_color
       - id: wind_mph
         kind: text
         bind: rocket.windMph
         scale: 1
         color:
           script: rocket.wind_color
-      - id: wind_star
+      - id: wind_unit
         kind: text
-        text: "▶"
+        text: MPH
         scale: 1
         color:
-          script: rocket.wind_star_color
+          script: rocket.wind_color
   - id: wind_label
     kind: text
     class: rocket-wind-caption

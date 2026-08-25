@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: rocket_liftoff
+description: >-
+  SHE LEAVES THE PAD. Layered OVER the ignition's tail rather than instead of
+  it, so it only carries what that one does not: the sub going DOWN as the
+  weight comes off, the roar opening out wide, and a long slap of it coming
+  back off the house she is standing next to. Nothing above 900 Hz — the crack
+  is already spent, and a second one would make the pair louder instead of
+  bigger.
+voices:
+  # The pressure leaving: a long fall, held at the top, deeper than the
+  # ignition's whump ever goes.
+  - call: tone
+    type: sine
+    from: 58
+    to: 22
+    durationMs: 2000
+    attackMs: 60
+    holdMs: 620
+    volume: 0.082
+    echo: 0.3
+  - call: tone
+    type: triangle
+    from: 116
+    to: 44
+    durationMs: 1700
+    attackMs: 60
+    holdMs: 520
+    volume: 0.026
+    detuneCents: 11
+  # The engine at full — the swell the ignition ended on, taken up a fifth and
+  # left there while she climbs.
+  - call: tone
+    type: sawtooth
+    from: 64
+    to: 46
+    durationMs: 1800
+    attackMs: 140
+    holdMs: 700
+    volume: 0.037
+    detuneCents: 17
+  # The roar, wide and dark, in three overlapping grains so it holds its level
+  # for the whole climb out of frame.
+  - call: noise
+    durationMs: 1200
+    volume: 0.022
+    filter:
+      type: lowpass
+      frequency: 520
+  - call: noise
+    durationMs: 1200
+    volume: 0.02
+    delayMs: 480
+    filter:
+      type: lowpass
+      frequency: 460
+  - call: noise
+    durationMs: 1400
+    volume: 0.018
+    delayMs: 960
+    filter:
+      type: lowpass
+      frequency: 380
+    echo: 0.35

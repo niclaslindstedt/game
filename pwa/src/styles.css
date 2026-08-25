@@ -782,6 +782,27 @@ html.app-locked body {
   width: auto;
 }
 
+/* LANDSCAPE SPLITS IT, AND THE SHIP'S OWN COLUMN IS WHY. Held horizontally the
+   rocket flies down the middle of the frame with a plume hanging under it,
+   straight through the bottom of the picture — and three dials bunched in the
+   left corner reached far enough across that the HULL ring sat in that column,
+   so the one instrument the player checks was also the thing covering what they
+   were checking it about.
+
+   So the shelf takes the whole width and the hull dial is pushed to the far end
+   of it: speed and altitude keep the left corner (what the ship is doing), the
+   damage takes the right (what is left of it), and the flight path between them
+   is clear. The shelf is `pointer-events: none` either way, so widening it
+   steals no taps. */
+@media (orientation: landscape) {
+  .drive-dash.rocket-dash {
+    width: calc(100% - 1.5rem);
+  }
+  .rocket-dash > .rocket-hull-dial {
+    margin-left: auto;
+  }
+}
+
 /* PORTRAIT CENTRES THE CONSOLE — three dials fit a phone held upright with
    room to spare, and a shelf pinned left under a centred sky reads as chrome
    from a different game. Left/right pinning instead of a margin trick because
@@ -797,11 +818,11 @@ html.app-locked body {
   }
 }
 
-/* THE FLIGHT DIRECTOR'S CLUSTER — the attitude indicator with the wind meter
-   under it, top centre beneath the mission strip: on the ship's own column,
-   where the lean it reports is happening, and OFF the console — which is also
-   what lets the console fit a portrait phone (three dials do; four did not). */
-.rocket-attitude-slot {
+/* THE WIND VANE'S SHELF — top centre beneath the mission strip, on the ship's
+   own column, and OFF the console: it is the instrument the climb is flown
+   off, the console's corner is the last place the eye is, and keeping it out
+   of that row is also what lets the console fit a portrait phone. */
+.rocket-vane-slot {
   position: absolute;
   top: calc(max(0.5rem, env(safe-area-inset-top)) + 2.9rem);
   left: 50%;
@@ -815,61 +836,44 @@ html.app-locked body {
 }
 /* Portrait hides the strip's station labels, so the cluster rides higher. */
 @media (orientation: portrait) {
-  .rocket-attitude-slot {
+  .rocket-vane-slot {
     top: calc(max(0.5rem, env(safe-area-inset-top)) + 1.9rem);
   }
 }
 
-/* THE WIND METER — the vane's two arrows around the figure, the lit one
-   pointing the way the wind will push (`rocket_wind.yaml`). */
+/* THE WIND VANE — the blowing arrow, the figure with its unit, and the named
+   weather under both (`rocket_wind.yaml`; the arrow itself is the `windVane`
+   widget, because every part of it is a history rather than a value). */
 .rocket-wind {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.1rem;
   pointer-events: none;
+}
+.rocket-vane {
+  /* Sized in rem like every other instrument on this HUD, so it steps up with
+     the root font on a big screen instead of staying a phone's dial. The 44×15
+     viewBox is the widget's own; this is only how big it is drawn — wide and
+     short, because what it draws is travelling across rather than sweeping. */
+  width: 4.2rem;
+  height: 1.45rem;
+  overflow: visible;
 }
 .rocket-wind-row {
   display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  align-items: baseline;
+  gap: 0.25rem;
 }
 .rocket-wind-caption {
   opacity: 0.85;
 }
 
-/* THE ATTITUDE INDICATOR — two bars growing OUTWARD from the ship's own glyph,
-   so the light spreads toward the side the ship is falling over and the
-   correction owed is literally the other way. */
-.rocket-lean {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-  pointer-events: none;
-}
-.rocket-lean-row {
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-}
-.rocket-lean-bar {
-  width: 2.4rem;
-  height: 0.5rem;
-  background: #1b2431;
-  border: 1px solid #0a0c14;
-  overflow: hidden;
-}
-/* The port bar is the same bar mirrored, so its fill grows leftward — away
-   from the ship, like its twin. */
-.rocket-lean-port {
-  transform: scaleX(-1);
-}
-.rocket-lean-fill {
-  height: 100%;
-}
-.rocket-lean-ship {
-  image-rendering: pixelated;
+/* THE ALARM — the line under the vane, and empty whenever the cockpit has
+   nothing to shout (`rocket_alarm.yaml`). It keeps a row's height either way,
+   so the vane above it never jumps when the words arrive. */
+.rocket-alarm {
+  min-height: 0.7rem;
 }
 
 /* THE MISSION TIMELINE — the launch feed's event strip, hung across the top of
@@ -6313,6 +6317,18 @@ html.app-locked body {
   max-width: min(22rem, 92vw);
 }
 
+/* The confirm's cost line is the only row on the card whose text is not
+   authored to fit, so it is the only one that has to be MEASURED (both pause
+   cards flow it into `useTextColumn`). This gives it the box's full inner
+   width to be measured against — without it the row shrinks to its own canvas
+   and the column it reports is the width of the overflow it is trying to
+   fix. */
+.pause-cost {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 /* The three pause actions stack full-width — clean in landscape and portrait
    alike, with none of the old row's wrap that floated MENU on its own line. */
 .pause-actions {
@@ -7026,7 +7042,14 @@ html.app-locked body {
    so. */
 .rocket-thought {
   position: absolute;
-  top: 31%;
+  /* A SHARE OF THE PICTURE, WITH A FLOOR THE INSTRUMENTS SET. A third of the
+     way down is where the words want to be on any screen tall enough to have
+     a third; the wind vane above them is anchored in rem off the top edge
+     instead (`.rocket-vane-slot`), so on a short landscape phone a percentage
+     walks straight up into it. 8rem clears the vane at every height (its shelf
+     starts 3.4rem down and the instrument under it runs another 3.5), and is
+     under 31% on any picture over 26rem tall. */
+  top: max(31%, 8rem);
   left: 50%;
   transform: translateX(-50%);
   width: min(84vw, 22rem);

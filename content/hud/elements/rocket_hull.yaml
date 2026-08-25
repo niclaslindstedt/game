@@ -9,10 +9,19 @@
 # bite. Where it stops being a dent
 # and starts being the flight is a judgement, so the ladder is Lua and a mod
 # can move it.
+#
+# AND IT SITS AT THE FAR END OF THE CONSOLE ON A WIDE SCREEN. The other two
+# dials say what the ship is DOING and belong together; this one says what is
+# LEFT of it, and it is the one the eye goes to. Held horizontally the ship
+# flies down the middle of the picture with a plume under it, and a third dial
+# stacked onto the left-hand group put a lit ring exactly there — so the sheet
+# pushes this one to the opposite corner (`.rocket-hull-dial`) and leaves the
+# ship's own column clear. Upright there is no room to split anything and the
+# console stays one centred row.
 region: rocket_dash
 order: 3
 kind: panel
-class: drive-dial
+class: drive-dial rocket-hull-dial
 children:
   - id: hull_arc
     kind: gauge

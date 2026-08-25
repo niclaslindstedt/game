@@ -3,8 +3,8 @@
 -- when it changes its tone.
 --
 -- The flight minigame's HUD is authored in `hud/elements/rocket_*.yaml` — the
--- velocity and altitude dials, the hull dial, the attitude indicator, the T+
--- clock and the mission timeline — and everything on them that is a JUDGEMENT
+-- velocity and altitude dials, the hull dial, the wind vane, the T+ clock and
+-- the mission timeline — and everything on them that is a JUDGEMENT
 -- rather than a plain read lives here: where the lean stops being flying and
 -- starts being falling, when the hull dial starts talking about the trip
 -- instead of the paintwork, which stations of the timeline are lit.
@@ -148,22 +148,33 @@ function M.lean_color(state)
   return CALM
 end
 
---- The caption ranks its emergencies: a ship going over outranks a ship that
--- has merely wandered into somebody else's airspace.
+--- THE COCKPIT'S ONE ALARM (`elements/rocket_alarm.yaml`), and it says NOTHING
+-- while there is nothing to say: the lean it used to caption is a thing the
+-- player can watch happening to the rocket itself, and a word for it was a
+-- word for free. What is left is the two facts the picture does not carry —
+-- a ship past the point where the next second decides it, and a ship that
+-- looks fine and has wandered out of the corridor the strays are aimed down.
+-- They rank: going over outranks being somewhere you should not be.
+--
+-- The empty string is deliberate rather than a `visible:` condition — the row
+-- keeps its height, so the vane above it never jumps when the alarm arrives.
 function M.lean_label(state)
   if state.rocket.leanFrac >= LEAN_ALARM_FRAC then
     return "SHE'S GOING OVER"
   elseif state.rocket.offCourse >= OFF_COURSE_FRAC then
     return "OFF COURSE"
   end
-  return "BALANCE"
+  return ""
 end
 
---- THE WIND METER (`elements/rocket_wind.yaml`). The figure it colours is
--- what the ship can FEEL — wind bought down by air — so the ladder is honest
--- twice over: a jet-stream layer reads as the emergency it is while the ship
--- is in the soup, and the same layer over the shell reads as the nothing it
--- can do.
+--- THE WIND VANE (`elements/rocket_wind.yaml`) — the needle's colour and the
+-- figure's, which are one ladder because they are one instrument. What it
+-- colours is what the ship can FEEL — wind bought down by air — so the ladder
+-- is honest twice over: a jet-stream layer reads as the emergency it is while
+-- the ship is in the soup, and the same layer over the shell reads as the
+-- nothing it can do. The needle's own SWING and its tremble are the widget's
+-- (`hud/widgets/WindVane.tsx`); this only says what colour it is while it
+-- does them.
 function M.wind_color(state)
   local frac = state.rocket.windFrac
   if frac >= WIND_JET_FRAC then
@@ -193,22 +204,6 @@ function M.wind_label(state)
   return "CALM"
 end
 
---- The vane's two arrows: the lit one points the way the wind will PUSH the
--- ship, which is the correction's own direction read backwards.
-function M.wind_port_color(state)
-  if state.rocket.windDir < 0 then
-    return M.wind_color(state)
-  end
-  return DIM
-end
-
-function M.wind_star_color(state)
-  if state.rocket.windDir > 0 then
-    return M.wind_color(state)
-  end
-  return DIM
-end
-
 function M.clock_label(state)
   if state.rocket.paused then
     return "HOLD"
@@ -227,9 +222,9 @@ function M.trash_label(state)
   return "TRASH " .. state.rocket.trash
 end
 
---- The timeline's stations, each lit as the marker reaches its fifth. The
+--- The timeline's stations, each lit as the marker reaches its quarter. The
 -- thresholds are the STAGING's (`rocket.progress` maps each leg onto its own
--- fifth — dials.ts), so these numbers are positions on the strip, not
+-- quarter — dials.ts), so these numbers are positions on the strip, not
 -- altitudes.
 local function station(state, at)
   if state.rocket.progress >= at then
@@ -243,7 +238,7 @@ function M.evt_liftoff_color(state)
 end
 
 function M.evt_shell_color(state)
-  return station(state, 0.2)
+  return station(state, 0.25)
 end
 
 function M.evt_clear_color(state)
@@ -256,11 +251,7 @@ function M.evt_clear_color(state)
 end
 
 function M.evt_orbit_color(state)
-  return station(state, 0.6)
-end
-
-function M.evt_drop_color(state)
-  return station(state, 0.8)
+  return station(state, 0.75)
 end
 
 function M.evt_down_color(state)

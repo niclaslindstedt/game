@@ -45,6 +45,13 @@
 // card, a monologue, a breakdown). So each cloud band carries a slow drift on
 // the RENDER clock as well, on the same height ordering — the wisp barely
 // creeps, the bank actually moves.
+//
+// A BAND IS A WINDOW ON THE GROUND AND A LADDER IN A CLIMB. Standing still, a
+// band is exactly the rows it was hung in, and the road never leaves the
+// ground, so nothing on it pays for the rest of this. Under a CLIMB the same
+// band is something the camera is moving THROUGH: it is fed from above the
+// frame and retired below it, so a scene can keep rising for as long as it
+// holds without running its own sky out from under it (see `drawBand`).
 
 import { spriteByName, type Sprites } from "../assets.ts";
 
@@ -88,6 +95,11 @@ type Band = {
   readonly height: readonly [number, number];
 };
 
+/** How far above the frame a band is fed while the camera climbs (canvas px) —
+ * the tallest cloud plus the deepest row jitter, so a new one is always born
+ * out of sight rather than in the middle of the picture. */
+const CLOUD_SPAN = 24;
+
 /**
  * The three cloud bands, HIGHEST FIRST — which is also slowest first, and the
  * order they are painted in, since a nearer cloud passes in front of a further
@@ -122,6 +134,29 @@ const BANDS: readonly Band[] = [
     height: [0.58, 0.9],
   },
 ];
+
+/**
+ * THE DECK A CAMERA CLIMBS THROUGH — a fourth band, nearer than all three and
+ * therefore the fastest thing in the sky, drawn only for a caller that asks
+ * (`SkyOptions.deck`).
+ *
+ * It is opt-in rather than a fourth row above because it is only worth its
+ * cost to a camera that LEAVES THE GROUND. It hangs low, which on the road
+ * puts most of it behind the open country, and it slides at a third of the
+ * climb where the bank slides at a fifth — so on the way up the ground falls
+ * away and uncovers a layer moving visibly faster than anything else in the
+ * frame. Without it the quickest thing in a launch is the low bank, and a
+ * fifth of the ship is not enough motion to say the ship is moving at all.
+ */
+const CLIMB_DECK: Band = {
+  sprites: ["night_cloud_bank", "night_cloud_puff"],
+  parallax: 0.34,
+  drift: 5.4,
+  spacing: 118,
+  rowPitch: 26,
+  fill: 0.3,
+  height: [0.55, 0.95],
+};
 
 /**
  * ONE RIDGE OF OPEN COUNTRY behind the town.
@@ -338,6 +373,12 @@ export type SkyOptions = {
    * this is taken back off it.
    */
   readonly cameraY?: number;
+  /**
+   * Whether to hang the near CLOUD DECK under the three bands — the layer a
+   * climbing camera is meant to go through. See {@link CLIMB_DECK}: the road
+   * leaves it off, a scene that climbs asks for it.
+   */
+  readonly deck?: boolean;
 };
 
 /**
@@ -386,8 +427,13 @@ export function drawNightSky(
     timeMs,
   );
   drawMoon(ctx, sprites, cameraX, viewW, hangH, rise, portrait);
-  for (const band of BANDS) {
-    drawBand(ctx, sprites, band, cameraX, viewW, hangH, rise, timeMs);
+  // The frame a climbing band is fed across. The clip is the SKY's own band,
+  // which under a long climb is taller than the canvas it is being painted
+  // on; the picture is what a cloud has to cross.
+  const frameH = Math.min(skyH, ctx.canvas.height);
+  const bands = opts.deck ? [...BANDS, CLIMB_DECK] : BANDS;
+  for (const band of bands) {
+    drawBand(ctx, sprites, band, cameraX, viewW, hangH, rise, frameH, timeMs);
   }
   // THE COUNTRY BETWEEN, standing on the bottom edge of the sky: the ground the
   // town has its back to. Painted after the weather (it is under it) and before
@@ -537,16 +583,34 @@ function drawBand(
   /** The composed height, like the moon's: weather hangs where it was hung. */
   hangH: number,
   rise: number,
+  /** How tall the picture is (canvas px) — where a climbing band is fed from
+   * and retired to. */
+  frameH: number,
   timeMs: number,
 ): void {
   const shift = -cameraX * band.parallax - (timeMs / 1000) * band.drift;
   const from = Math.floor((-shift - band.spacing) / band.spacing);
   const to = Math.ceil((-shift + viewW + band.spacing) / band.spacing);
   const [fromFrac, toFrac] = band.height;
+  const top = hangH * fromFrac;
   const slice = hangH * (toFrac - fromFrac);
   const rows = Math.max(1, Math.round(slice / band.rowPitch));
+  const step = slice / rows;
+  const fall = rise * band.parallax;
+  // WHICH ROWS ARE WORTH DRAWING, as a stretch of screen y. A still camera
+  // gets the band's own slice, and the arithmetic below hands back exactly
+  // rows 0…rows-1 for it — the road's sky, unchanged. A camera that has
+  // CLIMBED gets the whole frame instead, with a cloud's own span of margin
+  // at each end: the lattice keeps its pitch and simply runs off the top of
+  // the picture, so rows arrive from above out of sight and the band never
+  // empties however long the climb is held.
+  const climbing = fall > 0;
+  const headY = climbing ? -CLOUD_SPAN : top;
+  const footY = climbing ? frameH + CLOUD_SPAN : top + slice;
+  const rowFrom = Math.ceil((headY - top - fall) / step - 0.5);
+  const rowTo = Math.floor((footY - top - fall) / step - 0.5);
   const salt = Math.round(band.spacing);
-  for (let row = 0; row < rows; row++) {
+  for (let row = rowFrom; row <= rowTo; row++) {
     for (let cell = from; cell <= to; cell++) {
       const seed = cell * 7919 + row * 104729 + salt;
       if (hash(seed) > band.fill) continue;
@@ -562,12 +626,7 @@ function drawBand(
       ctx.drawImage(
         cloud,
         Math.round(cell * band.spacing + jx + shift),
-        Math.round(
-          hangH * fromFrac +
-            (row + 0.5) * (slice / rows) +
-            jy +
-            rise * band.parallax,
-        ),
+        Math.round(top + (row + 0.5) * step + jy + fall),
       );
     }
   }
