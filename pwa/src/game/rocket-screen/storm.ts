@@ -147,10 +147,17 @@ export function drawStorm(
     ctx.fillStyle = `rgba(208,222,255,${(0.14 * intensity * flicker).toFixed(3)})`;
     ctx.fillRect(0, 0, viewW, viewH);
   }
+  // While the lawn is still in shot its strip is the GROUND: the drops land
+  // and splash across it — the launch site keeps the cutscene's own weather —
+  // and once the climb has left it behind, the sheet is open-sky rain again.
+  const groundY = cam.topAlt; // alt 0
   drawRain(ctx, 0, 0, viewW, viewH, nowMs, {
     intensity,
     slantPx: 3,
     scrollX: -cam.x,
     scrollY: cam.topAlt,
+    ...(groundY > 4 && groundY < viewH
+      ? { ground: { top: groundY - 2, bottom: Math.min(viewH, groundY + 28) } }
+      : {}),
   });
 }

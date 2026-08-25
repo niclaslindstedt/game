@@ -19,7 +19,21 @@ export type RainOptions = {
   scrollX?: number;
   scrollY?: number;
   color?: string;
+  /**
+   * THE GROUND IN SHOT, as region y's. With a band, the sheet stops being a
+   * pane of glass and becomes weather IN the scene: every streak owns a
+   * landing depth hashed inside the band, falls TO it — never through it —
+   * and spends the end of its cycle as a little splash there, so the rain
+   * visibly arrives at the lawn at a hundred different depths. Omit for a
+   * sky with no floor in shot (the climb once the lawn has sunk away), which
+   * keeps the wrapping pane behavior.
+   */
+  ground?: { top: number; bottom: number };
 };
+
+/** How long a landed drop's splash lives (ms) — the ticks fly out and sink
+ * inside it, and the streak's whole cycle stretches by its fall-equivalent. */
+const SPLASH_MS = 170;
 
 /** One depth of the sheet: nearer rain is longer, faster and brighter. */
 const DEPTHS = [
@@ -55,6 +69,7 @@ export function drawRain(
   ctx.save();
   ctx.strokeStyle = opts.color ?? "#9db4d8";
   ctx.lineWidth = 1;
+  const ground = opts.ground;
   for (const depth of DEPTHS) {
     const span = h + depth.lengthPx;
     const count = Math.round(((w * h) / 10000) * DENSITY_PER_10K * intensity);
@@ -66,8 +81,38 @@ export function drawRain(
       const pace = 0.75 + hash01(i * 3 + depth.salt) * 0.5;
       const fall = (timeMs / 1000) * depth.speedPx * pace;
       let sx = hx * w + scrollX;
-      let sy = hy * span + fall + scrollY;
       sx = ((sx % w) + w) % w;
+      if (ground) {
+        // GROUNDED: the streak's tip runs from over the frame's top down to
+        // its own landing depth, then the splash spends the cycle's tail.
+        // The landing rides the band the caller hands in each frame, so a
+        // panning camera carries the splash points with the lawn.
+        const ly =
+          ground.top +
+          hash01(i * 5 + 2 + depth.salt) *
+            Math.max(0, ground.bottom - ground.top);
+        const splashPx = depth.speedPx * pace * (SPLASH_MS / 1000);
+        const cycle = ly + depth.lengthPx + splashPx;
+        if (cycle <= 0) continue;
+        const head = (((hy * cycle + fall) % cycle) + cycle) % cycle;
+        if (head <= ly) {
+          ctx.moveTo(x + sx - slant, y + head - depth.lengthPx);
+          ctx.lineTo(x + sx, y + head);
+        } else {
+          // The splash: two ticks flying up and out of the landing point,
+          // spreading as they sink — SIZE carries the decay, because alpha
+          // is set once per batched depth layer.
+          const t = (head - ly) / splashPx;
+          const dx = 1 + t * 3;
+          const up = 0.6 + 1.8 * (1 - t);
+          ctx.moveTo(x + sx - dx, y + ly);
+          ctx.lineTo(x + sx - dx - 1.4, y + ly - up);
+          ctx.moveTo(x + sx + dx, y + ly);
+          ctx.lineTo(x + sx + dx + 1.4, y + ly - up);
+        }
+        continue;
+      }
+      let sy = hy * span + fall + scrollY;
       sy = (((sy % span) + span) % span) - depth.lengthPx;
       ctx.moveTo(x + sx, y + sy);
       ctx.lineTo(x + sx + slant, y + sy + depth.lengthPx);

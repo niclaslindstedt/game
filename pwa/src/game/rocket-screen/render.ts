@@ -42,6 +42,7 @@ export function flightCamera(
 ): SkyCamera {
   const { craft } = state;
   const halfSpan = Math.min(viewW, FLIGHT.fieldW);
+  let cam: SkyCamera;
   if (state.phase === "landing") {
     // The drop is a bounded stage, so its camera still respects the ground's
     // edges; the ground settles at 82% of the frame — ABOVE the console,
@@ -51,14 +52,27 @@ export function flightCamera(
       0,
       Math.min(FLIGHT.fieldW - halfSpan, craft.x - halfSpan / 2),
     );
-    return { x, topAlt: Math.max(viewH * 0.82, craft.alt + viewH * 0.42) };
+    cam = { x, topAlt: Math.max(viewH * 0.82, craft.alt + viewH * 0.42) };
+  } else {
+    // The climb's sky has NO edges — the camera simply follows the ship, which
+    // is also how the world-anchored clouds, stars and launch site get to say
+    // "you are drifting off course" without a single extra drawing.
+    // 0.72, not the middle: at climb speed the sky above the nose is the whole
+    // of the player's warning, and every extra row of it is reaction time.
+    cam = { x: craft.x - viewW / 2, topAlt: craft.alt + viewH * 0.72 };
   }
-  // The climb's sky has NO edges — the camera simply follows the ship, which
-  // is also how the world-anchored clouds, stars and launch site get to say
-  // "you are drifting off course" without a single extra drawing.
-  // 0.72, not the middle: at climb speed the sky above the nose is the whole
-  // of the player's warning, and every extra row of it is reaction time.
-  return { x: craft.x - viewW / 2, topAlt: craft.alt + viewH * 0.72 };
+  if (state.outcome === "wrecked") {
+    // A WRECK RE-CENTERS THE FRAME. The working camera rides the ship low
+    // (the danger is above) — which parks the explosion half under the
+    // console and the frame's bottom edge. A wrecked ship IS the picture, so
+    // the camera eases up over its first beats until the blast plays
+    // mid-frame; `outcomeMs` drives it, so the pan is deterministic and a
+    // restart puts the frame straight back.
+    const t = Math.min(1, state.outcomeMs / 350);
+    const ease = t * (2 - t);
+    cam.topAlt += (craft.alt + viewH * 0.5 - cam.topAlt) * ease;
+  }
+  return cam;
 }
 
 /** The night → space ramp, sampled at one altitude fraction. */
