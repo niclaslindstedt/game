@@ -34,12 +34,18 @@ import { CompanionRail, PartyFrames, TradeAsks } from "./PartyRail.tsx";
 import { Scoreboard } from "./Scoreboard.tsx";
 export { HUD_WIDGET_NAMES } from "./names.ts";
 import { WeaponSlot } from "./WeaponSlot.tsx";
+import { WindVane } from "./WindVane.tsx";
 
 /** Draw the widget an element names. An unknown name draws nothing — impossible
  * from the shipped tree (the schema refuses it), and the right answer from a mod
  * compiled against a newer game. */
 export function renderWidget(view: HudNodeView, ctx: HudContext) {
   const name = view.def.widget;
+  // THE ONE WIDGET THAT IS NOT THE FIGHT'S, and it is answered before the tag
+  // check below because that check is about reading the RUN. The wind vane
+  // reads nothing but published binding values, so it draws on whichever
+  // surface publishes them — the flight, today.
+  if (name === "windVane") return <WindVane ctx={ctx} view={view} />;
   // Every FIELD widget below reads the run; none of them can be drawn on the
   // road, and the tag makes that a type error rather than a crash.
   if (ctx.surface !== "field") return null;

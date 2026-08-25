@@ -23,6 +23,15 @@ import { useState, type ReactElement } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useTextColumn } from "@ui/lib/use-text-column.ts";
+
+/** The integer pixel scale the confirm's cost line is drawn at. */
+const COST_SCALE = 2;
+
+/** What it falls back to before the column has been measured, in rem — the
+ * `.pause-menu` cap (22rem) less `.intro-box`'s 1.5rem of side padding. Only
+ * the first layout frame ever uses it. */
+const COST_REM = 19;
 
 export function DrivePause({
   font,
@@ -58,6 +67,13 @@ export function DrivePause({
   // the card already draws, so a whole second window would be ceremony around a
   // yes/no.
   const [leaving, setLeaving] = useState(false);
+  // THE COST LINE IS THE ONE ROW HERE THAT IS NOT WRITTEN TO FIT. Every other
+  // string on this card is authored short; this one is a whole sentence handed
+  // in by the caller, and a `PixelText` with no cap is a single canvas as wide
+  // as its text — which on the arcade's line ran out of both sides of the box
+  // and off the screen. Measure the column and break to it, so it fits the
+  // narrowest phone as well as it fits a desktop.
+  const { ref: costRef, fontPx } = useTextColumn(COST_SCALE);
   const stop = (event: { stopPropagation: () => void }) =>
     event.stopPropagation();
   return (
@@ -85,7 +101,18 @@ export function DrivePause({
                 arcade lap says its own, because nothing about a hero is true
                 there. Either way, saying so is what makes this a decision
                 rather than a warning. */}
-            <PixelText font={font} text={cost} scale={2} color="#9aa3ad" />
+            <div className="pause-cost" ref={costRef}>
+              <PixelText
+                font={font}
+                text={cost}
+                scale={COST_SCALE}
+                color="#9aa3ad"
+                maxWidth={
+                  fontPx === null ? COST_REM : (fontPx * COST_SCALE) / 16
+                }
+                align="center"
+              />
+            </div>
             <div className="pause-actions">
               <button
                 type="button"

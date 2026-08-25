@@ -29,6 +29,9 @@ const BEAT_SPECS = {
   exit: { actors: ["actor"] },
   fade: { nums: ["to", "ms"] },
   pan: { vecs: ["by"], nums: ["ms"] },
+  // A running camera VELOCITY rather than a move with a length — px/s, and
+  // either axis may be negative, which is why it is a vec rather than a num.
+  drift: { vecs: ["by"] },
   shake: { actors: ["actor"], nums: ["amp"] },
   jump: { actors: ["actor"], nums: ["lift", "ms"] },
   // A held sprite is a single piece of art like a prop's (the weapon icon the

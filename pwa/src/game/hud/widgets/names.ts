@@ -23,6 +23,7 @@ export const HUD_WIDGET_NAMES = new Set([
   "questTracker",
   "pickupFeed",
   "voiceCards",
+  "windVane",
 ]);
 
 /**

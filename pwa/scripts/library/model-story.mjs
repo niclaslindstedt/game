@@ -81,6 +81,7 @@ export const CUTSCENE_BEAT_KINDS = {
   exit: "not reader-facing: staging — taking an actor off",
   fade: "not reader-facing: staging — the fade to and from black",
   pan: "not reader-facing: staging — gliding the camera",
+  drift: "not reader-facing: staging — the camera's running velocity",
   shake: "not reader-facing: staging — an actor's tremble",
   jump: "not reader-facing: staging — an actor leaving the ground",
   hold: "not reader-facing: staging — putting a thing in an actor's hands",

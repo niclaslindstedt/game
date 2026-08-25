@@ -4096,6 +4096,8 @@
     "rocket_boost",
     "rocket_clang_a",
     "rocket_clang_b",
+    "rocket_ignition",
+    "rocket_liftoff",
     "rocket_orbit",
     "rocket_poof",
     "rocket_rain",
@@ -5322,6 +5324,12 @@
     "rocket_clang_b": {
       "what": "Hardware meeting the paintwork, SECOND take — lower strike, longer ring: a bigger panel taking it, or the same panel taking it worse."
     },
+    "rocket_ignition": {
+      "what": "THE ENGINE CATCHING ON THE PAD — a homemade rocket lighting twelve feet from the garage it was built in. The igniter cracks, a low whump goes through the ground, and the burn comes up UNDER it rather than arriving: a held sub and a detuned saw swelling for a second and a half while the hull rattles. It is the bed's `rocket_rumble` said once, loud, with a front on it — the flight's running roar takes over from where this settles."
+    },
+    "rocket_liftoff": {
+      "what": "SHE LEAVES THE PAD. Layered OVER the ignition's tail rather than instead of it, so it only carries what that one does not: the sub going DOWN as the weight comes off, the roar opening out wide, and a long slap of it coming back off the house she is standing next to. Nothing above 900 Hz — the crack is already spent, and a second one would make the pair louder instead of bigger."
+    },
     "rocket_orbit": {
       "what": "THE SHELL FALLING AWAY / ORBIT MADE — the trip's one moment of fanfare: a consonant three-step triangle climb with a sine sparkle an octave up, and a generous echo send because this is the rare moment that has earned one."
     },
@@ -5675,10 +5683,10 @@
     "left",
     "portrait",
     "rocket",
-    "rocket_attitude",
     "rocket_clock",
     "rocket_dash",
     "rocket_strip",
+    "rocket_vane",
     "scores",
     "status",
     "top",
@@ -5853,7 +5861,8 @@
     "swipeDock",
     "tradeAsks",
     "voiceCards",
-    "weaponSlot"
+    "weaponSlot",
+    "windVane"
   ],
   "hudEvents": [
     "companion.heal",

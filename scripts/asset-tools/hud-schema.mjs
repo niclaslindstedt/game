@@ -402,6 +402,7 @@ export const HUD_WIDGETS = new Set([
   "questTracker",
   "pickupFeed",
   "voiceCards",
+  "windVane",
 ]);
 
 /** The DOM handles the render loop writes to every frame. An element carrying

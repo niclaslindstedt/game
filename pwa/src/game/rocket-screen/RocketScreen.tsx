@@ -698,7 +698,11 @@ export function RocketScreen({
               key={i}
               font={assets.font}
               text={line}
-              scale={1}
+              // The voyage's own box reads at 2 and so does this one: a
+              // thought is SMALL because it is private, not because it is
+              // optional, and one drawn a single pixel per pixel is a caption
+              // the player squints at while flying an inverted pendulum.
+              scale={2}
               color="#9fe8d2"
               maxWidth={20}
               align="center"

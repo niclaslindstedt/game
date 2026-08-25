@@ -15,6 +15,11 @@
 // the three a prelude is played with. Nothing here decides what the launch
 // looks like.
 //
+// AND IT MAKES ITS OWN NOISE. A `sound` beat queues an id on the scene state
+// for whoever is playing it to fire; in the campaign that is the run's step
+// pipeline, and here it is this file's own loop — the ignition and the lift-off
+// are the two moments of the flight nobody would forgive being silent.
+//
 // NO RUN TAGS. `launch`'s dressing climbs a ladder of `cleared:` tags — a whole
 // house the first time, a burnt shell after the homecoming, a gutted one after
 // Mars (`content/cutscenes/launch.yaml`) — and the trip this scene opens is the
@@ -45,6 +50,7 @@ import {
   CutsceneOverlay,
   type CutsceneReveal,
 } from "../overlays/CutsceneOverlay.tsx";
+import { playFlightSound } from "../sfx/index.ts";
 import { playUiSound } from "../sfx/ui.ts";
 
 import { LAUNCH_SCENE } from "./begin.ts";
@@ -81,6 +87,15 @@ export function RocketLaunch({
     const stop = startGameLoop({
       simulate(dtMs) {
         stepCutscene(scene, def, dtMs);
+        // A `sound` beat only WRITES ITS NAME DOWN (stepping a scene is pure),
+        // so the queue is drained HERE — the job the run's own step does for a
+        // scene the campaign plays (`engine/game/step/index.ts`, which turns it
+        // into a `cutsceneSound` event). Nothing else drains it, and an
+        // undrained queue is a scene that plays in silence. The ids are
+        // content's, so they go through the same live bank the flight's own
+        // sounds do and a mod's replacement is heard on the pad.
+        for (const sfx of scene.sounds) playFlightSound(synth, sfx);
+        scene.sounds.length = 0;
         if (!scene.done || handedOver.current) return;
         handedOver.current = true;
         doneRef.current();

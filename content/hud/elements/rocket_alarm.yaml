@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE COCKPIT'S ONE ALARM — the line under the wind vane, and NOTHING when
+# there is nothing wrong.
+#
+# It is what is left of an attitude indicator that used to live here. Two bars
+# growing out of a ship glyph reported a lean the player could already see
+# happening to the actual rocket, thirty px lower, at ten times the size — an
+# instrument for a fact the picture was already carrying, taking up the middle
+# of the sky to say it.
+#
+# WHAT THE PICTURE COULD NOT SAY IS WHY IT STILL MATTERS AT A GLANCE, and both
+# of those are here. A ship past the engine's own warning line is seconds from
+# the flip and the word is worth the space; a ship that has wandered out of the
+# launch corridor looks perfectly fine and is about to be dealt strays for it,
+# which is a fact with no picture at all. Everything else says nothing, and the
+# slot sits empty over a clean sky.
+#
+# The ranking and the wording are a judgement, so they are Lua
+# (`rocket.lean_label` / `rocket.lean_color`) — and the empty string is one of
+# its answers rather than a `visible:` condition, so the row holds its height
+# and the vane above it never jumps when the alarm arrives.
+region: rocket_vane
+order: 2
+kind: text
+class: rocket-alarm
+text:
+  script: rocket.lean_label
+scale: 1
+color:
+  script: rocket.lean_color

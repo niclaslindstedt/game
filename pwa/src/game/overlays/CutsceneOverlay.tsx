@@ -88,9 +88,12 @@ const CUTSCENE_TEXT_REM = 33;
  * later drives, and the sky over it was a moon prop and four star tiles that
  * agreed with nothing.
  *
- * IT IS HUNG STILL. There is no travel to parallax against and no reason for a
- * cutscene sky to fidget behind the acting, so the twinkle is off and the only
- * thing moving up there is the clouds' own slow drift.
+ * IT IS HUNG STILL WHILE THE CAMERA IS. There is no travel to parallax against
+ * and no reason for a cutscene sky to fidget behind the acting, so the twinkle
+ * is off and the only thing moving up there is the clouds' own slow drift. A
+ * scene that CLIMBS (`pan` / `drift` on the y axis) is the other case, and the
+ * sky answers it by depth — which is why the near cloud deck is asked for here
+ * and nowhere else.
  */
 const SKY_BACKDROPS: ReadonlySet<string> = new Set(["garageNight"]);
 
@@ -204,6 +207,11 @@ function drawStage(
     drawNightSky(ctx, assets.sprites, -shift.x, width, floorY, timeMs, {
       twinkle: false,
       cameraY: shift.y,
+      // A scene is the one place the camera leaves the ground, so it is the
+      // one place the near cloud deck is worth hanging: once the lot has
+      // fallen away it is the fastest thing in the frame, and it is what
+      // says the ship is still climbing while a caption holds for a tap.
+      deck: true,
     });
   }
   // THE CEILING, if the scene has one (`CutsceneBackdrop.ceiling*`). It rides

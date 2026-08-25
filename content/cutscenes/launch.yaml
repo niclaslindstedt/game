@@ -26,16 +26,18 @@ stage:
   props:
     # THE SKY IS NOT DRESSED HERE. `backdrop: garageNight` is one of the
     # renderer's SKY backdrops, so the night over this lot is the same night the
-    # drive is played against — the wash, the moon, the starfield, the three
-    # cloud bands and the open country along the skyline, all of it from
+    # drive is played against — the wash, the moon, the starfield, the cloud
+    # bands and the open country along the skyline, all of it from
     # `pwa/src/game/render/night-sky.ts`. The hero lifts off the road the car
     # later drives; it should be the same evening, and a moon prop with four
     # star tiles pinned behind it agreed with nothing.
     #
-    # It hangs STILL — no twinkle, nothing tracking the camera — and only the
-    # clouds drift, slowly. The ascent pan takes the LAND away (the fields and
-    # the glow ride the ground line down with the lawn) and leaves the sky
-    # exactly where it was.
+    # NOTHING UP THERE TWINKLES, and while the camera is on the ground the only
+    # thing moving is the clouds' own slow drift across. The CLIMB is what the
+    # sky is really for: the land goes first and fastest, and every layer above
+    # it comes down the frame by its own depth — the near deck a scene asks for,
+    # then the bank, the puffs, the wisp, and the stars at almost nothing. That
+    # ladder is the shot.
     #
     # Home, garage door up — and the ship parked HARD BESIDE IT, a dozen px off
     # the roll-up door, exactly as far as a man rolls a thing he built in there
@@ -175,16 +177,31 @@ beats:
   - { kind: wait, ms: 350 }
   - { kind: exit, actor: hero }
   - { kind: wait, ms: 700 }
-  # Ignition: flame on, the hull rattling on the pad…
+  # Ignition: flame on, the hull rattling on the pad… and the one moment of this
+  # scene the player would notice the silence of. The `sound` beat sits directly
+  # over the pose that lights the engine, so the crack and the picture are the
+  # same frame.
+  - { kind: sound, sound: rocket_ignition }
   - { kind: pose, actor: ship, sprite: ship_fire }
   - { kind: shake, actor: ship, amp: 1 }
   - { kind: wait, ms: 1200 }
-  # …liftoff: the ship climbs into the sky…
+  # …liftoff: the roar opens out over the ignition's own tail (it is authored to
+  # layer, not to replace) and the ship climbs into the sky…
+  - { kind: sound, sound: rocket_liftoff }
   - { kind: move, actor: ship, to: { x: 94, y: 46 }, speed: 42 }
   # …and the camera follows it up: house, lawn, drive and road fall away at full
   # depth, taking the skyline's own country with them, and the frame is left
-  # hanging in the same still night with the rocket burning and trembling.
+  # hanging in the same night with the rocket burning and trembling.
   - { kind: pan, by: { x: 0, y: 180 }, ms: 3200 }
+  # AND THE CLIMB DOES NOT STOP FOR THE NARRATION. The caption below holds until
+  # the player taps it, and a pan ends when its `ms` are spent — so the shot
+  # used to arrive at a ship parked in mid-air with a still sky around it, for
+  # as long as anybody took to read one line. The drift keeps the camera rising
+  # underneath every beat after it: the cloud deck slides down past the nose at
+  # a third of it, the bank at a fifth, the wisp at a twentieth and the stars at
+  # almost nothing, which is a ship climbing rather than a picture sliding. It
+  # is slower than the ascent on purpose — the shot is settling, not still.
+  - { kind: drift, by: { x: 0, y: 22 } }
   - kind: caption
     text:
       - FIRST FLIGHT. NO TEST RUNS. ADA WOULD CALL IT ROMANTIC.
