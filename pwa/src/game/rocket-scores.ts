@@ -18,6 +18,8 @@
 // SAME STORAGE POLICY AS ITS NEIGHBOURS: one namespaced localStorage key,
 // structurally validated on load, private mode degrades to memory.
 
+import type { FlightLeg } from "@game/core";
+
 import { storageKey } from "../identity.ts";
 
 const STORAGE_KEY = storageKey("rocket-scores");
@@ -32,6 +34,11 @@ export const ROCKET_HISTORY_SIZE = 1000;
 
 /** One row of the board: a time, the trip behind it, and who signed it. */
 export type FlightScoreEntry = {
+  /** Which slice of the trip the clock timed (`FlightParams.leg`). Absent on
+   * rows banked before the MOON LANDING cabinet existed — those are whole
+   * trips. A drop's clock and a trip's clock are not comparable, so every
+   * read of the ladder filters by leg (`boardLeg`). */
+  leg?: FlightLeg;
   /** The three letters, already clamped (`clampInitials`, drive-scores.ts —
    * the entry rules are the arcade's, not one cabinet's). */
   name: string;
@@ -75,8 +82,14 @@ function isEntry(value: unknown): value is FlightScoreEntry {
   );
 }
 
+/** The leg a row belongs to — legacy rows (no field) are whole trips. */
+export function boardLeg(entry: { leg?: FlightLeg }): FlightLeg {
+  return entry.leg === "landing" ? "landing" : "trip";
+}
+
 function sanitize(entry: FlightScoreEntry): FlightScoreEntry {
   return {
+    ...(entry.leg === "landing" ? { leg: "landing" as const } : {}),
     name: entry.name,
     score: cleanNum(entry.score),
     ms: cleanNum(entry.ms),
@@ -98,6 +111,7 @@ export function flightScoreKey(entry: FlightScoreEntry): string {
     entry.trash,
     entry.difficulty,
     entry.at,
+    boardLeg(entry),
   ].join("|");
 }
 
@@ -137,14 +151,25 @@ function persist(): void {
   }
 }
 
+/** One leg's ladder, best first — the store holds both cabinets' rows and
+ * every read slices its own. */
+function ladder(leg: FlightLeg): FlightScoreEntry[] {
+  return board.filter((entry) => boardLeg(entry) === leg);
+}
+
 /** The head of the ladder, best first. A copy: the array is the store's own. */
-export function topFlightScores(limit = ROCKET_BOARD_SIZE): FlightScoreEntry[] {
-  return board.slice(0, Math.max(0, limit)).map((entry) => ({ ...entry }));
+export function topFlightScores(
+  limit = ROCKET_BOARD_SIZE,
+  leg: FlightLeg = "trip",
+): FlightScoreEntry[] {
+  return ladder(leg)
+    .slice(0, Math.max(0, limit))
+    .map((entry) => ({ ...entry }));
 }
 
 /** How many flights the machine is holding — the denominator of a rank. */
-export function flightScoreCount(): number {
-  return board.length;
+export function flightScoreCount(leg: FlightLeg = "trip"): number {
+  return ladder(leg).length;
 }
 
 /** The stand-in an unbanked time ranks as — newest on purpose, so an incumbent
@@ -159,13 +184,17 @@ const CANDIDATE: FlightScoreEntry = {
   at: Number.MAX_SAFE_INTEGER,
 };
 
-/** Where this time lands without banking it — 0-based in the WHOLE ladder, or
- * null when the flight has no clock to rank. */
-export function flightTimeRank(ms: number): number | null {
+/** Where this time lands without banking it — 0-based in its LEG's whole
+ * ladder, or null when the flight has no clock to rank. */
+export function flightTimeRank(
+  ms: number,
+  leg: FlightLeg = "trip",
+): number | null {
   if (ms <= 0) return null;
+  const rows = ladder(leg);
   const candidate = { ...CANDIDATE, ms };
-  const index = board.findIndex((row) => compare(row, candidate) > 0);
-  return index === -1 ? board.length : index;
+  const index = rows.findIndex((row) => compare(row, candidate) > 0);
+  return index === -1 ? rows.length : index;
 }
 
 /** Bank a signed row. Returns the place it took, or null if it was turned

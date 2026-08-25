@@ -15,3 +15,8 @@ transcribes them as `**ME (thinks):**` under "Travel — THE FLIGHT". The
 tip-over line is a ROTATION (`flight_tipping_0..2`, cycled by
 `FlightBeats.tips`); the sky's surprises (first bird, first canopy, jet
 stream, off-course) are once-per-flight latches in `FlightBeats`.
+
+The EXCEPTION is the two PARKED cabin scenes between orbit and the drop
+(`RocketVoyage.tsx` — `flight_earth_away` / `flight_moon_close`): those page
+on a tap like a cutscene, so they MAY run to several pages — each page still
+one short sentence in his flat voice.

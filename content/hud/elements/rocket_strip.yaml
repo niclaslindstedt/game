@@ -8,8 +8,8 @@
 # labels below it are TRUE — the marker crosses a station's label exactly as
 # the ship crosses the station. Each label lights as it is reached (a
 # judgement, so it is Lua), and the strip's right-hand end carries the one
-# tally mission control keeps that no instrument shows: the trash riding the
-# hull.
+# tally mission control keeps that no instrument shows: the trash met
+# hull-first on the way up.
 region: rocket_strip
 order: 0
 kind: panel

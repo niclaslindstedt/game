@@ -52,6 +52,9 @@ function flightGore(): { gib: boolean; dust: boolean } {
 
 /** The one destination the sky is authored for. */
 const MOON = "moon";
+/** …and the arcade shelf's second way to fly it: the drop alone
+ * (`minigames.ts` — the MOON LANDING variant). */
+export const MOON_LANDING_VARIANT = "moon_landing";
 /** …and the one scene whose ending cues the flight — the launch on the lawn.
  * The chain raises `sceneEnded` for every scene, so the fork keys on WHICH. */
 export const LAUNCH_SCENE = "launch";
@@ -94,11 +97,20 @@ export function flightIsPlayed(
  * THE SAME SKY, OFF THE ARCADE SHELF — played on its own for the score. None
  * of the four gates applies at a cabinet the player walked over and pressed;
  * the gore gate still does, because the sky's soft bodies bleed at a cabinet
- * exactly as much as on the campaign's climb.
+ * exactly as much as on the campaign's climb. `variant` is the shelf's
+ * MISSION row: the whole trip, or the MOON LANDING drop alone
+ * (`FlightParams.leg`).
  */
 export function arcadeFlightParams(
   seed: number,
   difficulty: Difficulty,
+  variant?: string,
 ): FlightParams {
-  return { seed, difficulty, to: MOON, ...flightGore() };
+  return {
+    seed,
+    difficulty,
+    to: MOON,
+    ...(variant === MOON_LANDING_VARIANT ? { leg: "landing" as const } : {}),
+    ...flightGore(),
+  };
 }

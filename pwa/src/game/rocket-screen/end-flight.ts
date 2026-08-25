@@ -21,8 +21,12 @@ import { createFlightBeats, type FlightBeats } from "./loop.ts";
 
 /**
  * A WRECK puts the player back at the top of the half that killed them (the
- * engine's own restart rule); ORBIT, held for its breath, becomes the drop;
- * a LANDING hands the crossing back to the screen.
+ * engine's own restart rule); ORBIT, held for its whole sequence (the settle,
+ * the float, the separation, the departure), hands to the screen — the cabin
+ * scenes and the landing's briefing sit between orbit and the drop, and a
+ * plain module cannot mount them — falling back to the drop directly for a
+ * host with no hands to watch them (`auto`); a LANDING hands the crossing
+ * back to the screen.
  */
 export function endFlight(
   flight: FlightState,
@@ -34,6 +38,9 @@ export function endFlight(
   /** What the landing hands the flight to — the screen's own `arrive`, where
    * the choice between the high-score board and a silent crossing is made. */
   onLanded: (flight: FlightState) => void,
+  /** The orbit hold has run out — the screen decides what stands between the
+   * climb and the drop. Absent, the drop begins directly. */
+  onOrbitHeld?: () => void,
 ): void {
   if (
     flight.outcome === FLIGHT_OUTCOME.wrecked &&
@@ -58,9 +65,16 @@ export function endFlight(
     flight.outcome === FLIGHT_OUTCOME.toOrbit &&
     flight.outcomeMs > FLIGHT.orbitHoldMs
   ) {
-    beginDescent(flight);
     clearSpeech();
-    clearRocketFx(fx);
+    if (onOrbitHeld) {
+      // The screen parks the sky (synchronously — the loop re-reads its refs
+      // every step) and shows the cabin; the fx are cleared when the drop
+      // actually begins, so the departing stage is not blinked away.
+      onOrbitHeld();
+    } else {
+      beginDescent(flight);
+      clearRocketFx(fx);
+    }
   }
   if (
     flight.outcome === FLIGHT_OUTCOME.landed &&

@@ -29,7 +29,7 @@
 --   dashLive      the console is up
 --   phase         ASCENT or THE DROP, as a caption prints it
 --   landing       …the same, as a flag a rule can read
---   trash         bags riding the hull right now
+--   trash         bags met hull-first so far this trip
 --   boost         the boosters are open
 --   progress      the mission timeline's staged marker, 0..1
 --   shellClear    out of the junk — the sky above is clean

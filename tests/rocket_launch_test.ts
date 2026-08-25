@@ -125,8 +125,10 @@ describe("who asks for the lift-off", () => {
   const workbench = source("pwa/src/game/rocket-screen/RocketWorkbench.tsx");
   const campaign = source("pwa/src/game/GameScreen.tsx");
 
-  it("the arcade cabinet does — it has no prelude behind it", () => {
-    expect(arcade).toMatch(/<RocketScreen[\s\S]*?\n\s*launch\n[\s\S]*?\/>/);
+  it("the arcade cabinet does — except on the MOON LANDING lap, which never left the lawn", () => {
+    expect(arcade).toMatch(
+      /<RocketScreen[\s\S]*?launch=\{flightParams\.leg !== "landing"\}[\s\S]*?\/>/,
+    );
   });
 
   it("the workbench does, on the lap a sitting opens with", () => {

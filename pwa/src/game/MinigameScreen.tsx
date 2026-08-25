@@ -70,10 +70,12 @@ export function MinigameScreen({
   const [params] = useState(() =>
     arcadeDriveParams(Date.now() >>> 0, difficulty, variant),
   );
-  // …and the rocket's, settled the same way. Both are built whatever cabinet
-  // this is — two seeds a render, no drive under either until one mounts.
+  // …and the rocket's, settled the same way — the variant is the shelf's
+  // MISSION row (the whole trip, or the MOON LANDING drop alone). Both are
+  // built whatever cabinet this is — two seeds a render, no drive under
+  // either until one mounts.
   const [flightParams] = useState(() =>
-    arcadeFlightParams(Date.now() >>> 0, difficulty),
+    arcadeFlightParams(Date.now() >>> 0, difficulty, variant),
   );
 
   useEffect(() => {
@@ -112,8 +114,10 @@ export function MinigameScreen({
           // THE LIFT-OFF IS THE OPENING. A campaign flight is handed the sky
           // by the moon run's own prelude, which plays the launch on the lawn
           // first; a cabinet has no prelude, so it plays the scene itself
-          // rather than starting the player mid-air.
-          launch
+          // rather than starting the player mid-air. The MOON LANDING lap
+          // never left the lawn on its own account — it opens on the drop's
+          // briefing instead, which the screen owns.
+          launch={flightParams.leg !== "landing"}
           onScreenshot={() => takeScreenshot("THE ROCKET")}
           // Down (or given up): back to the shelf either way — there is no
           // crossing waiting on an arcade sky.

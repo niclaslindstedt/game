@@ -4,8 +4,9 @@
 # keeps the one resource it actually spends: its skin.
 #
 # The damageometer's dial read the other way up: full is a whole ship, and the
-# sweep only ever comes DOWN — trash never touches it (bags cost handling, not
-# skin), satellites and rocks take a visible bite. Where it stops being a dent
+# sweep only ever comes DOWN — trash never touches it (bags scuff the paint
+# and shove the balance, never the skin), satellites and rocks take a visible
+# bite. Where it stops being a dent
 # and starts being the flight is a judgement, so the ladder is Lua and a mod
 # can move it.
 region: rocket_dash

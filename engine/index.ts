@@ -1183,6 +1183,7 @@ export {
   FLIGHT_OUTCOME,
   FLIGHT_WRECKS,
   IDLE_FLIGHT_INPUT,
+  JUNK_KG,
   ORBIT_VARIANTS,
   SOFT_KINDS,
   airFrac,
@@ -1205,6 +1206,7 @@ export {
   flightTripMs,
   flightWindPx,
   gravityAt,
+  junkKg,
   restartFlight,
   stepFlight,
 } from "./game/rocket/index.ts";
@@ -1214,6 +1216,7 @@ export type {
   FlightDriver,
   FlightEvent,
   FlightInput,
+  FlightLeg,
   FlightOutcome,
   FlightParams,
   FlightPhase,
@@ -1223,7 +1226,6 @@ export type {
   FlightWreck,
   OrbitKind,
   OrbitObject,
-  StuckTrash,
 } from "./game/rocket/index.ts";
 
 // THE PLAYABLE INTERLUDES' own switch. Exported straight off the flag leaf

@@ -4365,6 +4365,18 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
+    "flight_earth_away": {
+      "id": "flight_earth_away",
+      "pages": [
+        ["THAT'S EVERYTHING. THE HOUSE. THE ROAD. THE COUCH. GETTING SMALLER."],
+        ["THE MOVIE IS STILL PAUSED. SHE ONLY WENT OUT FOR CHIPS AND SODA."],
+        [
+          "FIND ADA. FLY HOME. FINISH MOVIE NIGHT. I WAS LOOKING FORWARD TO THOSE CHIPS."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "flight_hobbyist": {
       "id": "flight_hobbyist",
       "pages": [["THEY HAD THE WHOLE SKY. THEY PICKED MINE."]],
@@ -4374,6 +4386,15 @@
     "flight_jetstream": {
       "id": "flight_jetstream",
       "pages": [["JET STREAM. EVEN THE AIR WANTS ME SIDEWAYS."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "flight_moon_close": {
+      "id": "flight_moon_close",
+      "pages": [
+        ["THERE IT IS. BIGGER THAN IT LOOKS FROM THE LAWN."],
+        ["NOBODY UP HERE IS GOING TO PARK THIS FOR ME. I NEED TO LAND."]
+      ],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
@@ -4415,7 +4436,7 @@
     },
     "flight_touchdown": {
       "id": "flight_touchdown",
-      "pages": [["DOWN. THE TRASH RODE UP HERE FOR FREE."]],
+      "pages": [["DOWN. EVERY BAG UP THERE GOT ITS SWING IN."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },

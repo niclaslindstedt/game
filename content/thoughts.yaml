@@ -264,18 +264,36 @@ thoughts:
     portrait: hero
     pages:
       - - CLEAR. THE RICH LEFT BEFORE THE SKY SHUT. THE REST OF US LEARN TO STEER.
+  # THE CABIN SCENES — the trip's two parked beats, between orbit and the
+  # drop: the first time the game goes INSIDE the ship
+  # (`rocket-screen/RocketVoyage.tsx`). One porthole, Earth going small in it,
+  # then the moon filling it; a tap turns the page, so these may run to more
+  # than one — still one sentence each, in his flat voice.
+  flight_earth_away:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THAT'S EVERYTHING. THE HOUSE. THE ROAD. THE COUCH. GETTING SMALLER.
+      - - THE MOVIE IS STILL PAUSED. SHE ONLY WENT OUT FOR CHIPS AND SODA.
+      - - FIND ADA. FLY HOME. FINISH MOVIE NIGHT. I WAS LOOKING FORWARD TO THOSE CHIPS.
+  flight_moon_close:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THERE IT IS. BIGGER THAN IT LOOKS FROM THE LAWN.
+      - - NOBODY UP HERE IS GOING TO PARK THIS FOR ME. I NEED TO LAND.
   flight_drop:
     speaker: "{HERO}"
     portrait: hero
     pages:
       - - HER TRACKER PINGS FROM THE MOON. NOBODY GOES THERE FOR CHIPS AND SODA.
   # …and the one line the landing earns. The trash line is the scorecard's
-  # joke said out loud once, by the man who hauled it.
+  # joke said out loud once, by the man every bag took a swing at.
   flight_touchdown:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - DOWN. THE TRASH RODE UP HERE FOR FREE.
+      - - DOWN. EVERY BAG UP THERE GOT ITS SWING IN.
   # …AND THAT IS THE LAST THING EITHER ROAD SAYS. A leg ends on a FADE with the
   # wagon still rolling: the minigame never parks the car, never switches the
   # engine off and never stands the man on the tarmac to be looked at, because

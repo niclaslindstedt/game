@@ -32,8 +32,9 @@ export type FlightPhase = "ascent" | "landing";
  */
 export type OrbitKind =
   /** A piece of GOODCO's disposal business — thirty years of "recycling" fired
-   * upward on a government contract. STICKS to the hull rather than holing it;
-   * the price is handling, not skin. */
+   * upward on a government contract. Never holes the ship: it BOUNCES off,
+   * scuffs the paintwork, and shoves the balance by its own WEIGHT
+   * (`JUNK_KG`) — a couch is a wallop, a crushed can is a tap. */
   | "junk"
   /** A GOODCO satellite — the company's other business up here, and the only
    * thing in the field that moves with any purpose. Holes the ship. */
@@ -86,22 +87,6 @@ export type OrbitObject = {
   r: number;
 };
 
-/**
- * A PIECE OF TRASH RIDING THE HULL — where it landed, in the ship's own frame,
- * so it leans when the ship leans and burns when the ship does.
- */
-export type StuckTrash = {
-  id: number;
-  /** The junk art it was wearing when it hit. */
-  variant: number;
-  /** Where it sits on the hull: px along the ship's axis from centre (positive
-   * toward the nose) and px across it (positive starboard). */
-  along: number;
-  across: number;
-  /** How it lies against the hull (rad, in the ship's frame). */
-  angle: number;
-};
-
 /** The craft the player is holding — the ship on the way up, the module on the
  * way down. One record for both, because the physics reads the same fields. */
 export type FlightCraft = {
@@ -132,9 +117,22 @@ export type FlightCraft = {
 /** Everything the sky owes the app this tick — sounds, flashes and beats,
  * drained every tick exactly as a drive's are. */
 export type FlightEvent =
-  /** A bag landed on the hull and stayed there. `side` says which shoulder
-   * took it (for the pan and the kick's direction). */
-  | { type: "stuck"; variant: number; side: 1 | -1 }
+  /** A bag met the hull and bounced off. `side` says which shoulder took it
+   * (for the pan and the kick's direction), `along`/`across` where it landed
+   * in the ship's own frame (the scuff rides the hull the way a splat does),
+   * and `kg` its weight — the thud's size, and the shove's. */
+  | {
+      type: "trashHit";
+      variant: number;
+      side: 1 | -1;
+      along: number;
+      across: number;
+      kg: number;
+    }
+  /** THE BOOSTER LET GO — the orbit beat's hinge: the settled ship drops its
+   * spent stage and the upper half flies on. Raised exactly once per climb,
+   * over the orbit hold. */
+  | { type: "separation"; x: number; alt: number }
   /** Something hard went through the paintwork. */
   | {
       type: "strike";
@@ -222,10 +220,19 @@ export const IDLE_FLIGHT_INPUT: FlightInput = Object.freeze({
   steer: 0,
 });
 
+/** WHICH SLICE OF THE TRIP a flight is — the whole climb-and-drop, or the
+ * drop alone (the arcade shelf's MOON LANDING cabinet and the workbench's
+ * `phase=landing`). One sim either way; the leg decides where it starts and
+ * what par it is measured against, and the board ranks each leg among its
+ * own. */
+export type FlightLeg = "trip" | "landing";
+
 export type FlightParams = {
   /** The seed the whole sky is derived from. A RESTART reuses it, so the shell
    * of junk that killed you is the same shell you get to learn. */
   seed: number;
+  /** Which slice is being flown. Absent means the whole trip. */
+  leg?: FlightLeg;
   /**
    * THE RUNG THE SKY IS FLOWN ON — the run's own difficulty, carried in
    * because a flight is settled whole before its first tick and has no run
@@ -263,8 +270,6 @@ export type FlightState = {
   phase: FlightPhase;
   /** The thing in the player's hands. */
   craft: FlightCraft;
-  /** What is riding the hull. Ascent only — the module drops clean. */
-  trash: StuckTrash[];
   /** Everything adrift within the live band of sky. */
   field: OrbitObject[];
   /** Wall-clock ms since the flight began (this phase's build — a restart
@@ -306,10 +311,14 @@ export type FlightState = {
    * leans the same way at the same altitude. */
   gustPhase: number;
 
+  // ── THE ORBIT BEAT'S LATCH ─────────────────────────────────────────────────
+  /** The booster has been dropped — the separation event is raised exactly
+   * once per climb, over the orbit hold, and this is its edge memory. */
+  boosterAway: boolean;
+
   // ── THE TALLIES THE SCORE READS ────────────────────────────────────────────
-  /** Bags currently riding the hull is `trash.length`; this is the trip's
-   * whole count, kept because the module drops clean and the card still prints
-   * what the climb collected. */
+  /** Every bag that took a swing at the hull on the way up — the scorecard's
+   * whole count, itemised and worth nothing. */
   trashCount: number;
   /** Hits that cost skin. */
   hullHits: number;

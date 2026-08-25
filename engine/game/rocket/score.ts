@@ -9,12 +9,12 @@
 // (`pwa/src/game/rocket-scores.ts`).
 //
 // THE JOKE ON THIS CARD is the trash line: the card counts every bag of
-// GOODCO's garbage the ship hauled to the moon, and pays nothing for any of
-// it — the company's disposal business is on the scoreboard the way the
-// drive's body count is, itemised and worthless.
+// GOODCO's garbage that took a swing at the ship on the way up, and pays
+// nothing for any of it — the company's disposal business is on the
+// scoreboard the way the drive's body count is, itemised and worthless.
 
 import { FLIGHT, flightCoursePx } from "./config.ts";
-import type { FlightState } from "./types.ts";
+import type { FlightLeg, FlightState } from "./types.ts";
 
 /**
  * The tally, itemised — every line the results card prints, plus the trip's
@@ -51,8 +51,8 @@ export type FlightScorecard = {
   touchdownVy: number;
   /** …and whether it was the marked pad. */
   onPad: boolean;
-  /** GOODCO's garbage, hauled to the moon on somebody else's hull. ON THE CARD
-   * AND WORTH NOTHING — see the header. */
+  /** GOODCO's garbage, met hull-first on the way up. ON THE CARD AND WORTH
+   * NOTHING — see the header. */
   trash: number;
   /** The sky's soft bodies met on the way up — birds, hobbyists. Itemised
    * beside the trash, and worth exactly as much. */
@@ -62,10 +62,16 @@ export type FlightScorecard = {
 /**
  * Par for a sky of this height (ms) — the climb at `parSpeedPx` plus the
  * landing's own fixed share. Derived from the course rather than pinned, so
- * the attract loop's short sky is scored against its own height.
+ * the attract loop's short sky is scored against its own height — and a
+ * LANDING leg is measured against the drop alone: there was no climb to be
+ * quick on.
  */
-export function flightPar(params: { coursePx?: number }): number {
+export function flightPar(params: {
+  coursePx?: number;
+  leg?: FlightLeg;
+}): number {
   const S = FLIGHT.score;
+  if (params.leg === "landing") return S.landingParMs;
   return (flightCoursePx(params) / S.parSpeedPx) * 1000 + S.landingParMs;
 }
 
