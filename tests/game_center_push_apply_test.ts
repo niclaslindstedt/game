@@ -370,10 +370,15 @@ describe("the dry run", { timeout: SPAWN_MS }, () => {
     expect(portal.rows.size).toBe(0);
   });
 
-  it("refuses an app the portal has no Game Center detail for", async () => {
+  // A missing detail is a PLANNED CREATE rather than a refusal: enabling Game
+  // Center on an app IS creating this resource, and CREATE is one of the three
+  // operations Apple allows on it. The dry run says so and writes nothing.
+  it("plans the Game Center detail for an app that has none", async () => {
+    portal.log.length = 0;
     const result = await run(["--app", "999", "--only", "leaderboards"]);
-    expect(result.status).toBe(1);
-    expect(result.stderr).toMatch(/has no Game Center detail/);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toMatch(/would be CREATED/);
+    expect(portal.log.every((line) => line.startsWith("GET"))).toBe(true);
   });
 });
 
