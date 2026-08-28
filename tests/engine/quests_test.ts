@@ -16,12 +16,14 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   acceptQuest,
   advanceQuestDialogue,
+  buildNavGrid,
   closeQuestDialogue,
   closeQuestLog,
   closeTalk,
   createGame,
   declineQuest,
   dismissIntro,
+  findPath,
   giverMark,
   giverTopics,
   killEnemy,
@@ -43,6 +45,7 @@ import {
   type GameState,
   type QuestDef,
   type QuestGiverDef,
+  type Vec2,
 } from "@game/core";
 
 import { clearStage, DT, idle, makeEnemy, startGame } from "./helpers.ts";
@@ -146,6 +149,30 @@ function questRun(): GameState {
   const state = startGame();
   state.players[0].pos = { x: GIVER_AT.x - 20, y: GIVER_AT.y };
   return state;
+}
+
+/**
+ * Wall a spot off from the rest of the level — a ring of solid blocks with no
+ * way through, which is what a carve leaves behind when an authored coordinate
+ * lands in a pocket the generator never joined up.
+ */
+function seal(state: GameState, at: Vec2): void {
+  const half = { x: 40, y: 40 };
+  for (let dx = -2; dx <= 2; dx++) {
+    for (let dy = -2; dy <= 2; dy++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== 2) continue; // the ring only
+      state.obstacles.push({
+        id: state.nextId++,
+        kind: "test_wall",
+        sprite: "test_rock",
+        pos: { x: at.x + dx * 80, y: at.y + dy * 80 },
+        radius: 56,
+        half,
+        jumpable: false,
+      });
+    }
+  }
+  state.obstaclesVersion++;
 }
 
 /**
@@ -626,6 +653,42 @@ describe("an escort errand", () => {
     for (let i = 0; i < 20; i++) step(state, idle, DT);
     expect(escort.waiting).toBe(true);
     expect(escort.pos).toEqual(at);
+  });
+
+  // A GENERATED map replaces the geometry the errand was authored against, so
+  // both ends of the walk can land where nobody can stand or, worse, where
+  // nobody can GET. The second is the one with no symptom: the marker draws,
+  // the escort follows, and the errand simply never completes. Both are staged
+  // here by walling the fixture level, because the rule is the engine's rather
+  // than any one map's.
+  it("re-homes a destination sealed inside a pocket onto ground the hero can walk to", () => {
+    const state = questRun();
+    seal(state, { x: 700, y: 1320 });
+    takeWalk(state);
+    const escort = state.escorts[0]!;
+    const grid = buildNavGrid(state);
+    expect(findPath(grid, state.players[0].pos, { x: 700, y: 1320 })).toBe(
+      null,
+    );
+    expect(findPath(grid, state.players[0].pos, escort.to)).not.toBe(null);
+  });
+
+  it("re-homes the BODY out of a pocket too — a walker nobody can reach never sets off", () => {
+    const state = questRun();
+    meet(state);
+    offerUntil(state, "test_walk");
+    // Sealed AFTER the meeting and with the hero stepped clear of it, or the
+    // ring closes round the giver's own corner and the pocket is simply where
+    // everybody already is.
+    seal(state, { x: 420, y: 1320 });
+    state.players[0].pos = { x: 1600, y: 800 };
+    takeAndLeave(state);
+    const escort = state.escorts[0]!;
+    const grid = buildNavGrid(state);
+    expect(findPath(grid, state.players[0].pos, { x: 420, y: 1320 })).toBe(
+      null,
+    );
+    expect(findPath(grid, state.players[0].pos, escort.pos)).not.toBe(null);
   });
 });
 

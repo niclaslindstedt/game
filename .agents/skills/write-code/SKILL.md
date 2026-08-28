@@ -224,6 +224,14 @@ rebuild and lets a stale artifact agree with an equally stale build), and run
   (`chiptune`, `synth`, `output`, …) stay at the `tests/` root.
 - Assert the rule you claim. "Cooldown blocks the second hit" is a claim and
   owes an assertion.
+- **Prove a regression test can FAIL, and prove its staging holds.** Stash the
+  fix (`git stash push <src>`) and re-run: a test that stays green was never
+  guarding the bug. And a test that STAGES a precondition — a walled-off spot, a
+  shut door, a disarmed hero — owes an assertion that the precondition really
+  holds, in the test, beside the one it exists for. Both fail the same way:
+  green, forever, over a rule that is gone. (A ring of obstacles staged to seal
+  a fixture spot enclosed the hero standing beside it too, so "the walker is
+  reachable" was true because nothing was ever sealed.)
 - **The Tauri shell is Rust and obeys the same two rules through its own
   toolchain** (§20.3): integration tests in `tauri/<crate>/tests/*_test.rs`,
   never a `#[cfg(test)]` module — which is also why every decision worth testing

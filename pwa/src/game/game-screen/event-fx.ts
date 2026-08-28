@@ -53,6 +53,7 @@ import { bloodBlow, bloodSpills } from "./blood-hit.ts";
 import { bossRitePresentation } from "./boss-rite.ts";
 import { pushDamage, pushFloat } from "./float-lane.ts";
 import { collectGoldPickup } from "./gold-float.ts";
+import { LIFT_LOCK_REPEAT_MS, lockedLiftRead } from "./lift-lock.ts";
 import { charredRemains, goreFamily } from "./gore.ts";
 import { CLEAVE_MS, GORE_BURST_MS, landingSpots } from "./gore-burst.ts";
 import { sfwModeEnabled, splashOnly } from "./gore-gate.ts";
@@ -1392,6 +1393,24 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // the sfx bus.
   if (event.type === "packCleared") {
     ctx.showAreaCaption("AREA CLEARED", "#7cff9b");
+  }
+
+  // A KEYED LIFT REFUSED THE RIDE. The engine deliberately says nothing — the
+  // read is the app's, and without it the only door in the game with no door in
+  // front of it is a plate the hero stands on while nothing happens. Named, and
+  // throttled, in lift-lock.ts.
+  if (event.type === "elevatorLocked") {
+    const read = lockedLiftRead(state, event, shared);
+    if (read) {
+      pushFloat(effects, state.stats.timeMs, {
+        pos: read.pos,
+        untilMs: state.stats.timeMs + LIFT_LOCK_REPEAT_MS,
+        durationMs: LIFT_LOCK_REPEAT_MS,
+        text: read.text,
+        color: "#ffd75e",
+        rise: 10,
+      });
+    }
   }
 
   // AN ERRAND MOVED. The tracker in the corner already carries the new tally,

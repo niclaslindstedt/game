@@ -22,16 +22,23 @@ import { distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 
 import { QUESTS } from "../config/index.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import { questDef, questEscortDef } from "../defs/quests.ts";
+import { questEscortDef } from "../defs/quests.ts";
 import { resolveObstacles } from "../obstacles.ts";
 import { nearestHero } from "../party.ts";
 import type { EscortState, GameState } from "../types/index.ts";
 import { inert } from "../disposition.ts";
+import { escortSpots } from "./placement.ts";
 
 /**
  * Put an escort on the field for a freshly accepted objective. Placed at its
  * authored spot, or at the giver's feet when it names none — the person you
  * are walking somewhere is usually standing next to the person who asked.
+ *
+ * BOTH ENDS ARE RE-HOMED ONTO GROUND THE PARTY CAN REACH (`escortSpots`), which
+ * on a generated map is the difference between an errand and a dead entry in
+ * the log: the authored coordinates were written against geometry no run has
+ * any more, so either end can land inside a wall or in a pocket nothing
+ * connects to. On a hand-authored map both come back untouched.
  */
 export function spawnEscort(
   state: GameState,
@@ -43,14 +50,20 @@ export function spawnEscort(
   const def = questEscortDef(questId, escortId);
   if (!def) return null;
   const maxHp = def.hp ?? QUESTS.escortHp;
+  // The nearest hero to where she was authored to stand is the reachability
+  // anchor: he is on walkable ground by construction, and it is his own
+  // component the walk has to end in.
+  const authored = def.at ?? fallbackAt;
+  const anchor = nearestHero(state, authored)?.pos ?? fallbackAt;
+  const spots = escortSpots(state, authored, to, anchor);
   const escort: EscortState = {
     id: state.nextId++,
     questId,
     defId: escortId,
-    pos: def.at ? { ...def.at } : { ...fallbackAt },
+    pos: spots.body,
     hp: maxHp,
     maxHp,
-    to: { ...to },
+    to: spots.to,
     faceLeft: false,
     moving: false,
     hitCooldownMs: 0,
@@ -182,19 +195,4 @@ export function escortSetOffLine(escort: EscortState): string | null {
 /** The line spoken on arrival, if their def ships one. */
 export function escortArrivedLine(escort: EscortState): string | null {
   return questEscortDef(escort.questId, escort.defId)?.arrived ?? null;
-}
-
-/**
- * The destination an escort objective walks to, read off the def. Exported so
- * the app can draw the marker and the engine can place the body without either
- * re-deriving the objective's index.
- */
-export function escortDestination(
-  questId: string,
-  escortId: string,
-): Vec2 | null {
-  const objective = questDef(questId).objectives.find(
-    (o) => o.kind === "escort" && o.escort === escortId,
-  );
-  return objective && objective.kind === "escort" ? { ...objective.to } : null;
 }

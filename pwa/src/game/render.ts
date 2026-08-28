@@ -264,7 +264,7 @@ export function drawFrame(
   drawLairs(ctx, state, sprites, camera, inView);
   // THE LIFT — the plate that is the only way to the boss, so it advertises
   // itself with a call light until it has been ridden (see render/elevators.ts).
-  drawElevators(ctx, state, sprites, camera, inView, timeMs);
+  drawElevators(ctx, state, sprites, assets.font, camera, inView, timeMs);
   // THE FAUNA — cattle and critters milling about, over the ground furniture and
   // under everything that fights (see render/fauna.ts). Nothing here collides,
   // and the wander comes off the render clock, so the layer is free.

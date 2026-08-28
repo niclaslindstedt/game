@@ -19,7 +19,4 @@ collection the system writes to. Here that is one extra line —
 did not catch fire".
 
 The tell is a negative assertion (`toBe(false)`, `toEqual([])`, `not.toContain`)
-whose subject is destroyed by the very event under test. When one appears, prove
-the test can fail: revert the rule (`git stash push <src>`) and re-run. Four
-regression tests written in this session were checked that way and the vacuous
-one was the only survivor.
+whose subject is destroyed by the very event under test.

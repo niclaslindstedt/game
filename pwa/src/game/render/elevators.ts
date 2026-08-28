@@ -6,11 +6,17 @@
 // generated map is covered in ground furniture, and a plate lying flat among it
 // is indistinguishable from a floor grate — which on the one prop that is the
 // only route to the boss is a run-ending piece of ambiguity. So an unused pad
-// carries a CALL LIGHT: a ring that breathes on a slow cycle, plus its label. A
-// pad the hero has already ridden stops advertising itself and dims to a plain
-// plate; it still works, it just no longer shouts.
+// carries a CALL LIGHT: a ring that breathes on a slow cycle, and its own
+// LABEL under it, which is the half that says where the car goes rather than
+// only that there is one. A pad the hero has already ridden stops advertising
+// itself and dims to a plain plate; it still works, it just no longer shouts.
+//
+// What a keyed pad says when it REFUSES is not here: that is a one-shot read
+// off the engine's own event (game-screen/lift-lock.ts), because it belongs to
+// the moment the hero stepped on it rather than to the prop.
 
 import type { GameState } from "@game/core";
+import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { drawWorldSprite } from "./plane.ts";
@@ -20,6 +26,10 @@ type InView = (x: number, y: number, margin: number) => boolean;
 
 /** Seconds one full breath of the call light takes. */
 const PULSE_SEC = 1.6;
+
+/** Font scale for a pad's destination label — the field's small-caption size,
+ * legible at the reference phone's viewport without crowding the plate. */
+const LABEL_SCALE = 1;
 
 /**
  * LAIR DOORS — the door prop on an occupied house (see `LevelDef.lairs`).
@@ -55,6 +65,7 @@ export function drawElevators(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   sprites: Sprites,
+  font: PixelFont,
   camera: Camera,
   inView: InView,
   timeMs: number,
@@ -86,5 +97,21 @@ export function drawElevators(
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
+    if (!pad.label) continue;
+    // …AND WHERE IT GOES. Drawn upright over the plate rather than lying in it:
+    // the ring is a light in the floor and reads foreshortened, but a word that
+    // foreshortens is a word nobody can read at a glance. Shadowed first, like
+    // every other line the field draws over ground of unknown colour.
+    const width = font.measure(pad.label) * LABEL_SCALE;
+    const tx = Math.round(x - width / 2);
+    const ty = Math.round(y - radius - font.height * LABEL_SCALE - 3);
+    font.draw(ctx, pad.label, tx + 1, ty + 1, {
+      scale: LABEL_SCALE,
+      color: "#0b0d10",
+    });
+    font.draw(ctx, pad.label, tx, ty, {
+      scale: LABEL_SCALE,
+      color: `rgba(140, 246, 220, ${0.55 + breath * 0.4})`,
+    });
   }
 }
