@@ -26,6 +26,7 @@ import { clamp, type Vec2 } from "@game/lib/vec.ts";
 
 import { QUESTS } from "../config/index.ts";
 import { insideObstacle } from "../obstacles.ts";
+import { buildNavGrid, nearestReachable } from "../pathfind.ts";
 import type { GameState } from "../types/index.ts";
 
 /** Body radius a quest spot is cleared for — a piece on the floor, or the
@@ -72,4 +73,47 @@ export function questSpot(state: GameState, at: Vec2): Vec2 {
 
 function blocked(state: GameState, pos: Vec2): boolean {
   return insideObstacle(state, pos, SPOT_RADIUS);
+}
+
+/**
+ * WHERE AN ESCORT'S WALK STARTS AND ENDS — `questSpot` plus the one thing a
+ * destination needs that a dropped piece does not: somebody has to be able to
+ * WALK there.
+ *
+ * A piece nudged out of a wall is still findable, so clear ground is the whole
+ * question for one. An escort's destination is judged the other way round: the
+ * errand is handed in when the person standing there is inside
+ * `QUESTS.escortArriveRadius` of it, and nothing about the objective moves once
+ * the run has started. So a spot in a sealed pocket, in the annex the lift
+ * rides to, or out on the dead rock past the carve is an errand that can never
+ * be completed — and it reaches the player as a marker they walk at and never
+ * arrive at, with nothing on screen to say why. Measured across the six shipped
+ * escort errands, the authored destination was unreachable on most seeds of
+ * most maps; on the worst of them, on every seed.
+ *
+ * `anchor` is ground somebody is already standing on — the hero, whose own
+ * component is by definition the one the party can walk in. Doors are read as
+ * they stand: one the hero has opened is already out of the obstacle field, and
+ * re-homing against a map with every door dissolved would hang the mark behind
+ * one this run may never unlock.
+ *
+ * BOTH ENDS COME BACK FROM ONE CALL because they share the grid, and building
+ * it is the expensive half. They are re-homed INDEPENDENTLY, each staying as
+ * near its own authored spot as the carve allows — that the walk stays a walk
+ * is then a property of the shipped errands rather than of this function, and
+ * `tests/content/quest_reachability_test.ts` is where it is held.
+ */
+export function escortSpots(
+  state: GameState,
+  body: Vec2,
+  to: Vec2,
+  anchor: Vec2,
+): { body: Vec2; to: Vec2 } {
+  const grid = buildNavGrid(state);
+  const home = questSpot(state, body);
+  const goal = questSpot(state, to);
+  return {
+    body: nearestReachable(grid, anchor, home) ?? home,
+    to: nearestReachable(grid, anchor, goal) ?? goal,
+  };
 }

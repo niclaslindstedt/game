@@ -629,6 +629,64 @@ function componentAt(g: NavGrid, p: Vec2): number {
 }
 
 /**
+ * THE NEAREST POINT TO `at` THAT A BODY STANDING AT `from` CAN WALK TO — `at`
+ * itself when it already qualifies, the anchor of the closest cell in `from`'s
+ * own component otherwise, and null when `from` is not on walkable ground.
+ *
+ * `findPath` answers "can I get there", and it snaps an unreachable goal onto
+ * the closest open cell only to then refuse it. This answers the other
+ * question — "where is the nearest place I CAN get to" — which is what a spot a
+ * carve may have put somewhere no route reaches needs before it is used as a
+ * destination at all. A GENERATED map is where that bites: an authored
+ * coordinate can land in a sealed pocket, in the annex the lift rides to, or
+ * out on the dead rock past the carve, and every one of those is a goal nobody
+ * can be walked to.
+ *
+ * At CELL resolution — the answer is clear ground for a hero-sized body, not
+ * for anything wider — so a caller that also needs the spot clear of small
+ * furniture nudges it first (see `quests/placement.ts`).
+ *
+ * The ring search is Chebyshev, so it can return a cell up to one ring further
+ * out than the true euclidean nearest; on a 40px grid that is not a difference
+ * anything downstream can measure. Deterministic, like everything else here.
+ */
+export function nearestReachable(
+  g: NavGrid,
+  from: Vec2,
+  at: Vec2,
+): Vec2 | null {
+  const side = componentAt(g, from);
+  if (side < 0) return null;
+  const comp = ensureComponents(g);
+  const c = cellOf(g, at);
+  const home = cellIndex(g, c.tx, c.ty);
+  if (g.walkable[home] && comp[home] === side) return { ...at };
+  const maxR = Math.max(g.cols, g.rows);
+  for (let r = 1; r <= maxR; r++) {
+    let best: Vec2 | null = null;
+    let bestSq = Infinity;
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue; // ring edge
+        const tx = c.tx + dx;
+        const ty = c.ty + dy;
+        if (!inBounds(g, tx, ty)) continue;
+        const i = cellIndex(g, tx, ty);
+        if (!g.walkable[i] || comp[i] !== side) continue;
+        const spot = cellAnchor(g, tx, ty);
+        const sq = (spot.x - at.x) ** 2 + (spot.y - at.y) ** 2;
+        if (sq < bestSq) {
+          bestSq = sq;
+          best = spot;
+        }
+      }
+    }
+    if (best) return best;
+  }
+  return null;
+}
+
+/**
  * Can `to` be reached from `from` at all, on foot or by riding the given
  * portals? Answered from the component labels alone — no search — so a plan can
  * ask "is the objective even reachable yet" every tick without paying for a

@@ -47,6 +47,10 @@ export type LoopShared = {
    * half a dozen identical numbers on the same spot (game-screen/gold-float.ts).
    * Absent while no group is open. */
   goldGroup: GoldGroup | undefined;
+  /** Sim-clock ms of the last "this lift wants a pass" read. The engine books
+   * `elevatorLocked` every tick the hero stands on a keyed plate, so the read
+   * is throttled off this (lift-lock.ts) rather than pushed per tick. */
+  liftRefusedMs: number;
 };
 
 export function createLoopShared(): LoopShared {
@@ -59,5 +63,6 @@ export function createLoopShared(): LoopShared {
     xpHeatBaseXp: 0,
     bagFullHintUntilMs: 0,
     goldGroup: undefined,
+    liftRefusedMs: -Infinity,
   };
 }

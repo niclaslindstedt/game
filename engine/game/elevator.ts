@@ -27,6 +27,7 @@ import { distance } from "@game/lib/vec.ts";
 import { ELEVATOR } from "./config/index.ts";
 import { revealAround } from "./fog.ts";
 import { nearestHeroWhere } from "./party.ts";
+import { holdsKeyFor } from "./story.ts";
 import type { GameState } from "./types/index.ts";
 
 /**
@@ -62,11 +63,19 @@ export function stepElevators(state: GameState, dtMs: number): void {
     ) {
       continue;
     }
-    // A KEYED CAR does not come when called. The pad is drawn and labelled
-    // either way — a lift you can see and cannot ride is what sends the player
-    // back for whoever is carrying the pass — and the refusal is silent here
-    // because the app answers it (a locked call light and the key's name).
-    if (pad.opensWith && !state.storyItems.includes(pad.opensWith)) {
+    // A KEYED CAR does not come when called. The pad is drawn either way — a
+    // lift you can see and cannot ride is what sends the player back for
+    // whoever is carrying the pass — and the refusal is silent HERE because
+    // the app names the pass over the plate instead (game-screen/lift-lock.ts),
+    // off the event below. It is booked every tick he stands there so that read
+    // can hold for as long as he is asking.
+    //
+    // `opensWith` is a DOOR id, so the question goes to `holdsKeyFor`, which
+    // walks the collection for the item whose `unlocks` names it. Asking
+    // `state.storyItems.includes(pad.opensWith)` instead compares a door id
+    // against item ids: it type-checks, it is never true, and the car it seals
+    // is the only way to the boss of the venue that uses one.
+    if (pad.opensWith && !holdsKeyFor(state, pad.opensWith)) {
       state.events.push({
         type: "elevatorLocked",
         id: pad.id,

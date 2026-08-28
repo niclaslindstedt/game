@@ -60,3 +60,20 @@ export function storyItemDef(defId: string): StoryItemDef {
   if (!def) throw new Error(`unknown story item def "${defId}"`);
   return def;
 }
+
+/**
+ * THE KEY THAT OPENS THIS DOOR — the one story item whose `unlocks` names it,
+ * or null where nothing does (the staff entrance, which is opened by somebody
+ * badging in rather than by a card).
+ *
+ * The catalog is the only place the two id spaces meet, so every reader that
+ * has a DOOR id and wants the card comes here: the engine to ask whether the
+ * hero is carrying it (`holdsKeyFor`), the app to NAME it on a lock that just
+ * refused. A door is expected to answer to at most one card and the first
+ * match is taken; a catalog with two is an authoring error the schema owns.
+ */
+export function keyItemForDoor(doorId: string): StoryItemDef | null {
+  return (
+    Object.values(activeStoryItemDefs).find((d) => d.unlocks === doorId) ?? null
+  );
+}

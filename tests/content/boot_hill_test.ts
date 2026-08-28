@@ -18,12 +18,13 @@ import {
   LEVELS,
   MAP_BLUEPRINTS,
   runLevelDef,
+  step,
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
   UNIQUE_DEFS,
   weaponDef,
 } from "@game/core";
-import { SEED, startGame } from "../helpers.ts";
+import { DT, idle, SEED, startGame } from "../helpers.ts";
 
 const BOOT_HILL = LEVELS.boot_hill!;
 const BLUEPRINT = MAP_BLUEPRINTS.boot_hill!;
@@ -75,6 +76,26 @@ describe("BOOT HILL level def", () => {
     // its fence with one way in.
     const compound = BLUEPRINT.areas.find((a) => a.id === "control")!;
     expect(compound.enclosure).toBe("hard");
+  });
+
+  it("takes the hero down once he is carrying that pass, and not before", () => {
+    // The compound has no door: it is the ANNEX, and the LIFT is the lock
+    // (`MapBlueprint.annex.lock`). So this is the venue's last gate and the
+    // only way to its boss — a car that refuses a hero holding the pass is a
+    // run that cannot be finished, with a plate to stand on and nothing said.
+    const state = startGame(SEED, "boot_hill");
+    const lift = state.elevators.find((p) => p.id === "lift_down")!;
+    expect(lift.opensWith).toBe("control");
+    const hero = state.players[0]!;
+    hero.pos = { ...lift.pos };
+    hero.z = 0;
+    step(state, idle, DT);
+    expect(hero.pos).toEqual(lift.pos);
+
+    state.storyItems.push("keycard_boot_hill");
+    step(state, idle, DT);
+    expect(hero.pos.x).toBeCloseTo(lift.to.x, 0);
+    expect(hero.pos.y).toBeCloseTo(lift.to.y, 0);
   });
 
   it("plays the arrival read on sight, then the hands read on the first kill", () => {

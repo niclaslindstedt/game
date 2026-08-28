@@ -955,8 +955,18 @@ export function collectStoryItem(
   state.events.push({ type: "dialogueStarted", speaker: def.name });
 }
 
-/** Does the collection hold a key that opens this door? */
-function holdsKeyFor(state: GameState, doorId: string): boolean {
+/**
+ * Does the collection hold a key that opens this door?
+ *
+ * A LOCK NAMES A DOOR, NEVER AN ITEM — `LevelDef.gates[].opensWith`,
+ * `LevelDef.elevators[].opensWith` and `MapBlueprint.annex.lock` all carry a
+ * DOOR id, and the story item that answers it is whichever one's `unlocks`
+ * points back at it. So every lock is asked through here rather than by
+ * checking `state.storyItems` for the lock's own name: that comparison is
+ * between two different id spaces, it type-checks, and it can only ever be
+ * false — a door nothing opens, on a run where the key is in the hero's hand.
+ */
+export function holdsKeyFor(state: GameState, doorId: string): boolean {
   return state.storyItems.some(
     (defId) => storyItemDef(defId).unlocks === doorId,
   );

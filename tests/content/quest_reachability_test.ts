@@ -23,6 +23,15 @@
 // `minDifficulty` the rung fails (`meetsMinDifficulty`) — so a new gate, or a
 // gate moved from the point onto a member line, is followed for free.
 //
+// AN ESCORT ERRAND HAS A SECOND WAY TO BE IMPOSSIBLE, and it is the same shape:
+// its destination is an authored coordinate, and every mission is CARVED FRESH
+// per run, so the spot can land inside a wall, in a pocket nothing joins up, in
+// the sealed annex the lift rides to, or out on the dead rock past the carve.
+// Nothing throws. The marker draws, the person follows, and the errand can
+// simply never be handed in. `escortSpots` re-homes both ends onto ground the
+// party can walk to; the walk below is what proves it on the shipped errands,
+// on real carves, rather than on the rule.
+//
 // A sequel deletes this file with the campaign it guards; the engine's own
 // rules are pinned on synthetic content in tests/engine/.
 
@@ -33,11 +42,18 @@ import {
   DIFFICULTY_ORDER,
   LEVELS,
   QUEST_DEFS,
+  QUESTS as QUEST_TUNING,
+  buildNavGrid,
+  createGame,
+  findPath,
   meetsMinDifficulty,
   resolveLevelDef,
   type Difficulty,
   type QuestDef,
 } from "@game/core";
+// Engine-internal: the one call `acceptQuest` makes to put a walker on the
+// field, asked here without walking a hero to a giver first.
+import { spawnEscort } from "../../engine/game/quests/escort.ts";
 
 const QUESTS = Object.values(QUEST_DEFS);
 
@@ -108,6 +124,55 @@ describe("every errand is finishable on every rung it is offered on", () => {
       expect(carriers, `no scale carrier on ${difficulty}`).not.toEqual([]);
     }
   });
+
+  it("walks every escort to a destination the hero can actually reach", () => {
+    // Asked at the START of a run — the fewest doors open, the smallest
+    // reachable region — because an errand that survives that survives being
+    // taken anywhere later. The check is the engine's OWN router, so a pass
+    // here is a pass in play.
+    const broken: string[] = [];
+    for (const quest of QUESTS) {
+      for (const objective of quest.objectives) {
+        if (objective.kind !== "escort") continue;
+        for (const seed of SEEDS) {
+          const state = createGame(seed, quest.level);
+          const hero = state.players[0]!;
+          const escort = spawnEscort(
+            state,
+            quest.id,
+            objective.escort,
+            objective.to,
+            hero.pos,
+          );
+          const where = `${quest.id}/${objective.escort} seed ${seed}`;
+          if (!escort) {
+            broken.push(`${where}: no body went on the field`);
+            continue;
+          }
+          const grid = buildNavGrid(state);
+          if (!findPath(grid, hero.pos, escort.to)) {
+            broken.push(`${where}: nothing can walk to the destination`);
+          }
+          if (!findPath(grid, hero.pos, escort.pos)) {
+            broken.push(`${where}: the walker is sealed off from the hero`);
+          }
+          // …AND IT IS STILL A WALK. Both ends re-home independently, so an
+          // errand that pays out on the tick it is taken is the other way this
+          // can go wrong — the payout with none of the job.
+          const walk = Math.hypot(
+            escort.to.x - escort.pos.x,
+            escort.to.y - escort.pos.y,
+          );
+          if (walk <= QUEST_TUNING.escortArriveRadius) {
+            broken.push(
+              `${where}: delivered on arrival — ${walk.toFixed(0)}px`,
+            );
+          }
+        }
+      }
+    }
+    expect(broken.join("\n")).toBe("");
+  }, 120_000);
 });
 
 /** Does this errand's own stall put the piece on the counter? The `requires:`

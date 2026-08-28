@@ -40,6 +40,7 @@ export {
   buildNavGrid,
   findPath,
   NAV_CELL,
+  nearestReachable,
   type NavGrid,
 } from "./game/pathfind.ts";
 
@@ -645,7 +646,6 @@ export {
   createQuestGivers,
   declineQuest,
   escortArrivedLine,
-  escortDestination,
   escortName,
   escortSetOffLine,
   escortSprite,
@@ -1458,6 +1458,7 @@ export {
 } from "./game/defs/companions.ts";
 export {
   STORY_ITEM_DEFS,
+  keyItemForDoor,
   storyItemDef,
   type StoryItemDef,
 } from "./game/defs/story.ts";
