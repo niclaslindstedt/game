@@ -31,12 +31,18 @@ it at both ends of the session.
 ## Running
 
 ```sh
-npm install --no-save playwright          # once per session — not a repo dep
+make levels && make assets            # the harness drives the REAL app, which
+                                      # will not boot on an unbuilt content tree
 cd pwa && npx vite --port 5199 &      # dev server
 node pwa/scripts/ui-shots.mjs         # all ten viewports (~25 min)
 node pwa/scripts/ui-shots.mjs --only land             # just the reference
-node pwa/scripts/ui-shots.mjs --only padl,padp,minil,minip  # tablets
+node pwa/scripts/ui-shots.mjs --only padl,padp,minil,minip,desk3x  # the 2x/3x tiers
 ```
+
+Playwright itself is a repo devDependency, so `npm install` already has it; only
+the browser may need fetching (`npx playwright install chromium`, once per
+machine — and never in an environment that ships one, where the harness's
+`PLAYWRIGHT_CHROMIUM` default already points at it).
 
 The ten viewports and what each is for:
 
