@@ -3,11 +3,11 @@
 // button in the upper HUD, or M on desktop) with the run frozen behind it.
 // Warcraft-style fog of war: the level is drawn one chunky pixel per fog
 // cell, terrain visible only where the hero has walked (`state.explored`),
-// pitch dark elsewhere, with a soft penumbra along the fog's edge. Pins mark
-// where story items and unique/legendary loot were found and where elites
-// and bosses fell (`state.mapMarkers`); the hero's own position glows green.
-// Everything is static while the map is up, so the canvas draws once per
-// open — no animation loop.
+// pitch dark elsewhere, with a soft penumbra along the fog's edge. Pins are
+// `state.mapMarkers` — where story items were found, where elites and bosses
+// fell, who has work and where that work wants the hero next — and the hero's
+// own position glows green. Everything is static while the map is up, so the
+// canvas draws once per open — no animation loop.
 
 import { localHero } from "../local-seat.ts";
 import { useEffect, useRef } from "react";
@@ -36,9 +36,9 @@ import {
 /** Backing-store pixels per fog cell — the map's chunky "pixel" size. */
 const CELL_PX = 4;
 
-/** The marker icon each event kind pins on the map (and shows in the legend) —
- * shapes carry the meaning now, not colored dots. Generated in the `markers`
- * sprite family (scripts/sprite-data/markers.mjs). */
+/** The marker icon each pin kind wears on the map (and in the legend) — shapes
+ * carry the meaning, not colored dots. Authored in the `markers` sprite family
+ * under content/sprites/markers/. */
 const MARKER_SPRITE: Record<MapMarkerKind, string> = {
   story: "map_story",
   elite: "map_elite",
@@ -46,11 +46,13 @@ const MARKER_SPRITE: Record<MapMarkerKind, string> = {
   // The wandering vendor's gold coin — the same sprite that bobs over his
   // head in-game, from the icons family.
   merchant: "icon_coin",
-  // The two quest pins: the person you take work from, and the thing that work
-  // sent you after. Both wear the same gold as the `!` over a giver's head, so
-  // the map and the field agree about what QUEST looks like.
+  // The three quest pins: the person you take work from, the thing that work
+  // sent you after, and the place it wants you to reach. All three wear the
+  // same gold as the `!` over a giver's head, so the map and the field agree
+  // about what QUEST looks like.
   questGiver: "map_questgiver",
   questTarget: "map_questtarget",
+  questGoal: "map_questgoal",
 };
 
 /** The hero's own "you are here" pin. */
@@ -280,6 +282,9 @@ export function MapOverlay({
       : []),
     ...(state.mapMarkers.some((m) => m.kind === "questTarget")
       ? [{ sprite: MARKER_SPRITE.questTarget, label: "TARGET" }]
+      : []),
+    ...(state.mapMarkers.some((m) => m.kind === "questGoal")
+      ? [{ sprite: MARKER_SPRITE.questGoal, label: "GO HERE" }]
       : []),
     // Only meaningful on the rift; harmless elsewhere (the legend is static).
     ...(state.wells.length > 0

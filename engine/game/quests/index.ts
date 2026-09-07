@@ -195,8 +195,9 @@ function clearSpot(
 
 /**
  * Advance the quest system one tick: MEET the givers (nothing opens — see rule
- * 2), walk the escorts, and pin what the hero has laid eyes on. Runs after the
- * horde has moved, so a sighting means the thing is actually on screen.
+ * 2), walk the escorts, and reconcile the map's quest pins against the work
+ * still running. Runs after the horde has moved, so a sighting means the thing
+ * is actually on screen.
  */
 export function stepQuests(state: GameState, dt: number, dtMs: number): void {
   pollQuestConditions(state);
@@ -207,6 +208,9 @@ export function stepQuests(state: GameState, dt: number, dtMs: number): void {
     }
     for (const escort of died) failQuest(state, escort.questId, "escortDied");
   }
+  // Ahead of the givers, and outside their early return: a venue whose givers
+  // have all been run down still owes the map an honest set of quest pins.
+  markQuestPins(state);
 
   if (state.questGivers.length === 0) return;
   stepArrivingGivers(state, dt, dtMs);
@@ -238,8 +242,6 @@ export function stepQuests(state: GameState, dt: number, dtMs: number): void {
     // ...and that is the whole meeting. Nothing opens. `talkToQuestGiver` is
     // the only door into a conversation, and only a tap calls it.
   }
-
-  markQuestTargets(state);
 }
 
 /**
@@ -253,7 +255,7 @@ export function stepQuests(state: GameState, dt: number, dtMs: number): void {
  * not an event; a flag may be set by any branch of any conversation; and a
  * hero's level rises inside `grantXp`, which has no business knowing quests
  * exist. So they are asked rather than told — over the handful of active
- * errands, which is the same budget `markQuestTargets` already spends beside
+ * errands, which is the same budget `markQuestPins` already spends beside
  * them, and never over the whole catalog.
  */
 function pollQuestConditions(state: GameState): void {
@@ -883,18 +885,41 @@ function refreshQuestCompletion(state: GameState, questId: string): void {
 // ------------------------------------------------------------------- the map
 
 /**
- * Pin what an active errand sent the hero after, the first time he lays eyes
- * on it. Only the errand's OWN targets — a map that pinned every monster
- * would be a map with nothing on it.
+ * WHAT THE MAP SAYS ABOUT THE ERRANDS, reconciled once a tick.
+ *
+ * Both quest pins answer "where do I go next", so both are owned by the work
+ * that is actually RUNNING rather than latched for the rest of the level. A
+ * reticle left behind by a finished errand is not a souvenir, it is the map
+ * telling the player to go and kill something he has already killed — and with
+ * three or four errands to a venue that is most of what the map has on it.
+ *
+ * So this pass ADDS and PRUNES in one place: what no active objective still
+ * wants comes off, whether the errand was completed, turned in, failed, or its
+ * escort simply arrived. `questGiver` pins are not its business — those are a
+ * memory of a meeting and outlive the job (see `MapMarkerKind`).
  */
-function markQuestTargets(state: GameState): void {
+function markQuestPins(state: GameState): void {
   const active = activeQuests(state);
-  if (active.length === 0) return;
+
+  // TARGETS — pinned the first time any hero lays eyes on one. Only the
+  // errands' OWN quarry: a map that pinned every monster would be a map with
+  // nothing on it.
+  const hunted = new Set<string>();
   for (const progress of active) {
     const objectives = questDef(progress.id).objectives;
-    for (const objective of objectives) {
+    for (const [index, objective] of objectives.entries()) {
       if (objective.kind !== "kill" && objective.kind !== "killNamed") continue;
-      if (state.mapMarkers.some((m) => m.defId === objective.enemy)) continue;
+      // A TALLY ALREADY FULL IS NOT WORK. An errand with three objectives runs
+      // until the last one lands, and pinning the breed of a tally that filled
+      // an hour ago is the same lie a finished errand's pin tells.
+      if ((progress.counts[index] ?? 0) >= objectiveNeed(objective)) continue;
+      hunted.add(objective.enemy);
+      // Scoped to this kind: the breed may already carry an `elite` or `boss`
+      // pin from a kill, and that is a different pin saying a different thing.
+      const pinned = state.mapMarkers.some(
+        (m) => m.kind === "questTarget" && m.defId === objective.enemy,
+      );
+      if (pinned) continue;
       // ANY hero's sighting pins the target — the map is shared.
       const seen = state.enemies.find(
         (e) =>
@@ -909,6 +934,26 @@ function markQuestTargets(state: GameState): void {
       if (seen) addMapMarker(state, "questTarget", seen.pos, objective.enemy);
     }
   }
+
+  // GOALS — an escort's destination, pinned from the moment she sets off and
+  // taken back when she gets there. `escort.to` rather than the authored
+  // coordinate, because on a carved map the two are different places
+  // (`escortSpots`) and the map has to agree with the ring on the ground.
+  const walking = new Set<string>();
+  for (const escort of state.escorts) {
+    if (escort.arrived) continue;
+    walking.add(escort.defId);
+    const pinned = state.mapMarkers.some(
+      (m) => m.kind === "questGoal" && m.defId === escort.defId,
+    );
+    if (!pinned) addMapMarker(state, "questGoal", escort.to, escort.defId);
+  }
+
+  state.mapMarkers = state.mapMarkers.filter((m) =>
+    m.kind === "questTarget"
+      ? hunted.has(m.defId)
+      : m.kind !== "questGoal" || walking.has(m.defId),
+  );
 }
 
 // -------------------------------------------------------------- the questions

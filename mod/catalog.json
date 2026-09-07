@@ -2295,6 +2295,7 @@
     "map_boss",
     "map_elite",
     "map_questgiver",
+    "map_questgoal",
     "map_questtarget",
     "map_story",
     "map_well",

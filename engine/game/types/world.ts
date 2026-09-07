@@ -577,10 +577,15 @@ export type DialogueState = {
 };
 
 /**
- * What a level-map pin commemorates: a `story` plot piece picked up, an
- * `elite` slain, a `boss` beaten (a fleeing unique counts — the fight was won
- * where it fled), or a `merchant` met (his stall stays put once discovered, so
- * the pin leads straight back to the shop).
+ * What a level-map pin says, and the two halves are different promises.
+ *
+ * A MEMORY — `story`, `elite`, `boss`, `merchant`, `questGiver`, `questTarget`
+ * — commemorates something that already happened at `pos`, and stands for the
+ * rest of the level because the player was there when it did.
+ *
+ * An INSTRUCTION — `questGoal` — is somewhere the player has been TOLD to get
+ * to and may never have seen. It is live state rather than a memory: it comes
+ * off the map the moment the errand behind it stops running.
  */
 export type MapMarkerKind =
   | "story"
@@ -593,19 +598,29 @@ export type MapMarkerKind =
    * instead of a hunt.
    */
   | "questGiver" /**
-   * A quest TARGET the hero has laid eyes on (`QUESTS.markSightRadius`) —
+   * A quest TARGET a hero has laid eyes on (`QUESTS.markSightRadius`) —
    * the named elite an errand sent him after, or the first of a breed it
    * asked him to thin out. Pinned on sight rather than on death, because
    * the pin's whole job is to answer "where was that thing again".
    */
-  | "questTarget";
+  | "questTarget" /**
+   * A PLACE A RUNNING ERRAND WANTS THE HERO TO REACH — today an escort's
+   * destination, and `defId` names the escort rather than a catalog entry.
+   *
+   * The one pin the player is shown before he has been there, because the
+   * errand told him where it was. Without it "walk her out past the water
+   * tower" is a search of the whole venue: the destination ring is drawn in
+   * the world, so it can only be found by already standing next to it.
+   */
+  | "questGoal";
 
 /**
- * A pin on the level map (see map.ts): something memorable happened at
- * `pos`. `defId` keys the catalog its `kind` implies — STORY_ITEM_DEFS for
- * `story`, WEAPON_DEFS/GEAR_DEFS for `loot`, ENEMY_DEFS for `elite`/`boss` —
- * so the app can resolve a name or icon. Markers are shown even where the
- * fog still stands: the player was there when it happened.
+ * A pin on the level map (see map.ts): something memorable happened at `pos`,
+ * or a running errand wants somebody brought there. `defId` keys the catalog
+ * its `kind` implies — STORY_ITEM_DEFS for `story`, ENEMY_DEFS for
+ * `elite`/`boss`/`questTarget`, the quest's own escorts for `questGoal` — so
+ * the app can resolve a name or icon. Markers are shown even where the fog
+ * still stands: the player was there when it happened, or has been told.
  */
 export type MapMarker = {
   kind: MapMarkerKind;

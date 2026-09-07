@@ -57,10 +57,11 @@ const BLIP_COLOR: Record<MapMarkerKind, string> = {
   elite: "#ff9040",
   boss: "#ff3020",
   merchant: "#ffcf3a",
-  // The two quest pins share the selection gold the marks over their heads
+  // The three quest pins share the selection gold the marks over their heads
   // wear — one colour means QUEST wherever it appears, on a head or on a map.
   questGiver: "#ffcf3a",
   questTarget: "#ffe98a",
+  questGoal: "#ffcf3a",
 };
 
 /** How many rampage stages fill the ring gauge (mirrors the old pip count). */
@@ -446,8 +447,11 @@ export function drawMinimap(
     dot(well.pos.x, well.pos.y, 2, "rgba(138, 108, 224, 0.9)");
   }
   // Event blips: only where the hero has been (the full map shows the rest).
+  // A `questGoal` is the exception and has to be — it is somewhere he was TOLD
+  // to go rather than somewhere he has been, so fog-gating it would hide the
+  // one blip that exists to point out of the dark.
   for (const marker of state.mapMarkers) {
-    if (!isExplored(state, marker.pos)) continue;
+    if (marker.kind !== "questGoal" && !isExplored(state, marker.pos)) continue;
     dot(marker.pos.x, marker.pos.y, 1.8, BLIP_COLOR[marker.kind]);
   }
   // The hero's own pin: a bright green dot ringed dark so it reads over any
