@@ -9735,8 +9735,8 @@ canvas.tier-artifact {
   box-shadow: 0 0 0 #7d3030;
 }
 
-/* The companion equip screen (CompanionPanel): the companion's card + three
-   slots above the HERO's own bag — Diablo-2 mercenary dressing. */
+/* The companion equip screen (CompanionPanel): the companion's card, then
+   WEARING beside YOUR BAG — Diablo-2 mercenary dressing. */
 /* Sized to its own content rather than inheriting the bag-sized inventory
    panel: a companion carries three slots and a short stat block, and at the
    inventory's 40rem the card hugged the left rail with two thirds of the modal
@@ -9747,7 +9747,7 @@ canvas.tier-artifact {
 .inventory-panel.companion-panel {
   align-items: center;
   text-align: center;
-  width: min(94vw, 26rem);
+  width: min(94vw, 27rem);
   gap: 0.7rem;
   padding: 1.1rem 1.25rem;
 }
@@ -9801,40 +9801,166 @@ canvas.tier-artifact {
   background: #7ef0c8;
 }
 
-/* The three labelled slot columns, centred as a row. */
-.companion-slots {
+/* The two halves of the screen: WEARING and YOUR BAG. Stacked in portrait,
+   folded side by side in landscape (below) where the 390px-tall phone has the
+   width to spare and not the height. */
+/* `flex-shrink: 0` here and on the rows below is load-bearing, not tidiness:
+   the panel is a flex column with a viewport-capped `max-height`, so on a
+   390px-tall landscape phone every child is a candidate for shrinking — and a
+   squashed row does not scroll, it overlaps the one under it. The panel
+   scrolls; the rows keep their height. */
+.companion-body {
   display: flex;
-  gap: 1rem;
-  justify-content: center;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 0.7rem;
+  width: 100%;
+  min-width: 0;
 }
 
-/* Each slot is a cell over its label; the label reads at scale 2 so it names
-   the slot rather than whispering it. */
-.companion-col {
-  gap: 0.25rem;
+.companion-head,
+.companion-close {
+  flex-shrink: 0;
 }
 
-.companion-cell {
-  cursor: pointer;
-}
-
-/* BAG heading + the one-line hint, on their own row above the grid. */
-.companion-bag-head {
+/* Each half names itself and its verb on one row — "WEARING · TAP TO TAKE
+   OFF", "YOUR BAG · 3 FIT - TAP ONE TO EQUIP" — so neither list has to be
+   guessed at. Wraps rather than overflowing when the fold makes it narrow. */
+.companion-section-head {
   display: flex;
+  flex-shrink: 0;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   width: 100%;
 }
 
-/* The bag grid stays a tidy block of cells instead of stretching four lonely
-   slots across the whole modal: fixed 2.2rem cells, centred. */
-.companion-bag.inv-grid {
-  grid-template-columns: repeat(auto-fit, 2.2rem);
-  justify-content: center;
+/* ---- WEARING: a ROW per slot ---------------------------------------------
+   A strip of three unlabelled icons never said what the companion had on, so
+   every slot carries its frame, its name and the NAME of the piece in it. */
+.companion-worn {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.companion-worn-row {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.28rem 0.4rem;
+  text-align: left;
+  background: rgba(6, 8, 12, 0.4);
+  border: 1px solid #232b35;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.companion-worn-row:active:not(:disabled) {
+  background: rgba(126, 240, 200, 0.1);
+}
+
+/* A row with nothing to take off is a READOUT, not a dead button: the weapon
+   slot the engine refuses to empty, and any slot that is already bare.
+
+   The weapon row's modifier is `swap-only` and NOT the obvious `fixed`, which
+   is not a naming preference: this sheet `@import`s Tailwind, whose utility
+   layer ships `.fixed { position: fixed }` — so a bare one-word class here
+   silently inherits a utility. It took the weapon row out of flow and painted
+   it over the two rows under it, with no rule in this file to find. Check a
+   new single-word modifier against the utility vocabulary (`hidden`, `block`,
+   `static`, `visible`, `grid`, `flex`, `absolute`, `sticky`…) before using
+   it. */
+.companion-worn-row:disabled {
+  cursor: default;
+}
+
+.companion-worn-row.empty {
+  border-style: dashed;
+  border-color: #2b333d;
+}
+
+/* The frame itself. `.inv-cell` pins the square and the inset; the size is
+   this rule's, because a bag cell's is set by its grid. */
+.inv-cell.companion-slot {
+  width: 2.4rem;
+  flex: 0 0 auto;
+  cursor: inherit;
+  touch-action: auto;
+}
+
+/* AN EMPTY SLOT SAYS WHAT IT WANTS: its own `icon_slot_*` glyph, ghosted —
+   the paper doll's `.doll-ghost` treatment, so a bare companion slot reads as
+   an outline of the piece that belongs there. */
+.companion-slot-ghost {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+  opacity: 0.22;
+  filter: grayscale(1) brightness(1.9) contrast(0.55);
+}
+
+.companion-worn-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+/* The slot's name, with the weapon row's SWAP ONLY caption beside it. The
+   canvas override is not optional: the blanket `.game-overlay canvas` rule
+   parks every PixelText at `flex-start`, which in this ROW reads as TOP and
+   floats the scale-1 caption half a line above the scale-2 label it annotates. */
+.companion-worn-label {
+  display: flex;
+  align-items: flex-end;
   gap: 0.35rem;
-  max-height: 8rem;
+}
+
+.companion-worn-label canvas {
+  align-self: flex-end;
+}
+
+/* ---- YOUR BAG ------------------------------------------------------------ */
+.companion-bag-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+/* The bag grid stays a tidy block of cells instead of stretching four lonely
+   slots across the whole modal: fixed cells, centred, three rows before it
+   scrolls.
+
+   The cap is CALCULATED from the cell pitch rather than typed as a round
+   number, so the scroll box's bottom edge always falls BETWEEN rows. A cap
+   that lands mid-cell reads as a clipped panel, not as something to scroll —
+   and `flex-shrink: 0` is what keeps it there: the column above is a flex
+   parent, so a free-shrinking grid gets squeezed to a fraction of a row on the
+   2x tablet tiers whatever the cap says. */
+.companion-bag.inv-grid {
+  --bag-cell: 2.2rem;
+  --bag-gap: 0.35rem;
+  grid-template-columns: repeat(auto-fit, var(--bag-cell));
+  /* The ROWS are pinned to the same figure as the columns, and that is what
+     makes the cap land where it is meant to. A cell is square by
+     `aspect-ratio`, but an auto-sized track measures the ICON inside it and
+     comes out shorter — so every cell overflowed its own row by a few pixels
+     and the third one was sliced open by the scroll box. */
+  grid-auto-rows: var(--bag-cell);
+  justify-content: center;
+  gap: var(--bag-gap);
+  width: 100%;
+  flex-shrink: 0;
+  max-height: calc(var(--bag-cell) * 3 + var(--bag-gap) * 2);
 }
 
 /* CLOSE spans the modal, like every other modal footer button. */
@@ -9844,31 +9970,55 @@ canvas.tier-artifact {
   padding: 0.6rem 1.5rem;
 }
 
-/* Bag pieces a companion can actually wear light up; the rest sit dim. A cell
-   here is a BUTTON (one tap hands the piece over), never a drag handle, so it
-   takes `.shop-bag-cell`'s side of `.inv-cell { touch-action: none }`: a touch
-   is free to pan the grid, without which a carry past three rows has no way to
-   reach its last one. */
+/* WHAT CAN BE EQUIPPED, said in the cells themselves: a piece this companion
+   can wear keeps its full-colour art, its tier rail and a mint ring; every
+   other piece goes flat and dark and stops looking pressable. */
 .companion-bag-cell {
   position: relative;
   cursor: default;
+  background: rgba(6, 8, 12, 0.75);
+  border-color: #1c222a;
+  /* A cell here is a BUTTON (one tap hands the piece over), never a drag
+     handle, so it takes `.shop-bag-cell`'s side of
+     `.inv-cell { touch-action: none }`: a touch is free to pan the grid,
+     without which a carry past three rows has no way to reach its last one. */
   touch-action: pan-y;
 }
 
 .companion-bag-cell.usable {
   cursor: pointer;
   background: rgba(20, 34, 30, 0.75);
+  box-shadow: 0 0 0 1px rgba(126, 240, 200, 0.55);
 }
 
 .companion-bag-cell .companion-bag-dim .inv-item-icon {
-  opacity: 0.35;
-  filter: grayscale(0.7);
+  opacity: 0.3;
+  filter: grayscale(0.85);
 }
 
 .companion-bag-req {
   position: absolute;
   right: 0.1rem;
   bottom: 0.1rem;
+}
+
+/* Landscape (the 844x390 reference phone): the two halves fold side by side.
+   Stacked they need ~22rem of a 24rem-tall modal, which left CLOSE riding the
+   fold on every phone; folded the panel measures ~16rem and the whole screen
+   is read without a scroll. */
+@media (min-aspect-ratio: 4/3) {
+  .inventory-panel.companion-panel {
+    width: min(94vw, 40rem);
+    gap: 0.55rem;
+    padding: 0.8rem 1.1rem 0.9rem;
+  }
+
+  .companion-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 0.5rem 1.1rem;
+  }
 }
 
 /* ---- The CHARACTER sheet (D2's character screen) --------------------------
