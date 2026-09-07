@@ -17,6 +17,7 @@ import {
   LEVEL_ORDER,
   LEVELS,
   MAP_BLUEPRINTS,
+  QUEST_DEFS,
   runLevelDef,
   step,
   STORY_ITEM_DEFS,
@@ -24,6 +25,9 @@ import {
   UNIQUE_DEFS,
   weaponDef,
 } from "@game/core";
+// Engine-internal: standing an escort up is what `acceptQuest` does, and the
+// errand's own chain gates are not what this suite is about.
+import { spawnEscort } from "../../engine/game/quests/escort.ts";
 import { DT, idle, SEED, startGame } from "../helpers.ts";
 
 const BOOT_HILL = LEVELS.boot_hill!;
@@ -283,5 +287,42 @@ describe("the barkeep's THE STRONGMAN stall", () => {
       expect(def.material).toBe("precious");
       expect(def.bonuses).toEqual({});
     }
+  });
+});
+
+describe("RUBY's eight o'clock — the walk the map has to show", () => {
+  it("pins the destination as a questGoal the moment she sets off", () => {
+    const state = startGame(SEED, "boot_hill");
+    // Stand the errand up directly: what is under test is the PIN, and the
+    // conversation that gets there has its own suite.
+    const quest = QUEST_DEFS.east_the_number!;
+    const objective = quest.objectives[0]!;
+    expect(objective.kind).toBe("escort");
+    if (objective.kind !== "escort") return;
+
+    state.quests[quest.id] = {
+      id: quest.id,
+      status: "active",
+      counts: [0],
+      dryKills: [0],
+      acceptedAtMs: 0,
+    };
+    const escort = spawnEscort(
+      state,
+      quest.id,
+      objective.escort,
+      objective.to,
+      state.players[0].pos,
+    );
+    expect(escort).not.toBeNull();
+    step(state, idle, DT);
+
+    const goal = state.mapMarkers.filter((m) => m.kind === "questGoal");
+    expect(goal).toHaveLength(1);
+    expect(goal[0]!.defId).toBe("ruby");
+    // BOOT HILL is carved fresh every run, so the authored coordinate is not
+    // where she is actually walked to — the pin has to be her own re-homed
+    // destination or it points at a spot inside a building.
+    expect(goal[0]!.pos).toEqual(state.escorts[0]!.to);
   });
 });

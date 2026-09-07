@@ -911,3 +911,99 @@ describe("a run with no errands", () => {
     installQuests();
   });
 });
+
+describe("the map's quest pins", () => {
+  beforeEach(() => installQuests());
+
+  /** Take `test_cull` and put a target where the hero can see it. */
+  function sightTarget(state: GameState): void {
+    meet(state);
+    offerUntil(state, "test_cull");
+    takeAndLeave(state);
+    const hero = state.players[0];
+    state.enemies.push(
+      makeEnemy({ pos: { x: hero.pos.x + 30, y: hero.pos.y } }, "test_minion"),
+    );
+    step(state, idle, DT);
+  }
+
+  const pins = (state: GameState, kind: string) =>
+    state.mapMarkers.filter((m) => m.kind === kind);
+
+  it("pins an errand's quarry on sight and takes it back when the errand ends", () => {
+    const state = questRun();
+    sightTarget(state);
+    expect(pins(state, "questTarget")).toHaveLength(1);
+    expect(pins(state, "questTarget")[0]!.defId).toBe("test_minion");
+
+    // Finishing the work retires the pin: a reticle over something already
+    // killed is the map telling the player to go and do it again.
+    cull(state, 3);
+    expect(state.quests.test_cull?.status).toBe("complete");
+    step(state, idle, DT);
+    expect(pins(state, "questTarget")).toHaveLength(0);
+  });
+
+  it("keeps the quarry pinned while the errand is still running", () => {
+    const state = questRun();
+    sightTarget(state);
+    cull(state, 2);
+    expect(state.quests.test_cull?.status).toBe("active");
+    step(state, idle, DT);
+    expect(pins(state, "questTarget")).toHaveLength(1);
+  });
+
+  it("retires the pin when the tally fills, before the errand is handed in", () => {
+    const state = questRun();
+    sightTarget(state);
+    // `test_cull` wants three. The third kill fills the tally, and the reticle
+    // is stale from that moment — not from the walk back to the giver.
+    cull(state, 3);
+    step(state, idle, DT);
+    expect(pins(state, "questTarget")).toHaveLength(0);
+  });
+
+  it("does not let an elite's own pin swallow the errand's target pin", () => {
+    const state = questRun();
+    // A kill pins the breed as an `elite` before the errand is ever taken, and
+    // the two pins say different things — the reticle must still appear.
+    state.mapMarkers.push({
+      kind: "elite",
+      pos: { x: 100, y: 100 },
+      defId: "test_minion",
+    });
+    sightTarget(state);
+    expect(pins(state, "questTarget")).toHaveLength(1);
+    expect(pins(state, "elite")).toHaveLength(1);
+  });
+
+  it("pins an escort's DESTINATION from the moment she sets off", () => {
+    const state = questRun();
+    meet(state);
+    offerUntil(state, "test_walk");
+    takeAndLeave(state);
+    step(state, idle, DT);
+
+    const goal = pins(state, "questGoal");
+    expect(goal).toHaveLength(1);
+    expect(goal[0]!.defId).toBe("test_ward");
+    // The pin is the escort's OWN destination, which on a carved map is not
+    // the authored coordinate (`escortSpots` re-homes both ends).
+    expect(goal[0]!.pos).toEqual(state.escorts[0]!.to);
+  });
+
+  it("takes the destination pin back once the escort arrives", () => {
+    const state = questRun();
+    meet(state);
+    offerUntil(state, "test_walk");
+    takeAndLeave(state);
+    step(state, idle, DT);
+    expect(pins(state, "questGoal")).toHaveLength(1);
+
+    const escort = state.escorts[0]!;
+    escort.pos = { ...escort.to };
+    step(state, idle, DT);
+    expect(escort.arrived).toBe(true);
+    expect(pins(state, "questGoal")).toHaveLength(0);
+  });
+});

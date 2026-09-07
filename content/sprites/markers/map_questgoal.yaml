@@ -1,0 +1,27 @@
+name: map_questgoal
+family: markers
+size: [12, 12]
+description: >
+  Minimap marker for where a running errand wants the hero to get to — a gold X on a dark tile.
+subject:
+  kind: minimap marker
+  build: a bold symmetrical X, two thick diagonal strokes crossing at center, on a dark rounded tile
+  accent: gold cross against near-black backing
+  flavor: X marks the spot — the place you were told to reach, marked before you have ever been there
+palette:
+  O: "#1a1c2c" # dark outline
+  y: "#ffcf3a" # gold pennant and pole
+  k: "#2b3040" # tile backing
+grid: |
+  .OOOOOOOOOO.
+  OkkkkkkkkkkO
+  OkyykkkkyykO
+  OkyyykkyyykO
+  OkkyyyyyykkO
+  OkkkyyyykkkO
+  OkkkyyyykkkO
+  OkkyyyyyykkO
+  OkyyykkyyykO
+  OkyykkkkyykO
+  OkkkkkkkkkkO
+  .OOOOOOOOOO.

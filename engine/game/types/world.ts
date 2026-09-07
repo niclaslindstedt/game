@@ -577,10 +577,15 @@ export type DialogueState = {
 };
 
 /**
- * What a level-map pin commemorates: a `story` plot piece picked up, an
- * `elite` slain, a `boss` beaten (a fleeing unique counts — the fight was won
- * where it fled), or a `merchant` met (his stall stays put once discovered, so
- * the pin leads straight back to the shop).
+ * What a level-map pin says, and the two halves are different promises.
+ *
+ * A MEMORY — `story`, `elite`, `boss`, `merchant`, `questGiver`, `questTarget`
+ * — commemorates something that already happened at `pos`, and stands for the
+ * rest of the level because the player was there when it did.
+ *
+ * An INSTRUCTION — `questGoal` — is somewhere the player has been TOLD to get
+ * to and may never have seen. It is live state rather than a memory: it comes
+ * off the map the moment the errand behind it stops running.
  */
 export type MapMarkerKind =
   | "story"
@@ -593,19 +598,41 @@ export type MapMarkerKind =
    * instead of a hunt.
    */
   | "questGiver" /**
-   * A quest TARGET the hero has laid eyes on (`QUESTS.markSightRadius`) —
+   * A quest TARGET a hero has laid eyes on (`QUESTS.markSightRadius`) —
    * the named elite an errand sent him after, or the first of a breed it
    * asked him to thin out. Pinned on sight rather than on death, because
    * the pin's whole job is to answer "where was that thing again".
    */
-  | "questTarget";
+  | "questTarget" /**
+   * A PLACE A RUNNING ERRAND WANTS THE HERO TO REACH — today an escort's
+   * destination, and `defId` names the escort rather than a catalog entry.
+   *
+   * THE ONE PIN DRAWN ON GROUND NOBODY HAS WALKED, and what earns it is that
+   * A PERSON SAID SO. Every errand has a giver (`QuestDef.giver` is required),
+   * so a goal is always somewhere the hero has been TOLD about — "walk her out
+   * past the water tower" is a landmark described across a bar, and a hero who
+   * has been given directions can mark his own map without having gone yet.
+   *
+   * That is why the fog has no say over it, and the reasoning is worth keeping
+   * because the opposite looks defensible: holding it back until its cell is
+   * explored reads as consistent with every other pin, and quietly restores
+   * the bug this pin exists for. The destination ring is drawn in the WORLD
+   * and culled to the camera, so without a pin the only way to find the spot
+   * is to already be standing next to it — and the fog lifts where the hero
+   * walks, so gating on it means the X arrives at the same moment the ring
+   * does. A goal that comes from something OTHER than a person's instructions
+   * would be the case to reconsider for; there is no such goal today.
+   */
+  | "questGoal";
 
 /**
- * A pin on the level map (see map.ts): something memorable happened at
- * `pos`. `defId` keys the catalog its `kind` implies — STORY_ITEM_DEFS for
- * `story`, WEAPON_DEFS/GEAR_DEFS for `loot`, ENEMY_DEFS for `elite`/`boss` —
- * so the app can resolve a name or icon. Markers are shown even where the
- * fog still stands: the player was there when it happened.
+ * A pin on the level map (see map.ts): something memorable happened at `pos`,
+ * or a running errand wants somebody brought there. `defId` keys the catalog
+ * its `kind` implies — STORY_ITEM_DEFS for `story`, ENEMY_DEFS for
+ * `elite`/`boss`/`questTarget`, the quest's own escorts for `questGoal` — so
+ * the app can resolve a name or icon. Markers are shown even where the fog
+ * still stands, and both halves of that earn it: the player was there when it
+ * happened, or a giver told him where to go (see `questGoal`).
  */
 export type MapMarker = {
   kind: MapMarkerKind;
