@@ -607,14 +607,21 @@ export type MapMarkerKind =
    * A PLACE A RUNNING ERRAND WANTS THE HERO TO REACH — today an escort's
    * destination, and `defId` names the escort rather than a catalog entry.
    *
-   * Without it "walk her out past the water tower" is a search of the whole
-   * venue: the destination ring is drawn in the world, so it can only be found
-   * by already standing next to it.
+   * THE ONE PIN DRAWN ON GROUND NOBODY HAS WALKED, and what earns it is that
+   * A PERSON SAID SO. Every errand has a giver (`QuestDef.giver` is required),
+   * so a goal is always somewhere the hero has been TOLD about — "walk her out
+   * past the water tower" is a landmark described across a bar, and a hero who
+   * has been given directions can mark his own map without having gone yet.
    *
-   * It is the one pin the app HOLDS BACK behind the fog (`visiblePins`, in the
-   * app's own map overlay) — every other pin commemorates ground the hero has
-   * stood on, and drawing this one over undrawn dark would annotate a page the
-   * map has not filled in yet.
+   * That is why the fog has no say over it, and the reasoning is worth keeping
+   * because the opposite looks defensible: holding it back until its cell is
+   * explored reads as consistent with every other pin, and quietly restores
+   * the bug this pin exists for. The destination ring is drawn in the WORLD
+   * and culled to the camera, so without a pin the only way to find the spot
+   * is to already be standing next to it — and the fog lifts where the hero
+   * walks, so gating on it means the X arrives at the same moment the ring
+   * does. A goal that comes from something OTHER than a person's instructions
+   * would be the case to reconsider for; there is no such goal today.
    */
   | "questGoal";
 
@@ -623,9 +630,9 @@ export type MapMarkerKind =
  * or a running errand wants somebody brought there. `defId` keys the catalog
  * its `kind` implies — STORY_ITEM_DEFS for `story`, ENEMY_DEFS for
  * `elite`/`boss`/`questTarget`, the quest's own escorts for `questGoal` — so
- * the app can resolve a name or icon. A commemorative marker is shown even
- * where the fog still stands, because the player was there when it happened;
- * whether an INSTRUCTION is shown yet is the app's call (see `questGoal`).
+ * the app can resolve a name or icon. Markers are shown even where the fog
+ * still stands, and both halves of that earn it: the player was there when it
+ * happened, or a giver told him where to go (see `questGoal`).
  */
 export type MapMarker = {
   kind: MapMarkerKind;

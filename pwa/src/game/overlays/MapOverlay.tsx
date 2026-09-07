@@ -32,7 +32,6 @@ import {
   type GameAssets,
   type Sprites,
 } from "../assets.ts";
-import { visiblePins } from "./map-pins.ts";
 
 /** Backing-store pixels per fog cell — the map's chunky "pixel" size. */
 const CELL_PX = 4;
@@ -270,11 +269,6 @@ export function MapOverlay({
   const iconUrl = (name: string) =>
     spriteDataUrl(assets.sprites, name) ?? undefined;
 
-  // One list for the icons and the legend, so a row can never advertise a pin
-  // the map is not drawing (`visiblePins` holds a `questGoal` back until the
-  // fog lifts off it).
-  const pins = visiblePins(state);
-
   const legend: { sprite: string; label: string }[] = [
     { sprite: PLAYER_SPRITE, label: "YOU" },
     { sprite: MARKER_SPRITE.story, label: "STORY" },
@@ -283,13 +277,13 @@ export function MapOverlay({
     { sprite: MARKER_SPRITE.merchant, label: "MERCHANT" },
     // Only listed once the hero has actually met somebody with an errand —
     // a legend row for a system this map never showed him is noise.
-    ...(pins.some((m) => m.kind === "questGiver")
+    ...(state.mapMarkers.some((m) => m.kind === "questGiver")
       ? [{ sprite: MARKER_SPRITE.questGiver, label: "QUEST" }]
       : []),
-    ...(pins.some((m) => m.kind === "questTarget")
+    ...(state.mapMarkers.some((m) => m.kind === "questTarget")
       ? [{ sprite: MARKER_SPRITE.questTarget, label: "TARGET" }]
       : []),
-    ...(pins.some((m) => m.kind === "questGoal")
+    ...(state.mapMarkers.some((m) => m.kind === "questGoal")
       ? [{ sprite: MARKER_SPRITE.questGoal, label: "GO HERE" }]
       : []),
     // Only meaningful on the rift; harmless elsewhere (the legend is static).
@@ -321,10 +315,10 @@ export function MapOverlay({
         </div>
         <div className="map-canvas-wrap">
           <canvas ref={canvasRef} className="map-canvas" />
-          {/* Pins ride above the canvas as pixel icons, where they happened,
-              and the hero's own pin last (on top). A pin that COMMEMORATES
-              shows even over standing fog — the hero was there; the one that
-              INSTRUCTS waits for its own ground to be drawn (`visiblePins`). */}
+          {/* Pins ride above the canvas as pixel icons, and the hero's own
+              pin last (on top). They show even over standing fog: a
+              commemorative one because the hero WAS there, and a `questGoal`
+              because a giver told him where to go. */}
           <div className="map-markers">
             {/* Black holes: the rift's gravity wells, always shown (a hazard
                 worth previewing) — they exist only on the rift, so nothing
@@ -338,7 +332,7 @@ export function MapOverlay({
                 style={at(well.pos)}
               />
             ))}
-            {pins.map((marker, index) => (
+            {state.mapMarkers.map((marker, index) => (
               <img
                 key={`${marker.kind}-${index}`}
                 className="pixel-img map-marker"

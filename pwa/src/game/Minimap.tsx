@@ -31,6 +31,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
+import { blipVisible } from "./minimap-pins.ts";
 import { getSettings } from "./settings.ts";
 
 /** Backing-store pixels per fog cell in the cached terrain layer — the map's
@@ -446,9 +447,10 @@ export function drawMinimap(
   for (const well of state.wells) {
     dot(well.pos.x, well.pos.y, 2, "rgba(138, 108, 224, 0.9)");
   }
-  // Event blips: only where the hero has been (the full map shows the rest).
+  // Event blips: only where the hero has been, bar the one a giver described
+  // (`blipVisible` owns that rule and the reasoning behind it).
   for (const marker of state.mapMarkers) {
-    if (!isExplored(state, marker.pos)) continue;
+    if (!blipVisible(state, marker)) continue;
     dot(marker.pos.x, marker.pos.y, 1.8, BLIP_COLOR[marker.kind]);
   }
   // The hero's own pin: a bright green dot ringed dark so it reads over any
