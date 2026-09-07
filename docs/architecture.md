@@ -1560,7 +1560,11 @@ escort.ts` walks the people an escort errand puts on the field, and
   `SPEED_STAT`) — and the swing cone `weaponSweepHalfAngle` that, capped by
   `maxMeleeTargets` (INT raises the cap), makes a swing cleave the nearest few
   monsters it faces), the auto-equip scoring (`weaponScore` DPS /
-  `gearScore`) and the crit-inclusive `weaponDps` the item cards lead with,
+  `gearScore`), the crit-inclusive `weaponDps` the item cards lead with and the
+  `weaponEffectiveDps` beneath it (that same figure across the crowd one attack
+  really lands on — `weaponRankTargets`, the AoE half the ranking multiplies
+  by, against the printed `weaponBaseTargets`; without it a card reads a
+  budget-divided cleaver as strictly worse than the sidearm it out-damages),
   the pickup-card upgrade read (`wouldUpgradeSlot`, which scores gear SPEC-aware
   via `specGearScore` — a `+STAT` roll weighted by the hero's own allocation —
   so an off-spec find no longer flashes UPGRADE or offers a tap-to-equip),

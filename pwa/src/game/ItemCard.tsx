@@ -36,15 +36,16 @@ import {
   isWeaponDef,
   itemLevelReq,
   itemQuote,
-  maxMeleeTargets,
-  MELEE,
   playerMissChance,
   rawStat,
   statRequirement,
   weaponCooldownFor,
   weaponDamageFor,
+  weaponBaseTargets,
   weaponDef,
   weaponDps,
+  weaponEffectiveDps,
+  weaponRankTargets,
   setForItem,
   uniqueDef,
   wornSetCount,
@@ -370,6 +371,32 @@ export function itemLines(
           })
         : null,
     });
+    // EFFECTIVE DPS — the per-target figure above, across the crowd ONE attack
+    // really lands on (`weaponRankTargets`). It is the throughput half of the
+    // number auto-equip ranks by, and without it the card is unreadable in the
+    // one comparison players actually make: the damage budget DIVIDES a
+    // cleaver's per-hit damage by the crowd it reaches, so a wide two-hander
+    // reads well UNDER a single-target sidearm it in fact out-damages, and the
+    // hero swaps onto the "worse" weapon with nothing on screen to explain it.
+    // Shown when either side of the comparison cleaves — on a single-target
+    // weapon it deliberately repeats the DPS above, which is the answer: this
+    // one has no crowd bonus to earn back.
+    const targets = weaponRankTargets(state, localHero(state), item);
+    const eqTargets = eq ? weaponRankTargets(state, localHero(state), eq) : 1;
+    if (targets > 1.05 || eqTargets > 1.05) {
+      const eff = weaponEffectiveDps(state, localHero(state), item);
+      const effValue = eff.toFixed(1);
+      lines.push({
+        text: `EFFECTIVE DPS ${effValue}`,
+        label: "EFFECTIVE DPS",
+        value: effValue,
+        delta: eq
+          ? compareChip(eff - weaponEffectiveDps(state, localHero(state), eq), {
+              digits: 1,
+            })
+          : null,
+      });
+    }
     // Attack speed as plain seconds between attacks (lower is faster), the unit
     // left off — the two decimals already read as a time. Shown as the weapon's
     // BASE cadence plus a blue `-N` for the time the hero's speed stat shaves
@@ -396,14 +423,20 @@ export function itemLines(
           )
         : null,
     });
-    // The MULTI-TARGET line, in AoE cyan — and PIERCES/PELLETS (ranged) and
-    // HITS (melee) are mutually exclusive, since only a ranged weapon carries a
-    // projectile:
-    //   • Ranged: the weapon's OWN fixed projectile physics — a pellet spread,
-    //     a piercing shot, a chaining bolt.
-    //   • Melee: how many foes the cone cleaves — the BASE swing plus a blue
-    //     `+N` for the extra foes INTELLIGENCE buys (maxMeleeTargets), the same
-    //     base-plus-lift read as DAMAGE/SPEED.
+    // The MULTI-TARGET lines, in AoE cyan. A ranged weapon leads with its OWN
+    // fixed projectile physics — a pellet spread, a piercing shot, a chaining
+    // bolt — and both classes then state the crowd itself.
+    //
+    // HITS is the number the EFFECTIVE DPS above is built from, read as the
+    // weapon's PRINTED reach-and-cone plus a blue `+N` for what the hero's
+    // build adds (STRENGTH lengthens the swing, INTELLIGENCE widens it) — the
+    // same base-plus-lift shape as DAMAGE and SPEED. It is fractional because
+    // it is an average over a run rather than a promise about the next swing.
+    // A ranged weapon's count is fixed by its physics, so it carries no lift.
+    // The row is on EVERY weapon, single-target ones included: "HITS 1.0" is
+    // the answer to why a gun lost to a cleaver, and an ABSENT row is not — the
+    // card a player compares against is the plain worn one, which carries no
+    // delta chips to infer it from.
     const p = def.projectile;
     if (p) {
       const label =
@@ -415,16 +448,18 @@ export function itemLines(
               ? `CHAINS TO ${p.chain}`
               : null;
       if (label) lines.push({ text: label, color: "#7ecbff" });
-    } else {
-      const baseHits = Math.max(1, Math.floor(MELEE.baseAoeTargets));
-      const intBonus = maxMeleeTargets(state, localHero(state)) - baseHits;
-      lines.push({
-        text: `HITS ${baseHits}`,
-        color: "#7ecbff",
-        hint:
-          intBonus > 0 ? { text: `+${intBonus}`, color: STAT_LIFT_BLUE } : null,
-      });
     }
+    const baseHits = weaponBaseTargets(item);
+    const hitsLift = targets - baseHits;
+    lines.push({
+      text: `HITS ${baseHits.toFixed(1)}`,
+      color: "#7ecbff",
+      hint:
+        hitsLift >= 0.05
+          ? { text: `+${hitsLift.toFixed(1)}`, color: STAT_LIFT_BLUE }
+          : null,
+      delta: eq ? compareChip(targets - eqTargets, { digits: 1 }) : null,
+    });
     // TWO-HANDED, in the same AoE cyan as the multi-target line above it — it
     // belongs with the "what does swinging this actually cost" group rather
     // than with the stats. It is the one line on the card that reads as a

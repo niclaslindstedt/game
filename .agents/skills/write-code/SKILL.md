@@ -181,6 +181,13 @@ While iterating, check only what you touched; all of these are sub-second:
 | formatting you are unsure of | `npx prettier --check <paths>`                               |
 | a sprite grid                | `make assets` — the one generator worth re-running alone      |
 
+**A `console.log` in a passing test prints NOTHING** — the reporter swallows it,
+so a throwaway probe that measures an engine figure looks like it ran and said
+nothing. Have the probe `appendFileSync` its numbers to a scratch file and read
+that. (And a probe that wants the SHIPPED catalogs belongs in `tests/content/`:
+under `tests/engine/` the fixtures are installed instead, so a shipped id throws
+`unknown weapon def`.)
+
 The full gate, split by cost, belongs to the `commit` skill — load it when the
 work is done. Two of its rules are worth carrying into the edit loop: verify
 with `make test`, **never** a bare `npx vitest run` (which skips the content

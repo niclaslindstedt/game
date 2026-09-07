@@ -295,6 +295,90 @@ export function maxMeleeTargets(state: GameState, player: Player): number {
 // ---- Auto-equip scoring --------------------------------------------------------
 
 /**
+ * HOW MANY FOES ONE ATTACK OF THIS WEAPON LANDS ON, in this hero's hands — the
+ * CALIBRATED realized count (`WEAPON.meleeAoe` / `rangedAoe`, measured by
+ * `engine/sim/aoe-calibration.ts` over real fights), not the ceiling a swing
+ * could theoretically reach. It is the AoE half of every "how good is this
+ * weapon" answer, so `weaponScore`, `weaponEffectiveDps` and the item card all
+ * read it HERE rather than each deriving their own — a card that credited a
+ * different crowd than the ranking is exactly how auto-equip comes to look
+ * arbitrary.
+ *
+ *   • MELEE: the reach-aware `meleeRealizedTargets` at the hero's ACTUAL cone
+ *     and reach (`weaponSweepHalfAngle`/`weaponRangeFor` — so a deep-STR build
+ *     credits the crowd its long swing really threads), capped by the number
+ *     INTELLIGENCE can cleave (`maxMeleeTargets`). Geometry is the binding
+ *     limiter for every shipped blade; the INT cap only bites on a build that
+ *     has left INT on the floor.
+ *   • RANGED: `rangedRankTargets` — the distinct-foe count a trigger pull
+ *     really reaches (a 6-pellet spread reads ~3.5, not 6; pierce and chain
+ *     their measured reach), so no further damping is owed.
+ *
+ * Fractional on purpose: it is an average over a run, not a promise about the
+ * next swing.
+ */
+export function weaponRankTargets(
+  state: GameState,
+  player: Player,
+  weapon: Equipment,
+): number {
+  const def = weaponDef(weapon.defId);
+  if (def.projectile) return rangedRankTargets(def);
+  return Math.min(
+    meleeRealizedTargets(
+      weaponSweepHalfAngle(state, player, weapon),
+      weaponRangeFor(state, player, weapon),
+    ),
+    maxMeleeTargets(state, player),
+  );
+}
+
+/**
+ * The crowd this weapon reaches on its PRINTED geometry — the same question
+ * {@link weaponRankTargets} answers, asked of a hero with no attributes at all.
+ * It is the catalog half of the item card's base-plus-lift read, the peer of
+ * `def.damage` and `def.cooldownMs`: what the weapon does, before STRENGTH
+ * lengthens the swing and INTELLIGENCE widens it.
+ *
+ * Distinct from `weaponAssumedTargets` (`defs/equipment.ts`), which prices a
+ * weapon for the BUDGET at the realistic stats of its `levelReq` — that one
+ * answers "what should this cost", this one "what does it print".
+ */
+export function weaponBaseTargets(weapon: Equipment): number {
+  const def = weaponDef(weapon.defId);
+  if (def.projectile) return rangedRankTargets(def);
+  const deg = def.sweepDeg ?? MELEE.defaultSweepDeg;
+  const half = Math.min(STATS.aoeMaxHalfAngle, (deg * Math.PI) / 360);
+  return Math.min(
+    meleeRealizedTargets(half, def.range),
+    Math.max(1, Math.floor(MELEE.baseAoeTargets)),
+  );
+}
+
+/**
+ * A weapon's EFFECTIVE DPS in this hero's hands — its per-target {@link
+ * weaponDps} across the crowd one attack actually lands on
+ * ({@link weaponRankTargets}). The same figure the damage budget is authored
+ * in (`scripts/weapon-budget.mjs`), which is what makes a wide two-hander and
+ * a single-target pistol comparable at all: the budget deliberately DIVIDES a
+ * cleaver's per-hit damage by the crowd it reaches, so per-target DPS alone
+ * reads a greatsword as strictly worse than a sidearm it in fact out-damages.
+ *
+ * This is the honest throughput half of `weaponScore` — the ranking multiplies
+ * it further by preferences (lane affinity, armor pen) that are NOT output and
+ * so have no place in a number labelled DPS.
+ */
+export function weaponEffectiveDps(
+  state: GameState,
+  player: Player,
+  weapon: Equipment,
+): number {
+  return (
+    weaponDps(state, player, weapon) * weaponRankTargets(state, player, weapon)
+  );
+}
+
+/**
  * A weapon's expected EFFECTIVE output in this player's hands — the number
  * auto-equip ranks weapons by. Per-target DPS (stats folded in: STR/DEX/INT
  * raise their class's damage AND cadence) × the weapon's assumed target
@@ -326,26 +410,11 @@ function computeWeaponScore(
     1 +
     playerCritChance(state, player, def.class) *
       (weaponCritMult(state, player, weapon) - 1);
-  // AoE is credited at its CALIBRATED realized count (measured, not the old
-  // over-optimistic ceiling — `WEAPON.meleeAoe` / `rangedAoe`), so auto-equip
-  // ranks a weapon by the crowd it really lands on and never swaps a reliable
-  // weapon for one that paper-out-budgets it but is horrible against a lone foe:
-  //   • Melee: the reach-aware `meleeRealizedTargets` at the hero's ACTUAL cone
-  //     and reach (`weaponSweepHalfAngle`/`weaponRangeFor` — so a deep-STR build
-  //     credits the crowd its long swing really threads), still capped by the
-  //     number INTELLIGENCE can cleave (maxMeleeTargets).
-  //   • Ranged: `weaponAssumedTargets` already returns the realistic distinct-foe
-  //     count (a 6-pellet spread reads ~1.8, not 6; pierce/chain their measured
-  //     reach), so it is used directly — no extra damping needed.
-  const targets = def.projectile
-    ? rangedRankTargets(def)
-    : Math.min(
-        meleeRealizedTargets(
-          weaponSweepHalfAngle(state, player, weapon),
-          weaponRangeFor(state, player, weapon),
-        ),
-        maxMeleeTargets(state, player),
-      );
+  // The crowd one attack really lands on (see `weaponRankTargets`), so the
+  // ranking never swaps a reliable weapon for one that paper-out-budgets it
+  // but is horrible against a lone foe. Shared with the item card's EFFECTIVE
+  // DPS line, which is what a player checks this decision against.
+  const targets = weaponRankTargets(state, player, weapon);
   // ON-LANE PREFERENCE: a weapon of the hero's committed lane (`committedLane`)
   // is worth more to HIM than its raw budget — it rides his deepened attribute
   // and keeps his build coherent — so it out-ranks a marginally stronger
