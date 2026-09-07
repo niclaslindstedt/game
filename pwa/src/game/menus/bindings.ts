@@ -37,6 +37,12 @@ export type MenuUiState = {
   hardcore: boolean;
   /** There is a multiplayer session behind this run. */
   session: boolean;
+  /** This run is the player's own to park — false for the demo, BOT VIEW and a
+   * joined session, and what the SAVE GAME row is gated on. */
+  saveOffered: boolean;
+  /** What the last SAVE GAME press did, while the answer is still worth
+   * showing. Empty until one is pressed, and again once the answer lapses. */
+  saveState: "" | "saved" | "failed";
 };
 
 export function menuBindings(
@@ -62,5 +68,7 @@ export function menuBindings(
     "menu.demo": ui.demo,
     "menu.hardcore": ui.hardcore,
     "menu.session": ui.session,
+    "menu.saveOffered": ui.saveOffered,
+    "menu.saveState": ui.saveState,
   };
 }

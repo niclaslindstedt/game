@@ -281,6 +281,16 @@ export const HUD_BINDINGS = {
   "menu.hardcore": "flag",
   /** …and there is a multiplayer session behind it. */
   "menu.session": "flag",
+  /** This run is the player's own to park at all — false for the HOW TO PLAY
+   * demo, BOT VIEW and a joined session, whose run belongs to its host. The
+   * SAVE GAME row is gated on it rather than greyed: a row that could never
+   * work is one the player should not be reading. */
+  "menu.saveOffered": "flag",
+  /** What the last SAVE GAME press did, for as long as the answer is worth
+   * showing: `saved`, `failed`, or empty for a row nobody has pressed yet.
+   * Which words and which colour that becomes is a judgement, and lives in
+   * `content/menus/scripts/pause.lua`. */
+  "menu.saveState": "text",
 };
 
 /**
@@ -378,6 +388,12 @@ export const HUD_ACTIONS = new Set([
   "resumeRun",
   "exitToMenu",
   "quitRun",
+  // SAVE GAME — park the run to storage now, without leaving it. The
+  // checkpoint autosave already writes every few seconds and on every
+  // backgrounding (`pwa/src/game/game-screen/autosave.ts`); this is the press
+  // that lets a player make sure, and the only save in the game that tells them
+  // what happened (`menu.saveState`).
+  "saveGame",
   "openAutopilot",
   "stopAutopilot",
   "useCleanSlate",

@@ -155,7 +155,7 @@ import {
   type RunCheckpoint,
   type RunProgress,
 } from "./game-screen/run-progress.ts";
-import { createAutosave } from "./game-screen/autosave.ts";
+import { createAutosave, type SaveOutcome } from "./game-screen/autosave.ts";
 import { TravelPanel } from "./game-screen/TravelPanel.tsx";
 import {
   clearRiftRun,
@@ -404,6 +404,17 @@ export function GameScreen({
    * level the run is on. Left refusing until a run installs the real reading.
    */
   const departByCarRef = useRef<(to: string) => boolean>(() => false);
+  /**
+   * SAVE GAME — the pause menu's own row, answered by the checkpoint autosave
+   * the loop effect owns (`game-screen/autosave.ts`).
+   *
+   * A ref for `departByCarRef`'s reason: the autosave is created inside that
+   * effect, and the pause menu is wired from the render above it. Refuses until
+   * a run installs the real one, which happens long before anything can pause.
+   */
+  const saveGameRef = useRef<(state: GameState) => SaveOutcome>(
+    () => "refused",
+  );
   /** Set as the drive HOME hands the trip back, consumed by the next run's
    * build (run-setup.ts): he pulls onto his own drive at the wheel. */
   const arriveInCarRef = useRef(false);
@@ -569,6 +580,14 @@ export function GameScreen({
   const suppressAchievements =
     __DEV_TOOLS__ &&
     new URLSearchParams(window.location.search).has("noachievements");
+  // IS THIS RUN THE ONE STORAGE'S `current-run` BELONGS TO? Only the player's
+  // own campaign parks itself there: the demo and BOT VIEW fly a synthetic
+  // hero, and a joined session's run belongs to its host. Read three times —
+  // by the autosave that writes the key, by the fatal path that drops it, and
+  // by the pause menu's SAVE GAME row — because a run that writes nothing there
+  // has no business deleting somebody else's parked game either, nor offering
+  // the player a save that could not go anywhere.
+  const ownsParkedRun = !demo && !botView && !join && !suppressAchievements;
   const fpsRef = useRef<HTMLDivElement>(null);
   // Landscape (the reference orientation) splits the bottom docks across BOTH
   // corners — the powerup (+ spell) buttons in the player's chosen corner, the
@@ -1131,13 +1150,6 @@ export function GameScreen({
       }
       return runCommandOk(state, "departByCar", to);
     };
-    // IS THIS RUN THE ONE STORAGE'S `current-run` BELONGS TO? Only the
-    // player's own campaign parks itself there: the demo and BOT VIEW fly a
-    // synthetic hero, and a joined session's run belongs to its host. Read
-    // twice — by the autosave that writes the key, and by the fatal path that
-    // drops it — because a run that writes nothing there has no business
-    // deleting somebody else's parked game either.
-    const ownsParkedRun = !demo && !botView && !join && !suppressAchievements;
     // THE CHECKPOINT AUTOSAVE: park this run to storage as it is played, so a
     // phone that kills the app from the app switcher — which runs no unload
     // handler at all — still leaves a CONTINUE behind (autosave.ts).
@@ -1146,6 +1158,10 @@ export function GameScreen({
       characterRef,
       enabled: ownsParkedRun,
     });
+    // …and the same park on demand, for the pause menu's SAVE GAME row. It is
+    // handed the run this effect stood up rather than reading one back, so the
+    // press cannot park a state the loop has since replaced (a crossing).
+    saveGameRef.current = () => autosave.save(state);
     // The bank-before-the-swap half of an in-session crossing: the driver
     // calls this with the OLD state, before the incoming snapshot moves the
     // world, so the local hero is banked off the level being left.
@@ -1626,6 +1642,7 @@ export function GameScreen({
     botView,
     demo,
     suppressAchievements,
+    ownsParkedRun,
     showFps,
     // The rest are STABLE (refs, memoized bundles, setState functions).
     achievementsOpenRef,
@@ -1671,6 +1688,8 @@ export function GameScreen({
     onExitToMenu,
     bumpUi,
     sessionLink,
+    ownsParkedRun,
+    saveGameRef,
   });
 
   // A run that failed before its first complete frame (see the loop's
@@ -1827,6 +1846,8 @@ export function GameScreen({
                 demo,
                 hardcore: character.hardcore,
                 session: sessionLink !== null && sessionLink !== undefined,
+                saveOffered: pauseMenu.saveOffered,
+                saveState: pauseMenu.saveState,
               },
               openModals,
             ),

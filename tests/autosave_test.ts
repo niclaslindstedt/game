@@ -283,6 +283,65 @@ describe("checkpoint autosave — runs that are not the player's own", () => {
     expect(loadSavedRun()).toBeNull();
     autosave.dispose();
   });
+
+  it("refuses a SAVE GAME press rather than pretending it wrote one", () => {
+    const run = liveRun();
+    const autosave = createAutosave({ ...run, enabled: false });
+    expect(autosave.save(run.state)).toBe("refused");
+    expect(storage.writes).toBe(0);
+    autosave.dispose();
+  });
+});
+
+describe("checkpoint autosave — the save the player asked for", () => {
+  it("parks the run now, whatever the cadence would have said", () => {
+    const { state, autosave } = armed();
+    autosave.tick(state);
+    clearSavedRun();
+    // Inside the throttle window and with nothing having moved, so the cadence
+    // would write nothing at all — which is the case the row exists for: a
+    // player putting the phone down wants THIS instant on disk.
+    now += 1;
+
+    expect(autosave.save(state)).toBe("saved");
+    expect(loadSavedRun()?.levelId).toBe(LEVEL_ID);
+  });
+
+  it("says `failed` when storage would not take it", () => {
+    // The answer that used to be invisible. A player who reads it can act on
+    // it; one who does not sees only their progress reverting to the hub.
+    const { state, autosave } = armed();
+    vi.spyOn(storage, "setItem").mockImplementation(() => {
+      throw new DOMException("quota", "QuotaExceededError");
+    });
+    expect(autosave.save(state)).toBe("failed");
+  });
+
+  it("refuses once the run has resolved, rather than re-parking a dead hero", () => {
+    // The counter-rule the whole file guards: a resolved run is dropped, and a
+    // press must not put it back — CONTINUE would land in a death scene the
+    // player already paid for.
+    const { state, autosave } = armed();
+    autosave.tick(state);
+    autosave.onEvent({ type: "playerDeath" } as GameEvent);
+
+    expect(autosave.save(state)).toBe("refused");
+    expect(loadSavedRun()).toBeNull();
+  });
+
+  it("resets the cadence, so a press is not followed by a second write", () => {
+    const { state, autosave } = armed();
+    autosave.tick(state);
+    state.stats.kills += 5;
+    now += PROGRESS_SAVE_MS;
+    autosave.save(state);
+    const after = storage.writes;
+
+    // The press banked the progress the pending write was owed, so the tick it
+    // lands on has nothing left to say.
+    autosave.tick(state);
+    expect(storage.writes).toBe(after);
+  });
 });
 
 afterEach(() => clearSavedRun());

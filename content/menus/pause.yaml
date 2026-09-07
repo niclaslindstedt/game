@@ -11,7 +11,7 @@
 #
 #   * one row of its own — ship `menus/elements/<id>.yaml` with `menu: pause`,
 #     `into: actions` and an order between two of the shipped ones (they are
-#     0, 10, 20, 30, 40, so 15 lands in the middle of the stack).
+#     0, 5, 10, 20, 30, 40, so 15 lands in the middle of the stack).
 #   * a different RESUME — ship an element with the id `resume`. Same id, later
 #     wins, and the shipped row is gone.
 #   * a different pause menu entirely — ship `menus/pause.yaml`. Same id, same
@@ -70,6 +70,36 @@ body:
             text: ▶ RESUME
             scale: 3
             color: "#0b0d10"
+
+      # SAVE GAME — park the run now, without leaving it.
+      #
+      # THE GAME ALREADY SAVES ITSELF (every few seconds of progress, on every
+      # beat worth not replaying, and on every backgrounding — see
+      # `pwa/src/game/game-screen/autosave.ts`), so this row buys the player no
+      # progress the autosave was not already keeping. What it buys is KNOWING:
+      # a phone killed from the app switcher gives the page no warning, and a
+      # player about to put the phone down has no way to tell a save that
+      # happened from one that silently could not. So the row exists to be
+      # ANSWERED — it says what the press did, which is the whole of why its
+      # label and its colour are judgements rather than a line of text.
+      #
+      # It is absent, never greyed, on a run that is nobody's to park: the HOW
+      # TO PLAY demo, BOT VIEW, and a joined session whose run is the host's.
+      - id: save
+        kind: button
+        class: pixel-button secondary
+        aria: save-game
+        order: 5
+        visible: menu.saveOffered
+        press:
+          action: saveGame
+        children:
+          - kind: text
+            text:
+              script: pause.save_label
+            scale: 3
+            color:
+              script: pause.save_color
 
       - id: autopilot_start
         kind: button

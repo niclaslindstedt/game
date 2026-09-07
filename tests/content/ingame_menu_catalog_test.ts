@@ -31,10 +31,15 @@ import {
   validateMenuElement,
 } from "../../scripts/asset-tools/ingame-menu-schema.mjs";
 import { loadMenus } from "../../scripts/menu-data/load-ingame-yaml.mjs";
+import { GLYPHS } from "../../scripts/asset-tools/font.mjs";
 import { moduleExports } from "../../scripts/asset-tools/script-schema.mjs";
 
 import { MENUS, MENU_MODALS } from "../../pwa/src/generated/ingame-menus.ts";
 import { menuBindings } from "../../pwa/src/game/menus/bindings.ts";
+import {
+  callHudScript,
+  hudScriptColor,
+} from "../../pwa/src/game/hud/script.ts";
 import {
   menuForScreen,
   mergeMenus,
@@ -104,6 +109,8 @@ describe("the in-game menus' vocabulary", () => {
         demo: false,
         hardcore: false,
         session: true,
+        saveOffered: true,
+        saveState: "saved",
       },
       [{ id: "some_modal", arg: "x", key: 1 }],
     );
@@ -188,6 +195,51 @@ describe("the shipped windows", () => {
     }
   });
 
+  it("words and colours the SAVE GAME row from what the last press did", () => {
+    // The row is one row in three moods (offering, confirming, admitting), so
+    // the moods are a judgement rather than three `visible:` gates — and this
+    // runs them through the real host, against the shipped Lua, for each one.
+    const mood = (saveState: "" | "saved" | "failed") => ({
+      menu: {
+        saveState,
+        saveOffered: true,
+      },
+    });
+    expect(callHudScript("pause.save_label", mood(""))).toBe("▲ SAVE GAME");
+    expect(callHudScript("pause.save_label", mood("saved"))).toBe(
+      "▲ GAME SAVED",
+    );
+    expect(callHudScript("pause.save_label", mood("failed"))).toBe(
+      "! COULD NOT SAVE",
+    );
+
+    // Three DISTINCT colours, and the failure is the one that has to carry:
+    // a player about to close the app on a save that did not happen has
+    // seconds to notice it.
+    const colors = (["", "saved", "failed"] as const).map((state) =>
+      hudScriptColor("pause.save_color", mood(state)),
+    );
+    expect(colors.every((color) => color !== undefined)).toBe(true);
+    expect(new Set(colors).size).toBe(3);
+  });
+
+  it("draws every SAVE GAME mood with glyphs the pixel font has", () => {
+    // A character the font has no cell for renders as "?" rather than as a
+    // gap, so a label is only as safe as its rarest glyph.
+    for (const state of ["", "saved", "failed"] as const) {
+      const label = callHudScript("pause.save_label", {
+        menu: { saveState: state },
+      });
+      // A host that answered nothing would hand `String(undefined)` on, whose
+      // every letter the font does have — a green check over a row that draws
+      // no label at all.
+      expect(typeof label, state).toBe("string");
+      for (const char of label as string) {
+        expect(Object.hasOwn(GLYPHS, char.toUpperCase()), char).toBe(true);
+      }
+    }
+  });
+
   it("gives the pause menu's rows room to insert between", () => {
     // The shipped rows are numbered in tens so a mod's own row can land in the
     // middle of the stack — which is what `menus/elements/*.yaml` with an
@@ -217,6 +269,8 @@ describe("the shipped windows", () => {
             demo,
             hardcore: false,
             session: false,
+            saveOffered: !demo,
+            saveState: "",
           },
           [],
         ),
@@ -288,6 +342,7 @@ describe("a mod's own rows", () => {
     const ids = (actions?.children ?? []).map((child) => child.id);
     expect(ids).toEqual([
       "resume",
+      "save",
       "autopilot_start",
       "mod_row",
       "autopilot_stop",
@@ -306,7 +361,7 @@ describe("a mod's own rows", () => {
     const children = actions?.children ?? [];
     expect(children[0]?.id).toBe("resume");
     expect(children[0]?.kind).toBe("text");
-    expect(children.length).toBe(5);
+    expect(children.length).toBe(6);
   });
 
   it("keeps a row aimed at a container this build no longer has", () => {

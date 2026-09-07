@@ -2,15 +2,14 @@
 // THE CHECKPOINT AUTOSAVE — parking the live run to storage WHILE it is being
 // played, rather than only when the player walks out through the pause menu.
 //
-// The run used to reach storage exactly once: `App`'s exit-to-menu handler
-// called `saveRun`. Every other way out of a run left nothing behind — and on a
-// phone the ordinary way out is not a menu at all. An iOS home-screen PWA
-// swiped out of the app switcher is killed outright: no `beforeunload`, no
-// `pagehide`, no chance to write anything on the way down. An hour of play, the
-// hero eight levels up, and the next launch offered no CONTINUE and a roster
-// hero still on level 1.
+// ON A PHONE THE ORDINARY WAY OUT OF A RUN IS NOT A MENU. An iOS home-screen
+// PWA swiped out of the app switcher is killed outright: no `beforeunload`, no
+// `pagehide`, no chance to write anything on the way down. So a run that only
+// reached storage through the exit-to-menu handler would leave an hour of play
+// and eight hero levels behind on every launch — no CONTINUE, and a roster hero
+// still on level 1.
 //
-// So the run is parked continuously, on two clocks:
+// The run is parked continuously instead, on two clocks:
 //
 //   PROGRESS — a save at most every `PROGRESS_SAVE_MS`, and only when the run
 //     has actually moved since the last one (a kill, a pickup, a coin, XP, a
@@ -23,6 +22,12 @@
 // `pagehide`) writes immediately and unconditionally. That is the last instant
 // an iOS PWA is guaranteed to run any code before it is killed, which makes it
 // the single most valuable save in the file.
+//
+// …and one PRESS: SAVE GAME on the pause menu (`content/menus/pause.yaml`),
+// which parks the run on demand and, alone among all of these, ANSWERS BACK.
+// The clocks above are silent because nobody is waiting on them; a player who
+// pressed a button is, and a save that quietly did not happen is exactly the
+// failure they came to the row to rule out.
 //
 // WHY NOT SIMPLY SAVE EVERY KILL. A parked run is the whole `GameState` — a
 // couple of hundred KB of JSON even with the fog packed (saved-run.ts) — and
@@ -90,6 +95,22 @@ const PARKABLE = new Set<GameState["phase"]>([
   "bossDeath",
 ]);
 
+/**
+ * WHAT A SAVE THE PLAYER ASKED FOR DID. The cadence above never reports —
+ * nobody asked it to write, so nobody is waiting to hear — but a press on SAVE
+ * GAME is a question, and all three answers are things the player needs to be
+ * told apart:
+ *
+ *   `saved`   it is on disk; closing the app now costs nothing.
+ *   `refused` there is nothing to park — a run already resolved, or one that is
+ *             not the player's to save (the demo, BOT VIEW, a joined session).
+ *   `failed`  storage would not take it. The one answer that used to be
+ *             invisible, and the one that matters most: every autosave since
+ *             the first refusal has been lost the same way, which is what the
+ *             player experiences as their progress reverting to the hub.
+ */
+export type SaveOutcome = "saved" | "refused" | "failed";
+
 export type Autosave = {
   /** Offer this tick's event — a beat jumps the queue. */
   onEvent: (event: GameEvent) => void;
@@ -100,6 +121,9 @@ export type Autosave = {
    * path, and anything else that knows the run is about to stop being
    * watched). */
   flush: (state: GameState) => void;
+  /** …and the same park, asked for by the PLAYER (the pause menu's SAVE GAME
+   * row), which is the one that answers back. */
+  save: (state: GameState) => SaveOutcome;
   dispose: () => void;
 };
 
@@ -114,6 +138,10 @@ function disabledAutosave(): Autosave {
     onEvent: () => {},
     tick: () => {},
     flush: () => {},
+    // Not "failed": nothing is wrong with the storage, this run simply is not
+    // the player's to park. The pause menu withholds the row entirely on such a
+    // run, so this is the answer nobody should ever see.
+    save: () => "refused",
     dispose: () => {},
   };
 }
@@ -170,11 +198,11 @@ export function createAutosave(deps: {
     return changed;
   };
 
-  const park = (state: GameState): void => {
+  const park = (state: GameState): boolean => {
     lastSaveMs = performance.now();
     dirty = false;
     beatPending = false;
-    saveRun({
+    return saveRun({
       characterId: characterRef.current.id,
       // The run's own, not the mount's: a paid AUTO PILOT ride steps the
       // difficulty up, and a crossing moves the level, both mid-mount.
@@ -184,8 +212,11 @@ export function createAutosave(deps: {
     });
   };
 
+  const parkable = (state: GameState): boolean =>
+    !resolved && PARKABLE.has(state.phase);
+
   const flush = (state: GameState): void => {
-    if (resolved || !PARKABLE.has(state.phase)) return;
+    if (!parkable(state)) return;
     progressed(state);
     park(state);
   };
@@ -233,6 +264,15 @@ export function createAutosave(deps: {
       park(state);
     },
     flush,
+    save(state) {
+      // The PAUSE MENU is where this press comes from, and pausing is a
+      // `Player.screen` rather than a phase — so a paused run is still
+      // `playing` here and parks exactly as the cadence would have. What
+      // `parkable` actually refuses is a run that has already ended.
+      if (!parkable(state)) return "refused";
+      progressed(state);
+      return park(state) ? "saved" : "failed";
+    },
     dispose() {
       document.removeEventListener("visibilitychange", onHide);
       window.removeEventListener("pagehide", onPageHide);

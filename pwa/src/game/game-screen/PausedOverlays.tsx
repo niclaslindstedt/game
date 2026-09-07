@@ -13,7 +13,13 @@
 // can carry it; the AUTO PILOT pickers are a panel, so a mod can move them,
 // gate them or leave them out; and neither needs a line of code here to change.
 
-import { useState, type MutableRefObject, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MutableRefObject,
+  type ReactNode,
+} from "react";
 
 import { localHero, localScreen, localSeat } from "../local-seat.ts";
 
@@ -50,18 +56,30 @@ import {
   finishAutopilotRide,
   type useAutopilotSession,
 } from "./autopilot-director.ts";
+import type { SaveOutcome } from "./autosave.ts";
 import { useRunStore, type RunBuy } from "./run-store.ts";
 
 import { runCommand, runCommandOk } from "../run-commands.ts";
 
+/** How long the SAVE GAME row shows what the last press did before going back
+ * to offering (ms). Long enough to read at a glance, short enough that a player
+ * who pauses again in the same breath is not told about the previous save. */
+const SAVE_ANSWER_MS = 4_000;
+
 /** What the pause menu contributes to the run's menus: verbs by name, panels by
- * name, and the one fact its rows are gated on. */
+ * name, and the facts its rows are gated on. */
 export type PauseMenuWiring = {
   actions: HudActions;
   panels: MenuPanels;
   /** This run may be handed to the AUTO PILOT at all — published as
    * `menu.autopilotOffered`, which is what the AUTO PILOT row is gated on. */
   autopilotOffered: boolean;
+  /** This run is the player's own to park — published as `menu.saveOffered`,
+   * which is what the SAVE GAME row is gated on. */
+  saveOffered: boolean;
+  /** What the last SAVE GAME press did, published as `menu.saveState` and worded
+   * by `content/menus/scripts/pause.lua`. */
+  saveState: "" | "saved" | "failed";
 };
 
 export function usePauseMenu({
@@ -78,6 +96,8 @@ export function usePauseMenu({
   onExitToMenu,
   bumpUi,
   sessionLink,
+  ownsParkedRun,
+  saveGameRef,
 }: {
   /** Null before the run is up — the hook is called every render, so it has to
    * survive that; every verb below refuses on it. */
@@ -105,6 +125,24 @@ export function usePauseMenu({
   /** The session behind this run, when there is one — the pause menu's own
    * roster row (see SessionPanel). */
   sessionLink?: SessionLink | null;
+  /**
+   * THIS RUN IS THE PLAYER'S OWN TO PARK — false for the HOW TO PLAY demo, BOT
+   * VIEW and a joined session, whose run belongs to its host. The same fact the
+   * checkpoint autosave is enabled on, read from the one place that computes
+   * it, so a run that writes nothing to storage cannot be offered a SAVE row.
+   */
+  ownsParkedRun: boolean;
+  /**
+   * PARK THE RUN NOW — the checkpoint autosave's own `save`, bound to the live
+   * state by the loop effect that owns it (`GameScreen`).
+   *
+   * A ref for the reason `departByCarRef` is one: the autosave is created
+   * inside the effect that stands the run up, and this hook is called from the
+   * render above it. It refuses until that effect has installed the real one,
+   * which is why whether the row is OFFERED is `ownsParkedRun` and not a read
+   * of this — a ref read during render is a read nothing re-renders on.
+   */
+  saveGameRef: MutableRefObject<(state: GameState) => SaveOutcome>;
 }): PauseMenuWiring {
   // The in-run COIN STORE's buy runner (the AUTO PILOT picker's STORE button):
   // banks the pack onto the hero and tops up the live purse.
@@ -148,6 +186,34 @@ export function usePauseMenu({
   const autopilotOffered =
     !demo && !botView && !hardcore && !sessionLink && autopilotAllowed();
   const active = state?.autopilot.active === true;
+
+  // WHAT THE LAST SAVE GAME PRESS DID, and it is deliberately transient: the
+  // row answers, then goes back to offering. A latched "SAVED" would still be
+  // sitting there on the next pause, telling the player about a write from
+  // twenty minutes ago as though it were about this one.
+  const [saveState, setSaveState] = useState<"" | "saved" | "failed">("");
+  const saveLapse = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (saveLapse.current !== null) clearTimeout(saveLapse.current);
+    },
+    [],
+  );
+
+  const saveGame = () => {
+    if (!state) return;
+    const outcome = saveGameRef.current(state);
+    // A REFUSAL LEAVES THE ROW ALONE. It means the run had already ended or is
+    // not this player's to park — neither of which the row is offered on, so
+    // saying nothing is the honest answer to a press that cannot arrive.
+    if (outcome === "refused") return;
+    setSaveState(outcome);
+    if (saveLapse.current !== null) clearTimeout(saveLapse.current);
+    saveLapse.current = setTimeout(() => {
+      saveLapse.current = null;
+      setSaveState("");
+    }, SAVE_ANSWER_MS);
+  };
 
   const resumeRun = () => {
     if (!state || localScreen(state) !== "paused") return;
@@ -230,6 +296,7 @@ export function usePauseMenu({
 
   const actions: HudActions = {
     resumeRun,
+    saveGame,
     exitToMenu,
     quitRun: onQuit,
     openAutopilot: () => setPicking(true),
@@ -305,7 +372,13 @@ export function usePauseMenu({
     );
   }
 
-  return { actions, panels, autopilotOffered };
+  return {
+    actions,
+    panels,
+    autopilotOffered,
+    saveOffered: ownsParkedRun,
+    saveState,
+  };
 }
 
 /**

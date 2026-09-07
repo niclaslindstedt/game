@@ -26,4 +26,36 @@ function M.bible_label(state)
   return "+ THE BIBLE"
 end
 
+--- The SAVE GAME row's label — what the last press did, for as long as the app
+--- keeps saying so (`menu.saveState`, cleared a few seconds after a press).
+---
+--- A judgement rather than three rows, because all three are the same row in
+--- three moods: it offers, it confirms, or it admits. Splitting them would let
+--- a mod replace one mood and not the others.
+---
+--- The pixel font has no tick, so the confirmation is carried by the words and
+--- by the colour below rather than by a glyph it would draw as a question mark.
+function M.save_label(state)
+  local saved = state.menu.saveState
+  if saved == "saved" then
+    return "▲ GAME SAVED"
+  elseif saved == "failed" then
+    return "! COULD NOT SAVE"
+  end
+  return "▲ SAVE GAME"
+end
+
+--- …and its colour, on the same three moods. The failure is the one that has to
+--- carry at a glance: a player who is about to close the app on a save that did
+--- not happen has seconds to notice.
+function M.save_color(state)
+  local saved = state.menu.saveState
+  if saved == "saved" then
+    return "#7ef0c8"
+  elseif saved == "failed" then
+    return "#e06a6a"
+  end
+  return "#9aa3ad"
+end
+
 return M
