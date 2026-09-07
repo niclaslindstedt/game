@@ -8251,6 +8251,10 @@ html.app-locked body {
   width: min(94vw, 40rem);
   max-width: 100%;
   max-height: 94vh;
+  /* The DYNAMIC viewport where it is supported: an Android browser showing its
+     URL bar hands out a `vh` taller than the screen, and the difference is the
+     foot rail — CLOSE, the purse, the pouch counts — pushed under the chrome. */
+  max-height: 94dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 1rem 1.1rem 1.15rem;
@@ -8262,7 +8266,16 @@ html.app-locked body {
   border-bottom-color: var(--panel-rail-bottom);
   border-radius: var(--panel-radius);
   box-shadow: var(--panel-shadow);
-  touch-action: none;
+  /* A FINGER HAS TO BE ABLE TO PAN THE CARRY. This panel and the bag grid
+     inside it are both scroll boxes, and `touch-action: none` here vetoes any
+     `pan-y` a descendant asks for — so every row past the frame's bottom edge
+     was unreachable on a phone, while the merchant's copy of the same grid
+     scrolled fine. `pan-y` hands the vertical axis to the scroller and keeps
+     the horizontal one for the drag; a gesture the browser cannot scroll — a
+     sideways pull, or any pull at all in a bag already shorter than its frame —
+     still reaches the drag handler untouched. The shop, the cache and the
+     companion panel all wear this class and were all mute the same way. */
+  touch-action: pan-y;
 }
 
 /* The panel's two blocks — the paper doll and the bag. Portrait stacks them,
@@ -8726,11 +8739,7 @@ canvas.tier-artifact {
 .shop-panel {
   gap: 0.7rem;
   max-height: min(92vh, 33rem);
-  /* The shop is a tap-only surface (no drag-to-equip), so drop the inventory
-     panel's `touch-action: none`: a touch anywhere must be free to pan the bag
-     grid vertically. The ancestor's `none` would otherwise veto the cell-level
-     `pan-y` and a large bag couldn't be scrolled. */
-  touch-action: pan-y;
+  max-height: min(92dvh, 33rem);
 }
 
 /* The trader's FACE on the left rail, his name CENTRED over his stall like every
@@ -8935,11 +8944,11 @@ canvas.tier-artifact {
   height: 1.1rem;
 }
 
-/* Bag cells are buttons here (tap to select), not drag handles. Unlike the
-   inventory (whose cells set `touch-action: none` so a touch-drag equips
-   instead of scrolling the page), the shop never drags — so let a touch on a
-   cell PAN the bag vertically, or a big carry can't be scrolled to its last
-   row on a phone. Overrides `.inv-cell { touch-action: none }`. */
+/* Bag cells are buttons here (tap to select), not drag handles: the shop never
+   drags, so a touch on a cell only ever needs to PAN the bag vertically, or a
+   big carry can't be scrolled to its last row on a phone. Overrides
+   `.inv-cell { touch-action: none }`, which the doll's slots want and no cell
+   on a tap-only surface does. */
 .shop-bag-cell {
   cursor: pointer;
   padding: 0;
@@ -9835,10 +9844,15 @@ canvas.tier-artifact {
   padding: 0.6rem 1.5rem;
 }
 
-/* Bag pieces a companion can actually wear light up; the rest sit dim. */
+/* Bag pieces a companion can actually wear light up; the rest sit dim. A cell
+   here is a BUTTON (one tap hands the piece over), never a drag handle, so it
+   takes `.shop-bag-cell`'s side of `.inv-cell { touch-action: none }`: a touch
+   is free to pan the grid, without which a carry past three rows has no way to
+   reach its last one. */
 .companion-bag-cell {
   position: relative;
   cursor: default;
+  touch-action: pan-y;
 }
 
 .companion-bag-cell.usable {
@@ -10586,6 +10600,21 @@ canvas.tier-artifact {
   pointer-events: none;
 }
 
+/* A PORTRAIT TABLET IS THE TIGHTEST PLACE THIS WINDOW STANDS UP. It clears the
+   2× UI-scale breakpoint, so every rem in the panel doubles — but its height
+   does not double with them, and the stacked portrait layout puts the doll's
+   whole 8-unit height ABOVE the carry rather than beside it. At 2.2rem a unit
+   the doll alone eats two thirds of the window and pushes the foot rail (CLOSE,
+   the purse, the pouch counts) clean off the bottom of an iPad mini. Taking the
+   unit down here still leaves each frame far larger than the phone draws it,
+   because the rem underneath is twice the size. Declared ABOVE the landscape
+   query below so that one wins the aspect ratio they both match. */
+@media (min-width: 700px) and (min-height: 700px) and (max-aspect-ratio: 4/3) {
+  .paper-doll {
+    --slot-u: 1.7rem;
+  }
+}
+
 /* Landscape (the 844×390 reference phone): the panel is short, so tighten the
    chrome tighter and let the bag spread WIDE (many small columns) but only
    four rows tall before it scrolls, so a big carry can't stretch the short
@@ -10673,10 +10702,29 @@ canvas.tier-artifact {
     var(--inv-cols) * var(--inv-cell-max) + (var(--inv-cols) - 1) *
       var(--inv-gap)
   );
-  /* Tall enough for one whole 40-cell frame at every breakpoint below (five
-     rows of eight in portrait), so the scroll only ever engages on a hero who
-     has earned a SECOND frame. */
-  max-height: 14.6rem;
+  /* THE CARRY TAKES THE HEIGHT THE PANEL IS NOT USING. Everything stacked above
+     and below it here — the doll, the bag's own header, the foot rail — is
+     sized in rem and comes to about 29rem whichever UI scale tier is in force,
+     so whatever the viewport has past that belongs to the bag: a tall phone
+     shows ten rows of the carry where a fixed cap showed five, which is most of
+     what "get an overview of the bag" means. The floor is THREE whole rows and
+     no more: a floor tall enough to always show a full 40-cell frame is a floor
+     that pushes CLOSE and the purse off the bottom of every screen too short to
+     afford one — the bag has a scrollbar of its own to give back that height,
+     and the window's foot rail has nowhere to go. The ceiling stops a big
+     display from drawing a bag taller than any carry fills. */
+  max-height: min(40rem, max(8.4rem, 94vh - 29rem));
+  max-height: min(40rem, max(8.4rem, 94dvh - 29rem));
+}
+
+/* A bag cell is BOTH a drag handle and a piece of a scroll box, and they split
+   by axis: a vertical pull scrolls the carry — the only way a thumb reaches the
+   rows below the frame — and a sideways pull still starts the drag that equips.
+   The doll's slots keep `.inv-cell`'s own `none`: nothing scrolls under them,
+   so a worn piece comes off the body in any direction, and a bag that fits its
+   frame has nothing to scroll either, so dragging out of one is unchanged. */
+.inv-bag-grid .inv-cell {
+  touch-action: pan-y;
 }
 
 /* THE CACHE's two grids (CachePanel.tsx). They wear the bag's rectangle so a
@@ -10730,6 +10778,21 @@ canvas.tier-artifact {
 @media (min-aspect-ratio: 4/3) {
   .inv-bag-grid {
     --inv-cols: 10;
+    /* The same rule as the portrait cap, measured against this layout's own
+       chrome: the doll stands BESIDE the carry rather than above it, so only
+       the header and the foot rail (~11rem) are spoken for. Four rows is D2's
+       own height and the floor a 390px-tall phone lands on. */
+    max-height: min(30rem, max(8.4rem, 94vh - 11rem));
+    max-height: min(30rem, max(8.4rem, 94dvh - 11rem));
+  }
+
+  /* THE CHEST AND THE BAG BESIDE IT ARE TWO GRIDS IN ONE WINDOW, so neither may
+     take the viewport-derived height above — between them they would ask for
+     twice the room the cache panel has. The hero's own carry is the only grid
+     in its panel and can have whatever the window is not using; these two split
+     it, four rows each. Declared after the rule it overrides, since both are a
+     single class and the cascade falls to document order. */
+  .cache-grid {
     max-height: 11.4rem;
   }
 }
