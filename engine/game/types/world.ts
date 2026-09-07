@@ -607,10 +607,14 @@ export type MapMarkerKind =
    * A PLACE A RUNNING ERRAND WANTS THE HERO TO REACH — today an escort's
    * destination, and `defId` names the escort rather than a catalog entry.
    *
-   * The one pin the player is shown before he has been there, because the
-   * errand told him where it was. Without it "walk her out past the water
-   * tower" is a search of the whole venue: the destination ring is drawn in
-   * the world, so it can only be found by already standing next to it.
+   * Without it "walk her out past the water tower" is a search of the whole
+   * venue: the destination ring is drawn in the world, so it can only be found
+   * by already standing next to it.
+   *
+   * It is the one pin the app HOLDS BACK behind the fog (`visiblePins`, in the
+   * app's own map overlay) — every other pin commemorates ground the hero has
+   * stood on, and drawing this one over undrawn dark would annotate a page the
+   * map has not filled in yet.
    */
   | "questGoal";
 
@@ -619,8 +623,9 @@ export type MapMarkerKind =
  * or a running errand wants somebody brought there. `defId` keys the catalog
  * its `kind` implies — STORY_ITEM_DEFS for `story`, ENEMY_DEFS for
  * `elite`/`boss`/`questTarget`, the quest's own escorts for `questGoal` — so
- * the app can resolve a name or icon. Markers are shown even where the fog
- * still stands: the player was there when it happened, or has been told.
+ * the app can resolve a name or icon. A commemorative marker is shown even
+ * where the fog still stands, because the player was there when it happened;
+ * whether an INSTRUCTION is shown yet is the app's call (see `questGoal`).
  */
 export type MapMarker = {
   kind: MapMarkerKind;
