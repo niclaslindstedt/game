@@ -26,36 +26,33 @@ function M.bible_label(state)
   return "+ THE BIBLE"
 end
 
---- The SAVE GAME row's label — what the last press did, for as long as the app
---- keeps saying so (`menu.saveState`, cleared a few seconds after a press).
+--- The SAVE warning's label. The row is only on screen at all when saving has
+--- something to say (`menu.saveAlert`), and this is which of the two things:
+--- storage is refusing the run, or a retry just landed.
 ---
---- A judgement rather than three rows, because all three are the same row in
---- three moods: it offers, it confirms, or it admits. Splitting them would let
---- a mod replace one mood and not the others.
+--- A judgement rather than two rows, because they are one row in two moods —
+--- the alarm and its all-clear. Split, a mod could replace one and not the
+--- other, and the player would meet two different buttons in the same place.
 ---
---- The pixel font has no tick, so the confirmation is carried by the words and
---- by the colour below rather than by a glyph it would draw as a question mark.
+--- The alarm says what to DO as well as what is wrong: a red line reading only
+--- SAVE FAILED is a thing to feel bad about rather than a thing to press. The
+--- pixel font has no tick, so the all-clear is carried by the words and by the
+--- colour below rather than by a glyph it would draw as a question mark.
 function M.save_label(state)
-  local saved = state.menu.saveState
-  if saved == "saved" then
+  if state.menu.saveState == "saved" then
     return "▲ GAME SAVED"
-  elseif saved == "failed" then
-    return "! COULD NOT SAVE"
   end
-  return "▲ SAVE GAME"
+  return "! SAVE FAILED - RETRY"
 end
 
---- …and its colour, on the same three moods. The failure is the one that has to
---- carry at a glance: a player who is about to close the app on a save that did
---- not happen has seconds to notice.
+--- …and its colour. The alarm is the one that has to carry at a glance: a
+--- player whose run has stopped reaching storage has until they close the app
+--- to notice.
 function M.save_color(state)
-  local saved = state.menu.saveState
-  if saved == "saved" then
+  if state.menu.saveState == "saved" then
     return "#7ef0c8"
-  elseif saved == "failed" then
-    return "#e06a6a"
   end
-  return "#9aa3ad"
+  return "#e06a6a"
 end
 
 return M

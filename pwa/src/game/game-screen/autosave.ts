@@ -23,11 +23,18 @@
 // an iOS PWA is guaranteed to run any code before it is killed, which makes it
 // the single most valuable save in the file.
 //
-// …and one PRESS: SAVE GAME on the pause menu (`content/menus/pause.yaml`),
-// which parks the run on demand and, alone among all of these, ANSWERS BACK.
-// The clocks above are silent because nobody is waiting on them; a player who
-// pressed a button is, and a save that quietly did not happen is exactly the
-// failure they came to the row to rule out.
+// …and a RETRY, when one of the above did not land. Every write here reports
+// whether storage took it (`saveRun` answers), and the run's health — "did the
+// last attempt land" — is published to the pause menu, which raises a warning
+// row while it is false (`content/menus/pause.yaml`).
+//
+// THE ALARM IS THE POINT, NOT THE RETRY. A refusing store is not a one-off: the
+// two parked-run slots hold whole `GameState`s and share one allowance, so once
+// it refuses, every write after it is lost the same way and the player keeps
+// resuming from whatever landed last. Nothing on screen said so, and the whole
+// failure presented as progress silently reverting to the hub. The press exists
+// so there is something to DO about it — and, because the cadence writes
+// nothing while the run is paused, it is the only way to re-test from in there.
 //
 // WHY NOT SIMPLY SAVE EVERY KILL. A parked run is the whole `GameState` — a
 // couple of hundred KB of JSON even with the fog packed (saved-run.ts) — and
@@ -96,18 +103,13 @@ const PARKABLE = new Set<GameState["phase"]>([
 ]);
 
 /**
- * WHAT A SAVE THE PLAYER ASKED FOR DID. The cadence above never reports —
- * nobody asked it to write, so nobody is waiting to hear — but a press on SAVE
- * GAME is a question, and all three answers are things the player needs to be
- * told apart:
+ * WHAT A SAVE THE PLAYER ASKED FOR DID — the RETRY row's three answers:
  *
- *   `saved`   it is on disk; closing the app now costs nothing.
+ *   `saved`   it is on disk; the warning stands down.
  *   `refused` there is nothing to park — a run already resolved, or one that is
  *             not the player's to save (the demo, BOT VIEW, a joined session).
- *   `failed`  storage would not take it. The one answer that used to be
- *             invisible, and the one that matters most: every autosave since
- *             the first refusal has been lost the same way, which is what the
- *             player experiences as their progress reverting to the hub.
+ *             Neither can raise the row, so nobody should ever see this.
+ *   `failed`  storage still will not take it, and the warning stays up.
  */
 export type SaveOutcome = "saved" | "refused" | "failed";
 
@@ -155,8 +157,17 @@ export function createAutosave(deps: {
   characterRef: MutableRefObject<Character>;
   /** False for the runs listed on {@link disabledAutosave}. */
   enabled: boolean;
+  /**
+   * STORAGE STOPPED TAKING THE RUN (or started again) — how a BACKGROUND
+   * failure reaches the player at all.
+   *
+   * Called only on the CHANGE, so it is a handful of calls in a run rather
+   * than one per write, and the app can hold it in ordinary state without
+   * re-rendering the pause menu every five seconds.
+   */
+  onHealthChange?: (failing: boolean) => void;
 }): Autosave {
-  const { state: runState, characterRef, enabled } = deps;
+  const { state: runState, characterRef, enabled, onHealthChange } = deps;
   if (!enabled) return disabledAutosave();
 
   let lastSaveMs = -Infinity;
@@ -170,6 +181,10 @@ export function createAutosave(deps: {
   // nothing is parked again until play actually resumes, which is what STAY
   // after a victory does.
   let resolved = false;
+  // THE LAST WRITE DID NOT LAND. Starts false — a run is presumed savable until
+  // something proves otherwise — and clears again the moment one succeeds, so
+  // the pause menu's warning stands only while saving is genuinely broken.
+  let failing = false;
 
   // The progress counters, in the order they are checked below. Primed to -1 so
   // the first tick of any run always reads as "moved" and parks it straight
@@ -202,7 +217,7 @@ export function createAutosave(deps: {
     lastSaveMs = performance.now();
     dirty = false;
     beatPending = false;
-    return saveRun({
+    const landed = saveRun({
       characterId: characterRef.current.id,
       // The run's own, not the mount's: a paid AUTO PILOT ride steps the
       // difficulty up, and a crossing moves the level, both mid-mount.
@@ -210,6 +225,13 @@ export function createAutosave(deps: {
       levelId: state.level.id,
       state,
     });
+    // Only the CHANGE is reported: a store that keeps refusing keeps saying so
+    // to nobody, and a healthy run must not re-render the menus on every write.
+    if (landed === failing) {
+      failing = !landed;
+      onHealthChange?.(failing);
+    }
+    return landed;
   };
 
   const parkable = (state: GameState): boolean =>

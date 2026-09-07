@@ -293,23 +293,86 @@ describe("checkpoint autosave — runs that are not the player's own", () => {
   });
 });
 
-describe("checkpoint autosave — the save the player asked for", () => {
+describe("checkpoint autosave — telling the app the store stopped taking it", () => {
+  /** A store that refuses every write, the way a full one does. */
+  const refuse = () =>
+    vi.spyOn(storage, "setItem").mockImplementation(() => {
+      throw new DOMException("quota", "QuotaExceededError");
+    });
+
+  function watched() {
+    const run = liveRun();
+    const health: boolean[] = [];
+    const autosave = createAutosave({
+      ...run,
+      enabled: true,
+      onHealthChange: (failing) => health.push(failing),
+    });
+    return { ...run, autosave, health };
+  }
+
+  it("reports a BACKGROUND write being refused, with nobody having pressed anything", () => {
+    // The whole reason the warning row can exist at all. A refusing store is
+    // otherwise completely silent: every write after the first is lost the same
+    // way, and the player meets it as their progress reverting to the hub.
+    const { state, autosave, health } = watched();
+    refuse();
+    autosave.tick(state);
+    expect(health).toEqual([true]);
+  });
+
+  it("says so ONCE, not on every write a broken store refuses", () => {
+    // Only the TRANSITION is reported — the app holds this in React state, and
+    // a call per write would re-render the menus every five seconds.
+    const { state, autosave, health } = watched();
+    refuse();
+    autosave.tick(state);
+    for (let i = 0; i < 20; i++) {
+      state.stats.kills += 1;
+      now += PROGRESS_SAVE_MS;
+      autosave.tick(state);
+    }
+    expect(health).toEqual([true]);
+  });
+
+  it("stands the warning down again the moment a write lands", () => {
+    const { state, autosave, health } = watched();
+    const refused = refuse();
+    autosave.tick(state);
+    expect(health).toEqual([true]);
+
+    refused.mockRestore();
+    expect(autosave.save(state)).toBe("saved");
+    expect(health).toEqual([true, false]);
+  });
+
+  it("says nothing at all while the store is healthy", () => {
+    // A run that never has trouble never raises the row, which is what keeps
+    // the pause menu free of a button for a thing that is already happening.
+    const { state, autosave, health } = watched();
+    autosave.tick(state);
+    state.stats.kills += 5;
+    now += PROGRESS_SAVE_MS;
+    autosave.tick(state);
+    expect(health).toEqual([]);
+  });
+});
+
+describe("checkpoint autosave — the retry the player asked for", () => {
   it("parks the run now, whatever the cadence would have said", () => {
     const { state, autosave } = armed();
     autosave.tick(state);
     clearSavedRun();
     // Inside the throttle window and with nothing having moved, so the cadence
-    // would write nothing at all — which is the case the row exists for: a
-    // player putting the phone down wants THIS instant on disk.
+    // would write nothing — which is exactly the state a paused run is in, and
+    // the reason the retry has to be a press rather than a wait.
     now += 1;
 
     expect(autosave.save(state)).toBe("saved");
     expect(loadSavedRun()?.levelId).toBe(LEVEL_ID);
   });
 
-  it("says `failed` when storage would not take it", () => {
-    // The answer that used to be invisible. A player who reads it can act on
-    // it; one who does not sees only their progress reverting to the hub.
+  it("says `failed` when storage still will not take it", () => {
     const { state, autosave } = armed();
     vi.spyOn(storage, "setItem").mockImplementation(() => {
       throw new DOMException("quota", "QuotaExceededError");

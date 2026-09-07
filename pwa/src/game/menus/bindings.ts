@@ -37,11 +37,9 @@ export type MenuUiState = {
   hardcore: boolean;
   /** There is a multiplayer session behind this run. */
   session: boolean;
-  /** This run is the player's own to park — false for the demo, BOT VIEW and a
-   * joined session, and what the SAVE GAME row is gated on. */
-  saveOffered: boolean;
-  /** What the last SAVE GAME press did, while the answer is still worth
-   * showing. Empty until one is pressed, and again once the answer lapses. */
+  /** Saving needs the player's attention: a write has been refused, or a retry
+   * has just landed. Empty through an ordinary run — the save row hangs off
+   * this, so it is absent while the autosave is quietly doing its job. */
   saveState: "" | "saved" | "failed";
 };
 
@@ -68,7 +66,7 @@ export function menuBindings(
     "menu.demo": ui.demo,
     "menu.hardcore": ui.hardcore,
     "menu.session": ui.session,
-    "menu.saveOffered": ui.saveOffered,
+    "menu.saveAlert": ui.saveState !== "",
     "menu.saveState": ui.saveState,
   };
 }

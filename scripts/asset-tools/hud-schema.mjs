@@ -281,15 +281,16 @@ export const HUD_BINDINGS = {
   "menu.hardcore": "flag",
   /** …and there is a multiplayer session behind it. */
   "menu.session": "flag",
-  /** This run is the player's own to park at all — false for the HOW TO PLAY
-   * demo, BOT VIEW and a joined session, whose run belongs to its host. The
-   * SAVE GAME row is gated on it rather than greyed: a row that could never
-   * work is one the player should not be reading. */
-  "menu.saveOffered": "flag",
-  /** What the last SAVE GAME press did, for as long as the answer is worth
-   * showing: `saved`, `failed`, or empty for a row nobody has pressed yet.
-   * Which words and which colour that becomes is a judgement, and lives in
-   * `content/menus/scripts/pause.lua`. */
+  /** SAVING NEEDS THE PLAYER'S ATTENTION — the gate the pause menu's save row
+   * hangs off. False through an ordinary run, when the checkpoint autosave is
+   * quietly doing its job and a row saying so would be furniture; true once a
+   * write has been REFUSED, and for a moment after a retry lands so the player
+   * sees the answer. */
+  "menu.saveAlert": "flag",
+  /** …and which of the two things it has to say: `failed` while storage is
+   * still refusing the run, `saved` for the moment after a retry lands, empty
+   * when there is nothing to report. Which words and which colour that becomes
+   * is a judgement, and lives in `content/menus/scripts/pause.lua`. */
   "menu.saveState": "text",
 };
 
@@ -388,11 +389,12 @@ export const HUD_ACTIONS = new Set([
   "resumeRun",
   "exitToMenu",
   "quitRun",
-  // SAVE GAME — park the run to storage now, without leaving it. The
+  // RETRY A SAVE THAT DID NOT LAND — park the run to storage now. The
   // checkpoint autosave already writes every few seconds and on every
-  // backgrounding (`pwa/src/game/game-screen/autosave.ts`); this is the press
-  // that lets a player make sure, and the only save in the game that tells them
-  // what happened (`menu.saveState`).
+  // backgrounding (`pwa/src/game/game-screen/autosave.ts`), so this is offered
+  // only once one of those has been REFUSED (`menu.saveAlert`): it is the
+  // player's way to re-test a store that has stopped taking the run, and while
+  // the run is paused the cadence writes nothing, so it is the only way.
   "saveGame",
   "openAutopilot",
   "stopAutopilot",

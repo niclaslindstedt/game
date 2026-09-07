@@ -5772,7 +5772,7 @@
     "menu.modalArg": "text",
     "menu.modalOpen": "flag",
     "menu.open": "flag",
-    "menu.saveOffered": "flag",
+    "menu.saveAlert": "flag",
     "menu.saveState": "text",
     "menu.screen": "text",
     "menu.session": "flag",

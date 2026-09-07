@@ -61,9 +61,9 @@ import { useRunStore, type RunBuy } from "./run-store.ts";
 
 import { runCommand, runCommandOk } from "../run-commands.ts";
 
-/** How long the SAVE GAME row shows what the last press did before going back
- * to offering (ms). Long enough to read at a glance, short enough that a player
- * who pauses again in the same breath is not told about the previous save. */
+/** How long the save row stays up saying a retry LANDED, before standing down
+ * altogether (ms). Long enough to read at a glance, short enough that a player
+ * who pauses again in the same breath is not told about a save from before. */
 const SAVE_ANSWER_MS = 4_000;
 
 /** What the pause menu contributes to the run's menus: verbs by name, panels by
@@ -74,11 +74,9 @@ export type PauseMenuWiring = {
   /** This run may be handed to the AUTO PILOT at all — published as
    * `menu.autopilotOffered`, which is what the AUTO PILOT row is gated on. */
   autopilotOffered: boolean;
-  /** This run is the player's own to park — published as `menu.saveOffered`,
-   * which is what the SAVE GAME row is gated on. */
-  saveOffered: boolean;
-  /** What the last SAVE GAME press did, published as `menu.saveState` and worded
-   * by `content/menus/scripts/pause.lua`. */
+  /** Whether saving has anything to say, and what — published as
+   * `menu.saveAlert` + `menu.saveState`, and worded by
+   * `content/menus/scripts/pause.lua`. Empty for an ordinary run. */
   saveState: "" | "saved" | "failed";
 };
 
@@ -96,7 +94,7 @@ export function usePauseMenu({
   onExitToMenu,
   bumpUi,
   sessionLink,
-  ownsParkedRun,
+  saveFailed,
   saveGameRef,
 }: {
   /** Null before the run is up — the hook is called every render, so it has to
@@ -126,21 +124,23 @@ export function usePauseMenu({
    * roster row (see SessionPanel). */
   sessionLink?: SessionLink | null;
   /**
-   * THIS RUN IS THE PLAYER'S OWN TO PARK — false for the HOW TO PLAY demo, BOT
-   * VIEW and a joined session, whose run belongs to its host. The same fact the
-   * checkpoint autosave is enabled on, read from the one place that computes
-   * it, so a run that writes nothing to storage cannot be offered a SAVE row.
+   * STORAGE HAS STOPPED TAKING THIS RUN — the checkpoint autosave's own health,
+   * held in `GameScreen` state so a BACKGROUND failure re-renders the menus.
+   *
+   * This is what raises the save row at all, and it is why the row is worth
+   * having: a refusing store is otherwise completely silent, and the player
+   * meets it as their progress reverting to the hub every launch.
    */
-  ownsParkedRun: boolean;
+  saveFailed: boolean;
   /**
-   * PARK THE RUN NOW — the checkpoint autosave's own `save`, bound to the live
+   * RETRY THE SAVE — the checkpoint autosave's own `save`, bound to the live
    * state by the loop effect that owns it (`GameScreen`).
    *
    * A ref for the reason `departByCarRef` is one: the autosave is created
    * inside the effect that stands the run up, and this hook is called from the
    * render above it. It refuses until that effect has installed the real one,
-   * which is why whether the row is OFFERED is `ownsParkedRun` and not a read
-   * of this — a ref read during render is a read nothing re-renders on.
+   * which is why the row is gated on `saveFailed` and not on a read of this —
+   * a ref read during render is a read nothing re-renders on.
    */
   saveGameRef: MutableRefObject<(state: GameState) => SaveOutcome>;
 }): PauseMenuWiring {
@@ -187,11 +187,12 @@ export function usePauseMenu({
     !demo && !botView && !hardcore && !sessionLink && autopilotAllowed();
   const active = state?.autopilot.active === true;
 
-  // WHAT THE LAST SAVE GAME PRESS DID, and it is deliberately transient: the
-  // row answers, then goes back to offering. A latched "SAVED" would still be
-  // sitting there on the next pause, telling the player about a write from
-  // twenty minutes ago as though it were about this one.
-  const [saveState, setSaveState] = useState<"" | "saved" | "failed">("");
+  // A RETRY LANDED, and the row says so for a moment before standing down. It
+  // is the only half of the mood the app holds: the FAILING half is the
+  // autosave's own health (`saveFailed`), because a store that refuses a
+  // background write must raise this row without anybody having pressed
+  // anything.
+  const [saveLanded, setSaveLanded] = useState(false);
   const saveLapse = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
     () => () => {
@@ -200,18 +201,26 @@ export function usePauseMenu({
     [],
   );
 
+  // FAILING WINS OVER LANDED, so a retry that lands and is immediately refused
+  // again cannot leave a green row over a broken store.
+  const saveState: "" | "saved" | "failed" = saveFailed
+    ? "failed"
+    : saveLanded
+      ? "saved"
+      : "";
+
   const saveGame = () => {
     if (!state) return;
-    const outcome = saveGameRef.current(state);
-    // A REFUSAL LEAVES THE ROW ALONE. It means the run had already ended or is
-    // not this player's to park — neither of which the row is offered on, so
-    // saying nothing is the honest answer to a press that cannot arrive.
-    if (outcome === "refused") return;
-    setSaveState(outcome);
+    // The outcome is not read: a landed write clears `saveFailed` through the
+    // autosave's own health callback, and a refused one leaves it standing —
+    // one source for the failing mood rather than two that can disagree. Only
+    // "it worked" is news this side, and only `saved` is that.
+    if (saveGameRef.current(state) !== "saved") return;
+    setSaveLanded(true);
     if (saveLapse.current !== null) clearTimeout(saveLapse.current);
     saveLapse.current = setTimeout(() => {
       saveLapse.current = null;
-      setSaveState("");
+      setSaveLanded(false);
     }, SAVE_ANSWER_MS);
   };
 
@@ -372,13 +381,7 @@ export function usePauseMenu({
     );
   }
 
-  return {
-    actions,
-    panels,
-    autopilotOffered,
-    saveOffered: ownsParkedRun,
-    saveState,
-  };
+  return { actions, panels, autopilotOffered, saveState };
 }
 
 /**

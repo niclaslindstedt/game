@@ -51,7 +51,10 @@ import type {
   MenuDef,
   MenuElementDef,
 } from "../../pwa/src/game/menus/types.ts";
-import { resolveContext } from "../../pwa/src/game/hud/resolve.ts";
+import {
+  resolveCondition,
+  resolveContext,
+} from "../../pwa/src/game/hud/resolve.ts";
 import {
   closeAllModals,
   modalStack,
@@ -109,7 +112,6 @@ describe("the in-game menus' vocabulary", () => {
         demo: false,
         hardcore: false,
         session: true,
-        saveOffered: true,
         saveState: "saved",
       },
       [{ id: "some_modal", arg: "x", key: 1 }],
@@ -195,38 +197,70 @@ describe("the shipped windows", () => {
     }
   });
 
-  it("words and colours the SAVE GAME row from what the last press did", () => {
-    // The row is one row in three moods (offering, confirming, admitting), so
-    // the moods are a judgement rather than three `visible:` gates — and this
-    // runs them through the real host, against the shipped Lua, for each one.
+  it("hides the save row until a write has actually been refused", () => {
+    // The whole design: through an ordinary run the checkpoint autosave is
+    // quietly doing its job, and a row saying so would be furniture. What the
+    // player cannot otherwise learn is that it STOPPED.
+    const save = MENUS.find((menu) => menu.id === "pause")
+      ?.body.find((row) => row.id === "actions")
+      ?.children?.find((child) => child.id === "save");
+    expect(save?.visible).toBe("menu.saveAlert");
+
+    const shown = (saveState: "" | "saved" | "failed") =>
+      resolveCondition(
+        save?.visible,
+        resolveContext(
+          menuBindings(
+            {
+              screen: "paused",
+              charTab: "bag",
+              cleanSlates: 0,
+              autopilotOffered: false,
+              autopilotActive: false,
+              demo: false,
+              hardcore: false,
+              session: false,
+              saveState,
+            },
+            [],
+          ),
+        ),
+      );
+    expect(shown("")).toBe(false);
+    expect(shown("failed")).toBe(true);
+    // …and it stays up for the all-clear, or a landed retry would vanish
+    // without ever telling the player it worked.
+    expect(shown("saved")).toBe(true);
+  });
+
+  it("words and colours the save row as an alarm and its all-clear", () => {
+    // One row in two moods, so the moods are a judgement rather than two
+    // `visible:` gates — run here through the real host, against the shipped
+    // Lua. The alarm says what to DO, not only what is wrong.
     const mood = (saveState: "" | "saved" | "failed") => ({
-      menu: {
-        saveState,
-        saveOffered: true,
-      },
+      menu: { saveState, saveAlert: saveState !== "" },
     });
-    expect(callHudScript("pause.save_label", mood(""))).toBe("▲ SAVE GAME");
+    expect(callHudScript("pause.save_label", mood("failed"))).toBe(
+      "! SAVE FAILED - RETRY",
+    );
     expect(callHudScript("pause.save_label", mood("saved"))).toBe(
       "▲ GAME SAVED",
     );
-    expect(callHudScript("pause.save_label", mood("failed"))).toBe(
-      "! COULD NOT SAVE",
-    );
 
-    // Three DISTINCT colours, and the failure is the one that has to carry:
-    // a player about to close the app on a save that did not happen has
-    // seconds to notice it.
-    const colors = (["", "saved", "failed"] as const).map((state) =>
-      hudScriptColor("pause.save_color", mood(state)),
-    );
-    expect(colors.every((color) => color !== undefined)).toBe(true);
-    expect(new Set(colors).size).toBe(3);
+    // Two DISTINCT colours, and the alarm is the one that has to carry: a
+    // player whose run has stopped reaching storage has until they close the
+    // app to notice it.
+    const alarm = hudScriptColor("pause.save_color", mood("failed"));
+    const allClear = hudScriptColor("pause.save_color", mood("saved"));
+    expect(alarm).toBeDefined();
+    expect(allClear).toBeDefined();
+    expect(alarm).not.toBe(allClear);
   });
 
-  it("draws every SAVE GAME mood with glyphs the pixel font has", () => {
+  it("draws both save moods with glyphs the pixel font has", () => {
     // A character the font has no cell for renders as "?" rather than as a
     // gap, so a label is only as safe as its rarest glyph.
-    for (const state of ["", "saved", "failed"] as const) {
+    for (const state of ["saved", "failed"] as const) {
       const label = callHudScript("pause.save_label", {
         menu: { saveState: state },
       });
@@ -269,7 +303,6 @@ describe("the shipped windows", () => {
             demo,
             hardcore: false,
             session: false,
-            saveOffered: !demo,
             saveState: "",
           },
           [],

@@ -1,6 +1,6 @@
 ---
 type: Added
-title: SAVE GAME
+title: A warning when the game can't save
 ---
 
-The pause menu can now park your run on the spot, and tells you whether it landed.
+The pause menu now tells you when your run has stopped reaching storage, and lets you retry it.

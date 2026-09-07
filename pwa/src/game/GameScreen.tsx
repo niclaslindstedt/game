@@ -405,8 +405,8 @@ export function GameScreen({
    */
   const departByCarRef = useRef<(to: string) => boolean>(() => false);
   /**
-   * SAVE GAME — the pause menu's own row, answered by the checkpoint autosave
-   * the loop effect owns (`game-screen/autosave.ts`).
+   * RETRY THE SAVE — the pause menu's own row, answered by the checkpoint
+   * autosave the loop effect owns (`game-screen/autosave.ts`).
    *
    * A ref for `departByCarRef`'s reason: the autosave is created inside that
    * effect, and the pause menu is wired from the render above it. Refuses until
@@ -415,6 +415,16 @@ export function GameScreen({
   const saveGameRef = useRef<(state: GameState) => SaveOutcome>(
     () => "refused",
   );
+  /**
+   * …AND WHETHER STORAGE IS STILL TAKING THE RUN, which is what raises that row.
+   *
+   * State rather than a ref, because the whole point is that a BACKGROUND write
+   * being refused reaches the player unprompted — a ref would change under a
+   * pause menu that never re-rendered to notice. The autosave reports only the
+   * TRANSITION, so this costs a couple of renders in a run rather than one
+   * every five seconds.
+   */
+  const [saveFailed, setSaveFailed] = useState(false);
   /** Set as the drive HOME hands the trip back, consumed by the next run's
    * build (run-setup.ts): he pulls onto his own drive at the wheel. */
   const arriveInCarRef = useRef(false);
@@ -1157,7 +1167,13 @@ export function GameScreen({
       state,
       characterRef,
       enabled: ownsParkedRun,
+      onHealthChange: setSaveFailed,
     });
+    // A FRESH AUTOSAVE PRESUMES A HEALTHY STORE, and the app's copy has to say
+    // the same thing or it can never come down again: the callback fires on the
+    // TRANSITION, so a stale `true` carried across a remount would sit through
+    // every successful write that follows without one.
+    setSaveFailed(false);
     // …and the same park on demand, for the pause menu's SAVE GAME row. It is
     // handed the run this effect stood up rather than reading one back, so the
     // press cannot park a state the loop has since replaced (a crossing).
@@ -1688,7 +1704,7 @@ export function GameScreen({
     onExitToMenu,
     bumpUi,
     sessionLink,
-    ownsParkedRun,
+    saveFailed,
     saveGameRef,
   });
 
@@ -1846,7 +1862,6 @@ export function GameScreen({
                 demo,
                 hardcore: character.hardcore,
                 session: sessionLink !== null && sessionLink !== undefined,
-                saveOffered: pauseMenu.saveOffered,
                 saveState: pauseMenu.saveState,
               },
               openModals,

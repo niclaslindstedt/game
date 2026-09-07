@@ -20,8 +20,9 @@
 # THE ROWS ARE GATED, NOT HIDDEN BY CODE. AUTO PILOT is offered on a run that
 # may be flown (not the demo, not BOT VIEW, not a hardcore hero — a hardcore
 # death is permanent, so an unattended bot could permakill the hero), THE BIBLE
-# only exists while the hero carries one, and the session panel only while
-# there is a session. Every one of those is a `visible:` a mod can change.
+# only exists while the hero carries one, the SAVE warning only while storage
+# has actually refused the run, and the session panel only while there is a
+# session. Every one of those is a `visible:` a mod can change.
 
 screen: paused
 # The demo's own exit confirm answers this same screen and is checked FIRST
@@ -71,26 +72,31 @@ body:
             scale: 3
             color: "#0b0d10"
 
-      # SAVE GAME — park the run now, without leaving it.
+      # THE SAVE WARNING — absent through an ordinary run, and that is the
+      # design rather than an oversight.
       #
       # THE GAME ALREADY SAVES ITSELF (every few seconds of progress, on every
       # beat worth not replaying, and on every backgrounding — see
-      # `pwa/src/game/game-screen/autosave.ts`), so this row buys the player no
-      # progress the autosave was not already keeping. What it buys is KNOWING:
-      # a phone killed from the app switcher gives the page no warning, and a
-      # player about to put the phone down has no way to tell a save that
-      # happened from one that silently could not. So the row exists to be
-      # ANSWERED — it says what the press did, which is the whole of why its
-      # label and its colour are judgements rather than a line of text.
+      # `pwa/src/game/game-screen/autosave.ts`), so a standing SAVE button would
+      # be a row for a thing that already happened. What the player has no way
+      # to know is when that STOPPED working: the two parked-run slots hold
+      # whole game states and share one storage allowance, so once it is full
+      # every write is refused and the player keeps resuming from whatever
+      # landed last — which they meet as their progress reverting to the hub,
+      # with nothing on screen saying why.
       #
-      # It is absent, never greyed, on a run that is nobody's to park: the HOW
-      # TO PLAY demo, BOT VIEW, and a joined session whose run is the host's.
+      # So the row is the ALARM, and the press is what to do about it. It comes
+      # up when a write has been refused (`menu.saveAlert`), says so in red,
+      # retries on a press, and stands down a moment after one lands. It matters
+      # that the press is here rather than only in the cadence: the cadence
+      # writes nothing while the run is paused, so from inside this window it is
+      # the only way to find out whether the store is taking the run again.
       - id: save
         kind: button
         class: pixel-button secondary
         aria: save-game
         order: 5
-        visible: menu.saveOffered
+        visible: menu.saveAlert
         press:
           action: saveGame
         children:
