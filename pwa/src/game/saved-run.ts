@@ -250,15 +250,25 @@ function unpackExplored(packed: string, size: number): Uint8Array {
   return grid;
 }
 
-/** Freeze the parked run to storage. Best-effort — a storage failure is logged, not thrown. */
-export function saveRun(run: ParkedRun): void {
-  writeRun(KEY, run);
+/**
+ * Freeze the parked run to storage. Never throws — but it DOES report, and the
+ * caller that can tell the player (the pause menu's SAVE GAME row) is why.
+ *
+ * A refusing store is not a rare curiosity: it is the failure the player
+ * experiences as "my progress keeps going back to the garage". Every write
+ * after the first refusal is lost too, so what survives is whatever landed last
+ * — usually the hub the run opened in, because that is the smallest the blob
+ * ever gets. Swallowed into a log line nobody reads, that is indistinguishable
+ * from the game simply not saving.
+ */
+export function saveRun(run: ParkedRun): boolean {
+  return writeRun(KEY, run);
 }
 
 /** THE TOWN PORTAL'S FAR SIDE: park the field this hero just stepped out of,
  * so the seam at home can put them back on it exactly as they left it. */
-export function saveRiftRun(run: ParkedRun): void {
-  writeRun(RIFT_KEY, run);
+export function saveRiftRun(run: ParkedRun): boolean {
+  return writeRun(RIFT_KEY, run);
 }
 
 /** Thaw the field parked on the other side of a rift portal, or null when
@@ -274,25 +284,54 @@ export function clearRiftRun(): void {
   removeRun(RIFT_KEY);
 }
 
-function writeRun(key: string, run: ParkedRun): void {
+/**
+ * Write one slot, and say whether it landed.
+ *
+ * A REFUSED WRITE IS RETRIED ONCE, WITH THE OTHER SLOT DROPPED. The two slots
+ * hold whole `GameState`s and the store is one shared allowance, so the way a
+ * player runs out of room is the rift field sitting on half of it while the run
+ * they are actually playing grows a map. The parked field is the cheaper of the
+ * two to lose — it costs one trip back through a seam, where the other costs
+ * the run — so it is what gets spent to make room. Only ever the OTHER slot: a
+ * write clearing its own key would turn a full store into a deleted save.
+ */
+function writeRun(key: string, run: ParkedRun): boolean {
+  const { rng, fxRng, goldRng, explored, ...rest } = run.state;
+  const payload: Serialized = {
+    v: SAVE_VERSION,
+    characterId: run.characterId,
+    difficulty: run.difficulty,
+    levelId: run.levelId,
+    rngState: rngState(rng),
+    fxRngState: rngState(fxRng),
+    goldRngState: rngState(goldRng),
+    fog: packExplored(explored),
+    // `events` is transient per-step chatter; blank it so a resume doesn't
+    // replay stale sfx (it's overwritten again on the first step anyway).
+    state: { ...rest, events: [] },
+  };
+  let blob: string;
   try {
-    const { rng, fxRng, goldRng, explored, ...rest } = run.state;
-    const payload: Serialized = {
-      v: SAVE_VERSION,
-      characterId: run.characterId,
-      difficulty: run.difficulty,
-      levelId: run.levelId,
-      rngState: rngState(rng),
-      fxRngState: rngState(fxRng),
-      goldRngState: rngState(goldRng),
-      fog: packExplored(explored),
-      // `events` is transient per-step chatter; blank it so a resume doesn't
-      // replay stale sfx (it's overwritten again on the first step anyway).
-      state: { ...rest, events: [] },
-    };
-    localStorage.setItem(key, JSON.stringify(payload));
+    blob = JSON.stringify(payload);
   } catch (err) {
     warn(`could not save the current run: ${String(err)}`);
+    return false;
+  }
+  if (putItem(key, blob)) return true;
+  const spare = key === KEY ? RIFT_KEY : KEY;
+  removeRun(spare);
+  if (putItem(key, blob)) return true;
+  warn("could not save the current run: storage is full");
+  return false;
+}
+
+/** One `setItem`, with the throw turned into an answer. */
+function putItem(key: string, blob: string): boolean {
+  try {
+    localStorage.setItem(key, blob);
+    return true;
+  } catch {
+    return false;
   }
 }
 

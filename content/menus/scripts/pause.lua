@@ -26,4 +26,33 @@ function M.bible_label(state)
   return "+ THE BIBLE"
 end
 
+--- The SAVE warning's label. The row is only on screen at all when saving has
+--- something to say (`menu.saveAlert`), and this is which of the two things:
+--- storage is refusing the run, or a retry just landed.
+---
+--- A judgement rather than two rows, because they are one row in two moods —
+--- the alarm and its all-clear. Split, a mod could replace one and not the
+--- other, and the player would meet two different buttons in the same place.
+---
+--- The alarm says what to DO as well as what is wrong: a red line reading only
+--- SAVE FAILED is a thing to feel bad about rather than a thing to press. The
+--- pixel font has no tick, so the all-clear is carried by the words and by the
+--- colour below rather than by a glyph it would draw as a question mark.
+function M.save_label(state)
+  if state.menu.saveState == "saved" then
+    return "▲ GAME SAVED"
+  end
+  return "! SAVE FAILED - RETRY"
+end
+
+--- …and its colour. The alarm is the one that has to carry at a glance: a
+--- player whose run has stopped reaching storage has until they close the app
+--- to notice.
+function M.save_color(state)
+  if state.menu.saveState == "saved" then
+    return "#7ef0c8"
+  end
+  return "#e06a6a"
+end
+
 return M

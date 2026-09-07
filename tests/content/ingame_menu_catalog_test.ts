@@ -31,10 +31,15 @@ import {
   validateMenuElement,
 } from "../../scripts/asset-tools/ingame-menu-schema.mjs";
 import { loadMenus } from "../../scripts/menu-data/load-ingame-yaml.mjs";
+import { GLYPHS } from "../../scripts/asset-tools/font.mjs";
 import { moduleExports } from "../../scripts/asset-tools/script-schema.mjs";
 
 import { MENUS, MENU_MODALS } from "../../pwa/src/generated/ingame-menus.ts";
 import { menuBindings } from "../../pwa/src/game/menus/bindings.ts";
+import {
+  callHudScript,
+  hudScriptColor,
+} from "../../pwa/src/game/hud/script.ts";
 import {
   menuForScreen,
   mergeMenus,
@@ -46,7 +51,10 @@ import type {
   MenuDef,
   MenuElementDef,
 } from "../../pwa/src/game/menus/types.ts";
-import { resolveContext } from "../../pwa/src/game/hud/resolve.ts";
+import {
+  resolveCondition,
+  resolveContext,
+} from "../../pwa/src/game/hud/resolve.ts";
 import {
   closeAllModals,
   modalStack,
@@ -104,6 +112,7 @@ describe("the in-game menus' vocabulary", () => {
         demo: false,
         hardcore: false,
         session: true,
+        saveState: "saved",
       },
       [{ id: "some_modal", arg: "x", key: 1 }],
     );
@@ -188,6 +197,83 @@ describe("the shipped windows", () => {
     }
   });
 
+  it("hides the save row until a write has actually been refused", () => {
+    // The whole design: through an ordinary run the checkpoint autosave is
+    // quietly doing its job, and a row saying so would be furniture. What the
+    // player cannot otherwise learn is that it STOPPED.
+    const save = MENUS.find((menu) => menu.id === "pause")
+      ?.body.find((row) => row.id === "actions")
+      ?.children?.find((child) => child.id === "save");
+    expect(save?.visible).toBe("menu.saveAlert");
+
+    const shown = (saveState: "" | "saved" | "failed") =>
+      resolveCondition(
+        save?.visible,
+        resolveContext(
+          menuBindings(
+            {
+              screen: "paused",
+              charTab: "bag",
+              cleanSlates: 0,
+              autopilotOffered: false,
+              autopilotActive: false,
+              demo: false,
+              hardcore: false,
+              session: false,
+              saveState,
+            },
+            [],
+          ),
+        ),
+      );
+    expect(shown("")).toBe(false);
+    expect(shown("failed")).toBe(true);
+    // …and it stays up for the all-clear, or a landed retry would vanish
+    // without ever telling the player it worked.
+    expect(shown("saved")).toBe(true);
+  });
+
+  it("words and colours the save row as an alarm and its all-clear", () => {
+    // One row in two moods, so the moods are a judgement rather than two
+    // `visible:` gates — run here through the real host, against the shipped
+    // Lua. The alarm says what to DO, not only what is wrong.
+    const mood = (saveState: "" | "saved" | "failed") => ({
+      menu: { saveState, saveAlert: saveState !== "" },
+    });
+    expect(callHudScript("pause.save_label", mood("failed"))).toBe(
+      "! SAVE FAILED - RETRY",
+    );
+    expect(callHudScript("pause.save_label", mood("saved"))).toBe(
+      "▲ GAME SAVED",
+    );
+
+    // Two DISTINCT colours, and the alarm is the one that has to carry: a
+    // player whose run has stopped reaching storage has until they close the
+    // app to notice it.
+    const alarm = hudScriptColor("pause.save_color", mood("failed"));
+    const allClear = hudScriptColor("pause.save_color", mood("saved"));
+    expect(alarm).toBeDefined();
+    expect(allClear).toBeDefined();
+    expect(alarm).not.toBe(allClear);
+  });
+
+  it("draws both save moods with glyphs the pixel font has", () => {
+    // A character the font has no cell for renders as "?" rather than as a
+    // gap, so a label is only as safe as its rarest glyph.
+    for (const state of ["saved", "failed"] as const) {
+      const label = callHudScript("pause.save_label", {
+        menu: { saveState: state },
+      });
+      // A host that answered nothing would hand `String(undefined)` on, whose
+      // every letter the font does have — a green check over a row that draws
+      // no label at all.
+      expect(typeof label, state).toBe("string");
+      for (const char of label as string) {
+        expect(Object.hasOwn(GLYPHS, char.toUpperCase()), char).toBe(true);
+      }
+    }
+  });
+
   it("gives the pause menu's rows room to insert between", () => {
     // The shipped rows are numbered in tens so a mod's own row can land in the
     // middle of the stack — which is what `menus/elements/*.yaml` with an
@@ -217,6 +303,7 @@ describe("the shipped windows", () => {
             demo,
             hardcore: false,
             session: false,
+            saveState: "",
           },
           [],
         ),
@@ -288,6 +375,7 @@ describe("a mod's own rows", () => {
     const ids = (actions?.children ?? []).map((child) => child.id);
     expect(ids).toEqual([
       "resume",
+      "save",
       "autopilot_start",
       "mod_row",
       "autopilot_stop",
@@ -306,7 +394,7 @@ describe("a mod's own rows", () => {
     const children = actions?.children ?? [];
     expect(children[0]?.id).toBe("resume");
     expect(children[0]?.kind).toBe("text");
-    expect(children.length).toBe(5);
+    expect(children.length).toBe(6);
   });
 
   it("keeps a row aimed at a container this build no longer has", () => {

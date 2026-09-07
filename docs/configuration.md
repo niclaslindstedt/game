@@ -387,11 +387,17 @@ most every five seconds, and only when the run has actually moved (a kill, a
 pickup, coins, XP, a story item); a ding, a boss going down or an errand turned
 in is written sooner; and backgrounding the app writes immediately, which is
 what covers a phone killing the game from the app switcher without running any
-unload handler. The snapshot is dropped once the run is resumed, abandoned
-(victory/defeat MENU), resolved (the hero falls, or the level is cleared —
-whose outcome the character carries from there), or replaced by a fresh game,
-and a snapshot written by an incompatible older build is discarded rather than
-resumed. The demo, BOT VIEW and a joined session park nothing. Clearing site
+unload handler. A refused write retries once with the parked rift field
+dropped, since the two slots share one allowance; if it is still refused, the
+pause menu raises a red **SAVE FAILED - RETRY** row saying the run has stopped
+reaching storage, and a press re-tries it (the cadence writes nothing while the
+run is paused, so from in there the press is the only way to find out). The row
+is absent through an ordinary run, and stands down a moment after a retry lands.
+The snapshot is dropped once the run is resumed, abandoned (victory/defeat
+MENU), resolved (the hero falls, or the level is cleared — whose outcome the
+character carries from there), or replaced by a fresh game, and a snapshot
+written by an incompatible older build is discarded rather than resumed. The
+demo, BOT VIEW and a joined session park nothing. Clearing site
 data resets all of it; the `?cutscene=<id>` workbench replays any scene
 regardless, and `?level=<id>` reaches any level regardless of unlock state.
 

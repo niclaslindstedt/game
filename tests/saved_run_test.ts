@@ -613,3 +613,101 @@ describe("the town portal's parked field — a second slot, not the same one", (
     expect(thawed?.difficulty).toBe("medium");
   });
 });
+
+describe("a store that will not take the write", () => {
+  const run = (levelId: string) => ({
+    characterId: "hero-1",
+    difficulty: "medium" as Difficulty,
+    levelId,
+    state: createGame(7, levelId, "medium"),
+  });
+
+  /** A store with a byte budget, which is what a real one is. Refuses like
+   * `localStorage` does — by throwing — rather than by quietly dropping the
+   * write, because that is the failure the callers have to survive. */
+  function cappedStorage(bytes: number): void {
+    const store = new Map<string, string>();
+    const used = (skip: string) => {
+      let total = 0;
+      for (const [key, value] of store) {
+        if (key !== skip) total += value.length;
+      }
+      return total;
+    };
+    (globalThis as { localStorage?: Storage }).localStorage = {
+      get length() {
+        return store.size;
+      },
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        if (used(key) + value.length > bytes) {
+          throw new DOMException("quota", "QuotaExceededError");
+        }
+        store.set(key, value);
+      },
+      removeItem: (key: string) => void store.delete(key),
+      clear: () => store.clear(),
+      key: (i: number) => Array.from(store.keys())[i] ?? null,
+    } as unknown as Storage;
+  }
+
+  it("says so, instead of losing the run in a log line", () => {
+    // THE FAILURE THE PLAYER READS AS "MY PROGRESS KEEPS GOING BACK TO THE
+    // GARAGE": every write after the first refusal is lost the same way, so
+    // what survives is whatever landed last — usually the hub the run opened
+    // in, because that is the smallest the blob ever gets. A silent `false`
+    // here is a save the pause menu would have claimed happened.
+    cappedStorage(0);
+    expect(saveRun(run("garage"))).toBe(false);
+    expect(loadSavedRun()).toBeNull();
+  });
+
+  /** How many characters one parked run actually takes, measured rather than
+   * guessed — a blob is hundreds of KB and its size moves with the map. */
+  function blobLength(write: () => void): number {
+    saveOne(write);
+    const key = Array.from({ length: localStorage.length }, (_, i) =>
+      localStorage.key(i),
+    ).find((k) => k !== null) as string;
+    return (localStorage.getItem(key) as string).length;
+  }
+
+  /** Write into a fresh uncapped store, so the measurement is of the blob and
+   * not of whatever a previous case left lying about. */
+  function saveOne(write: () => void): void {
+    (globalThis as { localStorage?: Storage }).localStorage =
+      new MemoryStorage() as unknown as Storage;
+    write();
+  }
+
+  it("spends the parked FIELD to make room for the run being played", () => {
+    // The two slots share one allowance, so the way a player runs out of room
+    // is the rift field sitting on half of it. The field is the cheaper loss —
+    // one trip back through a seam, against the whole run — so it is what gets
+    // dropped, and the retry lands.
+    const rift = blobLength(() => saveRiftRun(run("mars")));
+    const current = blobLength(() => saveRun(run("garage")));
+    // Room for either alone, never for both — which is exactly the store the
+    // retry exists for.
+    cappedStorage(Math.max(rift, current) + 1);
+
+    saveRiftRun(run("mars"));
+    expect(loadRiftRun()).not.toBeNull();
+
+    expect(saveRun(run("garage"))).toBe(true);
+    expect(loadSavedRun()?.levelId).toBe("garage");
+    expect(loadRiftRun()).toBeNull();
+  });
+
+  it("never clears the slot it is writing to", () => {
+    // A write that made room by dropping its OWN key would turn a full store
+    // into a deleted save — the one outcome worse than a refused write, since
+    // the player loses the run they still had.
+    cappedStorage(0);
+    saveRun(run("garage"));
+    saveRiftRun(run("mars"));
+    // Nothing landed (the cap is zero), but neither call may have taken the
+    // other's slot down with it on the way past.
+    expect(saveRun(run("goodco_hq"))).toBe(false);
+  });
+});

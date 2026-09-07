@@ -283,6 +283,128 @@ describe("checkpoint autosave — runs that are not the player's own", () => {
     expect(loadSavedRun()).toBeNull();
     autosave.dispose();
   });
+
+  it("refuses a SAVE GAME press rather than pretending it wrote one", () => {
+    const run = liveRun();
+    const autosave = createAutosave({ ...run, enabled: false });
+    expect(autosave.save(run.state)).toBe("refused");
+    expect(storage.writes).toBe(0);
+    autosave.dispose();
+  });
+});
+
+describe("checkpoint autosave — telling the app the store stopped taking it", () => {
+  /** A store that refuses every write, the way a full one does. */
+  const refuse = () =>
+    vi.spyOn(storage, "setItem").mockImplementation(() => {
+      throw new DOMException("quota", "QuotaExceededError");
+    });
+
+  function watched() {
+    const run = liveRun();
+    const health: boolean[] = [];
+    const autosave = createAutosave({
+      ...run,
+      enabled: true,
+      onHealthChange: (failing) => health.push(failing),
+    });
+    return { ...run, autosave, health };
+  }
+
+  it("reports a BACKGROUND write being refused, with nobody having pressed anything", () => {
+    // The whole reason the warning row can exist at all. A refusing store is
+    // otherwise completely silent: every write after the first is lost the same
+    // way, and the player meets it as their progress reverting to the hub.
+    const { state, autosave, health } = watched();
+    refuse();
+    autosave.tick(state);
+    expect(health).toEqual([true]);
+  });
+
+  it("says so ONCE, not on every write a broken store refuses", () => {
+    // Only the TRANSITION is reported — the app holds this in React state, and
+    // a call per write would re-render the menus every five seconds.
+    const { state, autosave, health } = watched();
+    refuse();
+    autosave.tick(state);
+    for (let i = 0; i < 20; i++) {
+      state.stats.kills += 1;
+      now += PROGRESS_SAVE_MS;
+      autosave.tick(state);
+    }
+    expect(health).toEqual([true]);
+  });
+
+  it("stands the warning down again the moment a write lands", () => {
+    const { state, autosave, health } = watched();
+    const refused = refuse();
+    autosave.tick(state);
+    expect(health).toEqual([true]);
+
+    refused.mockRestore();
+    expect(autosave.save(state)).toBe("saved");
+    expect(health).toEqual([true, false]);
+  });
+
+  it("says nothing at all while the store is healthy", () => {
+    // A run that never has trouble never raises the row, which is what keeps
+    // the pause menu free of a button for a thing that is already happening.
+    const { state, autosave, health } = watched();
+    autosave.tick(state);
+    state.stats.kills += 5;
+    now += PROGRESS_SAVE_MS;
+    autosave.tick(state);
+    expect(health).toEqual([]);
+  });
+});
+
+describe("checkpoint autosave — the retry the player asked for", () => {
+  it("parks the run now, whatever the cadence would have said", () => {
+    const { state, autosave } = armed();
+    autosave.tick(state);
+    clearSavedRun();
+    // Inside the throttle window and with nothing having moved, so the cadence
+    // would write nothing — which is exactly the state a paused run is in, and
+    // the reason the retry has to be a press rather than a wait.
+    now += 1;
+
+    expect(autosave.save(state)).toBe("saved");
+    expect(loadSavedRun()?.levelId).toBe(LEVEL_ID);
+  });
+
+  it("says `failed` when storage still will not take it", () => {
+    const { state, autosave } = armed();
+    vi.spyOn(storage, "setItem").mockImplementation(() => {
+      throw new DOMException("quota", "QuotaExceededError");
+    });
+    expect(autosave.save(state)).toBe("failed");
+  });
+
+  it("refuses once the run has resolved, rather than re-parking a dead hero", () => {
+    // The counter-rule the whole file guards: a resolved run is dropped, and a
+    // press must not put it back — CONTINUE would land in a death scene the
+    // player already paid for.
+    const { state, autosave } = armed();
+    autosave.tick(state);
+    autosave.onEvent({ type: "playerDeath" } as GameEvent);
+
+    expect(autosave.save(state)).toBe("refused");
+    expect(loadSavedRun()).toBeNull();
+  });
+
+  it("resets the cadence, so a press is not followed by a second write", () => {
+    const { state, autosave } = armed();
+    autosave.tick(state);
+    state.stats.kills += 5;
+    now += PROGRESS_SAVE_MS;
+    autosave.save(state);
+    const after = storage.writes;
+
+    // The press banked the progress the pending write was owed, so the tick it
+    // lands on has nothing left to say.
+    autosave.tick(state);
+    expect(storage.writes).toBe(after);
+  });
 });
 
 afterEach(() => clearSavedRun());
