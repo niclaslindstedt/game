@@ -1,21 +1,27 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The Diablo 2 inventory: a body-shaped PAPER DOLL of equipment slots
-// (PaperDoll.tsx) beside the bag grid, with the purse at its foot. Drag an
-// item onto a slot to equip it; on desktop a
-// plain click quick-equips, and on touch the first tap raises the item's
-// tooltip while a second commits. The two halves sit side by side in landscape
-// and stack in portrait (see styles.css). The panel mutates the (paused)
-// engine state through the inventory API and calls `onChange` so React re-reads
-// it.
+// (PaperDoll.tsx) beside the bag grid, with the purse at its foot. Drag an item
+// onto a slot to equip it; on desktop a plain click quick-equips, and on touch
+// the first tap raises the item's tooltip while a second commits. The two
+// halves sit side by side in landscape and stack in portrait (see styles.css).
+// The panel mutates the (paused) engine state through the inventory API and
+// calls `onChange` so React re-reads it.
+//
+// ON A TOUCHSCREEN THE BAG'S CELLS SPLIT THE GESTURE BY AXIS (`touch-action` in
+// styles.css): a vertical pull scrolls a carry taller than its frame — the only
+// way a thumb reaches the rows under it — and every other pull arrives here as
+// the drag below. So a deep carry cannot be dragged straight UP onto the doll,
+// which is what the two-tap equip is always there for; the doll's own slots
+// keep the whole gesture, nothing scrolling under them.
 //
 // The hero's NUMBERS are not here. The character sheet is its own modal
 // (CharacterSheet.tsx), raised by pressing the hero's portrait out in the HUD
 // exactly as D2 does it — so no portrait and no stat readout ride in this
 // panel. What a player needs WHILE trying gear on is already under their
 // finger: the item tooltip states the piece's own numbers and their green/red
-// difference from the piece it would replace, with the worn piece's card
-// beside it (see ItemTooltip). A strip repeating four of those totals was a
-// second, weaker copy of a comparison the tooltip already makes better.
+// difference from the piece it would replace, with the worn piece's card beside
+// it (see ItemTooltip). A foot rail repeating four of those totals is a second,
+// weaker copy of a comparison the tooltip already makes better.
 
 import { localHero } from "./local-seat.ts";
 import {
@@ -102,12 +108,10 @@ const BAG_FRAME_CELLS = 40;
  * A kind's note answers exactly one question, and it is the question three
  * icons and three numbers in a foot rail never answered: WHICH GUNS TAKE
  * THESE. So each entry names the weapon families its own kind feeds and
- * nothing else. It used to open with the rule shared by all three and a
- * clause about weapons that wear out instead — which meant the CELLS socket
- * explained a shotgun's pellets and a volley's arrows, neither of which has
- * anything to do with a cell, and the swords the whole system does not touch.
- * A note that spends its first four lines on the other kinds is a note the
- * player reads once.
+ * nothing else — never the rule the three kinds share, and never the weapons
+ * that wear out instead. A note that spends its first lines on the other kinds
+ * (a shotgun's pellets in the CELLS socket, the swords no ammunition touches)
+ * is a note the player reads once.
  */
 const AMMO_SERVES: Record<AmmoType, readonly string[]> = {
   bullets: [
@@ -148,12 +152,10 @@ function ammoHelp(player: Player, type: AmmoType): string[] {
     if (piece && weaponAmmoType(piece) === type)
       eaters.push(equipmentName(piece));
   }
-  // There is no longer a SIDEARM case to answer here. A run used to open with a
-  // stack of cells for the unbreakable fallback gun, so "nothing you carry
-  // fires these" was a lie on a fresh hero; the fallback is now the hero's own
-  // hands, which fire nothing, and the opening pouch stocks only the kind his
-  // actual weapon eats (`startingAmmo`). So a kind nothing carried can fire
-  // means exactly that.
+  // No SIDEARM case to answer: the weaponless fallback is the hero's own hands,
+  // which fire nothing, and the opening pouch stocks only the kind his actual
+  // weapon eats (`startingAmmo`). So a kind nothing carried can fire means
+  // exactly that, on a fresh hero as much as a late one.
   return [
     ...AMMO_SERVES[type],
     "",

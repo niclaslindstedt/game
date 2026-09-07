@@ -13,6 +13,13 @@
 // locked (`html.app-locked`, applied by main.tsx), and every scroll box inside
 // the game CONTAINS its overscroll so a drag that runs out of list can't chain
 // back out to the document.
+//
+// The mirror of that rule is pinned here too. A scroll box the finger cannot
+// REACH is as broken as one that chains: `touch-action: none` anywhere up an
+// ancestor chain vetoes the panning a descendant asks for, and the inventory's
+// window carried exactly that — so the rows of the bag below the frame's edge
+// were unreachable on a phone while the merchant's copy of the same grid
+// scrolled fine.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -128,5 +135,46 @@ describe("in-game scroll boxes", () => {
       (r) => !/overscroll-behavior(-y)?:\s*(contain|none)/.test(r.declarations),
     ).map((r) => r.selector);
     expect(leaking, "scroll boxes missing `overscroll-behavior`").toEqual([]);
+  });
+});
+
+describe("the inventory's carry pans under a finger", () => {
+  /**
+   * What every rule for a selector says about `touch-action` — a selector can
+   * be declared more than once (the landscape fold re-opens `.inventory-panel`
+   * to retune its padding), and any one of them setting `none` is the veto.
+   */
+  function touchActions(selector: string): string[] {
+    const found = RULES.filter((r) => r.selector === selector);
+    expect(
+      found.length,
+      `no \`${selector}\` rule in styles.css`,
+    ).toBeGreaterThan(0);
+    return found
+      .flatMap((r) => [...r.declarations.matchAll(/touch-action:\s*([\w-]+)/g)])
+      .map((m) => m[1] as string);
+  }
+
+  it("leaves the vertical axis to the window's own scroll boxes", () => {
+    // `touch-action: none` on the window is a VETO on everything inside it: the
+    // browser intersects the value with each descendant's, so no cell can win
+    // `pan-y` back. The shop, the cache and the companion panel wear this class
+    // too, and were all mute the same way.
+    const declared = touchActions(".inventory-panel");
+    expect(declared).not.toContain("none");
+    expect(declared).toContain("pan-y");
+  });
+
+  it("lets a touch on a bag cell pan the carry", () => {
+    // The cells are what a thumb actually lands on — the gaps between them are
+    // a sliver nobody can aim for, so a grid whose cells refuse to pan is a
+    // grid that does not scroll.
+    expect(touchActions(".inv-bag-grid .inv-cell")).toContain("pan-y");
+  });
+
+  it("keeps the doll's own slots undivided, so gear drags any which way", () => {
+    // Nothing scrolls under the paper doll, so its slots keep the whole gesture
+    // and a worn piece comes off the body in any direction.
+    expect(touchActions(".inv-cell")).toContain("none");
   });
 });

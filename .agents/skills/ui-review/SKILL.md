@@ -20,13 +20,13 @@ it at both ends of the session.
 
 ## Tooling
 
-| Piece | Role |
-| --- | --- |
+| Piece                      | Role                                                                                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pwa/scripts/ui-shots.mjs` | The capture harness: screenshots EVERY screen/modal/popup/toast at all ten viewports into `pwa/assets-preview/ui-review/<viewport>/` (gitignored) |
-| `?debug` + `window.__game` | Forces the rare in-game phases (levelup, respec, shop, dialogue, choice, victory, defeat) without waiting for organic triggers |
-| `?bot=kite` | Plays for real so the organic surfaces (pickup cards, feed, achievement toasts, a loot-filled bag) exist to capture |
-| `?cutscene=<id>` | Deterministic cutscene capture via the standalone workbench |
-| Read tool on the PNGs | The evaluation itself — every judgement is made on a screenshot, not on source |
+| `?debug` + `window.__game` | Forces the rare in-game phases (levelup, respec, shop, dialogue, choice, victory, defeat) without waiting for organic triggers                    |
+| `?bot=kite`                | Plays for real so the organic surfaces (pickup cards, feed, achievement toasts, a loot-filled bag) exist to capture                               |
+| `?cutscene=<id>`           | Deterministic cutscene capture via the standalone workbench                                                                                       |
+| Read tool on the PNGs      | The evaluation itself — every judgement is made on a screenshot, not on source                                                                    |
 
 ## Running
 
@@ -46,11 +46,11 @@ The ten viewports and what each is for:
 - **`port` 390×844** — vertical phone: narrow columns, stacked layouts, the
   bottom-edge docks.
 - **`sel` 667×375 / `sep` 375×667** — the small-phone floor (iPhone SE
-  class): the tightest 1× layouts. Anything tuned to *exactly* fit the
+  class): the tightest 1× layouts. Anything tuned to _exactly_ fit the
   844×390 reference (wide folds, three-button rows, long labels) runs out
   of room here first.
 - **`padl` 1180×820** — iPad landscape. Past the 2× UI-scale breakpoint
-  (`UI_SCALE_BREAKPOINT_PX`), so its *effective* layout space is 590×410 —
+  (`UI_SCALE_BREAKPOINT_PX`), so its _effective_ layout space is 590×410 —
   **narrower than the landscape phone**. Anything that fits 844×390 only
   because of horizontal room breaks here first.
 - **`padp` 820×1180** — iPad portrait. Also 2×-scaled: effective 410×590,
@@ -58,7 +58,7 @@ The ten viewports and what each is for:
   fit an 844px-tall phone must scroll or fold here, never clip.
 - **`minil` 1133×744 / `minip` 744×1133** — iPad mini, both orientations.
   The harshest 2× cases: effective 566×372 landscape and 372×566 portrait —
-  *smaller than every phone layout in both axes*. If a surface survives the
+  _smaller than every phone layout in both axes_. If a surface survives the
   mini, it survives every tablet.
 - **`desk` 1440×900** — the 2× root-font breakpoint at desktop size:
   confirms the rem-scaled UI grows in lockstep and nothing depends on
@@ -70,8 +70,8 @@ The ten viewports and what each is for:
 
 The tablet viewports are the harsh cases of the 2× regime: they pass the
 `≥700px on both axes` gate like a desktop, but after doubling they have
-*less* effective room than the phone baseline. Judge them like a cramped
-phone, not like a desktop — and remember media queries see the *physical*
+_less_ effective room than the phone baseline. Judge them like a cramped
+phone, not like a desktop — and remember media queries see the _physical_
 CSS viewport (1180×820), so width/height-gated rules written for phones
 silently miss the iPad even when its effective space matches a phone's.
 
@@ -105,7 +105,13 @@ past sweeps — extend it when a new rule of thumb settles.
    when it fits and scrolls when it doesn't. And EVERY new scroll box declares
    `overscroll-behavior: contain` beside its `overflow` — without it a flick
    past the end chains into the document behind it, and
-   `tests/page_scroll_lock_test.ts` fails the build by name.
+   `tests/page_scroll_lock_test.ts` fails the build by name. Then check the
+   other half, which a screenshot cannot show you: **a `touch-action: none`
+   anywhere ABOVE the box vetoes the panning it needs**, so on a phone the
+   content below its edge is simply unreachable. The value is intersected down
+   the ancestor chain, so no cell can win `pan-y` back on its own — the window
+   itself has to give the vertical axis up. Grep `touch-action` in
+   `styles.css` for every ancestor class the surface wears.
 2. **One window skin.** Every modal/panel/prompt wears the FF6 window skin —
    the `--panel-*` tokens in `styles.css` (fill gradient, rail borders,
    radius, shadow). A flat slab with its own border color is drift; re-skin
@@ -153,7 +159,7 @@ past sweeps — extend it when a new rule of thumb settles.
 
 1. **Capture the baseline.** Run the harness on a clean tree; skim EVERY
    PNG with the Read tool, landscape first. List findings in two buckets:
-   *broken* (clips, overlaps, bleed-through, unreachable) and *drift*
+   _broken_ (clips, overlaps, bleed-through, unreachable) and _drift_
    (off-skin, undersized, inconsistent). Note the surfaces that are already
    strong — they define the bar, and the list proves the sweep was total.
 2. **Fix structurally, not per-symptom.** Prefer the shared fix (a scroll
@@ -164,7 +170,7 @@ past sweeps — extend it when a new rule of thumb settles.
 3. **Re-capture and re-look.** Same harness, same viewports. Diff by eye
    against the baseline; a fix that helps landscape can break portrait.
 4. **Gates + ship.** `make build && make test && make lint && make
-   fmt-check`, a changeset fragment when anything user-visible changed,
+fmt-check`, a changeset fragment when anything user-visible changed,
    then the `commit` skill. Presentation-only passes rarely need new tests;
    engine untouched means the suite should be green unmodified.
 
@@ -173,22 +179,22 @@ past sweeps — extend it when a new rule of thumb settles.
 The engine state is live at `window.__game` under `?debug`; phases are
 plain mutations because rendering reads state every frame:
 
-| Surface | Force |
-| --- | --- |
-| Level-up chooser | `g.player.pendingStatPoints = 1; g.levelUpFxMs = 1` (next playing tick opens it) |
-| Respec | `g.player.pendingStatPoints = N; g.phase = "respec"` |
-| Shop | `g.merchant.discovered = true; g.phase = "shop"` |
-| Dialogue | `g.dialogue = { source: { kind: "merchant", levelId: g.level.id }, page: 0 }; g.phase = "dialogue"` (a real def on every level, so the portrait resolves) |
-| Choice + companion | Push a synthetic 0-hp enemy with a spareable `defId` onto `g.enemies`, set `g.choice`, `g.phase = "choice"`, then click SPARE — the join dialogue and companion panel follow for free |
-| Victory / defeat | `g.phase = "victory"` / `g.player.hp = 0` |
-| Developer menu / warp / arsenal / balance | Pre-seed `localStorage` `<storagePrefix>:settings` with `{"developerUnlocked": true}` before load |
-| Title STORE, its CONFIRM, the AUTO PILOT picker's STORE button, the in-run COIN STORE | Seed `{"storeForce": "on"}` too — a browser build has no platform store, so all four surfaces are otherwise unreachable |
-| AUTO PILOT START picker | Pause, then the `autopilot-start` button. Shoot it TWICE: with a fat purse (`g.player.coins = 250000`) and broke (`0`) — the unaffordable state swaps the note for the CAN'T AFFORD call-out |
-| AUTO PILOT LOOT history | `g.autopilot.active = true` to raise the HUD panel, then its `autopilot-loot` chip |
-| Talent picker | Bank ten points in a tree stat and enqueue: `g.player.spentStats.strength += 10; g.player.stats.strength += 10; g.pendingTalentPoints = ["strength"]`. Hand the ten points BACK afterwards — the engine reconciles the queue from `spentStats`, so a leftover re-opens the picker on top of the next capture |
-| LOST & FOUND (VaultScreen) | Bank a loadout on the roster hero whose `vault` holds a copy of the live run's weapon, then reload the title — the row exists only when the vault has something in it |
-| Demo exit confirm | HOW TO PLAY, then tap the field. A tap while a teaching tooltip is up dismisses the TIP, so tap until the confirm appears |
-| LAUNCH NOTICE (the licence acknowledgement) | Stamp `__GIS_UNLOCKED__` — plus `__GIS_NATIVE__`, `__GIS_PLATFORM__ = "steam"` and a stub `__gisShell` for the QUIT row — in an init script BEFORE the page loads. There is no in-game trigger: the shell states it, and it gates the whole app, so it needs a page of its own |
+| Surface                                                                               | Force                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Level-up chooser                                                                      | `g.player.pendingStatPoints = 1; g.levelUpFxMs = 1` (next playing tick opens it)                                                                                                                                                                                                                             |
+| Respec                                                                                | `g.player.pendingStatPoints = N; g.phase = "respec"`                                                                                                                                                                                                                                                         |
+| Shop                                                                                  | `g.merchant.discovered = true; g.phase = "shop"`                                                                                                                                                                                                                                                             |
+| Dialogue                                                                              | `g.dialogue = { source: { kind: "merchant", levelId: g.level.id }, page: 0 }; g.phase = "dialogue"` (a real def on every level, so the portrait resolves)                                                                                                                                                    |
+| Choice + companion                                                                    | Push a synthetic 0-hp enemy with a spareable `defId` onto `g.enemies`, set `g.choice`, `g.phase = "choice"`, then click SPARE — the join dialogue and companion panel follow for free                                                                                                                        |
+| Victory / defeat                                                                      | `g.phase = "victory"` / `g.player.hp = 0`                                                                                                                                                                                                                                                                    |
+| Developer menu / warp / arsenal / balance                                             | Pre-seed `localStorage` `<storagePrefix>:settings` with `{"developerUnlocked": true}` before load                                                                                                                                                                                                            |
+| Title STORE, its CONFIRM, the AUTO PILOT picker's STORE button, the in-run COIN STORE | Seed `{"storeForce": "on"}` too — a browser build has no platform store, so all four surfaces are otherwise unreachable                                                                                                                                                                                      |
+| AUTO PILOT START picker                                                               | Pause, then the `autopilot-start` button. Shoot it TWICE: with a fat purse (`g.player.coins = 250000`) and broke (`0`) — the unaffordable state swaps the note for the CAN'T AFFORD call-out                                                                                                                 |
+| AUTO PILOT LOOT history                                                               | `g.autopilot.active = true` to raise the HUD panel, then its `autopilot-loot` chip                                                                                                                                                                                                                           |
+| Talent picker                                                                         | Bank ten points in a tree stat and enqueue: `g.player.spentStats.strength += 10; g.player.stats.strength += 10; g.pendingTalentPoints = ["strength"]`. Hand the ten points BACK afterwards — the engine reconciles the queue from `spentStats`, so a leftover re-opens the picker on top of the next capture |
+| LOST & FOUND (VaultScreen)                                                            | Bank a loadout on the roster hero whose `vault` holds a copy of the live run's weapon, then reload the title — the row exists only when the vault has something in it                                                                                                                                        |
+| Demo exit confirm                                                                     | HOW TO PLAY, then tap the field. A tap while a teaching tooltip is up dismisses the TIP, so tap until the confirm appears                                                                                                                                                                                    |
+| LAUNCH NOTICE (the licence acknowledgement)                                           | Stamp `__GIS_UNLOCKED__` — plus `__GIS_NATIVE__`, `__GIS_PLATFORM__ = "steam"` and a stub `__gisShell` for the QUIT row — in an init script BEFORE the page loads. There is no in-game trigger: the shell states it, and it gates the whole app, so it needs a page of its own                               |
 
 Keep the harness in sync: a new overlay, a renamed aria-label, or a new
 `GamePhase` gets a step (or a fixed selector) in `ui-shots.mjs` in the same
