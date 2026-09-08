@@ -173,7 +173,7 @@ import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
 import { setGamepadKeysSuspended } from "@ui/lib/gamepad-keys.ts";
 import { ConnectingScreen } from "./game-screen/ConnectingScreen.tsx";
 import { createRunDriver, type RunDriver } from "./game-screen/run-driver.ts";
-import { createRunHealth } from "./game-screen/run-health.ts";
+import { createRunHealth, type LoopPhase } from "./game-screen/run-health.ts";
 import { createRunSession } from "./game-screen/run-setup.ts";
 import { activeMods } from "./mod-state.ts";
 import { joinRefusalText } from "./net-text.ts";
@@ -488,16 +488,16 @@ export function GameScreen({
   // so React re-reads the frozen state.
   const [, setUiTick] = useState(0);
   const bumpUi = () => setUiTick((t) => t + 1);
-  // A loop failure in a half of the frame that has NEVER completed. The loop's
+  // A loop failure in a half of the frame that is not coming back. The loop's
   // crash-resilience (game-loop.ts) is built for a bad frame in a healthy run —
-  // it logs, drops the frame and keeps going. A run that cannot draw its first
-  // frame or take its first step is a different animal: it throws the same way
-  // on every frame forever, so "keep going" leaves a picture that will never
-  // move — often with no HUD ever published, and so no overlay, dock or pause
-  // menu to escape through (the post-update resume freeze — a thawed save the
-  // new build can't read). Escalate that one case to React instead: the throw
-  // below lands in App's ErrorBoundary, which tells the player the game could
-  // not load and offers a RELOAD. The rule itself is run-health.ts.
+  // it logs, drops the frame and keeps going. A half that faults the same way
+  // on every frame forever is a different animal: "keep going" leaves a picture
+  // that will never move, and the HUD snapshot every overlay, dock and pause
+  // menu is gated on is published by the last statement of the render frame, so
+  // there is nothing left to escape through. Escalate that case to React
+  // instead: the throw below lands in App's ErrorBoundary, which tells the
+  // player the game could not load and offers a RELOAD. The rule — which half,
+  // and how long it has to be down — is run-health.ts.
   const [fatalRunError, setFatalRunError] = useState<unknown>(null);
   // The AUTO PILOT session (see autopilot-director.ts): survives the run
   // remounts the ride itself causes and ends with the screen.
@@ -1256,13 +1256,40 @@ export function GameScreen({
       guideBlinkRef,
       setHud,
     });
-    // ONE COMPLETED HALF-FRAME IS THE LINE between "a bad frame in a live run"
-    // (survivable — see onError below) and "a run that cannot start" (fatal),
-    // and the two halves are watched apart because the first animation frame
-    // renders without simulating anything — see game-screen/run-health.ts.
-    // The first render is also what publishes the first HUD snapshot React's
-    // whole overlay stack is gated on.
+    // A COMPLETED HALF-FRAME IS THE LINE between "a bad frame in a live run"
+    // (survivable — the loop drops it and carries on) and a half that will
+    // never complete again (fatal), and the two halves are watched apart
+    // because the first animation frame renders without simulating anything —
+    // see game-screen/run-health.ts. The render half is also what publishes the
+    // HUD snapshot React's whole overlay stack is gated on, which is why a draw
+    // that keeps throwing is a screen with no way out of it.
     const health = createRunHealth();
+    // EVERY THROW IS BOOKED HERE rather than off the loop's `onError`, which
+    // falls quiet after a few reports (game-loop.ts) — and a half still
+    // throwing long after that is precisely the case the rule exists for. The
+    // error is re-thrown so the loop drops the frame and logs it exactly as
+    // before.
+    const watched =
+      (phase: LoopPhase, half: (arg: number) => void) => (arg: number) => {
+        try {
+          half(arg);
+        } catch (err) {
+          if (health.failed(phase)) {
+            setFatalRunError(
+              err ?? new Error(`game loop ${phase} failed with no error`),
+            );
+            // …and let go of the parked run behind it, but ONLY when this half
+            // never got going: that park holds a state this build cannot read,
+            // so keeping it hands the same black screen back on every CONTINUE.
+            // A half that died mid-run parked a state that played for as long
+            // as it took to get here, and binning that is binning the session.
+            // If it turns out to fault on the way back in, the never-ran arm
+            // above clears it then.
+            if (ownsParkedRun && !health.ran(phase)) clearSavedRun();
+          }
+          throw err;
+        }
+      };
     const render = (timeMs: number) => {
       // THE DRIVE OWNS THE PICTURE (see the mount below): it covers the shell
       // whole and opaque, so a frame drawn under it is a frame nobody sees.
@@ -1283,7 +1310,7 @@ export function GameScreen({
       // engine meter and the fast-forward always agree; see autopilot.ts).
       speed: () =>
         state.autopilot.active ? state.autopilot.speed : tuning.simSpeed,
-      simulate(dtMs) {
+      simulate: watched("simulate", (dtMs) => {
         // THE DRIVE HOLDS THE RUN THAT LAUNCHED IT. A road is an interlude
         // BETWEEN two levels: the departing run is kept mounted (tearing it down
         // and rebuilding it around an interlude is the thing the drive's mount
@@ -1581,41 +1608,22 @@ export function GameScreen({
           setHud(null);
           setLevelId(state.level.id);
         }
-        // THE SIM HALF GOT THROUGH A WHOLE STEP. Until it has, a throw in here
-        // is a run that cannot start rather than a bad tick in a live one —
-        // and the first animation frame never simulates at all, so the drawn
-        // frame above cannot answer this for it (run-health.ts).
+        // THE SIM HALF GOT THROUGH A WHOLE STEP — which both clears the run to
+        // start and resets the failure streak, so a throw here only counts as
+        // the end of the run once it has kept the sim from finishing a step at
+        // all. The first animation frame never simulates, so the drawn frame
+        // above cannot answer this for it (run-health.ts).
         health.ok("simulate");
-      },
-      render,
-      // A frame that throws no longer takes the run down with it (see
+      }),
+      render: watched("render", render),
+      // A frame that throws does not take the run down with it (see
       // game-loop.ts): the loop keeps stepping and drawing, and the failure is
-      // booked here so `?debug`'s log buffer carries it into a bug report
-      // instead of the run simply stopping dead with nothing to go on.
+      // logged here so `?debug`'s buffer carries it into a bug report instead
+      // of the run simply stopping dead with nothing to go on. Whether the run
+      // survives it is `watched`'s question, above — this only writes it down,
+      // and falls quiet after a handful of frames.
       onError: (err, phase) => {
         error(`game loop ${phase} failed: ${describeError(err)}`);
-        // This half has never once completed: the run is dead on arrival (a
-        // deterministic engine re-throws the same way every frame), and a loop
-        // that keeps going only holds a picture that will never move — with no
-        // HUD, no pause menu and no way out. Hand the error to React instead —
-        // the throw in the render body routes it to App's ErrorBoundary and the
-        // player is told the game could not load, with a RELOAD to press.
-        if (health.fatal(phase)) {
-          setFatalRunError(
-            err ??
-              new Error(`game loop ${phase} failed before the run got going`),
-          );
-          // …and let go of the parked run behind it. A run resumed from the
-          // menu was already consumed from storage on the way in, but the
-          // autosave re-parks a live one every few seconds — so a run that
-          // dies on its first step after having written one would be handed
-          // straight back on the next CONTINUE, and the player would be stuck
-          // in the same black screen every launch. It cannot be resumed by
-          // this build; keeping it only wedges the game shut. Only ever this
-          // run's own park, though: a demo that fell over must not throw away
-          // the campaign the player left waiting behind it.
-          if (ownsParkedRun) clearSavedRun();
-        }
       },
     });
 
