@@ -321,6 +321,58 @@ describe("generated levels", () => {
       }
   });
 
+  it("stand the named cast past the doorstep, never at the arrival", () => {
+    // AN ELITE IS A BEAT — a name, dialogue, last words, and on GOODCO a keycard
+    // — and a beat that fires while the player is still walking off the landing
+    // is not one. The sharp case is the venue whose arrival is a CAR PARK: the
+    // whole first minute is finding the way in, and the deal used to be free to
+    // man a post in the room right behind the gate, so THE NIGHT MANAGER was
+    // waiting a few paces inside the door the hero had just followed somebody
+    // through.
+    //
+    // The generator's rule is counted in DOORS (see `pastTheDoorstep` —
+    // an elite never stands in the landing's own cell, nor in one that shares a
+    // door with it); what is asserted here is the thing the PLAYER gets from it,
+    // measured the only honest way: how far the autopilot's own pathfinder has
+    // to walk. One screenful at the reference viewport is ~422 world px, and the
+    // floor below is that — the opening stretch has to belong to the place
+    // rather than to somebody's entrance.
+    const STANDOFF = 420;
+    const tooClose: string[] = [];
+    for (const id of MISSIONS)
+      for (const seed of WALK_SEEDS) {
+        const def = resolveLevelDef(id, seed);
+        // The same door-dissolved grid the reachability check builds, and for
+        // the same reason: what is being measured is the map's distance, not
+        // how long the hero spends waiting for a card.
+        const run = createGame(seed, id, "medium");
+        const doorParts = new Set(run.doors.flatMap((d) => d.obstacleIds));
+        const grid = buildNavGrid({
+          ...run,
+          obstacles: run.obstacles.filter((o) => !doorParts.has(o.id)),
+        });
+        for (const spawn of def.spawns) {
+          if (!("at" in spawn) || !spawn.enemy) continue;
+          if (ENEMY_DEFS[spawn.enemy]?.role !== "elite") continue;
+          const path = findPath(grid, def.playerSpawn, spawn.at);
+          // Unreachable is the reachability check's business, not this one's —
+          // an elite behind a lift is exactly where it belongs.
+          if (!path) continue;
+          let walk = 0;
+          let prev = def.playerSpawn;
+          for (const step of path) {
+            walk += Math.hypot(step.x - prev.x, step.y - prev.y);
+            prev = step;
+          }
+          if (walk < STANDOFF)
+            tooClose.push(
+              `${id}/${seed}: ${spawn.enemy} ${Math.round(walk)}px from the landing`,
+            );
+        }
+      }
+    expect(tooClose.slice(0, 8)).toEqual([]);
+  });
+
   it("walk the sentries a real beat inside their own room", () => {
     // A patrolling elite is the difference between staff and statues, and the
     // route is DERIVED (a sweep down the long axis of whatever room the carve

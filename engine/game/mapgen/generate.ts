@@ -57,6 +57,7 @@ import {
   chamberZone,
   densityCount,
   pointIn,
+  solidBoxes,
   spread,
   WALL_INSET,
 } from "./place.ts";
@@ -1114,6 +1115,21 @@ export function generateLevel(
   // The annex is unreachable on foot, so its door distance is infinite — which
   // lands it at depth 1, the deepest the map goes. Which is exactly right: it is.
   const depth = steps.map((d) => (Number.isFinite(d) ? d / reach : 1));
+  // HOW CLOSE A NAMED MOB MAY STAND TO THE ARRIVAL. An elite is a BEAT — it has
+  // a name, dialogue, last words and a keycard — and a beat that fires while the
+  // player is still walking off the landing is not one: the venue's first minute
+  // is for reading the place, and a mission that opens with its sentry is a
+  // mission with no shallow end.
+  //
+  // Counted in DOORS rather than pixels, because "two rooms in" is what the
+  // player actually reads and a radius is what an open-plan carve defeats. Two
+  // is the floor: not the landing's own cell, and not one that shares a door
+  // with it — which on GOODCO is exactly the room behind the gate the hero has
+  // to follow somebody through. The ANNEX answers true (its distance is
+  // infinite, because nothing adjoins it), which is right: it is the boss's.
+  const ELITE_DOORSTEP = 2;
+  const pastTheDoorstep = (cell: number): boolean =>
+    (steps[cell] ?? Infinity) >= ELITE_DOORSTEP;
   const playerSpawn = pointIn(
     spawn,
     rng,
@@ -1322,7 +1338,15 @@ export function generateLevel(
       eliteStands[i] as PlacedSpawn,
     ];
   }
+  // …and the roll may not hand one the DOORSTEP. A deck's elite posts sit
+  // wherever an elite reads right inside that room, and the room itself can be
+  // the one the landing opens onto — which on GOODCO is the first room past the
+  // gate, so the deal stood THE NIGHT MANAGER a few paces inside the door the
+  // hero had just followed somebody through. A post that shallow is simply not
+  // manned; the elite it would have taken falls through to the spread below,
+  // which is held to the same floor (`pastTheDoorstep`).
   const manned = eliteStands
+    .filter((m) => pastTheDoorstep(m.cell))
     .slice(0, bp.elites.length)
     .sort((a, b) => (depth[a.cell] as number) - (depth[b.cell] as number));
   const spawns: SpawnSpec[] = [];
@@ -1332,18 +1356,44 @@ export function generateLevel(
   // One lair per cell — two named neighbours on the same patch of street reads
   // as a coincidence rather than as somebody's house.
   const lairRooms = new Set<number>();
-  // The fallback matters as much as the pool: on a small carve the thoroughfare
-  // can come out empty (endpoints, caches and vaults taking every cell), and
-  // falling back to EVERY cell put a keycard-carrying elite inside the room his
-  // own card opens. Whatever else happens, a set piece never stands in a vault.
-  const openCells = grid.chambers.filter((c) => !vaultIds.has(c.id));
+  // WHERE A NAMED MOB MAY STAND. Not the thoroughfare: that list is the ordinary
+  // rooms, and it also withholds every cache cul-de-sac — which on a floor where
+  // the carve spent most of its cells on caches and vaults left TWO rooms for a
+  // cast of five, and four of them ended up shoulder to shoulder in one office.
+  // A cache is the opposite of a reason to keep an elite out: what is worth
+  // searching for is worth standing over.
+  //
+  // What an elite must keep off is short and each entry has been paid for once:
+  // a VAULT (a keycard inside the room its own card opens is an unfinishable
+  // run), the LANDING and the objective, the BOSS'S HOME (its cell is kept quiet
+  // so the last fight is the boss's), the TRADER'S pitch (his safe zone shoves
+  // a mob straight back out of it), and the DOORSTEP.
+  const offTheCast = new Set([...offLimits, shopRoom.id]);
+  const openCells = grid.chambers.filter(
+    (c) => !vaultIds.has(c.id) && !offTheCast.has(c.id),
+  );
+  const deepCells = openCells.filter((c) => pastTheDoorstep(c.id));
   const elitePool =
-    throughfare.length > 0
-      ? throughfare
+    deepCells.length > 0
+      ? deepCells
       : openCells.length > 0
         ? openCells
-        : grid.chambers;
-  const eliteRooms = spread(elitePool, bp.elites.length);
+        : grid.chambers.filter((c) => !vaultIds.has(c.id));
+  // ONE ROOM, ONE NAMED MOB. The cast is the floor's staff, and three of them in
+  // one office is a boss rush rather than a building with people working in it —
+  // so a room is spent the moment anything is stood in it, whether by a manned
+  // post or by the spread, and every later pick takes what is left.
+  const usedRooms = new Set(manned.map((m) => m.cell));
+  const freeRooms = elitePool.filter((c) => !usedRooms.has(c.id));
+  // …and when the carve did not grow a room each — GOODCO spends three cells on
+  // its keyed rooms before the boss, the lot and the trader take theirs — the
+  // spread goes back over the WHOLE pool rather than emptying into the one cell
+  // left over. Doubling up is the honest outcome there; doubling up four deep in
+  // a cache cupboard is not.
+  const eliteRooms = spread(
+    freeRooms.length >= bp.elites.length ? freeRooms : elitePool,
+    bp.elites.length,
+  );
   // A SENTRY NEEDS SOMEWHERE TO PACE. The beat is derived from the room the
   // piece was placed in (`patrolBeat`), so a walker dropped in a broom cupboard
   // walks nothing: measured on a goodco office wing, the janitor's whole round
@@ -1351,14 +1401,13 @@ export function generateLevel(
   // got small enough for that to happen when interior districts started being
   // cut into them (`MapArea.roomSize`), so the fix belongs here rather than in
   // the beat: a patroller is re-homed to the roomiest cell still going.
-  const paced = new Set<number>();
   const roomToPace = (room: Chamber): Chamber => {
     if (Math.min(room.w, room.h) >= PATROL_ROOM) return room;
     // …and when the carve grew nothing that roomy, the ROOMIEST still beats the
     // one the spread happened to pick: a floor of small offices should put its
     // sentry in the biggest of them, not in the first.
     const roomier = elitePool
-      .filter((c) => !paced.has(c.id))
+      .filter((c) => !usedRooms.has(c.id))
       .sort((a, b) => Math.min(b.w, b.h) - Math.min(a.w, a.h))[0];
     return roomier && Math.min(roomier.w, roomier.h) > Math.min(room.w, room.h)
       ? roomier
@@ -1375,7 +1424,7 @@ export function generateLevel(
       : piece.patrol
         ? roomToPace(eliteRooms[i] as Chamber)
         : (eliteRooms[i] as Chamber);
-    if (piece.patrol && !stand) paced.add(room.id);
+    usedRooms.add(room.id);
     const at = stand
       ? vec(stand.at.x, stand.at.y)
       : pointIn(room, rng, Math.min(WALL_INSET * 1.5, room.w / 3, room.h / 3));
@@ -2039,7 +2088,17 @@ export function generateLevel(
     ...anchored,
   ];
   if (rows.length > 0) def.propLines = rows;
-  const placedItems = buildPlacedItems(base, grid, depth, offMap, rng);
+  // …on floor a body could stand on. The mission's own story piece is in this
+  // list, so a spot behind the furniture is not a cosmetic miss — it is a run
+  // nobody can finish (`tests/content/generated_maps_test.ts` asks the nav grid).
+  const placedItems = buildPlacedItems(
+    base,
+    grid,
+    depth,
+    offMap,
+    rng,
+    solidBoxes(def.buildings, def.propLines),
+  );
   if (placedItems) def.placedItems = placedItems;
   const wells = buildWells(base, grid, offMap, rng);
   if (wells) def.wells = wells;

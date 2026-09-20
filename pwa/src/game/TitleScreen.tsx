@@ -45,7 +45,7 @@ import { synth } from "./audio.ts";
 import { playMenuHaptic } from "./haptics.ts";
 import { splashSettled } from "./splash.ts";
 import { characterPurse, type Character } from "./characters.ts";
-import type { JoinIntent } from "./session-intent.ts";
+import { settleHostArm, type JoinIntent } from "./session-intent.ts";
 import type { MinigameId } from "./minigames.ts";
 import {
   bindingLabel,
@@ -286,6 +286,9 @@ export function TitleScreen({
   // `<a href>` (see `MenuEntry.href`), and only `scrollIntoView` is ever called
   // on this, which both element types have.
   const selectedRowRef = useRef<HTMLElement>(null);
+  // A PENDING HOST ARM LIVES ONLY WHILE THE PLAYER IS STILL ON THE WAY TO THE
+  // RUN IT WAS MADE FOR — `settleHostArm` owns the rule and why it matters.
+  useEffect(() => settleHostArm(screen), [screen]);
   const prevScreenRef = useRef(screen);
   useEffect(() => {
     if (prevScreenRef.current !== screen) {

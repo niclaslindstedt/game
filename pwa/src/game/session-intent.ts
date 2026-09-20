@@ -117,6 +117,27 @@ export function disarmHosting(): void {
 }
 
 /**
+ * THE TITLE MENU IS STANDING ON `screen` — drop a pending arm when that means
+ * the player backed out of the host they armed.
+ *
+ * The arm is made on the HOST page and consumed by the run that START sends
+ * them to, so the only screens allowed to keep it are the ones ON THAT PATH:
+ * the ladder and the mission list the press hands off to (the roster is an
+ * overlay above the menu and never a screen here). The MAIN menu is not one of
+ * them — it is the front door, and a player standing at it has gone back.
+ *
+ * Without this the arm outlived the detour and the next press of NEW GAME
+ * opened a socket nobody asked for. The loud half of that is a session
+ * listening; the quiet half is the one that gets reported, because a hosted run
+ * is a party run and a party takes the straight cut instead of the DRIVE
+ * (`driveIsPlayed`) — so the car minigame simply stopped happening, with
+ * nothing on screen to say why.
+ */
+export function settleHostArm(screen: string): void {
+  if (screen === "main") disarmHosting();
+}
+
+/**
  * The session this hero would host, from the stored settings.
  *
  * The NAME is derived from the hero rather than typed, which is a deliberate
