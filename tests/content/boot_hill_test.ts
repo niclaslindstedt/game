@@ -93,7 +93,15 @@ describe("BOOT HILL level def", () => {
     const hero = state.players[0]!;
     hero.pos = { ...lift.pos };
     hero.z = 0;
+    // WARPING THE HERO ONTO THE PAD PUTS HIM IN THE MIDDLE OF THE MAP, where
+    // there is a horde to see — and the level's arrival read fires on that
+    // sight, parks the run in `dialogue` and stops the lift being stepped at
+    // all. That is the venue behaving correctly and this test measuring
+    // something else, so the read is spent up front; the phase is asserted
+    // below because a staging that stops holding fails silently and green.
+    state.thoughtsSeen.push("boot_hill_arrival");
     step(state, idle, DT);
+    expect(state.phase).toBe("playing");
     expect(hero.pos).toEqual(lift.pos);
 
     state.storyItems.push("keycard_boot_hill");

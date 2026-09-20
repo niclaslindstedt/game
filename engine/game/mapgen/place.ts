@@ -874,6 +874,7 @@ export function buildPlacedItems(
   depth: number[],
   exclude: Set<number>,
   rng: Rng,
+  solid: readonly SolidBox[] = [],
 ): LevelDef["placedItems"] {
   const items = base.placedItems ?? [];
   if (items.length === 0) return undefined;
@@ -890,11 +891,85 @@ export function buildPlacedItems(
   const storyRooms = spread(pool, story.length);
   const out: NonNullable<LevelDef["placedItems"]> = [];
   story.forEach((item, i) => {
-    out.push({ ...item, pos: pointIn(storyRooms[i] as Chamber, rng) });
+    out.push({
+      ...item,
+      pos: standingSpot(storyRooms[i] as Chamber, rng, solid),
+    });
   });
   for (const item of rest) {
     const c = pool[Math.floor(rng() * pool.length)] as Chamber;
-    out.push({ ...item, pos: pointIn(c, rng) });
+    out.push({ ...item, pos: standingSpot(c, rng, solid) });
+  }
+  return out;
+}
+
+/** A fixed collision box in the ground plane — a building, or one stamp of a
+ *  colliding prop line. `hw`/`hh` are HALF-extents, as both carry them. */
+export type SolidBox = { x: number; y: number; hw: number; hh: number };
+
+/**
+ * How much clear floor a dropped item needs around it (world px). The autopilot
+ * samples the map on a 40 px nav grid and the hero is 20 px across, so a pickup
+ * closer than this to a wall of something is a pickup in a slot nothing can walk
+ * into — which on the reachability oracle is an unfinishable run when the item
+ * is the mission's story piece.
+ */
+const ITEM_CLEARANCE = 40;
+
+/**
+ * A point inside `c` that a BODY COULD STAND ON — `pointIn` held off the fixed
+ * furniture as well as off the walls.
+ *
+ * `pointIn` alone knows only the cell rectangle, so it will happily drop a story
+ * item into the thirteen-pixel gutter behind a town building. Measured on Boot
+ * Hill, that is exactly where one seed put the park brochure, and the run had no
+ * way to finish. The retries are bounded and the LAST roll is taken whatever it
+ * lands on: a cell packed wall to wall with furniture still has to yield a spot,
+ * and an item in a bad one beats an item in none.
+ */
+function standingSpot(c: Chamber, rng: Rng, solid: readonly SolidBox[]): Vec2 {
+  let at = pointIn(c, rng);
+  for (let tries = 0; tries < 8 && blockedAt(at, solid); tries++)
+    at = pointIn(c, rng);
+  return at;
+}
+
+/** Whether `at` is inside any solid box, or within `ITEM_CLEARANCE` of one. */
+function blockedAt(at: Vec2, solid: readonly SolidBox[]): boolean {
+  return solid.some(
+    (b) =>
+      Math.abs(at.x - b.x) <= b.hw + ITEM_CLEARANCE &&
+      Math.abs(at.y - b.y) <= b.hh + ITEM_CLEARANCE,
+  );
+}
+
+/**
+ * The fixed furniture a placement has to keep off: the buildings and every
+ * stamp of a colliding prop line, as half-extent boxes.
+ *
+ * The random SCATTER is deliberately not in here — `LevelDef.obstacles` carries
+ * counts rather than positions, and the run rolls the spots itself — so this is
+ * everything the generator knows the exact place of.
+ */
+export function solidBoxes(
+  buildings: LevelDef["buildings"],
+  rows: LevelDef["propLines"],
+): SolidBox[] {
+  const out: SolidBox[] = [];
+  for (const b of buildings ?? [])
+    out.push({ x: b.pos.x, y: b.pos.y, hw: b.w / 2, hh: b.h / 2 });
+  for (const line of rows ?? []) {
+    if (!line.collide) continue;
+    const hw = line.half?.x ?? line.radius ?? 8;
+    const hh = line.half?.y ?? line.radius ?? 8;
+    const dx = line.to.x - line.from.x;
+    const dy = line.to.y - line.from.y;
+    const span = Math.hypot(dx, dy);
+    const steps = Math.max(0, Math.floor(span / Math.max(1, line.spacing)));
+    for (let i = 0; i <= steps; i++) {
+      const t = steps === 0 ? 0 : i / steps;
+      out.push({ x: line.from.x + dx * t, y: line.from.y + dy * t, hw, hh });
+    }
   }
   return out;
 }
