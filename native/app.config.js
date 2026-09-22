@@ -20,7 +20,33 @@ const EAS_PROJECT_ID = "180cff05-a398-48e3-ae63-a9b0bd408321";
 // the permanent identifier is the company's rather than the author's. Kept
 // identical on both stores so the app is one product across platforms — and
 // UNCHANGEABLE once an app record ships under it.
-const BUNDLE_ID = "se.agilator.adastrail";
+// A store listing's identifier is a fact about a deployment, not about the
+// code, so it arrives as a build variable and is not committed: APP_BUNDLE_ID,
+// a repository secret and an EAS environment variable, named identically in
+// every app in the fleet so a secret is pasted rather than translated. Unset,
+// a checkout builds under the development id below and runs; a `production`
+// profile without it throws rather than shipping a binary under that id.
+// UNCHANGEABLE once an app record ships under it.
+const DEV_BUNDLE_ID = "dev.local.adastrail";
+const BUNDLE_ID = process.env.APP_BUNDLE_ID?.trim() || DEV_BUNDLE_ID;
+
+// The listing name. The games keep one name in both places — a prefix earns
+// nothing on a title that is already distinctive — so this falls back to the
+// project's own name rather than to something duller, and still reads the same
+// variable as the rest of the fleet.
+const DISPLAY_NAME = process.env.APP_DISPLAY_NAME?.trim() || null;
+
+if (process.env.EAS_BUILD_PROFILE === "production") {
+  for (const key of ["APP_BUNDLE_ID", "EAS_PROJECT_ID"]) {
+    if (!process.env[key]?.trim()) {
+      throw new Error(
+        `${key} is not set. A production build needs it — set it as an EAS ` +
+          `environment variable on the EAS project (and as a repository ` +
+          `secret for the build workflow). See native/README.md.`,
+      );
+    }
+  }
+}
 
 const BRAND_BG = "#0b0d10"; // game.config theme_color / color-scheme: dark
 
@@ -42,7 +68,7 @@ const CLOUD_ENTITLEMENTS = {
 
 module.exports = () => ({
   expo: {
-    name: identity.shortName,
+    name: DISPLAY_NAME ?? identity.shortName,
     slug: "adas-trail",
     version,
     // Follow the device: the web game is fully responsive and ships a

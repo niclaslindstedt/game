@@ -1,7 +1,8 @@
-# Which app fastlane is talking about. The bundle id is the one source of truth
-# in app.config.js — kept in step by `fastlane metadata`'s preflight, which
-# fails if the two drift.
-app_identifier("se.agilator.adastrail")
+# Which app fastlane is talking about. The bundle id is a build variable rather
+# than a literal — the listing's identifier is a fact about a deployment, not
+# about the code — and app.config.js reads the same one, with the same
+# development fallback. `fastlane metadata`'s preflight fails if the two drift.
+app_identifier(ENV["APP_BUNDLE_ID"] || "dev.local.adastrail")
 
 # The Apple Account email comes from the environment because it is personal
 # data. The team id is read the same way for symmetry rather than for secrecy —

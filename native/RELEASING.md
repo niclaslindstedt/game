@@ -13,8 +13,10 @@ repo root before any build so that bundle exists.
 
 Store identities are wired in [`app.config.js`](app.config.js):
 
-- iOS `ios.bundleIdentifier` — `se.agilator.adastrail`
-- Android `android.package` — `se.agilator.adastrail`
+- iOS `ios.bundleIdentifier` and Android `android.package` — both from
+  `APP_BUNDLE_ID`, a repository secret and an EAS environment variable. Unset,
+  a build runs under `dev.local.adastrail`; a `production` profile without it
+  fails rather than shipping under the development id.
 
 > **Licence note.** The repo uses PolyForm Noncommercial 1.0.0 plus the Ada's
 > Trail Feature Terms, which reserve player use of mods and multiplayer for an
