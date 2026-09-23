@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! ACHIEVEMENTS' SHELL half — the peer of `electron/src/achievements.ts`, and
-//! deliberately identical in shape to it. The protocol is documented on the web
+//! ACHIEVEMENTS' SHELL half — a dumb forwarder between the page's bridge and
+//! the platform provider. The protocol is documented on the web
 //! side (`pwa/src/app/achievements-bridge.ts`); keep the two in step.
 //!
 //! Deliberately dumb, exactly like the cloud-save bridge: it forwards a list of

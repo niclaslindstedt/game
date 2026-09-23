@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! THE SESSION SIDECAR, as a process — the effects half of
-//! [`adastrail_shell::session_host`], and the peer of what
-//! `electron/src/session-host.ts` gets from `utilityProcess.fork`.
+//! [`adastrail_shell::session_host`].
 //!
 //! One process per SESSION. It is spawned on the Node runtime
 //! ([`adastrail_shell::runtime`]) with `--shell`, which is the entry
-//! `server/main.ts` calls "a shell spawned us as a plain child": the control
+//! `server/main.ts` calls "the desktop shell spawned us as a child": the control
 //! channel is this process's own stdio and the snapshot channel is a loopback
 //! socket the PAGE opens straight to it.
 //!
 //! Three things are worth knowing before changing anything here:
 //!
-//!  * **STDIN'S END IS THE ORPHAN REAPER.** Electron kills its utility process
-//!    in `before-quit`; a spawned child has no such handler to inherit. Dropping
+//!  * **STDIN'S END IS THE ORPHAN REAPER.** A spawned child has no quit handler
+//!    to inherit. Dropping
 //!    this struct closes the pipe, the child sees EOF, and it stops — so a
 //!    session cannot outlive the shell even if the shell is killed rather than
 //!    quit.
@@ -181,7 +180,7 @@ impl Sidecar {
 
     /// Ask for an orderly shutdown, then kill if it does not come.
     ///
-    /// Short grace, exactly as on the Electron side: the server's own stop is
+    /// Short grace: the server's own stop is
     /// synchronous, so anything past this is a process that is no longer
     /// answering — and a host that will not quit is worse than one that is
     /// killed.

@@ -114,7 +114,7 @@ function inert(screen: "mods" | "modinfo" | "modorder", id: string): MenuEntry {
  * A row that opens one of the game's mods folders.
  *
  * Null when the platform has no such folder (macOS has no install-folder
- * option — see `electron/src/mods.ts`) or before the first list has answered:
+ * option — see `tauri/shell/src/mods.rs`) or before the first list has answered:
  * a row offering to open a folder we cannot name is a row that does nothing.
  */
 function folderRow(

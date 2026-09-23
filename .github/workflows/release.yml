@@ -132,10 +132,9 @@ jobs:
         run: node scripts/release/collate-changelog.mjs "${{ steps.bump.outputs.version }}"
 
       # The notes are the changelog section, plus a standing footer about the
-      # downloads. The macOS half of that footer is not decoration: the
-      # archives are signed but not notarized (see electron/RELEASING.md), so
-      # Gatekeeper asks about them once, and a player with no answer to that
-      # prompt has no game.
+      # downloads. The macOS half of that footer is not decoration: the app is
+      # signed but not notarized (see tauri/RELEASING.md), so Gatekeeper asks
+      # about it once, and a player with no answer to that prompt has no game.
       - name: Extract release-notes body
         run: |
           node scripts/release/extract-section.mjs "${{ steps.bump.outputs.version }}" > .release-notes.md
@@ -145,8 +144,9 @@ jobs:
 
           ### Downloads
 
-          Pick the archive for your machine — `mac-arm64` for Apple Silicon
-          (M1 and later), `mac-x64` for an Intel Mac.
+          Pick the one for your machine — the `.exe` installer on Windows,
+          the `.dmg` on macOS (Apple Silicon), the `.AppImage` or the `.deb`
+          on Linux.
 
           **macOS:** the app is signed but not notarized, so the first launch
           is refused. Open **System Settings → Privacy & Security**, scroll to
@@ -204,16 +204,13 @@ jobs:
             gh release create "$TAG" --draft --title "$TAG" --notes-file .release-notes.md
           fi
 
-  # The downloadable desktop builds, attached to the release the job above
-  # created. One runner per platform, because each one packages the Electron
-  # binary for its own OS and the archive has to be built where the app was.
-  # macOS builds BOTH slices — Intel and Apple Silicon — as separate artifacts
-  # rather than one universal binary, so neither download carries a copy of
-  # Chromium the machine will never run.
+  # THE DOWNLOADS, attached to the release the job above created. One runner
+  # per platform, because each packages the desktop app (tauri/) for its own OS
+  # and an installer has to be built where the app was: an `.exe` on Windows, a
+  # `.dmg` on macOS, a `.deb` and an `.AppImage` on Linux.
   #
-  # Four archives come out: two macOS zips, a Windows zip, a Linux tar.gz.
-  # Archives rather than installers — see electron-builder.config.cjs for why
-  # an unsigned installer is a promise this project cannot keep.
+  # It checks out the TAG rather than main, so what ships is exactly what was
+  # released, and it reads the capability inputs the maintainer dispatched with.
   desktop:
     needs: release
     name: desktop (${{ matrix.target }})
@@ -223,113 +220,6 @@ jobs:
         include:
           - os: windows-latest
             target: windows
-            script: release:win
-          - os: macos-latest
-            target: macos
-            script: release:mac
-          - os: ubuntu-latest
-            target: linux
-            script: release:linux
-    runs-on: ${{ matrix.os }}
-    # contents: write — the artifacts are uploaded onto the GitHub Release.
-    permissions:
-      contents: write
-    env:
-      # The release commit is on the tag, so the build is made from exactly
-      # what was tagged rather than from whatever main looks like by now.
-      TAG: ${{ needs.release.outputs.tag }}
-      GIS_PACKAGE_PROFILE: standalone
-      GIS_STAMP_CAPABILITIES: "1"
-      GIS_ENABLE_MULTIPLAYER: ${{ inputs.enable_multiplayer && '1' || '0' }}
-      GIS_ENABLE_MODS: ${{ inputs.enable_mods && '1' || '0' }}
-      GIS_ENABLE_UPNP: ${{ inputs.enable_upnp && '1' || '0' }}
-      # VOICE is off unless asked for: a GitHub download is not the Steam
-      # edition, and a microphone is not something a plain download should open
-      # because somebody clicked release.
-      GIS_ENABLE_VOICE: ${{ inputs.enable_voice && '1' || '0' }}
-      GIS_ENABLE_LICENSED: ${{ inputs.enable_licensed && '1' || '0' }}
-      # macOS SIGNING — optional here, but the build is never unsigned.
-      #
-      # Apple Silicon refuses to execute unsigned arm64 code, and reports that
-      # to the player as "the app is damaged", so an unsigned arm64 download is
-      # not a download at all. electron-builder therefore signs the app AD HOC
-      # when none of these secrets are set (see electron-builder.config.cjs) —
-      # the app runs natively, the player answers one Gatekeeper prompt.
-      #
-      # Set the secrets and the same job signs and notarizes for real, and the
-      # prompt goes away too. Every one of them is empty until somebody adds
-      # it, and empty means "not provided" to electron-builder, so a repo with
-      # no Apple account behaves exactly as it did before.
-      GIS_MAC_IDENTITY: ${{ secrets.MAC_SIGN_IDENTITY }}
-      CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
-      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.release.outputs.tag }}
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      # The website build lives in the root workspace; the shell copies its
-      # output and packages around it.
-      - run: npm ci
-      - run: npm ci
-        working-directory: electron
-
-      - name: Package
-        shell: bash
-        run: npm --prefix electron run ${{ matrix.script }}
-
-      # Whatever this platform's packager produced, by extension — a job that
-      # listed filenames would silently upload nothing the day a target
-      # changed its suffix.
-      - name: Attach to the release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          shopt -s nullglob
-          assets=(electron/release/*.zip electron/release/*.tar.gz)
-          if [ ${#assets[@]} -eq 0 ]; then
-            echo "::error::${{ matrix.target }} produced no distributable files"
-            ls -R electron/release || true
-            exit 1
-          fi
-          printf 'uploading %s\n' "${assets[@]}"
-          gh release upload "$TAG" "${assets[@]}" --clobber
-
-  # THE SAME PRODUCT IN THE OTHER SHELL, onto the same release page.
-  #
-  # `tauri/` is a second desktop wrapper around the identical site
-  # (docs/desktop-shells.md), and it is NOT the shipping build. It attaches its
-  # downloads here anyway, and that is the whole point: **the numbers the choice
-  # between the two turns on — install size, cold start — are then measured by
-  # anybody who wants to, on their own machine, from artifacts nobody staged.**
-  #
-  # **THE `-tauri` SUFFIX IS THE MECHANISM, NOT A DECORATION.** Both shells
-  # package the same product at the same version for the same platforms, so
-  # without it these two jobs race to upload files with colliding names and the
-  # release ends up with whichever finished last. `tauri/scripts/package.mjs`
-  # names its standalone output `adastrail-<version>-tauri-<os>-<arch>.<ext>`
-  # against Electron's `adastrail-<version>-<os>-<arch>.<ext>`.
-  #
-  # It reads the IDENTICAL capability inputs and the IDENTICAL macOS signing
-  # secrets, because it is the same product being packaged — a build stamped
-  # differently from its Electron twin would make the comparison meaningless.
-  desktop-tauri:
-    needs: release
-    name: desktop-tauri (${{ matrix.target }})
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            target: windows
           - os: macos-latest
             target: macos
           - os: ubuntu-latest
@@ -346,14 +236,20 @@ jobs:
       GIS_ENABLE_UPNP: ${{ inputs.enable_upnp && '1' || '0' }}
       GIS_ENABLE_VOICE: ${{ inputs.enable_voice && '1' || '0' }}
       GIS_ENABLE_LICENSED: ${{ inputs.enable_licensed && '1' || '0' }}
+      # THE DEPLOYMENT'S IDENTITY — the same secrets, under the same names, the
+      # phone build reads. The identifier is also where the installed app keeps
+      # its progress, so `--require-identity` below refuses to package a
+      # release under the development one rather than ship it.
+      APP_BUNDLE_ID: ${{ secrets.APP_BUNDLE_ID }}
+      APP_DISPLAY_NAME: ${{ secrets.APP_DISPLAY_NAME }}
       # A download is not the Steam edition, so it is packaged against the real
       # app id only if one is configured — and `--allow-placeholder` is what
       # lets a repo with no Steam app still produce downloads.
       GIS_STEAM_APP_ID: ${{ vars.STEAM_APP_ID }}
-      # NEVER UNSIGNED on macOS, for the reason the Electron job gives at
-      # length: Apple Silicon refuses to execute unsigned arm64 code and reports
-      # it to the player as "the app is damaged". An absent secret means the
-      # ad-hoc signature `scripts/package.mjs` falls back to.
+      # NEVER UNSIGNED on macOS: Apple Silicon refuses to execute unsigned
+      # arm64 code and reports it to the player as "the app is damaged". An
+      # absent secret means the ad-hoc signature `scripts/package.mjs` falls
+      # back to — the app runs, and the player answers one Gatekeeper prompt.
       APPLE_SIGNING_IDENTITY: ${{ secrets.MAC_SIGN_IDENTITY }}
     steps:
       - uses: actions/checkout@v7
@@ -381,13 +277,11 @@ jobs:
 
       - name: Package
         shell: bash
-        run: npm run tauri:package:dist -- --allow-placeholder
+        run: npm run tauri:package:dist -- --allow-placeholder --require-identity
 
       # Whatever this platform's bundler produced, by extension — a job that
       # listed filenames would silently upload nothing the day a target changed
-      # its suffix. The DMG is skipped where a zip of the same .app exists for
-      # the same reason the Electron job ships archives: an unsigned installer
-      # is a promise this project cannot keep.
+      # its suffix.
       - name: Attach to the release
         shell: bash
         env:
@@ -409,12 +303,6 @@ jobs:
   # a draft — a release that is missing a download is a bug report from
   # every player on that platform, and the fix (re-dispatch, or upload the
   # archive by hand) is much cheaper while nobody has seen it yet.
-  #
-  # **`desktop-tauri` is deliberately NOT in that list.** It is not the
-  # shipping build, so a Rust toolchain failing on one runner must not hold
-  # back a release whose actual downloads are ready — the Tauri artifacts are
-  # a comparison aid until that changes (docs/desktop-shells.md), and they can
-  # be uploaded to a published release afterwards exactly as they are here.
   publish:
     needs: [release, desktop]
     runs-on: ubuntu-latest

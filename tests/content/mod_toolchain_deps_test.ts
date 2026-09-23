@@ -2,18 +2,17 @@
 // THE MOD TOOLCHAIN'S DEPENDENCIES, declared once and checked against reality.
 //
 // This suite exists because of a specific failure, and it is one that WILL
-// recur without it. The toolchain runs in three environments:
+// recur without it. The toolchain runs in two environments:
 //
 //   the repo        a full `npm ci` — everything resolves, nothing is noticed
-//   electron's CI   `npm ci` in electron/ ONLY — the repo root is not installed
-//   a player's app  resources/modtools/, outside the asar, no root at all
+//   a player's app  the package's modtools/, beside a Node runtime, no root
 //
-// The first hides what the other two need. `yaml` was imported by
+// The first hides what the second needs. `yaml` was imported by
 // `scripts/*-data/load-yaml.mjs` for as long as those files have existed while
 // being declared NOWHERE — it resolved only because `pwa`'s copy of vite
 // depends on it and npm hoisted it to the root. Everything passed locally and
-// forever; the desktop check job, which installs only `electron/`, could not
-// find it the moment the shell started compiling mods.
+// forever; the desktop shell's own check job, which installed only the
+// shell's tree, could not find it the moment the shell started compiling mods.
 //
 // Hand-listing the package in the packager AND in the workflow (as the first
 // fix did) is two lists that have to agree, which is the same bug wearing a
@@ -141,9 +140,9 @@ describe("the mod toolchain's dependencies", () => {
 
   it("has every module it imports carried into the packaged app", () => {
     // The same gap as the package one, for our OWN files. The compiler ships
-    // OUTSIDE the asar in a tree that MIRRORS the repo, and every module in it
-    // finds its neighbours by relative path — so a `scripts/` directory the
-    // toolchain imports and `extraResources` does not copy is a mod that
+    // in a tree that MIRRORS the repo, and every module in it finds its
+    // neighbours by relative path — so a `scripts/` directory the toolchain
+    // imports and the packager does not copy is a mod that
     // compiles in the repo and fails on a player's machine with a resolve error.
     // (`scripts/powerup-data` was exactly that for a release.)
     // The list lives in `scripts/modtools-manifest.cjs` and BOTH desktop
@@ -171,32 +170,18 @@ describe("the mod toolchain's dependencies", () => {
     expect(missing).toEqual([]);
   });
 
-  it("is carried into the packaged app by electron-builder", () => {
-    // The third environment. A declared package that the packager does not
+  it("is carried into the packaged app by the desktop packager", () => {
+    // The second environment. A declared package that the packager does not
     // copy is a mod that compiles in CI and fails on a player's machine —
-    // which is the same class of gap, one layer further out.
-    const config = readFileSync(
-      path.join(repoRoot, "electron", "electron-builder.config.cjs"),
-      "utf8",
+    // which is the same class of gap, one layer further out. The packager
+    // builds its entries FROM the shared manifest and from `mod/package.json`
+    // rather than repeating the names, so what is asserted is that it still
+    // reads both.
+    const packager = path.join("tauri", "scripts", "package.mjs");
+    const source = readFileSync(path.join(repoRoot, packager), "utf8");
+    expect(source, packager).toMatch(/modtools-manifest\.cjs/);
+    expect(source, packager).toMatch(
+      /mod\/package\.json|"mod", "package.json"/,
     );
-    // The config builds its entries FROM this manifest rather than repeating
-    // the names, so what is asserted is that it still reads it.
-    expect(config).toMatch(/mod\/package\.json/);
-  });
-
-  it("is carried into the packaged app by BOTH desktop packagers", () => {
-    // `tauri/` packages the same compiler (docs/desktop-shells.md), so the
-    // same three gaps exist there — and the way they stay closed is that both
-    // shells read one list rather than keeping one each.
-    for (const packager of [
-      path.join("electron", "electron-builder.config.cjs"),
-      path.join("tauri", "scripts", "package.mjs"),
-    ]) {
-      const source = readFileSync(path.join(repoRoot, packager), "utf8");
-      expect(source, packager).toMatch(/modtools-manifest\.cjs/);
-      expect(source, packager).toMatch(
-        /mod\/package\.json|"mod", "package.json"/,
-      );
-    }
   });
 });

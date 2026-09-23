@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! FINDING THE THINGS THAT ARE NOT RUST — the peer of
-//! `electron/src/resources.ts`, and the mirror image of its problem.
+//! FINDING THE THINGS THAT ARE NOT RUST.
 //!
-//! Two of this shell's features are Node programs that the Electron shell
-//! merely IMPORTS, because its main process is already Node:
+//! Two of this shell's features are Node programs:
 //!
-//!   THE SESSION SERVER  the engine compiled for Node (`scripts/build-server.mjs`).
-//!                       Electron forks it with `utilityProcess`; here it is a
-//!                       child process on a Node runtime.
+//!   THE SESSION SERVER  the engine compiled for Node (`scripts/build-server.mjs`),
+//!                       run as a child process on a Node runtime.
 //!   THE MOD COMPILER    `mod/tools/build.mjs`, shared verbatim with the CLI a
-//!                       modder runs. Electron `import()`s it; here it is a
-//!                       child process too, and what crosses is JSON.
+//!                       modder runs — a child process too, and what crosses is
+//!                       JSON.
 //!
 //! Neither may be rewritten in Rust, and the reason is the same for both: there
 //! is ONE compiler and ONE server, so that "it works in my mod" and "it works in
@@ -21,13 +18,13 @@
 //! **SO THE SHELL NEEDS A NODE RUNTIME, AND A PLAYER HAS NO REASON TO HAVE
 //! ONE.** A packaged build therefore carries one beside itself. That is the one
 //! place this shell is fatter than the promise Tauri makes — a Node binary is
-//! ~50 MB — and it is still a fraction of Electron's Chromium, which is a whole
-//! browser carried for the same two features plus the window. A build with
+//! ~50 MB — and it is still a fraction of a whole browser engine carried for
+//! the same two features plus the window. A build with
 //! neither multiplayer nor mods stamped does not need it at all, and
 //! `scripts/package.mjs` leaves it out of one.
 //!
-//! There are exactly two layouts to resolve between, as there are on the
-//! Electron side, and they cannot be told apart by looking for a file — a
+//! There are exactly two layouts to resolve between, and they cannot be told
+//! apart by looking for a file — a
 //! developer running a packaged build has both. The caller says which.
 
 use std::path::{Path, PathBuf};
@@ -69,13 +66,9 @@ impl Resources {
 
     /// The session server's entry point — what the sidecar runs.
     ///
-    /// **In a checkout it is under `electron/`, and that is history rather than
-    /// ownership.** `scripts/build-server.mjs` is the ENGINE's Node ship target
-    /// and predates this tree; both shells consume the same output, and
-    /// building it twice would be two copies of the simulation that could
-    /// disagree. The directory moves beside `server/` the day only one desktop
-    /// wrapper is left, which is the moment it stops being confusing rather than
-    /// merely inaccurate.
+    /// **In a checkout it is `server-dist/` at the repo root, beside `server/`.**
+    /// `scripts/build-server.mjs` is the ENGINE's Node ship target rather than
+    /// this shell's: the standalone dedicated server runs the same output.
     ///
     /// The compiled tree is self-contained ESM with its own `package.json`, so
     /// nothing here has to resolve anything inside it — the one path is the
@@ -84,11 +77,7 @@ impl Resources {
         if self.packaged {
             self.root.join("server").join("server").join("main.js")
         } else {
-            self.root
-                .join("electron")
-                .join("server-dist")
-                .join("server")
-                .join("main.js")
+            self.root.join("server-dist").join("server").join("main.js")
         }
     }
 

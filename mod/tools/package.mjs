@@ -19,7 +19,7 @@
 //
 // The archive holds ONE top-level folder named after the mod's id, which is
 // what the game's own reader looks for when it opens a zip
-// (`electron/src/mod-archive.ts` → `modRoot`), and what makes unpacking it by
+// (`tauri/shell/src/mod_archive.rs` → `modRoot`), and what makes unpacking it by
 // hand land a tidy folder rather than forty loose files.
 
 import { readFileSync, writeFileSync } from "node:fs";

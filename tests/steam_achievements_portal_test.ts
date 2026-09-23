@@ -42,7 +42,7 @@ import { parseArgs } from "../scripts/steam-achievements-portal.mjs";
 
 const MANIFEST = JSON.parse(
   readFileSync(
-    new URL("../electron/store/steam-achievements.json", import.meta.url),
+    new URL("../tauri/store/steam-achievements.json", import.meta.url),
     "utf8",
   ),
 ) as SteamAchievementManifest;
@@ -119,10 +119,10 @@ describe("the worksheet", () => {
   it("names both icons where the art generator writes them", () => {
     const moon = rows()[0]!;
     expect(moon.icon).toBe(
-      `electron/store/achievements/clear_moon-${ART_VARIANTS.icon}.png`,
+      `tauri/store/achievements/clear_moon-${ART_VARIANTS.icon}.png`,
     );
     expect(moon.iconGray).toBe(
-      `electron/store/achievements/clear_moon-${ART_VARIANTS.iconGray}.png`,
+      `tauri/store/achievements/clear_moon-${ART_VARIANTS.iconGray}.png`,
     );
     expect(moon.artMissing).toEqual([]);
   });
@@ -132,7 +132,7 @@ describe("the worksheet", () => {
       hasArt: (file) => file.endsWith("-achieved.png"),
     })[0]!;
     expect(moon.artMissing).toEqual([
-      "electron/store/achievements/clear_moon-locked.png",
+      "tauri/store/achievements/clear_moon-locked.png",
     ]);
   });
 

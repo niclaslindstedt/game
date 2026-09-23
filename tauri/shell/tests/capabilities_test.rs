@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! What a build may do, and what a command line may add to it — the peer of
-//! `electron/tests/capabilities_test.ts`.
+//! What a build may do, and what a command line may add to it.
 //!
 //! The rule under every case here is the same one: a build carries only what
 //! something DELIBERATELY gave it. The narrow answer is what happens by

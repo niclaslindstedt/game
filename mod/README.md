@@ -183,7 +183,7 @@ anything you were sent:
 | ------- | ----------------------------------------------- |
 | Windows | `%APPDATA%\adastrail\mods\`                     |
 | macOS   | `~/Library/Application Support/adastrail/mods/` |
-| Linux   | `~/.config/adastrail/mods/`                     |
+| Linux   | `~/.local/share/adastrail/mods/`                |
 
 A mod here is a **local** mod: the only kind the game offers a PUBLISH row for,
 because what is published is what somebody authored — a mod you were sent is

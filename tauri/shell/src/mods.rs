@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! MODS' SHELL half — the peer of `electron/src/mods.ts`: the thing that joins
+//! MODS' SHELL half — the thing that joins
 //! the Workshop ([`crate::workshop`]) to the compiler (`mod/tools/build.mjs`)
 //! and answers the page's bridge (`pwa/src/app/mods-bridge.ts`). Keep the
 //! protocol here in step with the one documented there.
@@ -11,12 +11,11 @@
 //! that stays true precisely because this seam does not hand it anything but
 //! data.
 //!
-//! **THE ONE DIFFERENCE FROM ELECTRON IS WHOSE PROCESS COMPILES.** Electron's
-//! main process is Node, so it `import()`s the compiler. This shell is Rust, so
-//! it SPAWNS it ([`crate::runtime`]) and reads a JSON document back — which is
-//! the mirror image of Electron's `resources.ts` problem and, incidentally, a
-//! stronger boundary: a mod that makes the compiler throw takes down a child
-//! process rather than a thread of the shell's.
+//! **THE COMPILER RUNS IN A CHILD PROCESS.** This shell is Rust and the
+//! compiler is Node, so it SPAWNS it ([`crate::runtime`]) and reads a JSON
+//! document back — which is also a strong boundary: a mod that makes the
+//! compiler throw takes down a child process rather than a thread of the
+//! shell's.
 //!
 //! THREE SOURCES, one list:
 //!

@@ -49,28 +49,28 @@ fn a_reveal_names_one_of_two_folders_and_never_a_path() {
 
 #[test]
 fn a_publish_may_only_name_a_folder_inside_the_authoring_directory() {
-    let root = Path::new("/home/nic/.local/share/adastrail-tauri/mods");
+    let root = Path::new("/home/nic/.local/share/adastrail/mods");
     assert!(is_local_mod(
-        Path::new("/home/nic/.local/share/adastrail-tauri/mods/greenhouse"),
+        Path::new("/home/nic/.local/share/adastrail/mods/greenhouse"),
         root
     ));
 
     // The directory itself is not a mod, and neither is anything beside it.
     assert!(!is_local_mod(root, root));
     assert!(!is_local_mod(
-        Path::new("/home/nic/.local/share/adastrail-tauri/mods-elsewhere/x"),
+        Path::new("/home/nic/.local/share/adastrail/mods-elsewhere/x"),
         root
     ));
     assert!(!is_local_mod(Path::new("/etc"), root));
     // …and `..` cannot climb out of it, which is the whole reason the check is
     // lexical rather than a string prefix.
     assert!(!is_local_mod(
-        Path::new("/home/nic/.local/share/adastrail-tauri/mods/../../secrets"),
+        Path::new("/home/nic/.local/share/adastrail/mods/../../secrets"),
         root
     ));
     // A path that leans on `.` and `..` and still lands inside is fine.
     assert!(is_local_mod(
-        Path::new("/home/nic/.local/share/adastrail-tauri/mods/./a/../greenhouse"),
+        Path::new("/home/nic/.local/share/adastrail/mods/./a/../greenhouse"),
         root
     ));
 }
@@ -96,8 +96,8 @@ fn macos_has_no_folder_beside_the_app_and_that_is_the_platform_rather_than_an_om
 #[test]
 fn the_authoring_folder_hangs_off_the_apps_own_user_data() {
     assert_eq!(
-        local_mods_dir(Path::new("/home/nic/.local/share/adastrail-tauri")),
-        PathBuf::from("/home/nic/.local/share/adastrail-tauri/mods")
+        local_mods_dir(Path::new("/home/nic/.local/share/adastrail")),
+        PathBuf::from("/home/nic/.local/share/adastrail/mods")
     );
 }
 

@@ -2,8 +2,6 @@
 //! The window state is read from a file the player can open in a text editor,
 //! so every case here is "what if it says something we did not write" — plus
 //! the one that is not about the file at all: the monitor that got unplugged.
-//!
-//! The peer of `electron/tests/window-state_test.ts`.
 
 use std::fs;
 use std::path::PathBuf;

@@ -53,7 +53,7 @@ export function TitleFooter({ font }: { font: PixelFont }) {
           // parked in this document survives the trip, and the two native
           // shells hand an off-origin navigation to the player's own browser
           // rather than steering the game window onto a page it has no chrome
-          // to leave (electron/src/main.ts, native/App.tsx).
+          // to leave (tauri/src-tauri/src/window.rs, native/App.tsx).
           target="_blank"
           rel="noopener noreferrer"
           // The canvas is a picture as far as a screen reader is concerned, so

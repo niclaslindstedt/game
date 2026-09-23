@@ -113,7 +113,7 @@ make store-preflight
 
 Run it after every step in this file; it is the checklist. Its last section is
 Steam's — one command answers "are we ready to ship" for both storefronts; see
-[`electron/RELEASING.md`](../electron/RELEASING.md) for that half.
+[`tauri/STEAM.md`](../tauri/STEAM.md) for that half.
 
 Each finding that waits on a store record says so (`needs the App Store Connect
 record`, `needs the Steamworks app`), and the summary counts them separately —

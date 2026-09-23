@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! NET's SHELL half — the peer of `electron/src/net.ts`, and the fifth arm of
-//! the shape cloud save, achievements, leaderboards and screenshots already
-//! use. The protocol is documented on the web side (`pwa/src/app/net-bridge.ts`)
-//! and is IDENTICAL on both desktop shells; keep the three in step.
+//! NET's SHELL half, and the fifth arm of the shape cloud save, achievements,
+//! leaderboards and screenshots already use. The protocol is documented on the
+//! web side (`pwa/src/app/net-bridge.ts`); keep the two in step.
 //!
-//! It is the bridge whose traffic mostly does not go through it, and the split
-//! is the same one Electron makes:
+//! It is the bridge whose traffic mostly does not go through it, split by what
+//! it carries:
 //!
 //!   CONTROL   host / listen / stop / status / browse / join / connect /
 //!             firewall. JSON, a handful of round trips per session, down the
@@ -15,7 +14,7 @@
 //!             straight to the session process. Nothing here ever sees a game
 //!             byte. See [`crate::snapshot`] and `server/shell-host.ts`.
 //!
-//! **ONE EXCEPTION, AND IT IS FORCED, exactly as on Electron.** Packets from
+//! **ONE EXCEPTION, AND IT IS FORCED.** Packets from
 //! STEAM peers do pass through the shell, because the Steam handshake is a
 //! single global one this process owns and the session runs in another. They
 //! are relayed as small control messages to `server/net/relay.ts`, which
@@ -201,8 +200,8 @@ pub fn plain_control(kind: &str) -> Value {
 
 /// One packet off the Steam P2P queue, on its way to `server/net/relay.ts`.
 ///
-/// The bytes travel as a JSON array rather than base64 because that is exactly
-/// what the Electron peer sends and the server's `toBytes` already accepts —
+/// The bytes travel as a JSON array rather than base64 because that is what
+/// the server's `toBytes` already accepts —
 /// a second encoding on a control-plane channel would be a second thing to keep
 /// in step for no measurable gain.
 pub fn peer_control(from: &str, data: &[u8]) -> Value {

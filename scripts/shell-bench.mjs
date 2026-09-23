@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE NUMBERS A DESKTOP WRAPPER IS JUDGED ON, measured rather than assumed.
+// THE NUMBERS THE DESKTOP BUILD IS JUDGED ON, measured rather than assumed.
 //
 //   node scripts/shell-bench.mjs --size            weigh the packaged builds
 //   node scripts/shell-bench.mjs --startup         read the launches on this machine
@@ -9,20 +9,18 @@
 //
 // Two numbers, and they are measured completely differently:
 //
-//   INSTALL SIZE  weighed from the outside, off whatever each packager left in
+//   INSTALL SIZE  weighed from the outside, off whatever the packager left in
 //                 its release directory. Nothing has to run.
 //   COLD START    cannot be measured from the outside at all — a stopwatch on
-//                 the process gives you the moment one build's window appeared
-//                 and the moment another build's splash did, and those are not
-//                 the same event. So each shell stamps five marks itself
-//                 (electron/src/metrics.ts, tauri/shell/src/metrics.rs) into a
-//                 `startup.jsonl` in its own user-data directory, and this reads
-//                 them back.
+//                 the process gives you the moment a window appeared, which is
+//                 not the moment the game did. So the shell stamps five marks
+//                 itself (tauri/shell/src/metrics.rs) into a `startup.jsonl` in
+//                 its own user-data directory, and this reads them back.
 //
 // WHICH MEANS THIS SCRIPT DOES NOT LAUNCH ANYTHING. Starting a desktop game
 // from a harness measures the harness: a cold start is cold because the OS's
 // file cache is cold, and a build launched five times in a row by a script is
-// warm from the second one on. The honest procedure is to start each build the
+// warm from the second one on. The honest procedure is to start the build the
 // way a player does, a few times, over a few sittings — and then run this.
 //
 // A MEDIAN, never a mean: the slow launch in any set is the one that lost the
@@ -44,19 +42,16 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_DIR = join(ROOT, "measurements");
 
-/** Where each build leaves a package, per its own packager. */
+/** Where the packager leaves a package. Keyed by shell, because that is how
+ * the report is grouped. */
 const RELEASE_DIRS = {
-  electron: [
-    ["depot (Windows)", join(ROOT, "electron", "release", "win-unpacked")],
-    ["depot (macOS)", join(ROOT, "electron", "release", "mac")],
-    ["depot (Linux)", join(ROOT, "electron", "release", "linux-unpacked")],
-  ],
   tauri: [["depot", join(ROOT, "tauri", "release", "depot")]],
 };
 
-/** Where each build keeps its own things, per platform. */
-function userDataDir(shell) {
-  const name = shell === "tauri" ? "adastrail-tauri" : "adastrail";
+/** Where the build keeps its own things, per platform
+ * (tauri/shell/src/user_data.rs). */
+function userDataDir() {
+  const name = "adastrail";
   if (process.platform === "win32") {
     return join(
       process.env.APPDATA ?? join(homedir(), "AppData", "Roaming"),
@@ -66,12 +61,9 @@ function userDataDir(shell) {
   if (process.platform === "darwin") {
     return join(homedir(), "Library", "Application Support", name);
   }
-  // The one place the two disagree on Linux, and it is Electron's own choice:
-  // it puts userData under XDG_CONFIG_HOME, while Tauri's data_dir is
-  // XDG_DATA_HOME.
-  const config = process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config");
+  // Tauri's data_dir is XDG_DATA_HOME on Linux.
   const data = process.env.XDG_DATA_HOME ?? join(homedir(), ".local", "share");
-  return join(shell === "tauri" ? data : config, name);
+  return join(data, name);
 }
 
 function bytesOf(path) {
@@ -90,7 +82,7 @@ function bytesOf(path) {
     } else if (stat.isFile()) {
       // The APPARENT size rather than blocks on disk: it is what a download is
       // and what a depot uploads, and block counts differ per filesystem, which
-      // would make the two builds incomparable across two machines.
+      // would make the numbers incomparable across two machines.
       total += stat.size;
     }
   }
@@ -115,8 +107,8 @@ function sizes() {
 }
 
 /** The launches a build wrote on this machine. */
-function launches(shell) {
-  const file = join(userDataDir(shell), "startup.jsonl");
+function launches() {
+  const file = join(userDataDir(), "startup.jsonl");
   if (!existsSync(file)) return { file, rows: [] };
   const rows = readFileSync(file, "utf8")
     .split("\n")
@@ -150,15 +142,15 @@ const median = (numbers) => {
 
 function startup() {
   const report = {};
-  for (const shell of ["electron", "tauri"]) {
-    const { file, rows } = launches(shell);
+  for (const shell of Object.keys(RELEASE_DIRS)) {
+    const { file, rows } = launches();
     if (rows.length === 0) {
       report[shell] = { file, launches: 0 };
       continue;
     }
-    // BY TIME, never by key order. One shell serializes the marks through a
-    // sorted map and the other through an object literal, so `Object.keys`
-    // hands back alphabetical order on one of them — and subtracting
+    // BY TIME, never by key order. A file may hold marks serialized through a
+    // sorted map or through an object literal, so `Object.keys` can hand back
+    // alphabetical order — and subtracting
     // alphabetical neighbours produced a first step of minus the whole launch.
     const marks = Object.entries(rows[0].marks ?? {})
       .sort(([, a], [, b]) => a - b)
@@ -234,8 +226,7 @@ function main() {
         console.log(`  · ${row.shell} ${row.label}: not packaged here`);
       }
       console.log(
-        "\n  package with `make desktop-steam` / `make desktop-tauri-steam` " +
-          "(or the `-dist` pair).",
+        "\n  package with `make desktop-steam` (or `make desktop-dist`).",
       );
     }
     if (document.startup) {

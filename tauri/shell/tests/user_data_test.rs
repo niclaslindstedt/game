@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! WHERE THE PLAYER'S THINGS LIVE, and the one time that moves — the peer of
-//! `electron/tests/user-data_test.ts`.
+//! WHERE THE PLAYER'S THINGS LIVE, and the one time that moves.
 //!
 //! The move is conservative in both directions, and both directions are a way
 //! to lose somebody's window layout, mods and launch history: moving onto a
@@ -52,22 +51,17 @@ fn the_folder_is_the_declared_name_rather_than_the_bundle_identifier() {
 }
 
 #[test]
-fn the_tauri_shell_keeps_its_own_folder_while_both_shells_exist() {
-    // Two desktop shells are installable at once during the migration, and two
-    // running games sharing one window-state.json and one launch.log is a fight
-    // neither can win. The day only one desktop wrapper is left is what
-    // changes this word.
-    assert_ne!(
-        APP_DIR_NAME, "adastrail",
-        "sharing the other desktop build's folder is a decision, not a default"
-    );
+fn the_folder_is_the_executables_name_and_the_old_one_is_adopted() {
+    // One desktop wrapper is left, so the folder is the executable's own name —
+    // and the name this shell used while there were two is a legacy name, so
+    // an install that ran under it is moved rather than orphaned.
+    assert_eq!(APP_DIR_NAME, "adastrail");
+    assert!(LEGACY_DIR_NAMES.contains(&"adastrail-tauri"));
 }
 
 #[test]
 fn a_legacy_folder_is_adopted_rather_than_orphaned() {
-    // LEGACY_DIR_NAMES is empty today — this shell has shipped under one name —
-    // so the test drives the planner the way that rename will, through the
-    // same seam rather than through a second code path written later.
+    // Drives the planner through the same seam the rename uses.
     let root = Path::new("/appdata");
     let Some(legacy) = LEGACY_DIR_NAMES.first() else {
         assert!(

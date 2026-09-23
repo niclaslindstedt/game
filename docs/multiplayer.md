@@ -235,14 +235,15 @@ nothing to pay for, and the game's own promise — "no sign-up, no login and no
 server of ours" — survives intact.
 
 ```
-electron/src/main.ts          routes the __gisNet control protocol
-electron/src/net.ts           the bridge: mints the port, supervises replies
-electron/src/session-host.ts  the utilityProcess's lifecycle
-electron/src/net-steam-p2p.ts the Steam P2P pump (main process only)
-electron/src/net-lobby.ts     the lobby, which IS the server browser
-electron/src/net-firewall.ts  the one layer that needs a player's permission
-        │  MessagePort (snapshots, transferred ArrayBuffers)
+tauri/src-tauri/src/main.rs     routes the __gisNet control protocol
+tauri/src-tauri/src/net.rs      the bridge: the process, the queue, the lobby
+tauri/src-tauri/src/session.rs  the child's lifecycle, on a bundled Node runtime
+tauri/src-tauri/src/p2p.rs      the Steam P2P pump (shell only — see below)
+tauri/src-tauri/src/lobby.rs    Steam matchmaking, which IS the server browser
+tauri/src-tauri/src/firewall.rs the one layer that needs a player's permission
+        │  stdio, newline-delimited JSON (control only)
         ▼
+server/shell-host.ts          the sidecar entry: `--shell`
 server/main.ts                the session server (its own Node process)
 server/session.ts             one authoritative GameState, at 60 Hz
 server/chat-room.ts           the log, and what a slash command does
@@ -250,9 +251,9 @@ server/net/hub.ts             where a stranger becomes a client
 server/net/udp.ts             the direct path — its own socket, its own port
 server/net/relay.ts           the Steam path, arriving over the control channel
 server/net/upnp.ts            the router mapping (NAT-PMP, then UPnP-IGD)
-        │
+        │  a loopback WebSocket the PAGE opens — no shell in the path
         ▼
-pwa/src/app/net-bridge.ts     the page's control half
+pwa/src/app/net-bridge.ts     the page's control half; asks for a MessagePort
 server/client.ts              snapshots back into a run — @game/client
 pwa/src/game/net/driver.ts    host a run, or join somebody else's
 pwa/src/game/title-screen/    the three doors (menus-net.ts, use-sessions.ts)
@@ -261,39 +262,22 @@ server/bot-client.ts          a headless joiner that PLAYS — the soak's engine
 scripts/bot-client.mjs        a fleet of them, pointed at an address
 ```
 
-**AND THE SAME SHAPE IN THE OTHER DESKTOP SHELL, with two pipes where Electron
-has one.** `tauri/` is a Rust process (`docs/desktop-shells.md`): it has no
-`utilityProcess.fork` and no way to transfer a `MessagePort` to the page, so the
-session server grew a THIRD entry rather than a second implementation.
-
-```
-tauri/src-tauri/src/main.rs   routes the __gisNet control protocol
-tauri/src-tauri/src/net.rs    the bridge: the process, the queue, the lobby
-tauri/src-tauri/src/session.rs the child's lifecycle, on a bundled Node runtime
-tauri/src-tauri/src/p2p.rs    the Steam P2P pump (shell only, same reason)
-tauri/src-tauri/src/lobby.rs  Steam matchmaking — the SAME metadata keys
-tauri/src-tauri/src/firewall.rs runs what tauri/shell/src/net_firewall.rs wrote
-        │  stdio, newline-delimited JSON (control only)
-        ▼
-server/shell-host.ts          the sidecar entry: `--shell`
-        │  a loopback WebSocket the PAGE opens — no shell in the path
-        ▼
-pwa/src/app/net-bridge.ts     unchanged: it asks for a MessagePort, gets one
-```
+Every decision behind those effects — what a request means, which replies
+nobody is waiting on, what a lobby row says — lives in `tauri/shell/src/`
+(`net.rs`, `session_host.rs`, `net_lobby.rs`, `net_firewall.rs`,
+`steam_p2p.rs`), where it is tested with no GUI and no Steam client.
 
 Three things are worth carrying from that:
 
-- **THE METADATA KEYS ARE SHARED.** A lobby row written by one desktop build is
-  read by the other, so the two shells see each other's games — which they must,
-  because both are installable at once while they are being compared.
-- **STDIN'S EOF IS THE ORPHAN REAPER.** Electron kills its utility process in
-  `before-quit`; a spawned child watches its own control pipe instead, so a
-  shell that was killed rather than quit still takes its session with it.
-- **THE PAGE DID NOT CHANGE.** `__gisShell.onNetPort` still hands over a
+- **THE METADATA KEYS ARE STABLE.** A lobby row written by one build is read by
+  another, so they are the names the earlier Electron build published too, and
+  a player still on it sees the same games.
+- **STDIN'S EOF IS THE ORPHAN REAPER.** A spawned child watches its own control
+  pipe, so a shell that was killed rather than quit still takes its session with
+  it.
+- **THE PAGE DOES NOT KNOW.** `__gisShell.onNetPort` hands over a
   `MessagePort`; the shell's initialization script mints the pair in the page
-  and bridges its own end to the socket. Every protocol on this page — including
-  the loot mode, the trade table and the voice payload — is byte-identical
-  across the two shells.
+  and bridges its own end to the socket.
 
 **`server/client.ts` IS THE ONE CLIENT, and it is in `server/` rather than
 `pwa/` on purpose.** It is the only thing in the repo that turns snapshots back
@@ -331,7 +315,7 @@ the lazy chunk used would keep its bytes on the startup path.
 ## The three rules worth knowing
 
 **One process per session, and the host is just another client.** A 60 Hz
-simulation must not compete with the main process's IPC, window, Workshop and
+simulation must not compete with the shell's IPC, window, Workshop and
 Steam duties; and the engine holds 36 process-global mutable bindings (the
 `BALANCE` tuning object, the flags in `engine/game/flags.ts`, every `activeXDefs`
 catalog `registerDefs` swaps for a mod) which are not per-`GameState`, so a
@@ -433,11 +417,11 @@ screenshots, the store) move a handful of JSON round trips per session. This one
 would move a snapshot twenty times a second, so it does not use that channel for
 it:
 
-- **CONTROL** — host, stop, status. JSON, over the shared `gis:post` channel,
-  tagged `__gisNet` like every other protocol.
-- **GAME** — the frames. A `MessagePort` pair minted in the main process, one
-  end to the renderer and one to the utility process, with the `ArrayBuffer`
-  transferred rather than copied. The frames never enter the main process.
+- **CONTROL** — host, stop, status. JSON, over the one shell channel
+  (`shell_post`), tagged `__gisNet` like every other protocol.
+- **GAME** — the frames. A loopback WebSocket the page opens straight to the
+  session process, bridged to a `MessagePort` pair minted in the page, with the
+  `ArrayBuffer` transferred rather than copied. The frames never enter the shell.
 
 ## What a client may do
 
@@ -513,22 +497,22 @@ A host listens on **both at once**, and should by default: Steam friends get the
 frictionless path, everybody else gets an address. `server/net/transport.ts` is
 the one interface both satisfy — **polled, packet-shaped and explicit about
 reliability**, because that is what the narrower of the two APIs forces.
-`steamworks.js` binds the LEGACY `ISteamNetworking` P2P API and nothing else: no
-sockets, no callbacks, no channels, just `isP2PPacketAvailable()` on a pump
-somebody else runs.
+The Steam path is the LEGACY `ISteamNetworking` P2P API: no sockets, no
+callbacks, no channels, just `is_p2p_packet_available()` on a pump somebody else
+runs.
 
-**The seam lives in `server/`, not in `electron/src/`, and that is deliberate.**
-The obvious placement is a transport in the SHELL (`electron/src/net-transport*.ts`),
-and it cannot survive the dedicated server being "the same file, minus
-Electron" — a transport in the shell is a transport the standalone server does
-not have. So:
+**The seam lives in `server/`, not in the desktop shell, and that is
+deliberate.** The obvious placement is a transport in the SHELL, and it cannot
+survive the dedicated server being "the same file, minus the shell" — a
+transport in the shell is a transport the standalone server does not have. So:
 
 - **UDP lives in the session process** (`server/net/udp.ts`). Its packets never
-  touch the main process's event loop, and the dedicated server inherits the
+  touch the shell's event loop, and the dedicated server inherits the
   whole path with no shell at all.
-- **Steam lives in the shell** (`electron/src/net-steam-p2p.ts`), because
-  `steamworks.init()` is a single global handshake `steam.ts` owns and the
-  session is a different process. Its packets are relayed over the control
+- **Steam lives in the shell** (`tauri/shell/src/steam_p2p.rs`, pumped by
+  `tauri/src-tauri/src/p2p.rs`), because the Steam handshake is a single global
+  one `tauri/src-tauri/src/steam.rs` owns and the session is a different
+  process. Its packets are relayed over the control
   channel to `server/net/relay.ts`, which presents them to the session as an
   ordinary transport. That asymmetry is forced, not chosen: each half lives
   where the resource it needs lives, and the session's view of the two is
@@ -622,11 +606,11 @@ Three independent things can block an inbound connection, they have three
 different remedies, and conflating them is why "open your ports" is folklore
 rather than instruction. So they are three files and three status rows.
 
-| Layer        | Where                          | How automatic                                                           |
-| ------------ | ------------------------------ | ----------------------------------------------------------------------- |
-| **Socket**   | `server/net/udp.ts`            | Fully. It binds, walks on collision, and reports where it landed        |
-| **Router**   | `server/net/upnp.ts`           | Fully, silently, no permission. NAT-PMP first, UPnP-IGD as the fallback |
-| **Firewall** | `electron/src/net-firewall.ts` | One prompt, once, on an explicit press — and never at launch            |
+| Layer        | Where                             | How automatic                                                           |
+| ------------ | --------------------------------- | ----------------------------------------------------------------------- |
+| **Socket**   | `server/net/udp.ts`               | Fully. It binds, walks on collision, and reports where it landed        |
+| **Router**   | `server/net/upnp.ts`              | Fully, silently, no permission. NAT-PMP first, UPnP-IGD as the fallback |
+| **Firewall** | `tauri/shell/src/net_firewall.rs` | One prompt, once, on an explicit press — and never at launch            |
 
 The router mapping's own reply is where the external address comes from, which
 is a deliberate refusal to use STUN or a "what's my IP" lookup: the game's
@@ -675,13 +659,13 @@ content/hud/scripts/voice.lua      what a card says and what colour it says it
                                    in, thresholds included
 server/wire/voice.ts               the payload format — the wire's ONE binary one
 server/session.ts  `relayVoice`    the four relay rules
-electron/src/main.ts `installPermissionHandlers`  the microphone gate
+tauri/shell/src/media.rs                         the microphone gate
 ```
 
 ### It is its own build capability, and that is the point
 
 `GIS_ENABLE_VOICE` stamps it, `--voice` turns it on for one launch, and
-`electron/src/capabilities.ts` reads it back beside `multiplayer`, `mods`,
+`tauri/shell/src/capabilities.rs` reads it back beside `multiplayer`, `mods`,
 `portMap` and `licensed`. The depot build carries it; a plain download does not.
 Three reasons, each a fact about the BUILD rather than about the machine:
 
@@ -829,12 +813,8 @@ the per-speaker gain, the meters, the HUD, the wire — is provider-agnostic.
    packet nobody here implements makes its speaker **UNHEARD** on the HUD —
    readable and actionable, rather than silence indistinguishable from a mute.
 
-**Why Steam voice is not the shipped provider today:** `steamworks.js@0.4.0`
-binds no `voice` namespace and no `friends` namespace at all, so reaching
-`ISteamUser::GetVoice` means an N-API addon and the loss of the prebuilt binaries
-that let this shell install without a Rust toolchain — the same trade
-`electron/src/steam.ts` records for the missing `ISteamNetworkingSockets`. Its
-codec id (`VOICE_CODEC.steam`) is allocated and reserved so the day it lands it is
+**Why Steam voice is not the shipped provider today:** the desktop shell does
+not bind `ISteamUser::GetVoice` or Steam's friends list. Its codec id (`VOICE_CODEC.steam`) is allocated and reserved so the day it lands it is
 a provider and a `case`, not a protocol bump that refuses everybody mid-session.
 It would bring three things this provider cannot: Valve's own game-chat tuning,
 the player's Steam-wide microphone and push-to-talk settings, and the only path
@@ -944,7 +924,7 @@ of a listen server, the same one the mode already accepts for the host being abl
 to cheat — fine among friends, and stated rather than implied. There is no
 server-side moderation, no recording, and nothing is stored: a packet is relayed
 and forgotten. **There is no Steam mute/blocklist integration**, because that
-needs the `friends` namespace `steamworks.js` does not bind; the per-player mute
+needs Steam's friends API, which the desktop shell does not bind; the per-player mute
 is the game's own and lives on the machine that set it.
 
 ### Testing it with a file instead of a microphone
@@ -958,7 +938,7 @@ exact:
 # the TALKING machine, at the game's console:
 window.__voiceFile("https://example.test/line.wav")   # looping; null gives the mic back
 # …or launch straight into it, with ?voice=<url> on the page URL
-npm run electron -- --multiplayer --voice
+npm run tauri -- --multiplayer --voice
 
 # the LISTENING machine, at its console:
 window.__voiceTap()        # start recording what arrives
@@ -991,7 +971,7 @@ file and one entry in `PROVIDERS`.
   the tap's .wav beside the source file — same length, same envelope, same words
   — or by correlating the two numerically. Do not pin a digest of the ENCODED
   stream either: libopus is deterministic only for a fixed version and settings,
-  and an Electron upgrade moves both, so that test would go red on a dependency
+  and a webview upgrade moves both, so that test would go red on a dependency
   bump rather than on a regression.
 
 Voice's four suites are in the table under _What is tested_ below, and what no
@@ -1204,9 +1184,9 @@ and join times are a fact about a session, and there is no session
 `@game/core` is consumed by Vite (for the browser) and by
 `scripts/game-alias-loader.mjs` (for tooling); neither produces something that
 ships inside the app. `npm run server:build` (`scripts/build-server.mjs`)
-compiles `server/` and `engine/` into `electron/server-dist/`, which
-`electron-builder` copies to `resources/server/` and `electron/src/resources.ts`
-resolves between on `app.isPackaged` — the same two-layout arrangement the mod
+compiles `server/` and `engine/` into `server-dist/` at the repo root, which
+`tauri/scripts/package.mjs` copies into the package's `server/` and
+`tauri/shell/src/runtime.rs` resolves between — the same two-layout arrangement the mod
 toolchain already uses.
 
 Two details are load-bearing:
@@ -1218,10 +1198,10 @@ Two details are load-bearing:
   the copy — which keeps the engine written in the repo's own house style.
 - **Type stripping was spiked and refused.** It works (Node has it on by
   default from 22.18, which is how `scripts/simulate-run.mjs` already imports
-  `engine/sim/simulate.ts`), but it does not resolve the aliases, and
-  `utilityProcess` runs Electron's bundled Node — a runtime whose version moves
-  with Electron. A ship target resting on an experimental flag in a runtime
-  somebody else upgrades breaks in a released build for a reason nobody changed.
+  `engine/sim/simulate.ts`), but it does not resolve the aliases, and the
+  shipped runtime is whatever Node the packaging machine ran. A ship target
+  resting on an experimental flag in a runtime somebody else upgrades breaks in
+  a released build for a reason nobody changed.
 
 `server/package.json` declares what the compiled tree needs at runtime —
 nothing today — and `tests/content/server_deps_test.ts` walks the real import
@@ -1258,10 +1238,9 @@ compiler.
 | `tests/engine/net_bot_client_test.ts`    | A bot playing off a client's view alone — is what a client HAS enough                      |
 | `tests/engine/bot_intent_test.ts`        | The autopilot's decision→verb mapping, written out by hand                                 |
 | `tests/content/server_deps_test.ts`      | The ship target's dependency manifest, and that it reaches nothing outside it              |
-| `electron/tests/session-host_test.ts`    | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop                         |
-| `electron/tests/net-lobby_test.ts`       | The metadata round trip through the short keys, and degrading without Steam                |
-| `electron/tests/capabilities_test.ts`    | The voice capability, `--voice` refused by name, and `--autopilot` taking multiplayer away |
-| `tauri/shell/tests/capabilities_test.rs` | The same, in the Rust shell — the two must resolve a command line alike                    |
+| `tauri/shell/tests/session_host_test.rs` | The sidecar's replies, orderly stop, forced kill, and crash-vs-stop                        |
+| `tauri/shell/tests/net_lobby_test.rs`    | The metadata round trip through the short keys                                             |
+| `tauri/shell/tests/capabilities_test.rs` | The voice capability, `--voice` refused by name, and `--autopilot` taking multiplayer away |
 | `tests/launch_notice_test.ts`            | Which launches are told what, and that the auto pilot gate fails OPEN off a shell          |
 | `tests/multiplayer_doors_test.ts`        | All three doors shut for a flown hero, locked rather than absent, BACK still open          |
 | `tests/autopilot_mark_test.ts`           | The mark's latch, its cheap read, and the trophy shelf it shuts                            |
@@ -1301,7 +1280,7 @@ sees "ONE OF YOU NEEDS TO UPDATE - HOST BUILD 1.5.0" goes and updates.
 
 **AN INVITE ARRIVES BEFORE THE GAME DOES.** `+connect_lobby <id>` (Steam, when a
 friend accepts while the game is closed) and `--connect <addr>` (a shareable
-link) are read by `electron/src/net-invite.ts` and PARKED until the page is up —
+link) are read by `tauri/shell/src/net_invite.rs` and PARKED until the page is up —
 at startup there is no window to hand them to, and on a `second-instance` event
 the process that received them is about to exit. They are delivered on the
 page's `did-finish-load` as the bridge's one unsolicited event, and consumed:
@@ -1535,10 +1514,9 @@ The utility-process server and the standalone one are the same code.
 `server/host.ts` owns the session, the admission desk, the sockets, the router
 mapping and — the part that must not be copied — the fixed-timestep loop, whose
 second copy would drift from the first silently and only under load.
-`server/main.ts` picks between THREE entries and nobody passes it a mode: a
-`parentPort` means Electron forked it and it is the game's session server;
-`--shell` means a plain child spawned by the Tauri shell (`shell-host.ts`);
-neither means a person at a terminal, and it hands over to `server/dedicated.ts`.
+`server/main.ts` picks between TWO entries: `--shell` means the desktop shell
+spawned it as the game's session server (`shell-host.ts`); without it, it is a
+person at a terminal, and it hands over to `server/dedicated.ts`.
 One binary, so there is no second one to forget.
 
 ```sh
@@ -1547,7 +1525,7 @@ npm run server:start -- server.config.json
 ./Ada\'s\ Trail --dedicated --bots 3 --verbose
 ```
 
-The Electron executable's `--dedicated` mode enters that same server entry
+The desktop executable's `--dedicated` mode spawns that same server entry
 without initializing Steam or opening a window. The flags are
 `--config`/a bare path, `--level`, `--difficulty`, `--seed`, `--port`,
 `--players`, `--password`, `--bots`, `--licensed`, `--no-portmap` and
@@ -1564,8 +1542,7 @@ for an autonomous soak or demo.
 The terminal always reports lifecycle edges: game start, player joins, deaths
 and quits, level completion, and campaign completion. Beside them it prints a
 status line every thirty seconds (`statusEverySec`; 0 turns it off), and
-`--verbose` prints a detailed one every second instead (it is `--verbose` rather
-than `--debug` because Electron reserves the latter).
+`--verbose` prints a detailed one every second instead.
 
 Ctrl-C begins a one-minute graceful shutdown announced to chat, with another
 warning at 15 seconds and a 10-to-1 countdown. A second Ctrl-C exits
@@ -1585,8 +1562,8 @@ before any socket is open. A dedicated server has no such renderer, so the first
 person to join over the network was mistaken for the host and handed a DEFAULT
 character instead of the one they brought.
 
-**No Steam** is a consequence rather than a feature: `steamworks.init()` is a
-single global handshake the desktop shell's main process owns, so the relay
+**No Steam** is a consequence rather than a feature: the Steam handshake is a
+single global one the desktop shell's process owns, so the relay
 transport is something the SHELL adds to a host. A dedicated server has only the
 direct UDP path, which is the transport that already carries the whole protocol
 and the only one that works on a LAN with the internet off.
@@ -1824,7 +1801,7 @@ and it does so in CI (`tests/engine/net_bot_client_test.ts`).
 latency, jitter and loss available at the transport seam:
 
 ```sh
-node electron/server-dist/server/main.js soak.json     # allowUnlicensedTransport
+node server-dist/server/main.js soak.json     # allowUnlicensedTransport
 node scripts/bot-client.mjs --address 127.0.0.1:27015 --bots 8   --minutes 120 --latency 75 --loss 0.02
 ```
 
@@ -1962,9 +1939,9 @@ ordinary work, small, and deliberately left rather than forgotten.
   overnight; the section above on the first soaks records what the short runs
   already found.
 - **Five acceptances need a human with hardware**, and cannot be run from CI:
-  a PACKAGED desktop launch (`npm run electron` with a real
-  `utilityProcess.fork` and `MessagePortMain` handover — covered by stubs and
-  reasoning, never by a running packaged app); eight machines over each
+  a PACKAGED desktop launch (a real spawned session process and the page's
+  loopback snapshot channel — covered by tests and reasoning, never by a running
+  packaged app); eight machines over each
   transport through a real NAT; the UPnP mapping against a real router; the
   firewall remedy prompts on each OS; and a `ui-review` screenshot audit of
   the HOST/JOIN screens (they exist only in desktop builds, which the
@@ -1982,13 +1959,13 @@ ordinary work, small, and deliberately left rather than forgotten.
   coming out of the same speakers the microphone is next to. The permission
   prompt on each OS needs a packaged build to see. Both halves of the macOS
   pair — `com.apple.security.device.audio-input` in
-  `electron/build/entitlements.mac.plist` and `NSMicrophoneUsageDescription` in
-  `electron/electron-builder.config.cjs` — are declared; their ABSENCE is a
+  `tauri/src-tauri/entitlements.mac.plist` and `NSMicrophoneUsageDescription` in
+  `tauri/src-tauri/Info.plist` — are declared; their ABSENCE is a
   crash rather than a refusal, which is why they are named here.
 - **Nothing moderates voice, and nothing can mute it Steam-side.** The
   per-player mute is the game's own, local and unsent; honouring a Steam MUTE or
-  BLOCK needs the `friends` namespace `steamworks.js` does not bind — the same
-  blocker as the Steam voice provider itself. Worth its own decision before a
+  BLOCK needs Steam's friends API, which the desktop shell does not bind — the
+  same blocker as the Steam voice provider itself. Worth its own decision before a
   public release, since the audience for a public session is not the audience
   for a friends game.
 

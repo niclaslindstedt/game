@@ -40,14 +40,13 @@ tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
 # A SECOND COPY OF THE GAME would fight the first over the same save files and
 # the same Steam session — and, worse, would swallow the `+connect_lobby` Steam
-# hands a friend's "accept". Electron has `requestSingleInstanceLock` built in;
-# this is its peer, and its callback is where an invite reaches a running game.
+# hands a friend's "accept". Its callback is where an invite reaches a running
+# game.
 tauri-plugin-single-instance = "2"
 # SHARE's other half: the picture on the clipboard, which is the part that
 # actually sends it somewhere. Rust-only, like the two above.
 tauri-plugin-clipboard-manager = "2"
-# STEAM. The peer of `steamworks.js` on the Electron side, and a materially
-# richer one: it binds ISteamScreenshots and the whole leaderboard surface,
+# STEAM. It binds ISteamScreenshots and the whole leaderboard surface,
 # neither of which the Node binding has — see `shell/src/screenshots_provider.rs`
 # and `shell/src/leaderboards_provider.rs` for what each of those changed.
 #

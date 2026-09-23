@@ -17,7 +17,7 @@ src-tauri/icons/
 src-tauri/gen/
 
 # The packaged output — the Steam depot directory that scripts/package.mjs
-# assembles. The peer of electron/release/.
+# assembles.
 release/
 
 # The sidecars, staged by scripts/package.mjs before the bundler files them:
@@ -35,5 +35,5 @@ node_modules/
 steam_appid.txt
 
 # Cargo.lock IS committed (this tree builds binaries, not a library), so it is
-# deliberately absent from this file. So is package-lock.json, for the same
-# reason electron/'s is committed: a packaging run has to be reproducible.
+# deliberately absent from this file. So is package-lock.json: a packaging run
+# has to be reproducible.

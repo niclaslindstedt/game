@@ -22,7 +22,7 @@ inside `pwa/`. Run `npm install` at the root.
 An npm script tried to set an environment variable with `VAR=value` shell
 syntax. That is Bourne shell; `cmd.exe` reads it as the name of a program, so
 the script fails before the command it was supposed to run. Fixed for
-`npm run electron` (it goes through `scripts/run-electron.mjs`, which sets the
+`npm run tauri` (it goes through `scripts/run-tauri.mjs`, which sets the
 variable on the child process instead) and pinned by
 `tests/content/npm_scripts_portable_test.ts` — if you hit it in another script,
 that is the bug and a shell prefix is never the fix.
@@ -31,17 +31,19 @@ that is the bug and a shell prefix is never the fix.
 
 Read `launch.log` in the app's user-data directory —
 `%APPDATA%\adastrail` (Windows), `~/Library/Application
-Support/adastrail` (macOS), `~/.config/adastrail` (Linux). The
+Support/adastrail` (macOS), `~/.local/share/adastrail` (Linux). The
 shell writes every launch there, INFO included, and keeps the previous one as
 `launch.log.prev`. Anything fatal also raises an error dialog naming that file.
 
-Three lines in it answer most of these:
+Two lines in it answer most of these:
 
-| Line                              | What happened                                                                                                                                                                     |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `another copy is already running` | A previous copy (possibly wedged) still holds the single-instance lock. End it in the task manager.                                                                               |
-| `no bundled website was found`    | Incomplete install, or a checkout that never ran `npm run electron` from the repo root.                                                                                           |
-| `child process gone: GPU`         | A graphics-driver problem. Launching with `GIS_STEAM_OVERLAY=0` rules out the Steam overlay — the Chromium switches on the Electron build, the decoy swap chain on the Tauri one. |
+| Line                           | What happened                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `No bundled website was found` | Incomplete install, or a checkout that never ran `npm run tauri` from the repo root.             |
+| `The game could not start — …` | There is no display to open a window on; the rest of the line says which variable it looked for. |
+
+A graphics-driver problem on Windows can come from the Steam overlay's decoy
+surface: launching with `GIS_STEAM_OVERLAY=0` rules it out.
 
 If the log ends with no error at all, launch once with `GIS_VERBOSE=1` set and
 read it again.

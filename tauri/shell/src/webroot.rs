@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! Serving the bundled website — the peer of `electron/src/webroot.ts`, and the
-//! module this shell would be wrong to simplify.
+//! Serving the bundled website — the module this shell would be wrong to
+//! simplify.
 //!
 //! The site is served from a registered private scheme (`game://`, see
 //! [`crate::config`]) handled in-process: no port to pick, no port to collide

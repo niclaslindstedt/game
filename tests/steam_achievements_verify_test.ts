@@ -32,7 +32,7 @@ const SCRIPT = path.join(root, "scripts", "steam-achievements-portal.mjs");
 const ROWS = (
   JSON.parse(
     readFileSync(
-      new URL("../electron/store/steam-achievements.json", import.meta.url),
+      new URL("../tauri/store/steam-achievements.json", import.meta.url),
       "utf8",
     ),
   ) as { achievements: unknown[] }
@@ -138,7 +138,7 @@ const enteredCorrectly = async (): Promise<SchemaAchievement[]> => {
   const { readFileSync } = await import("node:fs");
   const manifest = JSON.parse(
     readFileSync(
-      path.join(root, "electron/store/steam-achievements.json"),
+      path.join(root, "tauri/store/steam-achievements.json"),
       "utf8",
     ),
   ) as {
@@ -172,7 +172,7 @@ describe("the worksheet", () => {
     expect(result.stdout).toContain(`── 1/${ROWS} ── clear_goodco_hq`);
     expect(result.stdout).toContain("  API Name         clear_goodco_hq");
     expect(result.stdout).toContain(
-      "  Achieved icon    electron/store/achievements/clear_goodco_hq-achieved.png",
+      "  Achieved icon    tauri/store/achievements/clear_goodco_hq-achieved.png",
     );
     expect(result.stderr).toContain(
       `${ROWS} rows for App Admin → Achievements`,

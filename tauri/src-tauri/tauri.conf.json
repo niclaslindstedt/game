@@ -3,7 +3,7 @@
   "productName": "Adas Trail",
   "mainBinaryName": "adastrail",
   "version": "0.1.0",
-  "identifier": "se.agilator.adastrail.tauri",
+  "identifier": "dev.local.adastrail",
   "build": {
     "frontendDist": "./placeholder"
   },

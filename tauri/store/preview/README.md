@@ -10,14 +10,14 @@ Serve the repository root so image paths resolve, then open:
 
 ```sh
 python3.12 -m http.server 8765
-# http://127.0.0.1:8765/electron/store/preview/
+# http://127.0.0.1:8765/tauri/store/preview/
 ```
 
 Capture the entire page—not only the first viewport—with:
 
 ```sh
 make store-page-shot
-# electron/store/preview/output/steam-page-2000.png
+# tauri/store/preview/output/steam-page-2000.png
 
 make store-page-shot ARGS="--width 1440 --out /tmp/steam-page.png"
 ```

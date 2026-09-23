@@ -2,13 +2,12 @@
 // THE SESSION SERVER'S DEPENDENCIES, declared once and checked against reality.
 //
 // The sibling of `mod_toolchain_deps_test.ts`, and it exists for the same
-// failure in a second place. The server runs in three environments:
+// failure in a second place. The server runs in two environments:
 //
 //   the repo        a full `npm ci` — everything resolves, nothing is noticed
-//   electron's CI   `npm ci` in electron/ ONLY — the repo root is not installed
-//   a player's app  resources/server/, outside the asar, no root at all
+//   a player's app  the package's server/, beside a Node runtime, no root
 //
-// The first hides what the other two need. The engine has NO npm dependencies
+// The first hides what the second needs. The engine has NO npm dependencies
 // today, and that is exactly the state worth pinning: the first one added would
 // resolve locally, resolve in every test, and then fail on a player's machine
 // with a module-not-found the developer who added it cannot reproduce.

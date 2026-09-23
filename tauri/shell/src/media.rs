@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! WHAT THE PAGE MAY ASK THE OPERATING SYSTEM FOR — the peer of
-//! `installPermissionHandlers` in `electron/src/main.ts`, and the gate the macOS
+//! WHAT THE PAGE MAY ASK THE OPERATING SYSTEM FOR — the gate the macOS
 //! shipped an entitlement for without shipping the thing that makes it mean
 //! anything.
 //!
@@ -28,8 +27,7 @@
 //!
 //! ## THE PLATFORM HALF, AND WHERE IT IS HONEST
 //!
-//! Electron has one permission handler for every webview it owns. The three
-//! platform webviews have three different mechanisms, and this shell answers
+//! The three platform webviews have three different mechanisms, and this shell answers
 //! them at two depths on purpose:
 //!
 //!  * **WebKitGTK** raises `permission-request` on the webview, which

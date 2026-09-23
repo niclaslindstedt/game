@@ -159,7 +159,7 @@ the atlas; `ARGS="--only game-center"` or `ARGS="--id boss_slayer"` narrows a
 run while iterating.
 
 Steam's half of the same generator is described in
-[`../../electron/RELEASING.md`](../../electron/RELEASING.md).
+[`../../tauri/STEAM.md`](../../tauri/STEAM.md).
 
 ## The Game Center entries
 

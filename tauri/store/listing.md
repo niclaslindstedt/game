@@ -111,7 +111,7 @@ errs toward disclosure rather than hiding a borderline marketing use.
 
 The product must be launched on every listed OS before these are submitted.
 The one-gigabyte storage allowance deliberately includes headroom for the
-Electron runtime, Workshop items, and save data.
+bundled Node runtime (multiplayer and mods), Workshop items, and save data.
 
 ### Windows
 

@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// WHAT THE MOD TOOLCHAIN NEEDS BESIDE IT, declared once for both desktop
-// shells.
+// WHAT THE MOD TOOLCHAIN NEEDS BESIDE IT, declared once.
 //
 // The compiler is not part of any shell: `mod/tools/` lives at the repo's top
 // level, imports the game's own loaders and validators out of `scripts/`, reads
 // three authored catalogs out of `content/`, and is shared verbatim with the
 // CLI a modder runs. That is the whole point — ONE compiler, so "it works in my
 // mod" and "it works in the game" mean the same thing — and it means the files
-// sit outside both `electron/` and `tauri/` and have to be carried into each
-// package deliberately.
+// sit outside `tauri/` and have to be carried into the package deliberately.
 //
 // **THE TREE MIRRORS THE REPO'S LAYOUT, and that is not neatness**: every one
 // of these modules finds its neighbours by relative path (`../../scripts/…`,
@@ -16,20 +14,17 @@
 // resolve to nothing. Only the root differs — `modtools/` inside whichever
 // package is being built.
 //
-// **AND IT IS ONE LIST BECAUSE TWO WOULD DRIFT.** Both shells package the same
-// compiler; a loader added for a new catalog and carried into only one of them
-// is a mod that compiles on one desktop build and not the other, with nothing
-// anywhere reporting it. `electron/electron-builder.config.cjs` and
-// `tauri/scripts/package.mjs` both read this file, and
+// **AND IT IS ONE LIST, KEPT BESIDE THE TOOLCHAIN.** A loader added for a new
+// catalog and not carried into the package is a mod that compiles in the repo
+// and not in the game, with nothing anywhere reporting it.
+// `tauri/scripts/package.mjs` reads this file, and
 // `tests/content/mod_toolchain_deps_test.ts` holds `mod/package.json` — the npm
 // half of the same question — to what the toolchain actually imports.
 //
-// A CommonJS module rather than JSON so it can carry these comments, and rather
-// than ESM so the Electron config (which is `.cjs` and has no top-level await)
-// can `require` it directly. The Tauri packager reaches it through
-// `createRequire`.
+// A CommonJS module rather than JSON so it can carry these comments. The
+// packager reaches it through `createRequire`.
 //
-// Paths are relative to the REPOSITORY ROOT. Each shell prefixes its own way.
+// Paths are relative to the REPOSITORY ROOT.
 
 module.exports = [
   // The compiler and the reference catalog it validates against.

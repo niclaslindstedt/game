@@ -145,7 +145,7 @@ export function createLocalDriver(state: GameState): RunDriver {
 /**
  * Pick this run's driver.
  *
- * An ordinary NEW GAME is local on every platform, including Electron. The
+ * An ordinary NEW GAME is local on every platform, the desktop included. The
  * net driver is offered only when HOST GAME armed this run; it then answers
  * null wherever the shell cannot actually host and the local driver remains a
  * safe fallback. The intent is a better boundary than asking "am I on Steam?":
@@ -162,9 +162,9 @@ export function createRunDriver(session: RunSession): RunDriver {
     return local();
   }
   // HOST GAME is the only door into the session driver. NEW GAME must not
-  // fork a utility process, expose a SESSION panel, or make local controls
-  // depend on the multiplayer loopback transport merely because Electron has
-  // that bridge available.
+  // start a session process, expose a SESSION panel, or make local controls
+  // depend on the multiplayer loopback transport merely because the desktop
+  // shell has that bridge available.
   const hosting = takeHostIntent();
   if (!hosting) return local();
   // A run that was BUILT travels as its parameters and costs the wire nothing;

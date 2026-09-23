@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench flight-bench town gallery sheet song unsong audition album mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench flight-bench town gallery sheet song unsong audition album mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-steam desktop-dist sync sync-merge sync-continue sync-abort sync-cleanup
 
 build:
 	npm run build
@@ -75,7 +75,8 @@ levels:
 # The Lua VM, compiled to plain ESM for the SHIPPED mod compiler — the desktop
 # shell's main process has no TypeScript, and the script validator IS the
 # engine's own interpreter (see scripts/build-lua.mjs). Runs inside
-# `npm run electron:*`; this target is for checking it on its own.
+# `make desktop-steam` / `make desktop-dist` when mods are stamped; this target
+# is for checking it on its own.
 lua-vm:
 	node scripts/build-lua.mjs
 
@@ -285,7 +286,7 @@ store-sweep:
 # Playwright's full-page capture rather than stopping at the viewport fold.
 # `make store-page-shot ARGS="--width 1440 --out /tmp/steam-page.png"`
 store-page-shot:
-	node electron/store/preview/screenshot.mjs $(ARGS)
+	node tauri/store/preview/screenshot.mjs $(ARGS)
 
 # ---------------------------------------------------------------------------
 # Desktop packaging
@@ -310,13 +311,19 @@ store-page-shot:
 # Unset means off in a packaged target; a build from sources with no switches
 # at all keeps everything, so a checkout is always the whole game.
 #
-# `make desktop-steam` is what goes to a depot; `make desktop-dist` is a plain
-# download (installers and archives rather than a depot directory).
-# `PLATFORM=win|mac|linux` picks one, and the default builds for this machine.
+# `make desktop-steam` produces a DEPOT DIRECTORY, because that is what Steam
+# uploads and its client owns installing. `make desktop-dist` produces the
+# platform's own installers for a plain download — what the release attaches.
+# The switches are baked into the machine code at compile time
+# (`tauri/src-tauri/src/stamp.rs`), so an installed copy has nothing to edit.
+# Pass anything `tauri/scripts/package.mjs` takes through ARGS, e.g.
+# `ARGS="--target aarch64-apple-darwin"`.
+#
+# A store build must also set GIS_STEAM_APP_ID — the packaging script refuses to
+# ship a build still pointed at Valve's Spacewar test app unless it is told to —
+# and APP_BUNDLE_ID, the identifier the installed app keeps its data under.
 
 .PHONY: desktop-steam desktop-dist
-
-DESKTOP_SCRIPT = release$(if $(PLATFORM),:$(PLATFORM),)
 
 desktop-steam:
 	GIS_STAMP_CAPABILITIES=1 \
@@ -325,29 +332,25 @@ desktop-steam:
 	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),1) \
 	GIS_ENABLE_VOICE=$(or $(ENABLE_VOICE),1) \
 	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),1) \
-	npm --prefix electron run $(DESKTOP_SCRIPT)
+	npm run tauri:package -- $(ARGS)
 
 desktop-dist:
 	GIS_STAMP_CAPABILITIES=1 \
-	GIS_PACKAGE_PROFILE=standalone \
 	GIS_ENABLE_MULTIPLAYER=$(or $(ENABLE_MULTIPLAYER),0) \
 	GIS_ENABLE_MODS=$(or $(ENABLE_MODS),0) \
 	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),0) \
 	GIS_ENABLE_VOICE=$(or $(ENABLE_VOICE),0) \
 	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),0) \
-	npm --prefix electron run $(DESKTOP_SCRIPT)
+	npm run tauri:package:dist -- $(ARGS)
 
 # ---------------------------------------------------------------------------
-# The Tauri desktop shell
+# The desktop shell (tauri/)
 # ---------------------------------------------------------------------------
 #
-# A SECOND desktop wrapper around the same built website, beside electron/ and
-# not instead of it. `tauri/README.md` is the tree; `docs/desktop-shells.md` is
-# how the two are held against each other and what decides which one ships.
-#
-# It is Rust, so it has its own toolchain and its own linter, and none of it is
-# on the root suite's path: `make test` and `make lint` stop at this tree's edge
-# exactly as they stop at electron/'s. These targets are how it is checked.
+# A thin Tauri wrapper around the same built website. `tauri/README.md` is the
+# tree. It is Rust, so it has its own toolchain and its own linter, and none of
+# it is on the root suite's path: `make test` and `make lint` stop at this
+# tree's edge. These targets are how it is checked.
 
 .PHONY: tauri tauri-test tauri-lint tauri-fmt
 
@@ -372,47 +375,6 @@ tauri-lint:
 # rustfmt in place, the peer of `make fmt`.
 tauri-fmt:
 	npm --prefix tauri run fmt
-
-# ---------------------------------------------------------------------------
-# Packaging the Tauri shell
-# ---------------------------------------------------------------------------
-#
-# The peers of `desktop-steam` / `desktop-dist` above, reading the SAME five
-# capability switches — one vocabulary drives both shells, so nobody has to
-# learn a second one. Here they are baked into the machine code at compile time
-# (`tauri/src-tauri/src/stamp.rs`) rather than written into a packaged manifest,
-# which is the one place this shell is stricter than the Electron one: an
-# installed copy has nothing to edit.
-#
-# `make desktop-tauri-steam` produces a DEPOT DIRECTORY, because that is what
-# Steam uploads and its client owns installing. `make desktop-tauri-dist`
-# produces the platform's own installers and archives for a plain download.
-#
-# A store build must also set GIS_STEAM_APP_ID — the packaging script refuses to
-# ship a build still pointed at Valve's Spacewar test app unless it is told to.
-#
-# NOTE: `electron/` is still the release package — see docs/desktop-shells.md
-# for what the choice between the two turns on.
-
-.PHONY: desktop-tauri-steam desktop-tauri-dist
-
-desktop-tauri-steam:
-	GIS_STAMP_CAPABILITIES=1 \
-	GIS_ENABLE_MULTIPLAYER=$(or $(ENABLE_MULTIPLAYER),1) \
-	GIS_ENABLE_MODS=$(or $(ENABLE_MODS),1) \
-	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),1) \
-	GIS_ENABLE_VOICE=$(or $(ENABLE_VOICE),1) \
-	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),1) \
-	npm run tauri:package -- $(ARGS)
-
-desktop-tauri-dist:
-	GIS_STAMP_CAPABILITIES=1 \
-	GIS_ENABLE_MULTIPLAYER=$(or $(ENABLE_MULTIPLAYER),0) \
-	GIS_ENABLE_MODS=$(or $(ENABLE_MODS),0) \
-	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),0) \
-	GIS_ENABLE_VOICE=$(or $(ENABLE_VOICE),0) \
-	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),0) \
-	npm run tauri:package:dist -- $(ARGS)
 
 # ---------------------------------------------------------------------------
 # Catching a branch up with main

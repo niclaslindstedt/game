@@ -224,7 +224,7 @@ The sync is done when **all** of these hold:
 - `make fmt-check`, `make lint` and `make test` are green **on the merged tree**
   — not on the pre-merge one. This is the whole point of the exercise.
 - Any tree with its own toolchain that the merge touched has been checked too
-  (`make tauri-test` / `make tauri-lint`, `npm run electron:test`) — the root
+  (`make tauri-test` / `make tauri-lint`) — the root
   suite stops at their edges.
 - The branch is pushed, and only then is the backup deleted.
 

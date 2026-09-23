@@ -16,7 +16,7 @@
 // only symptom anybody saw was "the game does not launch".
 //
 // So: an environment variable a script needs goes in a Node launcher that sets
-// it on the child (scripts/run-electron.mjs is the worked example), never as a
+// it on the child (scripts/run-tauri.mjs is the worked example), never as a
 // shell prefix. The same trap in its other spellings — `export`, backticks,
 // `$(…)` — is checked too, since each is equally Unix-only.
 
@@ -33,11 +33,10 @@ const ROOT = path.resolve(
 
 /** Every package manifest whose scripts a human or a workflow runs directly.
  * The store shells are outside the workspace and are included on purpose —
- * `npm --prefix electron run start` is exactly the path that broke. */
+ * a shell's own `npm --prefix … run start` is exactly the path that broke. */
 const MANIFESTS = [
   "package.json",
   "pwa/package.json",
-  "electron/package.json",
   "tauri/package.json",
   "native/package.json",
   "mod/package.json",

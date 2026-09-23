@@ -4,8 +4,8 @@
 // developer is reading the log.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-//! The Tauri desktop shell — the peer of `electron/src/main.ts`, and as thin as
-//! that file is: a window showing the bundled game, plus the routing that
+//! The Tauri desktop shell — a window showing the bundled game, plus the routing
+//! that
 //! connects the page's bridge protocols to whatever is behind them.
 //!
 //! All six of the page's protocols are answered here — cloud save,
@@ -135,8 +135,7 @@ pub struct Shell {
 }
 
 /// THE ONE COMMAND the page may reach — every bridge protocol travels down it
-/// as a JSON string, exactly as it travels down `postMessage` on the phone and
-/// `ipcRenderer.send` under Electron.
+/// as a JSON string, exactly as it travels down `postMessage` on the phone.
 #[tauri::command]
 fn shell_post(app: AppHandle, shell: State<'_, Shell>, message: String) {
     let allows = |capability: &str| match capability {
@@ -223,8 +222,7 @@ fn answer(app: &AppHandle, protocol: &str, raw: &str, reply: impl FnOnce(&Value)
 }
 
 /// THE RETURN PATH — the shell calling the page's own `window.__gis*Event(...)`
-/// from outside, exactly as Electron's `executeJavaScript` and the phone's
-/// `injectJavaScript` do. It is why the web side needed no change to run here.
+/// from outside, exactly as the phone's `injectJavaScript` does. It is why the web side needed no change to run here.
 ///
 /// By PROTOCOL name rather than by global, so the two stateful bridges — which
 /// live in modules of their own and answer on threads of their own — have no
@@ -281,11 +279,8 @@ fn fatal(app: &AppHandle, summary: &str) {
 
 /// Say what a developer build is and what the overlay is, once per launch.
 ///
-/// All of them are LOG LINES rather than dialogs, and that is still the
-/// difference from the Electron shell even now that this tree packages itself:
-/// the Electron box exists for a build somebody packaged WITHOUT stamping it,
-/// and this tree's packaging always stamps (`scripts/package.mjs` refuses
-/// otherwise). So an unstamped Tauri binary is by construction a checkout being
+/// All of them are LOG LINES rather than dialogs. This tree's packaging always
+/// stamps (`scripts/package.mjs` refuses otherwise), so an unstamped binary is by construction a checkout being
 /// run by the person who checked it out — and making them click a box on every
 /// `npm run tauri` is how you train somebody to dismiss the box that will
 /// matter.

@@ -1,42 +1,37 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! WHERE THIS APP KEEPS THINGS — the peer of `electron/src/user-data.ts`, and
-//! the one time that has to move.
+//! WHERE THIS APP KEEPS THINGS, and the one time that has to move.
 //!
 //! Tauri names the app-data directory after the bundle IDENTIFIER, which is a
 //! reverse-domain string nobody has ever seen (`se.agilator.adastrail…`)
 //! while the executable is `adastrail` and the window says _Ada's Trail_. So the
 //! folder the player's things live in is DECLARED here instead, beside the
 //! app-data root rather than under the identifier, and it is the executable's
-//! own name — the same word `electron/src/user-data.ts` declares, for the same
-//! reason.
+//! own name.
 //!
-//! **It is `adastrail-tauri` rather than `adastrail`, and that is deliberate.**
-//! Both desktop wrappers are installable at once while the two are being
-//! compared (`docs/desktop-shells.md`), and two running games sharing one
-//! `window-state.json` and one `launch.log` is a fight neither can win. The day
-//! only one of them is left, the name becomes `adastrail` and this one joins
-//! [`LEGACY_DIR_NAMES`] — which is exactly the machinery below, used as
-//! designed.
+//! **It was `adastrail-tauri` while a second desktop wrapper existed**, so two
+//! running games never shared one `window-state.json` and one `launch.log`.
+//! With one wrapper left the name is `adastrail`, and the old one is in
+//! [`LEGACY_DIR_NAMES`], so an install that ran the Tauri build under it is
+//! adopted by the machinery below rather than orphaned.
 //!
 //! **What does NOT live here is the player's roster**, and the difference
 //! matters: `localStorage` belongs to the WEBVIEW, which keeps its own store
 //! under the bundle identifier. A window rect is ours; a hero is the web
-//! platform's. That is also why the electron→tauri switch cannot carry a roster
-//! across on disk at all — Chromium's storage is not WebKit's — and why cloud
-//! save is the only bridge between them.
+//! platform's. That is also why a player moving from the earlier Electron build
+//! cannot have a roster carried across on disk at all — Chromium's storage is
+//! not WebKit's — and why cloud save is the only bridge.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 /// The directory name, and the name the app reports for its own files.
-pub const APP_DIR_NAME: &str = "adastrail-tauri";
+pub const APP_DIR_NAME: &str = "adastrail";
 
 /// The names an install could already be using, newest guess first.
 ///
-/// Empty today: this shell has shipped under exactly one name. It is not an
-/// oversight and not dead code — it is the seam a rename walks through, and
-/// [`plan_user_data_move`] is already written and tested against it.
-pub const LEGACY_DIR_NAMES: &[&str] = &[];
+/// `adastrail-tauri` is the name this shell used while it was the second of two
+/// desktop wrappers (see the module header).
+pub const LEGACY_DIR_NAMES: &[&str] = &["adastrail-tauri"];
 
 /// This app's own directory under the OS's app-data root.
 pub fn user_data_dir(app_data_root: &Path) -> PathBuf {

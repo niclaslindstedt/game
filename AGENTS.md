@@ -66,8 +66,7 @@ make song FILE=x.song          # write a SCORE the short way, and engrave it
 make audition ARGS="overdue"   # HEAR a score — the page that plays it, for an artifact
 make album                     # HEAR THE WHOLE SOUNDTRACK — every score, one page
 make bump          # print the release bump derived from .changes/unreleased/
-npm run parity     # rewrite docs/desktop-parity.md from the two desktop trees
-npm run shell:bench    # weigh the packaged desktop builds; read this machine's cold starts
+npm run shell:bench    # weigh the packaged desktop build; read this machine's cold starts
 npm run webview:sweep  # the web-platform features the game needs, engine by engine
 make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
 ```
@@ -80,7 +79,7 @@ vitest run` skips that and tests whatever happens to be on disk. Several
 COMMITTED artifacts here are drift-tested against a fresh build —
 `mod/catalog.json`, `native/store/game-center-achievements.json`,
 `native/store/game-center-leaderboards.json`,
-`electron/store/steam-achievements.json` — so a stale artifact compared against
+`tauri/store/steam-achievements.json` — so a stale artifact compared against
 an equally stale build MATCHES, and the suite goes green over exactly the drift
 the test exists to catch. (This is not hypothetical: a merge brought in sprites
 from other PRs, `mod/catalog.json` was regenerated after `npm run levels` —
@@ -101,35 +100,30 @@ must never chain a second entry point that rebuilds again (which is what made
 `make lint` compile the whole content tree three times over).
 
 **The store shells are OUTSIDE the npm workspace**, each with its own
-dependency tree (and `electron/` with its own `tsc` and its own vitest, so the
-root suite stops at its edge). The root `package.json` forwards to them with
-`npm --prefix`: `npm run native:*` and `npm run electron:*`, listed with what
-each does in **`native/README.md`** and **`electron/README.md`**. Shipping to
-Steam is **`electron/RELEASING.md`**, which is also the preflight checklist.
-Two traps worth carrying here: `release:*` strips the developer tooling out of
-the embedded site and is the ONLY correct target for a store build, and the
-`native:ios*` scripts run `expo prebuild` first so a change to
-`native/app.config.js` re-syncs instead of shipping a stale native project.
+dependency tree. The root `package.json` forwards to them with `npm --prefix`:
+`npm run native:*` and `npm run tauri:*`, listed with what each does in
+**`native/README.md`** and **`tauri/README.md`**. Shipping to Steam is
+**`tauri/RELEASING.md`** (the build and the upload) and **`tauri/STEAM.md`**
+(the store side). One trap worth carrying here: the `native:ios*` scripts run
+`expo prebuild` first so a change to `native/app.config.js` re-syncs instead of
+shipping a stale native project.
 
-**`tauri/` IS A THIRD SUCH TREE AND IS NOT THE RELEASE PACKAGE** — a second
-desktop shell around the same site, complete beside `electron/`, and which of
-the two ships turns on measurements rather than taste. It is **Rust**, so
+**`tauri/` IS THE DESKTOP SHELL** — the release package for Windows, macOS and
+Linux, and the Steam depot. It is **Rust**, so
 `make test` and `make lint` do not reach it at all: it is checked by
 `make tauri-test` (its decision layer, and DELIBERATELY only that crate — no GUI
 libraries and no Steam SDK needed) and `make tauri-lint` (clippy at zero
 warnings over both crates, which does need the webview libraries). A change to
 that tree runs both, and `.github/workflows/desktop-tauri.yml` runs them for you.
-It packages itself with `make desktop-tauri-steam` / `make desktop-tauri-dist`,
-reading the SAME five `GIS_ENABLE_*` switches the Electron targets do — one
-vocabulary, two shells — and `release.yml` attaches its downloads to every
-release, suffixed `-tauri` so the two shells' artifacts cannot collide.
-It also has TWO windowless modes nothing else has: `--dedicated` (the session
-server in a terminal) and `--roster-check` (what the platform cloud is holding,
-by hero name), the second of which is how "a roster crosses between the two
-desktop builds" is verified in one command per build instead of an evening.
-→ **`tauri/README.md`** for the tree, **`docs/desktop-shells.md`** for how the
-two are held against each other, **`docs/desktop-parity.md`** for the pairing
-the build checks (`npm run parity:check`).
+It packages itself with `make desktop-steam` / `make desktop-dist`, reading the
+five `GIS_ENABLE_*` switches, and `release.yml` attaches its installers to every
+release. The package's identifier comes from `APP_BUNDLE_ID` at packaging time
+(`tauri/scripts/package.mjs`) — it is also where the webview keeps the player's
+data, so it is fixed per deployment. It also has TWO windowless modes nothing
+else has: `--dedicated` (the session server in a terminal) and `--roster-check`
+(what the platform cloud is holding, by hero name).
+→ **`tauri/README.md`** for the tree, **`docs/desktop-shells.md`** for why it is
+the one desktop build and what that retired.
 Nothing in `engine/` or `pwa/` may learn it exists: the page is told
 `__GIS_PLATFORM__ = "steam"` because it is the same product on the same store —
 and **not one line of `pwa/` changed to give this shell cloud save,
@@ -275,20 +269,14 @@ above it, and `docs/architecture.md` has the module-by-module map:
   browser can't give iOS: Taptic haptics, an audio session that plays through
   the ringer switch, in-app purchases, cloud save and Game Center. Its own
   dependency tree. → `native/README.md`
-- **`electron/` — the Steam wrapper.** The same idea for desktop, serving the
-  built site from a private `game://app` scheme (NOT `file://` — `localStorage`
-  is keyed by origin, and an opaque origin would orphan the player's whole
-  roster). Its own dependency tree, its own `tsc`, its own vitest.
-  → `electron/README.md`
-- **`tauri/` — the second desktop wrapper.** The same site again, in the
-  platform's own webview instead of a bundled Chromium. **Rust, in two crates,
-  and the split is the design**: `shell/` is every DECISION and depends on no
-  GUI and no Steam SDK (so its whole suite runs anywhere), `src-tauri/` is every
-  EFFECT. Each module in `shell/` is the named peer of a file in
-  `electron/src/` — including all four platform seams, whose bridge and
-  provider are decisions and whose only Steam-touching file is the third —
-  and `npm run parity:check` refuses a build where that pairing has drifted.
-  It is not the shipping desktop build.
+- **`tauri/` — the desktop wrapper (Steam).** The same idea for desktop, in
+  the platform's own webview, serving the built site from a private `game://`
+  scheme (NOT `file://` — `localStorage` is keyed by origin, and an opaque
+  origin would orphan the player's whole roster). **Rust, in two crates, and
+  the split is the design**: `shell/` is every DECISION and depends on no GUI
+  and no Steam SDK (so its whole suite runs anywhere), `src-tauri/` is every
+  EFFECT — including all four platform seams, whose bridge and provider are
+  decisions and whose only Steam-touching file is the third.
   → `tauri/README.md`, `docs/desktop-shells.md`
 - **`server/` — the session server.** The engine compiled for **Node**, so a
   multiplayer session simulates in a process of its own rather than in the
@@ -303,7 +291,7 @@ and never leak app code into the engine.
 
 **THE SHELLS DIFFER ONLY IN THEIR PIPE.** Both wrap the same built site and
 answer the same bridge protocols; they differ in how the JSON travels
-(`ReactNativeWebView.postMessage` vs Electron IPC), so that — and only that —
+(`ReactNativeWebView.postMessage` vs one Tauri command), so that — and only that —
 lives behind `pwa/src/app/shell-bridge.ts`. The RETURN path needed no
 abstraction at all: both shells call the page's `window.__gis*Event(...)` from
 OUTSIDE, which is why adding a second shell changed no bridge's protocol.
@@ -709,22 +697,21 @@ edit or commit anything under `engine/generated/` or `pwa/src/generated/`.
 
 ## Where new code goes
 
-| Change type                                                         | Goes in                                                                                                                                                              |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine/gameplay logic specific to this game                         | `engine/…` (framework-free TypeScript); exported from `engine/index.ts` — add to `engine/menu.ts` ONLY if the startup path needs it and it drags no simulation along |
-| Generic engine code (usable by any game)                            | `engine/lib/…` — imported as `@game/lib/*`                                                                                                                           |
-| App shell, rendering, PWA, game-specific UI                         | `pwa/src/…`                                                                                                                                                          |
-| Generic UI game components (Preact)                                 | `pwa/src/lib/…` — imported as `@ui/lib/*`                                                                                                                            |
-| Native-only concern (haptics, audio session, IAP, cloud save)       | `native/src/…` — never leak it into `engine/` or `pwa/`                                                                                                              |
-| Desktop/Steam-only concern (window, Steam Cloud, overlay, firewall) | `electron/src/…` — same rule                                                                                                                                         |
-| The SAME concern in the Tauri shell — a DECISION                    | `tauri/shell/src/…` + a test in `tauri/shell/tests/*_test.rs`; a `use tauri::` here is the review comment                                                            |
-| The SAME concern in the Tauri shell — an EFFECT (window, IPC, ACL)  | `tauri/src-tauri/src/…`                                                                                                                                              |
-| The MOD SDK (format, compiler, examples, modder docs)               | `mod/…`                                                                                                                                                              |
-| A RULE the engine hands to a script                                 | `content/scripts/<id>.lua` + a hook in `engine/game/script/hooks.ts` + a binding in `script/bindings.ts` — never a formula only TypeScript knows                     |
-| Generators, analyzers, previews, maintenance commands               | `scripts/…` — executable tooling only; authored data belongs under `content/`                                                                                        |
-| Tests                                                               | `tests/…`, named `*_test.ts`                                                                                                                                         |
-| Docs / examples / LLM prompts                                       | `docs/…` / `examples/…` / `prompts/<name>/<major>_<minor>_<patch>.md`                                                                                                |
-| Mature, playtested generic code                                     | keep in the local `engine/lib/` or `pwa/src/lib/` pool                                                                                                               |
+| Change type                                                   | Goes in                                                                                                                                                              |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine/gameplay logic specific to this game                   | `engine/…` (framework-free TypeScript); exported from `engine/index.ts` — add to `engine/menu.ts` ONLY if the startup path needs it and it drags no simulation along |
+| Generic engine code (usable by any game)                      | `engine/lib/…` — imported as `@game/lib/*`                                                                                                                           |
+| App shell, rendering, PWA, game-specific UI                   | `pwa/src/…`                                                                                                                                                          |
+| Generic UI game components (Preact)                           | `pwa/src/lib/…` — imported as `@ui/lib/*`                                                                                                                            |
+| Native-only concern (haptics, audio session, IAP, cloud save) | `native/src/…` — never leak it into `engine/` or `pwa/`                                                                                                              |
+| Desktop/Steam-only concern — a DECISION                       | `tauri/shell/src/…` + a test in `tauri/shell/tests/*_test.rs`; a `use tauri::` here is the review comment                                                            |
+| Desktop/Steam-only concern — an EFFECT (window, IPC, ACL)     | `tauri/src-tauri/src/…`                                                                                                                                              |
+| The MOD SDK (format, compiler, examples, modder docs)         | `mod/…`                                                                                                                                                              |
+| A RULE the engine hands to a script                           | `content/scripts/<id>.lua` + a hook in `engine/game/script/hooks.ts` + a binding in `script/bindings.ts` — never a formula only TypeScript knows                     |
+| Generators, analyzers, previews, maintenance commands         | `scripts/…` — executable tooling only; authored data belongs under `content/`                                                                                        |
+| Tests                                                         | `tests/…`, named `*_test.ts`                                                                                                                                         |
+| Docs / examples / LLM prompts                                 | `docs/…` / `examples/…` / `prompts/<name>/<major>_<minor>_<patch>.md`                                                                                                |
+| Mature, playtested generic code                               | keep in the local `engine/lib/` or `pwa/src/lib/` pool                                                                                                               |
 
 **Content is data.** Every catalog below is authored YAML under `content/`,
 compiled by `make levels`. The skill named is the one to load before authoring.
@@ -765,17 +752,17 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | The projection, the postfx, a gait, the loot aura | `pwa/src/game/render/`                                                         | `docs/rendering.md`           |
 | A library page's content or look                  | `pwa/scripts/library/…` — the pages are build output and are NEVER hand-edited | `library-improvement`         |
 
-| Multiplayer                                       | Goes in                                                                                                                                                                                                             |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The session server, or the wire either end speaks | `server/…` (`server/wire/*` imports NOTHING; never anything under `pwa/`). THREE ENTRIES, one server: a `parentPort` (Electron forked us), `--shell` (a plain child — `shell-host.ts`), or neither (`dedicated.ts`) |
-| A transport, admission, the router mapping        | `server/net/…` — Node builtins only                                                                                                                                                                                 |
-| Turning SNAPSHOTS back into a run                 | `server/client.ts` — the ONE client, read as `@game/client`. Never a second one: a bot client and the page must prove the same thing playable                                                                       |
-| A headless player, or a soak                      | `server/bot-client.ts` + `scripts/bot-client.mjs`; the weather is `Impairment` on the UDP transport                                                                                                                 |
-| The shell's half (fork, supervise, hand the port) | `electron/src/net.ts` + `session-host.ts`, and their Tauri peers `tauri/shell/src/net*.rs` + `tauri/src-tauri/src/{net,session}.rs`; the page's half is `pwa/src/app/net-bridge.ts`                                 |
-| A HOST / JOIN screen                              | `content/mainmenu.yaml` + `title-screen/menus-net.ts` — STARTUP PATH, so never `pwa/src/game/net/`. A LIVE status row belongs to the RUN instead (`game-screen/SessionPanel.tsx`)                                   |
-| A rule about who may take, keep or move an item   | `engine/game/trade.ts` when TWO players are involved; `items/` otherwise                                                                                                                                            |
-| VOICE — a codec, the capture, the jitter buffer   | `pwa/src/game/net/voice/` behind the PROVIDER seam in `codecs.ts` (a new codec is one entry in `PROVIDERS`); the payload is `server/wire/voice.ts`, the relay `session.ts`                                          |
-| A SECOND LEVEL live in the same session           | `server/worlds.ts` (raising and populating a carve) + `server/crossing.ts` (moving a seat between two). `session.ts` owns only the LOOP over them                                                                   |
+| Multiplayer                                       | Goes in                                                                                                                                                                                  |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The session server, or the wire either end speaks | `server/…` (`server/wire/*` imports NOTHING; never anything under `pwa/`). TWO ENTRIES, one server: `--shell` (the desktop shell's child — `shell-host.ts`), or neither (`dedicated.ts`) |
+| A transport, admission, the router mapping        | `server/net/…` — Node builtins only                                                                                                                                                      |
+| Turning SNAPSHOTS back into a run                 | `server/client.ts` — the ONE client, read as `@game/client`. Never a second one: a bot client and the page must prove the same thing playable                                            |
+| A headless player, or a soak                      | `server/bot-client.ts` + `scripts/bot-client.mjs`; the weather is `Impairment` on the UDP transport                                                                                      |
+| The shell's half (fork, supervise, hand the port) | `tauri/shell/src/net.rs` + `session-host.ts`, and their Tauri peers `tauri/shell/src/net*.rs` + `tauri/src-tauri/src/{net,session}.rs`; the page's half is `pwa/src/app/net-bridge.ts`   |
+| A HOST / JOIN screen                              | `content/mainmenu.yaml` + `title-screen/menus-net.ts` — STARTUP PATH, so never `pwa/src/game/net/`. A LIVE status row belongs to the RUN instead (`game-screen/SessionPanel.tsx`)        |
+| A rule about who may take, keep or move an item   | `engine/game/trade.ts` when TWO players are involved; `items/` otherwise                                                                                                                 |
+| VOICE — a codec, the capture, the jitter buffer   | `pwa/src/game/net/voice/` behind the PROVIDER seam in `codecs.ts` (a new codec is one entry in `PROVIDERS`); the payload is `server/wire/voice.ts`, the relay `session.ts`               |
+| A SECOND LEVEL live in the same session           | `server/worlds.ts` (raising and populating a carve) + `server/crossing.ts` (moving a seat between two). `session.ts` owns only the LOOP over them                                        |
 
 Everything multiplayer: **`docs/multiplayer.md`** — the shipped architecture,
 and the record of what still needs a human with hardware to accept.
@@ -825,13 +812,10 @@ looking at what the module exported. A new field
 is added THERE, with its rule and its error message, before any generator reads
 it; `mod/FORMAT.md` indexes the set against the file each validates.
 
-Five artifacts are **committed and drift-tested against a fresh build**, so they
+Four artifacts are **committed and drift-tested against a fresh build**, so they
 are regenerated in the same commit as the change that moves them:
 `mod/catalog.json` (`make mod-catalog`), `native/store/game-center-{achievements,leaderboards}.json`,
-`electron/store/steam-achievements.json`, and `docs/desktop-parity.md`
-(`npm run parity`) — which is derived from the two desktop trees rather than
-from a catalog, and whose drift test lives in the ROOT suite because a change
-under `electron/src/` breaks it exactly as easily as one under `tauri/`.
+and `tauri/store/steam-achievements.json`.
 
 ## Local reusable code, tests, file size — the `write-code` skill owns them
 
@@ -865,8 +849,8 @@ that tag's own lockfile.
 | story or dialogue text (any line)                                      | `docs/manuscript.md`, with `docs/story.md` above it — load `update-story` |
 | a name (a mob, an item, a company)                                     | `docs/naming.md` if the RULE changes; otherwise just obey it              |
 | the co-op architecture                                                 | `docs/multiplayer.md`                                                     |
-| the Tauri shell's own tree                                             | `tauri/README.md`; then `npm run parity` if a module paired or unpaired   |
-| which desktop build ships, or the numbers that decide it               | `docs/desktop-shells.md`                                                  |
+| the Tauri shell's own tree                                             | `tauri/README.md`                                                         |
+| the desktop build's platform differences, or its numbers               | `docs/desktop-shells.md`                                                  |
 | the mod format or SDK                                                  | `docs/modding.md`, `mod/FORMAT.md`, and `make mod-catalog` if ids moved   |
 | a scripting hook, or what a script may read                            | `docs/scripting.md`, `mod/FORMAT.md`, then `make mod-catalog`             |
 | Make targets / npm scripts                                             | `README.md` Usage, `CONTRIBUTING.md`, this file                           |
@@ -957,7 +941,7 @@ skill is the source of truth — load that, not a search of the tree.
 | Naming anything                                                                                                       | `docs/naming.md`                                                                    |
 | Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md`                                                               |
 | The Tauri shell: the two crates, the launch modes, the overlay, packaging                                             | `tauri/README.md`, then `tauri/RELEASING.md`                                        |
-| Which desktop build ships: what is measured, by what, and the three outcomes                                          | `docs/desktop-shells.md`, `docs/desktop-parity.md`                                  |
+| Why the desktop build is Tauri: what it does differently, what is measured, and by what                               | `docs/desktop-shells.md`                                                            |
 | Mods: the format, `registerDefs`, load order, the catalog, the Workshop, `--mod`                                      | the `mod-authoring` skill, then `mod/AGENTS.md`, `mod/FORMAT.md`, `docs/modding.md` |
 | Scripting: the hooks, the sandbox, what a script may read, adding one                                                 | `docs/scripting.md`                                                                 |
 | Settings, URL params, env vars, the DEVELOPER menu's inventory                                                        | `docs/configuration.md`                                                             |

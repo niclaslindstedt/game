@@ -10,9 +10,10 @@
 // "the player just pressed A" is what a menu needs and the API never says it.
 //
 // One reader covers every shell the game ships in, which is the reason to do it
-// in the web layer rather than in `electron/`: Chromium implements the Gamepad
-// API, so the same code serves the browser, the desktop Steam build (where
-// Steam Input presents even an exotic pad as a standard one), and iOS/Android's
+// in the web layer rather than in the desktop shell: every engine the game runs
+// in implements the Gamepad API, so the same code serves the browser, the
+// desktop Steam build (where Steam Input presents even an exotic pad as a
+// standard one), and iOS/Android's
 // WKWebView, which exposes MFi and Bluetooth controllers the same way. Nothing
 // platform-specific is needed for any of them.
 //

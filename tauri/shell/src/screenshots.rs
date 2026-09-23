@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! SCREENSHOTS' SHELL half — the peer of `electron/src/screenshots.ts`, and the
-//! bridge between the game's screenshot key (`pwa/src/game/screenshots.ts`) and
+//! SCREENSHOTS' SHELL half — the bridge between the game's screenshot key (`pwa/src/game/screenshots.ts`) and
 //! the things a desktop can do with a picture that a browser tab cannot. The
 //! protocol is documented on the web side (`pwa/src/app/screenshot-bridge.ts`);
 //! keep the two in step.
@@ -42,7 +41,7 @@ const MAX_NAME: usize = 120;
 
 /// WHICH SHELL answered, as the page's own `ShotsProviderId` spells it.
 ///
-/// Hardcoded, exactly as the Electron peer hardcodes it, and deliberately NOT
+/// Hardcoded, and deliberately NOT
 /// the platform library's id: the page's union is `steam | ios | android` — a
 /// PLATFORM — and it is the same platform whichever binary is showing the game.
 /// A value invented here would be a protocol redesigned for this shell, which

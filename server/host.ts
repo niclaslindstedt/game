@@ -4,15 +4,15 @@
 //
 // **THIS MODULE EXISTS SO "THE DEDICATED SERVER IS THE SAME FILE" CAN BE
 // TRUE.** The only way to make that hold rather than merely claim it is to
-// have one implementation with two thin entries on top: `main.ts` when
-// Electron forked this process and handed it a control channel,
+// have one implementation with two thin entries on top: `main.ts` when the
+// desktop shell spawned this process and drives it down a control channel,
 // `dedicated.ts` when a person ran it from a terminal. What
 // would otherwise be duplicated is precisely the part that must not be — a
 // FIXED-TIMESTEP LOOP, whose second copy drifts from the first silently and only
 // under load.
 //
-// **NOTHING HERE KNOWS WHY IT IS RUNNING.** No Electron, no control channel, no
-// `MessagePort`, no Steam. The two entries supply what differs: how a client's
+// **NOTHING HERE KNOWS WHY IT IS RUNNING.** No shell, no control channel, no
+// snapshot channel, no Steam. The two entries supply what differs: how a client's
 // bytes arrive (a port, or a socket), where a log line goes, and — the only
 // genuinely platform-shaped one — the STEAM relay, which stays in the shell
 // because `steamworks.init()` is a single global handshake the main process

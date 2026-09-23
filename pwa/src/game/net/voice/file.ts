@@ -49,8 +49,8 @@
 // listener DECODED to a .wav you can open beside the source file: same length,
 // same envelope, same words. For a numeric answer use correlation or RMS error
 // against the source, never a hash — and expect a digest of the encoded stream
-// to be stable only for one Chromium build, since libopus' output is
-// deterministic for a fixed version and settings and Electron upgrades move
+// to be stable only for one browser-engine build, since libopus' output is
+// deterministic for a fixed version and settings and an engine upgrade moves
 // both.
 
 import { warn } from "@game/core";

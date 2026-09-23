@@ -67,8 +67,8 @@ grow into a player manual or marketing page.
 | Game premise / how-to-play content | The flavored intro sections |
 | Installation / dev setup (`.npmrc`, `GITHUB_PAT`) | **Install** / dev setup |
 | License change | **License** section, badges |
-| Mod authoring, loading or Workshop (`mod/**`, `docs/modding.md`, `electron/src/{mods,workshop}.ts`) | Opening modder callout, **Modding**, platform availability, and **License** |
-| Desktop/Steam release scope (`electron/**`, `electron/store/steam.json`) | Opening description, release/platform table, mod testing path, and unpublished/published status |
+| Mod authoring, loading or Workshop (`mod/**`, `docs/modding.md`, `tauri/shell/src/{mods,workshop}.rs`) | Opening modder callout, **Modding**, platform availability, and **License** |
+| Desktop/Steam release scope (`tauri/**`, `tauri/store/steam.json`) | Opening description, release/platform table, mod testing path, and unpublished/published status |
 | Agent skill discovery (`OSS_GAME_SPEC.md` §21, `.agents/skills/`, tool aliases, `scripts/skill-lessons.mjs`) | Agent callout, **Repository layout**, and skill links under **Documentation** |
 
 Extend this table every time you find a new source-of-truth file that feeds the README.

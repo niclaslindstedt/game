@@ -27,25 +27,42 @@ viewer for a website — see [`README.md`](README.md).
 - **Everything the STORE side needs** — Steam Direct, the Steamworks SDK and its
   `steamcmd`, the interactive `steamcmd +login` that caches a Steam Guard
   session, `STEAM_USER`, the bank and tax details, and the **30-day store-page
-  wait** that gates the whole thing. None of it is per-shell: it is one app on
-  one store, so it lives once, in
-  [`electron/RELEASING.md`](../electron/RELEASING.md) §0.
+  wait** that gates the whole thing. It is the store side rather than the
+  build, so it lives in [`STEAM.md`](STEAM.md) §0.
 
 ### The ids
 
-The app id and the three depot ids live in **`electron/store/steam.json`** —
+The app id and the three depot ids live in **`tauri/store/steam.json`** —
 one file for the whole repo, because it is one app on one store. Fill them in
 from the partner site (App Admin → the number in the URL is the app id; App
 Admin → Depots for the rest). CI can override them with `GIS_STEAM_APP_ID` and
 `GIS_STEAM_DEPOT_WINDOWS` / `_MACOS` / `_LINUX` rather than committing them.
+
+### The package identity
+
+`src-tauri/tauri.conf.json` commits a development identifier
+(`dev.local.adastrail`). What an installed copy installs under arrives at
+packaging time instead, under the same names the phone build and every app in
+the fleet use:
+
+| Variable           | Becomes                                                                    |
+| ------------------ | -------------------------------------------------------------------------- |
+| `APP_BUNDLE_ID`    | `identifier` — and the key each desktop webview keeps the player's data by |
+| `APP_DISPLAY_NAME` | `productName`, optionally; unset, the committed name stands                |
+
+`scripts/package.mjs` merges them over the committed config. Set them as
+repository **secrets** for the release workflow, which passes
+`--require-identity` and refuses to package under the development identifier.
+**The identifier is where the data lives**, so it is fixed per deployment:
+changing it after a release strands every installed copy's progress.
 
 ---
 
 ## 1. Build the depot
 
 ```sh
-make desktop-tauri-steam                                    # from the repo root
-make desktop-tauri-steam ARGS="--target aarch64-apple-darwin"
+make desktop-steam                                    # from the repo root
+make desktop-steam ARGS="--target aarch64-apple-darwin"
 ```
 
 That produces a **depot directory** at `tauri/release/depot`, not an installer,
@@ -73,7 +90,7 @@ release, with notarization on top.
 
 ### What the five capability switches do
 
-`make desktop-tauri-steam` turns all five on; `make desktop-tauri-dist` turns
+`make desktop-steam` turns all five on; `make desktop-dist` turns
 them all off unless asked. They are read at **compile** time, so an installed
 copy has nothing to edit.
 
@@ -86,7 +103,7 @@ copy has nothing to edit.
 | `GIS_ENABLE_LICENSED`    | the store licence the feature terms reserve |
 
 Override one at a time with the Makefile's `ENABLE_*` variables, e.g.
-`make desktop-tauri-dist ENABLE_MODS=1`.
+`make desktop-dist ENABLE_MODS=1`.
 
 ---
 

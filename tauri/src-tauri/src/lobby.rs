@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! STEAM MATCHMAKING — the effects half of [`adastrail_shell::net_lobby`], and
-//! the peer of the Steam half of `electron/src/net-lobby.ts`.
+//! STEAM MATCHMAKING — the effects half of [`adastrail_shell::net_lobby`].
 //!
 //! **EVERY CALL HERE IS A CALL-RESULT, WHICH IS WHY THE CALLBACK PUMP HAD TO BE
 //! RE-DECIDED FIRST.** `create_lobby`, `request_lobby_list` and `join_lobby`

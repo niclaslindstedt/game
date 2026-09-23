@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! THE MULTIPLAYER PROTOCOL, both directions.
 //!
-//! Every assertion here is about a message the OTHER shell also sends or the
-//! page also reads, so the file is really a check that three
-//! implementations of one protocol still agree: `electron/src/net.ts`,
-//! `pwa/src/app/net-bridge.ts` and this shell.
+//! Every assertion here is about a message the page also sends or reads, so
+//! the file is really a check that two implementations of one protocol still
+//! agree: `pwa/src/app/net-bridge.ts` and this shell.
 //!
 //! The three that matter most are the ones a real session gets wrong
 //! invisibly: the licence travelling from the BUILD rather than from the page,

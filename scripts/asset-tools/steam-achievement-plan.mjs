@@ -48,7 +48,7 @@ export const WORKSHEET_COLUMNS = [
 ];
 
 /** Where `make store-achievement-art` writes Steam's 64×64 pair. */
-export const DEFAULT_ART_DIR = "electron/store/achievements";
+export const DEFAULT_ART_DIR = "tauri/store/achievements";
 
 /** The two rasters one row takes, by the suffix the art generator writes. */
 export const ART_VARIANTS = { icon: "achieved", iconGray: "locked" };

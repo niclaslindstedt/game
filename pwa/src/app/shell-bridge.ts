@@ -3,14 +3,14 @@
 // the one place that knows HOW a shell is reached.
 //
 // The game ships inside more than one shell: the Expo WebView (`native/`, iOS
-// and Android) and the Electron desktop app (`electron/`, Steam). Both wrap the
+// and Android) and the Tauri desktop app (`tauri/`, Steam). Both wrap the
 // SAME built website and both answer the SAME bridge protocols (the coin store,
 // cloud save, achievements, leaderboards; plus mods and MULTIPLAYER, which only
 // the desktop shell can honour) — they differ only in the pipe the JSON travels
 // down:
 //
 //   Expo WebView   `window.ReactNativeWebView.postMessage(json)`
-//   Electron       `window.__gisShell.post(json)`  (preload → ipcRenderer)
+//   Tauri          `window.__gisShell.post(json)`  (init script → invoke)
 //
 // So the pipe is the ONLY thing abstracted here. Every bridge keeps its own
 // protocol, its own request ids and its own waiters; they just stopped naming
@@ -20,15 +20,15 @@
 //
 // The RETURN path needs no abstraction at all, and that is deliberate: both
 // shells call the page's `window.__gis*Event(...)` callbacks from the outside
-// (`injectJavaScript` on the WebView, `webContents.executeJavaScript` in
-// Electron), so the bridges' receiving half is already shell-agnostic and is
+// (`injectJavaScript` on the WebView, `webview.eval` on the desktop), so the
+// bridges' receiving half is already shell-agnostic and is
 // left exactly as it was.
 
 import { isNativeApp } from "./native.ts";
 
 /** Which shell the game is running inside, when it is running inside one.
- * `ios`/`android` are the Expo WebView (`native/`); `steam` is the Electron
- * desktop app (`electron/`). */
+ * `ios`/`android` are the Expo WebView (`native/`); `steam` is the Tauri
+ * desktop app (`tauri/`). */
 export type ShellPlatform = "ios" | "android" | "steam";
 
 declare global {
@@ -36,8 +36,8 @@ declare global {
     /** The Expo WebView's message channel into the native shell
      * (native/App.tsx `onMessage`). */
     ReactNativeWebView?: { postMessage(message: string): void };
-    /** The Electron shell's message channel, exposed by the preload over
-     * `contextBridge` (electron/src/preload.ts). Same JSON, same protocols. */
+    /** The desktop shell's message channel, installed by its initialization
+     * script (tauri/src-tauri/src/page.rs). Same JSON, same protocols. */
     __gisShell?: {
       post(message: string): void;
       /**
@@ -46,7 +46,7 @@ declare global {
        * text". A session publishes twenty times a second, which is not traffic
        * for a channel built around round trips, so the shell mints a
        * `MessagePort` pair and gives the page one end (see
-       * `pwa/src/app/net-bridge.ts` and `electron/src/net.ts`).
+       * `pwa/src/app/net-bridge.ts` and `tauri/shell/src/net.rs`).
        *
        * Optional because only the desktop shell has it: the WebView shells
        * host nothing, and a browser has no shell at all.

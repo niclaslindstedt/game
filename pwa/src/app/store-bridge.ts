@@ -83,7 +83,7 @@ let purchaseWaiter: {
  * WEB build, which has never had the store either: the AUTO PILOT purse is
  * funded the way it always is off a phone, by selling loot across the
  * merchant's counter (`engine/game/merchant.ts` `sellItem`). Nothing else changes,
- * and the Electron shell answers no store channel at all — so this is a
+ * and the desktop shell answers no store channel at all — so this is a
  * statement of fact about that shell, not a policy bolted on top of one.
  */
 export function storeBridgeAvailable(): boolean {

@@ -40,7 +40,7 @@ const MANIFESTS = [
   },
   {
     portal: "Steam",
-    rows: read("../../electron/store/steam-achievements.json")
+    rows: read("../../tauri/store/steam-achievements.json")
       .achievements as Array<{ id: string }>,
   },
 ];

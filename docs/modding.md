@@ -208,8 +208,8 @@ whose size it already knows. That was a deliberate choice before PNGs existed
 (decoding a stranger's image in the process holding the player's save is an
 attack surface with no upside) and shipping PNG bytes through would have thrown
 it away for nothing. `mod/tools/png.mjs` is therefore a from-scratch
-non-interlaced PNG reader on `node:zlib`: the toolchain runs outside the app's
-asar and installs no packages of its own, which rules out `sharp`, and a decoder
+non-interlaced PNG reader on `node:zlib`: the toolchain ships beside the app
+and installs no packages of its own, which rules out `sharp`, and a decoder
 short enough to read end to end is a decoder whose refusals can be explained to
 an author by line. `tests/content/mod_png_test.ts` pins it byte-for-byte against
 `sharp` across every row filter and colour type, and pins the two refusals
@@ -800,7 +800,7 @@ answered by `hasLevel()` (the ACTIVE catalog) rather than by probing the shipped
 
 ## Publishing
 
-`electron/src/workshop.ts` wraps ISteamUGC. The first publish calls `createItem`
+`tauri/shell/src/workshop.rs` wraps ISteamUGC. The first publish calls `createItem`
 and remembers the returned id, so publishing again updates the same item. What
 is uploaded is the **authored folder**, not a compiled bundle — each subscriber's
 game compiles it locally, and a published mod stays readable and forkable the
@@ -874,15 +874,13 @@ The rest of what is load-bearing in `menus-mods.ts`:
 
 ## The shell handler, and what ships with it
 
-`electron/src/mods.ts` is where the three halves meet: it asks `workshop.ts`
-what the player is subscribed to, walks the two mods folders on disk, runs the
-compiler over each one, and answers the bridge. It is the peer of
-`cloud-save.ts` with one difference that shapes the file — it does real work,
+`tauri/shell/src/mods.rs` is where the three halves meet: it asks the Workshop
+(`workshop.rs`) what the player is subscribed to, walks the two mods folders on
+disk, runs the compiler over each one, and answers the bridge. It is the peer of
+`cloud_save.rs` with one difference that shapes the file — it does real work,
 because **compiling is the security boundary**. A mod's YAML is read, parsed
-and validated here so that only checked JSON crosses to the renderer. The Tauri
-shell answers the same bridge from the named peers `tauri/shell/src/mods.rs`,
-`mod_archive.rs` and `workshop.rs`, which is a pairing `npm run parity:check`
-refuses a build without (→ [`docs/desktop-parity.md`](desktop-parity.md)).
+and validated here so that only checked JSON crosses to the page; a `.zip` is
+opened by `mod_archive.rs`.
 
 **Three sources, one list**, and each answers a different question:
 
@@ -910,7 +908,7 @@ that rule can be tested for all three from one machine.
 
 ### The one archive this app opens
 
-`electron/src/mod-archive.ts` reads a `.zip` from that folder, and it is worth
+`tauri/shell/src/mod_archive.rs` reads a `.zip` from that folder, and it is worth
 being precise about what changed and what did not. The Workshop path still has
 no archive parser: Steam downloads and unpacks a subscription, so a stranger's
 file never meets code of ours. What the reader answers is the other arrival —
@@ -934,28 +932,26 @@ the row appears with the reason on it. Unlike a nameless directory, which is
 silently skipped, a file called `something.zip` in the mods folder was put
 there to be played, so "it is not a mod" is an answer the player needs.
 
-**Shipping the compiler is its own problem.** It lives outside `electron/` — in
+**Shipping the compiler is its own problem.** It lives outside `tauri/` — in
 `mod/tools/`, importing the game's own loaders out of `scripts/` — because there
 must be exactly one compiler. **`scripts/modtools-manifest.cjs` is the one copy
-list**, read by `electron-builder.config.cjs` (as `extraResources`) and by
-`tauri/scripts/package.mjs` alike, because a loader carried into one desktop
-build and not the other is a mod that compiles on one and not the other with
+list**, read by `tauri/scripts/package.mjs`, because a loader not carried into
+the package is a mod that compiles in the repo and not in the game with
 nothing anywhere reporting it. Five details are load-bearing:
 
-- The packaged tree **mirrors the repo's layout** under `resources/modtools/`.
-  Every module in there finds its neighbours by relative path
+- The packaged tree **mirrors the repo's layout** under the package's
+  `modtools/`. Every module in there finds its neighbours by relative path
   (`../../scripts/…`, `new URL("../../content", import.meta.url)`), so a
-  flattened copy resolves to nothing. `resources.ts` is the one place that knows
-  which root applies, off `app.isPackaged`.
-- It is **outside the asar**, because it is loaded by dynamic `import()`, which
-  resolves real files on disk rather than asar entries.
-- **`yaml` rides along** into `modtools/node_modules/`, for the same reason: a
-  package inside the asar is not resolvable from a module outside it. Which
-  packages those are is declared in `mod/package.json` — a MANIFEST, never a tree
-  to `npm install` into.
+  flattened copy resolves to nothing. `tauri/shell/src/runtime.rs` is the one
+  place that knows which root applies.
+- It is **real files on disk**, run as a child process on the Node runtime the
+  package carries, and what crosses back is JSON.
+- **`yaml` rides along** into `modtools/node_modules/`, because the package has
+  no repo root to resolve it from. Which packages those are is declared in
+  `mod/package.json` — a MANIFEST, never a tree to `npm install` into.
 - **So does the Lua VM** (`make lua-vm`, staged as `modtools/lua-vm`), because
-  the script validator IS the engine's own interpreter and this process has no
-  TypeScript to compile it from.
+  the script validator IS the engine's own interpreter and the shipped Node has
+  no TypeScript to compile it from.
 - **Every `scripts/` directory the compiler imports has to be listed.** One that
   is not is a mod that compiles in the repo and fails on a player's machine with
   a resolve error, so `tests/content/mod_toolchain_deps_test.ts` walks the
@@ -968,9 +964,9 @@ nothing anywhere reporting it. Five details are load-bearing:
 The one value that crosses from the page INWARD in this whole feature is the
 `folder` a PUBLISH names, so it is the one that is checked — resolved and
 compared as a path prefix against the local mods directory, which is what stops
-both `..` traversal and a sibling like `mods-elsewhere`. `electron/tests/`
-covers that, and compiles the worked example end to end through the real
-dynamic import.
+both `..` traversal and a sibling like `mods-elsewhere`.
+`tauri/shell/tests/mods_test.rs` covers that, and
+`tests/content/mod_build_test.ts` compiles the worked example end to end.
 
 ## What is not here yet
 

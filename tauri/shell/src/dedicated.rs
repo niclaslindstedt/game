@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE ONE BINARY'S SECOND MODE — the peer of `electron/src/dedicated-mode.ts`.
+//! THE ONE BINARY'S SECOND MODE.
 //!
 //! `--dedicated` turns this executable into the session server with no window
 //! at all. It is the same server the game forks, run from a terminal by a
 //! person, and the argument for it is `server/dedicated.ts`'s: there is no
 //! second binary to forget to update.
 //!
-//! **THE ONE DIFFERENCE FROM ELECTRON IS WHICH PROCESS RUNS IT.** Electron's
-//! main process IS Node, so it rewrites its own `process.argv` and `import()`s
-//! the server entry into itself. This shell is Rust: it spawns the same entry
-//! on the bundled runtime and waits, forwarding the exit code — which is
-//! actually the closer match to what an operator expects, since the thing in
-//! their process table is then the server rather than a game shell pretending.
+//! **THE SERVER IS SPAWNED, NOT RUN IN THIS PROCESS.** This shell is Rust: it
+//! spawns the server entry on the bundled runtime and waits, forwarding the
+//! exit code — the match to what an operator expects, since the thing in their
+//! process table is then the server rather than a game shell pretending.
 //!
 //! **AND IT DOES NOT GET THE SIDECAR'S PIPES.** A dedicated server is driven by
 //! a config file and a signal, not by a control channel, so it is spawned

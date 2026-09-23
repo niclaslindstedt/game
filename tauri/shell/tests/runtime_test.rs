@@ -48,7 +48,7 @@ fn a_checkout_reads_what_the_repos_own_build_already_produced() {
     );
     assert_eq!(
         repo.server_entry(),
-        PathBuf::from("/home/nic/game/electron/server-dist/server/main.js")
+        PathBuf::from("/home/nic/game/server-dist/server/main.js")
     );
     assert_eq!(
         repo.mod_compiler(),

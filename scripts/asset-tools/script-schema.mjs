@@ -39,8 +39,8 @@ const engine = (p) => fileURLToPath(new URL(`../../${p}`, import.meta.url));
  * SHIPPED desktop app the compiler runs in a main process with no TypeScript,
  * so it reads the precompiled JavaScript `scripts/build-lua.mjs` emits — the
  * same decision, for the same reason, that `scripts/build-server.mjs` makes for
- * the session server: the runtime is Electron's and its version is not ours to
- * pin.
+ * the session server: the shipped runtime is whatever Node the packaging
+ * machine ran, and its version is not ours to pin.
  *
  * The shipped paths are relative to the TOOLCHAIN ROOT — in the packaged app
  * this file sits at `modtools/scripts/asset-tools/`, so `lua-vm/…` resolves to

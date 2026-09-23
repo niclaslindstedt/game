@@ -2,8 +2,8 @@
 // THE LAUNCH NOTICE — what a build whose licensed features were switched on by
 // command line says before it lets anybody at the menu.
 //
-// It used to be an OPERATING-SYSTEM MESSAGE BOX (`dialog.showMessageBoxSync` in
-// electron/src/main.ts), raised before the window existed: a system-font panel
+// It used to be an OPERATING-SYSTEM MESSAGE BOX raised by the desktop shell
+// before the window existed: a system-font panel
 // with the platform's own buttons, in front of a black rectangle, seconds
 // before the game drew its first pixel. Nothing about it belonged to the game —
 // which is a poor way to make somebody read a sentence about the terms they are
@@ -163,8 +163,8 @@ export function LaunchNotice({
               onClick={() => {
                 playUiSound(synth, "confirm");
                 // The shells deny the popup and hand the URL to the player's
-                // own browser (`setWindowOpenHandler` in electron/src/main.ts,
-                // the navigation guard in the Tauri shell), so the game is
+                // own browser (the navigation guard in
+                // tauri/src-tauri/src/window.rs), so the game is
                 // still standing here when they come back.
                 window.open(storeUrl, "_blank", "noopener,noreferrer");
               }}

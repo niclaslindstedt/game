@@ -295,7 +295,7 @@ describe("packageMod", () => {
     const entries = readZip(readFileSync(result.file));
     const names = entries.map((entry) => entry.name).sort();
     // One top-level folder named after the mod — what the game's own reader
-    // looks for when it opens a zip (electron/src/mod-archive.ts).
+    // looks for when it opens a zip (tauri/shell/src/mod_archive.rs).
     expect(names.every((name) => name.startsWith("greenhouse/"))).toBe(true);
     expect(names).toContain("greenhouse/mod.yaml");
     expect(names).toContain("greenhouse/README.md");

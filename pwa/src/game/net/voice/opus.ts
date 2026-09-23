@@ -6,10 +6,9 @@
 // **IT IS ENTIRELY THE PLATFORM'S OWN.** `getUserMedia` opens the microphone,
 // an `AudioWorklet` cuts it into frames and measures it, and WebCodecs'
 // `AudioEncoder`/`AudioDecoder` do Opus. No dependency, no WASM, no native
-// addon — which matters more here than it usually does: the desktop shell's
-// whole installability rests on `steamworks.js` shipping prebuilt binaries, and
-// a voice codec that needed a toolchain would put that back on the table for
-// the sake of something Chromium already contains.
+// addon — which matters more here than it usually does: a voice codec that
+// needed a native dependency would put a second toolchain into every desktop
+// build for the sake of something the platform already contains.
 //
 // **WHY OPUS AND NOT "WHATEVER THE BROWSER ENCODES".** It is the codec designed
 // for exactly this — interactive speech over a lossy packet network — and the

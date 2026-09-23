@@ -34,7 +34,7 @@ export function isDocumentUrl(url: string): boolean {
  * the players keep) would replace the game with a web page the player cannot
  * leave without killing the app. App.tsx hands such a URL to the system browser
  * instead, exactly as the desktop shell hands one to `shell.openExternal`
- * (electron/src/main.ts) — keep the two in step.
+ * (tauri/src-tauri/src/window.rs) — keep the two in step.
  *
  * Only http(s) is judged, and everything else is INTERNAL by default: the
  * WebView's own `about:blank`, `blob:` and `data:` loads must not be cancelled,

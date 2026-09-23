@@ -1,31 +1,28 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE SIDECAR MODE — how a shell with no `utilityProcess` drives a session.
+// THE SIDECAR MODE — how the desktop shell drives a session.
 //
-// `main.ts` has two entries already: a `parentPort` (Electron forked us) and no
-// parent at all (a person at a terminal — `dedicated.ts`). This is the third,
-// and it exists because the Tauri shell is a Rust process that can spawn a
-// child and nothing more: there is no `utilityProcess.fork`, no Node IPC
-// channel, and — the part that shapes this whole file — no way to transfer a
+// `main.ts` has two entries: this one, and no shell at all (a person at a
+// terminal — `dedicated.ts`). This one exists because the desktop shell is a
+// Rust process that can spawn a child and nothing more: there is no Node IPC
+// channel and — the part that shapes this whole file — no way to transfer a
 // `MessagePort` to the page.
 //
-// **THE SPLIT IS THE SAME SPLIT, REACHED WITH TWO PIPES INSTEAD OF ONE.**
+// **TWO PIPES, SPLIT BY WHAT THEY CARRY.**
 //
 //   CONTROL   host / listen / stop / status / connect, plus the relayed Steam
 //             packets. A handful of small JSON messages. They travel on this
 //             process's own STDIO as newline-delimited JSON — the plainest
 //             thing a parent process can read, needing no library on either
-//             side, and exactly the traffic `parentPort` carries under
-//             Electron.
+//             side.
 //   GAME      a snapshot twenty times a second. It travels on a LOOPBACK
 //             WEBSOCKET the PAGE opens directly to this process, so the shell
-//             is not in the path — which is the one property Electron's
-//             `MessagePort` bought and the only one worth paying for.
+//             is not in the path — the one property worth paying for.
 //
 // **WHY THE WEBSOCKET WON** (`docs/desktop-shells.md` records the same
 // argument). The alternatives were Tauri's own IPC with a
 // binary channel, which puts the shell's event loop between the simulation and
-// the screen for every frame — the exact cost the `MessagePort` was chosen to
-// avoid — and a `SharedArrayBuffer` ring, which needs COOP/COEP on the game's
+// the screen for every frame — the exact cost this split exists to avoid —
+// and a `SharedArrayBuffer` ring, which needs COOP/COEP on the game's
 // own origin and would therefore change how the WEBSITE is served to suit one
 // shell. A socket the page opens itself changes neither: the page's contract is
 // still a `MessagePort` (the shell's initialization script mints the pair and
@@ -40,9 +37,8 @@
 // is a strictly smaller door than the UDP socket a host already opens to the
 // internet.
 //
-// **AND STDIN'S END IS THE ORPHAN REAPER.** Electron kills its utility process
-// in `before-quit`; a spawned child has no such handler to inherit. Here the
-// shell dying closes this process's stdin, and EOF on the control channel means
+// **AND STDIN'S END IS THE ORPHAN REAPER.** A spawned child has no quit handler
+// to inherit. Here the shell dying closes this process's stdin, and EOF on the control channel means
 // nobody is driving — so the session stops and the process exits, rather than
 // holding a level in memory for the rest of the login session.
 
@@ -68,8 +64,7 @@ export type ClientPortLike = {
 };
 
 export type ShellHostOptions = {
-  /** One control message arrived. `reply` answers it, in order, exactly as the
-   * `parentPort` entry does. */
+  /** One control message arrived. `reply` answers it, in order. */
   onControl(message: unknown, reply: (event: unknown) => void): void;
   /** The page opened (or re-opened) the snapshot channel. */
   onClient(port: ClientPortLike): void;
@@ -154,11 +149,9 @@ export async function startShellHost(
 /**
  * The websocket, dressed as the port `main.ts` expects.
  *
- * `postMessage`'s transfer list is DROPPED rather than honoured, and that is
- * the one honest difference from the `MessagePort` path: a socket copies. The
- * caller transfers so that Electron's structured clone does not copy twice, and
- * a buffer it has given away is one it will not touch again either way — so
- * reading it here is safe and the transfer is simply moot.
+ * `postMessage`'s transfer list is DROPPED rather than honoured: a socket
+ * copies. A buffer the caller has given away is one it will not touch again
+ * either way — so reading it here is safe and the transfer is simply moot.
  */
 function portFor(peer: WebSocketPeer, current: () => boolean): ClientPortLike {
   return {

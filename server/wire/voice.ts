@@ -50,11 +50,8 @@
  * `steam` is RESERVED, unallocated, and named here on purpose — it is the
  * number a future `ISteamUser::GetVoice` provider takes, so the day that lands
  * it is a new provider and a `case`, not a protocol change with a version bump
- * and a refusal for everybody mid-session. Nothing may send it yet:
- * `steamworks.js` binds no voice API at all today (no `voice` namespace, no
- * `friends`), so reaching it means an N-API addon and the prebuilt binaries
- * that make this shell installable without a Rust toolchain — the same trade
- * `electron/src/steam.ts` records for the missing networking sockets.
+ * and a refusal for everybody mid-session. Nothing may send it yet: the
+ * desktop shell does not bind Steam's voice API today.
  */
 export const VOICE_CODEC = {
   opus: 1,

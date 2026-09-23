@@ -1,9 +1,8 @@
 # Desktop (Tauri) shell — checks on every relevant push, and dispatch-only
 # packaging.
 #
-# The peer of desktop-electron.yml, and split by the SAME cost boundary — which
-# this tree happens to have structurally rather than by discipline, because it
-# is two crates:
+# Split by cost — which this tree has structurally rather than by discipline,
+# because it is two crates:
 #
 #   check    Cheap and automatic. `cargo test -p adastrail-shell` is the whole
 #            decision layer and needs NO GUI libraries and NO Steam SDK — that
@@ -15,8 +14,8 @@
 #            an apt step and a cache away.
 #
 #   package  Expensive and manual. Real Windows/macOS runners producing real
-#            bundles. Dispatch-only for the same reason the Electron and EAS
-#            ones are: it runs when a human is shipping.
+#            bundles. Dispatch-only for the same reason the EAS one is: it
+#            runs when a human is shipping.
 #
 # `tauri/` is not an npm workspace member and its crates are not on any other
 # job's path, so without this file `make tauri-test` and `make tauri-lint` run

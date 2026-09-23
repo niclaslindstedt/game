@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! THE STEAM P2P PUMP, as a thread — the effects half of
-//! [`adastrail_shell::steam_p2p`], and the peer of
-//! `electron/src/net-steam-p2p.ts`.
+//! [`adastrail_shell::steam_p2p`].
 //!
 //! It exists in the shell rather than beside the UDP transport because the
 //! Steam handshake is a single global one this process owns and the session

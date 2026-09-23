@@ -21,19 +21,16 @@ what the player downloads before the menu appears. See
 [Two engine entry points](#two-engine-entry-points) below.
 
 Two further layers wrap that same built site for the storefronts — `native/`
-(Expo, App Store / Play Store) and `electron/` (Steam, Windows/macOS/Linux).
-Neither is an npm workspace member, neither is imported by the engine or the
-app, and both answer the same bridge protocols over their own transport — one
-file each under `pwa/src/app/`: the coin store, cloud save, achievements,
-leaderboards and screenshots on either shell, plus mods, multiplayer and QUIT,
-which only a desktop shell can honour. See their sections below.
-A third, `tauri/`, is a SECOND desktop shell beside
-`electron/` — same site, same protocols, the platform's own webview instead of a
-bundled Chromium. It is complete and ships its own downloads, but `electron/` is
-still the release package; [`desktop-shells.md`](desktop-shells.md) is how the
-two are held against each other and the section below is this one's shape.
+(Expo, App Store / Play Store) and `tauri/` (Steam and the release downloads,
+Windows/macOS/Linux, in the platform's own webview). Neither is an npm
+workspace member, neither is imported by the engine or the app, and both answer
+the same bridge protocols over their own transport — one file each under
+`pwa/src/app/`: the coin store, cloud save, achievements, leaderboards and
+screenshots on either shell, plus mods, multiplayer and QUIT, which only the
+desktop shell can honour. See their sections below, and
+[`desktop-shells.md`](desktop-shells.md) for why the desktop build is this one.
 
-A sixth tree, `server/`, is the engine compiled for **Node** rather than for a
+A fifth tree, `server/`, is the engine compiled for **Node** rather than for a
 browser: the authoritative session server multiplayer runs the simulation in.
 It ships inside the desktop app and is forked as its own process. It imports
 the engine and nothing else — see [`multiplayer.md`](multiplayer.md).
@@ -1799,7 +1796,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   `dismissIntro`, `resumeGame`) so the player places them under their own
   control.
   **AND IT IS NOT IN THE DESKTOP BUILD.** A copy that plays itself is a cheat in
-  somebody else's session, so both desktop shells withhold the ride — depot
+  somebody else's session, so the desktop shell withholds the ride — depot
   build included, with no `GIS_ENABLE_*` to package it back in — and
   `--autopilot` is a DEVELOPER switch that hands it to one launch at the price
   of that launch's multiplayer, voice and licence. The engine is untouched by
@@ -2029,7 +2026,7 @@ deploy-shaped:
   **In a STORE SHELL it is the first thing painted**: a shell build strips the
   prerendered boot shell out of `index.html` (`VITE_SHELL_BUILD`, applied by
   `stripBootShell` in `pwa-plugin.ts`), because that markup is SEO and nothing
-  crawls an asar, a `webroot.zip` or a Tauri resource bundle — all it did in
+  crawls a `webroot.zip` or a Tauri resource bundle — all it did in
   there was flash an SEO document between the platform splash lifting and the
   card. The web keeps it: it is the crawlable copy AND what a first-time
   visitor reads while the bundle is still on the wire.
@@ -2551,164 +2548,120 @@ plus wherever Android puts its own parental controls. Four rules:
    and the title menu rebuilds on them through the same `bumpSettings` tick its
    own settings use.
 
-### `electron/` — the desktop shell (the fourth tree)
+### `tauri/` — the desktop shell (the fourth tree)
 
-The **Steam** build for Windows, macOS and Linux lives in `electron/`. It is the
-desktop twin of `native/` and shares its whole shape: a thin shell wrapping the
-built site, copied inside it (`webroot/`, gitignored, from
-`npm run electron:bundle`), self-contained and offline, updated only by shipping
-a new build. Like `native/` it has its own dependency tree, its own `tsc` and —
-because the root suite stops at its edge — its own vitest.
-
-Three things are specific to the desktop:
-
-- **The site is served from a private `game://app` scheme**, not `file://` and
-  not a local HTTP server. `localStorage` is keyed by origin and the player's
-  entire roster lives there, so the origin must be one stable constant for the
-  life of the install; a `file://` page is an opaque origin and a server on an
-  ephemeral port is a different origin each launch. The scheme also means no
-  listening socket on the player's machine. `webroot.ts` maps Content-Type
-  explicitly (an ES module served as the wrong type is a blank screen, not an
-  error) and refuses any path that resolves outside the webroot.
-- **The renderer is locked down**, deliberately departing from steamworks.js'
-  own Electron instructions, which suggest `nodeIntegration: true` and
-  `contextIsolation: false` so the renderer can require the native module. The
-  renderer here is the entire game; it gets no Node, no `require` and its own
-  isolated world. Steam lives in the main process and the page reaches it only
-  through the JSON protocols it already speaks to the phone app.
-- **The window remembers itself** (`window-state.ts`) — size, position,
-  maximized/fullscreen. That state is kept in the shell rather than in the
-  game's settings because geometry is device-shaped and the settings now ride
-  cloud save; a 4K rect restored onto a laptop would be actively wrong, the same
-  reasoning that keeps key bindings out of the synced payload.
-
-The platform features ride the identical bridge → provider → platform seam the
-mobile shell uses, so the web side never learns which platform answered:
-**Steam Cloud** (`cloud-steam.ts`, a file store where iCloud is key-value, so
-our one save key becomes one file name) and **Steam achievements**
-(`achievements-steam.ts` — a switch, not a percentage, so 100 unlocks and
-anything less is not reported). **Leaderboards are absent on purpose**, argued
-at the seam in `leaderboards-provider.ts`: steamworks.js binds no leaderboard
-API, and Steam's overlay has no leaderboard page either, so the "the platform
-draws the board" rule that lets the game ship no board UI has no counterpart
-here.
-
-**Screenshots are the one platform feature where doing nothing is the right
-answer**, and `screenshots-provider.ts` argues it at the seam: steamworks.js
-binds no `ISteamScreenshots`, but the overlay this shell injects already hooks
-Steam's own screenshot key at the swap chain, so a press files a copy in the
-player's Steam library with the game entirely uninvolved. The game's bind ships
-on F12 IN A SHELL to match and never grabs the key away from it (a browser tab
-gets ENTER instead, where F12 belongs to the developer tools) — one press on a
-Steam build gives the player Steam's copy AND the game's own, the latter in the
-in-game gallery and as a real file in their pictures folder
-(`electron/src/screenshots.ts`, whose `share` puts the PNG on the clipboard and
-opens the file manager on it — the desktop's honest version of a share sheet).
-What is actually missing is `AddScreenshotToLibrary`, and only for a build with
-no overlay.
-
-`electron-builder.config.cjs` reads brand identity from `game.config.json`
-(never re-hardcoding it) and shares the mobile app's bundle id. It packages a
-**directory, not an installer** — Steam distributes by uploading a directory to
-a depot and its own client owns installing and updating. Linux is built too, so
-the Steam Deck runs the real binary rather than the Windows one under Proton.
-`.github/workflows/desktop-electron.yml` typechecks and tests the shell on every
-relevant push, and packages the depot directories dispatch-only. See
-`electron/README.md`.
-
-### `tauri/` — the second desktop shell (the fifth tree)
-
-A **second** wrapper around the same built site, beside `electron/` rather than
-instead of it, so the two can be run back to back and judged against each other.
-Tauri uses the platform's own webview — WebView2, WKWebView, WebKitGTK — which
-takes the install from ~180 MB to about a tenth of that and the idle memory with
-it, at the cost of three rendering engines instead of one, no `utilityProcess`
-and no `steamworks.js`. Whether it takes over as the release package turns on
-measurements; the criteria, the tools and the outcomes are
-[`desktop-shells.md`](desktop-shells.md), and the machine-checked pairing
-between the two trees is [`desktop-parity.md`](desktop-parity.md).
+The **Steam** build and the release downloads for Windows, macOS and Linux live
+in `tauri/`. It is the desktop twin of `native/` and shares its whole shape: a
+thin shell wrapping the built site, copied inside it (`webroot/`, gitignored),
+self-contained and offline, updated only by shipping a new build. It uses the
+platform's own webview — WebView2, WKWebView, WebKitGTK — rather than a bundled
+browser engine, which keeps the install and the idle memory small at the cost
+of three rendering engines instead of one; [`desktop-shells.md`](desktop-shells.md)
+records why it is the desktop build and what that retired.
 
 It is **Rust, in two crates**, and that split is the design rather than a layout
 preference: `tauri/shell/` holds every DECISION the shell makes (webroot
 resolution, window geometry, capability parsing, bridge routing) and depends on
 no GUI at all, while `tauri/src-tauri/` holds every EFFECT. So the whole
 decision layer is testable — `make tauri-test` — on a machine with no webview
-libraries installed, which is the Rust-shaped version of the discipline
-`electron/src/window-state.ts` keeps by hand. Each module in `shell/` is the
-named peer of a file in `electron/src/`, so a change to one shell is a visible
-gap in the other.
+libraries installed.
 
-Three things differ from the Electron shell and all three are platform facts
-rather than judgements: the origin is `game://localhost` (and
-`http://game.localhost` on Windows, which is how WebView2 maps a registered
-scheme); the page's globals arrive in an initialization script instead of a
-preload, with one command — `shell_post` — carrying the identical JSON the other
-shells carry; and the capability stamp is read with `option_env!` at compile
-time, so an installed copy has nothing to edit. `pwa/` needed no change to run
-inside it: `__GIS_PLATFORM__` stays `steam`, because it is the same product on
-the same store, and `__GIS_SHELL__` says which binary for a bug report.
+Four things are specific to the desktop:
+
+- **The site is served from a private `game://` scheme**, not `file://` and not
+  a local HTTP server. `localStorage` is keyed by origin and the player's entire
+  roster lives there, so the origin must be one stable constant for the life of
+  the install; a `file://` page is an opaque origin and a server on an ephemeral
+  port is a different origin each launch. The origin is `game://localhost` (and
+  `http://game.localhost` on Windows, which is how WebView2 maps a registered
+  scheme). `shell/src/webroot.rs` maps Content-Type explicitly (an ES module
+  served as the wrong type is a blank screen, not an error) and refuses any path
+  that resolves outside the webroot.
+- **The page is told almost nothing.** Its globals arrive in an initialization
+  script, with one command — `shell_post` — carrying the identical JSON the
+  phone shell carries. `pwa/` needed no change to run inside it:
+  `__GIS_PLATFORM__` is `steam`, because it is the same product on the same
+  store, and `__GIS_SHELL__` says which binary for a bug report.
+- **The capability stamp is read with `option_env!` at compile time**, so an
+  installed copy has nothing to edit.
+- **The window remembers itself** (`shell/src/window_state.rs`) — size,
+  position, maximized/fullscreen. That state is kept in the shell rather than in
+  the game's settings because geometry is device-shaped and the settings now
+  ride cloud save; a 4K rect restored onto a laptop would be actively wrong, the
+  same reasoning that keeps key bindings out of the synced payload.
 
 **It runs the whole game and carries every platform seam** — cloud save,
-achievements, screenshots, mods, multiplayer and voice — plus a package
-(`make desktop-tauri-steam` produces a depot directory, the peer of
-`make desktop-steam`) and a `-tauri`-suffixed download on every release page.
-**Valve's overlay is here too, on Windows**, by a route Electron does not need;
-see below.
+achievements, screenshots, mods, multiplayer and voice. The seams are the
+**same three-file shape** the rest of the game uses — bridge → provider →
+platform — with the split falling exactly on the crate boundary: the bridge and
+the provider are decisions and live in `shell/`, and only the third file talks
+to Steam. So a protocol's whole behaviour, including the failure paths a real
+Steam client cannot be asked to produce on demand, is covered by
+`make tauri-test`. **Steam Cloud** (`src-tauri/src/cloud.rs`) is a file store
+where iCloud is key-value, so our one save key becomes one file name; **Steam
+achievements** (`src-tauri/src/achievements.rs`) are a switch, not a
+percentage, so 100 unlocks and anything less is not reported. **Leaderboards are
+absent on purpose**, argued at the seam in `shell/src/leaderboards_provider.rs`:
+the binding could publish a score, but Steam's overlay has no leaderboard page,
+so the "the platform draws the board" rule that lets the game ship no board UI
+has no counterpart here.
 
 Two extra launch modes belong to it and to no other tree: `--dedicated` runs the
 session server in the terminal, and `--roster-check` prints what the platform
-cloud is holding — which is what reduces "a roster crosses between the two
-desktop builds" from an evening's play to one command per build.
+cloud is holding.
 
-**The two features that need a second process needed a second pipe, and the
-page never learned.** Electron forks the compiled session server with
-`utilityProcess.fork` and transfers a `MessagePort` to the renderer; Tauri can
-spawn a child and nothing more. So the server is spawned on a Node runtime the
-package carries, its CONTROL channel is that child's stdio as newline-delimited
-JSON (`server/shell-host.ts`, the server's third entry), and its SNAPSHOT
-channel is a loopback WebSocket the PAGE opens straight to it — which keeps the
-one property the `MessagePort` bought, that no game byte crosses the shell. The
-page still asks `__gisShell.onNetPort` for a `MessagePort` and still gets one,
-because the shell's initialization script mints the pair in the page and bridges
-its own end. The mod compiler travels the same way: one compiler, spawned rather
-than imported, with JSON crossing.
-
-The platform seams are the **same three-file shape** the rest of the game uses —
-bridge → provider → platform — with the split falling exactly on the crate
-boundary: the bridge and the provider are decisions and live in `shell/`, and
-only the third file talks to Steam. So a protocol's whole behaviour, including
-the failure paths a real Steam client cannot be asked to produce on demand, is
-covered by `make tauri-test`.
+**The two features that need a second process get a second pipe, and the page
+never learns.** The shell can spawn a child and nothing more, so the session
+server is spawned on a Node runtime the package carries, its CONTROL channel is
+that child's stdio as newline-delimited JSON (`server/shell-host.ts`), and its
+SNAPSHOT channel is a loopback WebSocket the PAGE opens straight to it — so no
+game byte crosses the shell. The page still asks `__gisShell.onNetPort` for a
+`MessagePort` and still gets one, because the shell's initialization script
+mints the pair in the page and bridges its own end. The mod compiler travels
+the same way: one compiler, spawned rather than imported, with JSON crossing.
 
 **Valve's overlay reaches this shell from the other end.** It is a library Steam
 injects into the process, which hooks the swap chain the game presents its frames
 with — and a webview shell presents none, so the hook waits for a frame that
-never comes. Electron leaves one behind with two Chromium command line switches;
-a platform webview has no command line, so this shell opens a transparent,
-click-through window over the game and presents EMPTY frames into it at vsync
-through a real in-process swap chain. Steam composites the overlay into those,
-and everywhere it does not draw the sheet is transparent and the game shows
-through. Windows today (`tauri-plugin-steam-overlay-surface`, MIT); the decision
-of whether to raise it is `shell/src/steam.rs`'s `overlay_plan` and the wiring is
+never comes. A platform webview has no command line to change that, so this
+shell opens a transparent, click-through window over the game and presents
+EMPTY frames into it at vsync through a real in-process swap chain. Steam
+composites the overlay into those, and everywhere it does not draw the sheet is
+transparent and the game shows through. Windows today
+(`tauri-plugin-steam-overlay-surface`, MIT); the decision of whether to raise it
+is `shell/src/steam.rs`'s `overlay_plan` and the wiring is
 `src-tauri/src/overlay.rs`. Shift+Tab is FORWARDED rather than caught — the chord
 belongs to the webview's process — which is the same shape the F11 handler
 already had.
 
-Two platform answers still come out DIFFERENT from the Electron shell's, and both
-survive the overlay: the game files its own copy into the Steam screenshot
-library, because Steam's key photographs the decoy's empty frames rather than the
-game (Electron leaves that to the overlay outright); and leaderboards stay absent
-for a different reason than they do there — the Rust binding can publish a score,
-but there is no board on this platform anybody could open. `tauri/README.md` has
-the argument; `desktop-shells.md` has the table.
+**Screenshots are filed by the game**, because Steam's key photographs the
+decoy's empty frames rather than the game. The game's bind ships on F12 IN A
+SHELL (a browser tab gets ENTER instead, where F12 belongs to the developer
+tools): one press gives the player a copy in the in-game gallery, a real file in
+their pictures folder (`shell/src/screenshots.rs`, whose `share` puts the PNG on
+the clipboard and opens the file manager on it — the desktop's honest version of
+a share sheet), and a copy in their Steam library through
+`add_screenshot_to_library`.
 
-### `server/` — the session server (the sixth tree)
+`tauri/scripts/package.mjs` reads brand identity from `game.config.json` (never
+re-hardcoding it) and the deployment's identifier from `APP_BUNDLE_ID`. The
+Steam build is a **directory, not an installer** (`make desktop-steam`) — Steam
+distributes by uploading a directory to a depot and its own client owns
+installing and updating; the release download is the platform's own installers
+(`make desktop-dist`). Linux is built too, so the Steam Deck runs the real
+binary rather than the Windows one under Proton.
+`.github/workflows/desktop-tauri.yml` tests and lints the shell on every
+relevant push, and packages all three platforms dispatch-only. See
+`tauri/README.md`.
+
+### `server/` — the session server (the fifth tree)
 
 The engine, compiled for Node and shipped inside the desktop app, so a
 multiplayer session can simulate in a process of its own rather than in the
-renderer. `electron/src/session-host.ts` forks it as a `utilityProcess`,
-`electron/src/net.ts` is its bridge, and the snapshots travel to the page on a
-`MessagePort` that bypasses the main process entirely.
+page. The desktop shell spawns it as a child (`tauri/src-tauri/src/session.rs`,
+with its rules in `tauri/shell/src/session_host.rs`), `tauri/shell/src/net.rs`
+is its bridge, and the snapshots travel to the page on a loopback socket that
+bypasses the shell entirely.
 
 It is one more arm of the same bridge → provider → platform shape every other
 platform feature uses, with one thing deliberately NOT copied from them: the
@@ -2716,7 +2669,7 @@ volume. Those move a handful of JSON round trips per session; this one moves a
 snapshot twenty times a second, so `__gisNet` carries only control traffic and
 the game frames get their own channel.
 
-Like `mod/`, it is at the repo's top level rather than inside `electron/`,
+Like `mod/`, it is at the repo's top level rather than inside `tauri/`,
 because it is engine code rather than shell code — and the same file is the
 standalone dedicated server. `scripts/build-server.mjs` is its ship
 target and `server/package.json` declares its runtime dependencies, checked
@@ -2957,8 +2910,8 @@ The EXTRAS -> COMMUNITY row leads to the chat server the players keep, which
 neither shell serves and neither can offer a way back from — a `BACK TO GAME`
 header is the library's to carry because the library is ours. So both shells
 intercept the navigation and hand the URL to the player's own browser instead:
-`will-navigate` / `setWindowOpenHandler` on the desktop
-(`electron/src/main.ts`), `onShouldStartLoadWithRequest` on the phone
+the navigation guard on the desktop
+(`tauri/src-tauri/src/window.rs`), `onShouldStartLoadWithRequest` on the phone
 (`native/App.tsx`, judging with `native/src/navigation.ts`). Same rule on the
 website, where the row is a `target="_blank"` anchor: whatever the surface, a
 run lives in the game's document, and steering that document at a chat invite
@@ -3147,9 +3100,9 @@ see above) — in **every** slot and every build: `/`, `/preview/`, `/branch/`, 
 dev, the installed PWA, and every non-`production` shell build. The exception is
 the binary a storefront receives, and each shell reaches it the same way: the
 App Store / Play Store upload comes from the `production` EAS profile, and the
-Steam depot from `electron/`'s `release:*` targets or `make desktop-tauri-steam`,
-both of which run their own `bundle-web.mjs --profile production`. Each of the
-three `bundle-web.mjs` scripts builds the embedded
+Steam depot and the desktop downloads from `make desktop-steam` /
+`make desktop-dist`, both of which run their own
+`bundle-web.mjs --profile production`. Each `bundle-web.mjs` builds the embedded
 site with `VITE_DEV_TOOLS=off`, which `pwa/vite.config.ts` turns into the
 build-time literal `__DEV_TOOLS__ = false`. Because it is a literal, every gate
 on it folds away and Rollup drops the tooling's modules and lazy chunks — the

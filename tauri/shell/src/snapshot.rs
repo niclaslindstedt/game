@@ -2,9 +2,9 @@
 //! THE SNAPSHOT CHANNEL — the one real design problem in this tree, and the page's
 //! half of it.
 //!
-//! A session publishes twenty times a second. Electron mints a `MessagePort`
-//! pair and hands the page one end, so those frames never touch the main
-//! process; Tauri's IPC has no port transfer, so the property that mattered —
+//! A session publishes twenty times a second, and the page's client expects a
+//! `MessagePort` whose frames never touch the shell. Tauri's IPC has no port
+//! transfer, so the property that mattered —
 //! **the shell is not in the path** — has to be bought some other way. Three
 //! candidates were on the table (`docs/desktop-shells.md`), and this is the
 //! one that keeps the property without changing anything else:
@@ -82,8 +82,8 @@ pub fn adapter_script() -> String {
     }});
     socket.addEventListener('message', function (event) {{
       // The page's client takes ownership of every frame, so the buffer is
-      // handed over rather than copied — the same contract the MessagePort
-      // pair has under Electron.
+      // handed over rather than copied — the contract a transferred
+      // MessagePort has.
       try {{ channel.port1.postMessage(event.data, [event.data]); }} catch (e) {{}}
     }});
     socket.addEventListener('close', function () {{

@@ -855,7 +855,7 @@ describe("platform achievements", () => {
     // site — regenerate with `node scripts/steam-achievements.mjs`.
     const committed = JSON.parse(
       readFileSync(
-        new URL("../electron/store/steam-achievements.json", import.meta.url),
+        new URL("../tauri/store/steam-achievements.json", import.meta.url),
         "utf8",
       ),
     ) as { count: number; achievements: unknown[] };

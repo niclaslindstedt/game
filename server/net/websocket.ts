@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // A LOOPBACK WEBSOCKET LISTENER, in Node builtins and nothing else.
 //
-// It exists for one caller — `server/shell-host.ts`, the sidecar mode a shell
-// with no `utilityProcess` drives the session through — and it is deliberately
+// It exists for one caller — `server/shell-host.ts`, the sidecar mode the
+// desktop shell drives the session through — and it is deliberately
 // the smallest thing that can carry that traffic rather than a general-purpose
 // server:
 //
@@ -19,8 +19,7 @@
 //     process to allocate its way out of memory.
 //
 // **WHY A WEBSOCKET AT ALL** is `shell-host.ts`'s header: the short version is
-// that Electron hands the renderer a `MessagePort` and Tauri's IPC has no port
-// transfer, so the property that mattered — the shell is NOT in the snapshot
+// that the shell's IPC has no port transfer, so the property that mattered — the shell is NOT in the snapshot
 // path — has to be bought some other way, and a loopback socket the page opens
 // itself is the only candidate that keeps it without a COOP/COEP header on the
 // game's own origin.

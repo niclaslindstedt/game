@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! THE ONE OWNER OF THE STEAM CLIENT — the effects half of
-//! [`adastrail_shell::steam`], and the peer of `electron/src/steam.ts`.
+//! [`adastrail_shell::steam`].
 //!
-//! It exists for the reason that file exists: `Client::init_app` is a single
+//! It exists because `Client::init_app` is a single
 //! global handshake with the running Steam client, and the three features built
 //! on it (cloud save, achievements, and the screenshot library) must SHARE that
 //! one handshake rather than each performing their own. So every provider asks

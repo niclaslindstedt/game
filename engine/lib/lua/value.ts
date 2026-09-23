@@ -6,8 +6,8 @@
 //
 //  1. **One number type.** Lua 5.4 splits integers and floats; this VM keeps a
 //     single IEEE-754 double, like Lua 5.1/5.2 and like JavaScript. The point
-//     is DETERMINISM across the four places a script runs (browser, Node
-//     session server, Electron, the WebView shells): a script that produced a
+//     is DETERMINISM across the places a script runs (browser, Node session
+//     server, the webview shells): a script that produced a
 //     float on one and an integer on another would desync a seeded run. `//`
 //     and `%` still floor, `math.type` is deliberately absent, and integer
 //     division by zero yields ±inf rather than raising.

@@ -28,10 +28,6 @@ export default [
       // with its own toolchain (tsc, expo-doctor) and is not part of the npm
       // workspace; it is linted/typechecked on its own, not by the root config.
       "native/**",
-      // The desktop app (electron/) is likewise self-contained: its own
-      // dependency tree, its own tsc, its own output module (electron/src/
-      // output.ts), and not part of the npm workspace.
-      "electron/**",
       // The Tauri desktop shell (tauri/README.md) is Rust, with its own
       // linter: `cargo clippy` at zero warnings, run by `npm run tauri:lint`.
       // Only its build output and the crates are ignored — its two Node build
@@ -42,12 +38,24 @@ export default [
       // The sidecars scripts/package.mjs stages: a copy of the compiled server,
       // the mod toolchain and a Node runtime, all written by a build.
       "tauri/resources/**",
+      // The engine's two Node ship targets, compiled by
+      // scripts/build-server.mjs and scripts/build-lua.mjs — generated
+      // JavaScript, gitignored, never edited.
+      "server-src/**",
+      "server-dist/**",
+      "modtools-lua/**",
       "tauri/node_modules/**",
       "tauri/src-tauri/**",
       "coverage/**",
     ],
   },
   js.configs.recommended,
+  {
+    // The Steam store-page preview (tauri/store/preview/) is a static page
+    // opened in a browser, so it sees the browser's globals.
+    files: ["tauri/store/preview/**/*.js"],
+    languageOptions: { globals: { ...globals.browser } },
+  },
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
@@ -104,7 +112,7 @@ export default [
     },
   },
   {
-    // THE SESSION SERVER runs under Node, inside a `utilityProcess` — it is
+    // THE SESSION SERVER runs under Node, as its own process — it is
     // the one tree of `.ts` in this repo that is neither browser code nor a
     // build script, so it needs Node's globals on top of the browser ones the
     // wire's own leaves are read with in the page.

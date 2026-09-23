@@ -1,23 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE MODS BRIDGE, wired up — the effects half of [`adastrail_shell::mods`],
-//! and the peer of `createModsBridge` in `electron/src/mods.ts`.
+//! THE MODS BRIDGE, wired up — the effects half of [`adastrail_shell::mods`].
 //!
-//! **THE COMPILER IS A CHILD PROCESS, AND THAT IS THE MIRROR IMAGE OF
-//! ELECTRON'S PROBLEM.** There is ONE mod compiler — `mod/tools/build.mjs`,
-//! shared verbatim with the CLI a modder runs, so that "it works in my mod" and
-//! "it works in the game" mean the same thing. Electron's main process is Node
-//! and simply `import()`s it; this shell is Rust and spawns it, handing a job in
-//! on stdin and reading plain JSON back out.
+//! **THE COMPILER IS A CHILD PROCESS.** There is ONE mod compiler —
+//! `mod/tools/build.mjs`, shared verbatim with the CLI a modder runs, so that
+//! "it works in my mod" and "it works in the game" mean the same thing. This
+//! shell is Rust and spawns it, handing a job in on stdin and reading plain
+//! JSON back out.
 //!
-//! Two things follow, and both are improvements rather than costs:
+//! Two things follow, and both are strengths rather than costs:
 //!
 //!  * **ONE INVOCATION FOR THE WHOLE LIST.** Reading the reference catalog is
 //!    the expensive part and it is done once per list rather than once per mod,
 //!    which is what a per-mod spawn would have cost.
-//!  * **A COMPILER THAT THROWS TAKES DOWN A CHILD.** On the Electron side a mod
-//!    that makes the compiler throw is caught in the main process's own thread;
-//!    here it cannot reach the shell at all, and the row still appears with its
-//!    error.
+//!  * **A COMPILER THAT THROWS TAKES DOWN A CHILD.** A mod that makes the
+//!    compiler throw cannot reach the shell at all, and the row still appears
+//!    with its error.
 //!
 //! What crosses to the page is unchanged either way: compiled JSON, never a
 //! mod's YAML and never a path the page is expected to read.

@@ -126,7 +126,7 @@ export type MenuEntry = {
    * it costs a player nothing, but a run in progress lives in this document —
    * steering the tab off-site to look at a chat invite would throw it away.
    * Both store shells then intercept it and hand the URL to the player's own
-   * browser (electron/src/main.ts, native/App.tsx), because a game window has
+   * browser (tauri/src-tauri/src/window.rs, native/App.tsx), because a game window has
    * no address bar or back button to leave a web page with. */
   external?: boolean;
   /** A shown-but-not-yet-playable entry (a locked level): the cursor still

@@ -529,7 +529,7 @@ store-steam-achievements ARGS="--verify"` to read the app's achievement schema
 back and name every id the partner site is missing or holds mistyped. Read-only,
 and needed only for the verify — printing the worksheet touches no network. A
 personal Web API key authenticates and still cannot see an unreleased app (a
-bodyless 403). See `electron/RELEASING.md` §1.4.
+bodyless 403). See `tauri/STEAM.md` §1.4.
 
 **`GIS_STEAM_API_HOST`** — read by `scripts/steam-achievements-portal.mjs`.
 Points the achievement verify at a stand-in for Valve instead of
@@ -537,13 +537,12 @@ Points the achievement verify at a stand-in for Valve instead of
 compare → verdict path is exercisable end to end
 (`tests/steam_achievements_verify_test.ts`).
 
-### The desktop shells' own environment
+### The desktop shell's own environment
 
 **Five capabilities are decided when a desktop binary is PACKAGED** — they
-belong to the build, not to the machine that runs it. **One vocabulary drives
-both shells**, so `electron/` bakes them into a packaged manifest and `tauri/`
-into the machine code (`tauri/src-tauri/src/stamp.rs`), and the four packaging
-targets read the same names:
+belong to the build, not to the machine that runs it. `tauri/` bakes them into
+the machine code (`tauri/src-tauri/src/stamp.rs`), and both packaging targets
+read the same names:
 
 | Make variable        | Env var                  | What the build carries                         |
 | -------------------- | ------------------------ | ---------------------------------------------- |
@@ -553,9 +552,9 @@ targets read the same names:
 | `ENABLE_VOICE`       | `GIS_ENABLE_VOICE`       | Voice chat in a session — opens the microphone |
 | `ENABLE_LICENSED`    | `GIS_ENABLE_LICENSED`    | Sessions it hosts may admit players at all     |
 
-`make desktop-steam` / `make desktop-tauri-steam` default all five to `1` (the
-depot build); `make desktop-dist` / `make desktop-tauri-dist` default all five
-to `0` (a plain download), and both pairs let a variable override the default —
+`make desktop-steam` defaults all five to `1` (the depot build);
+`make desktop-dist` defaults all five to `0` (a plain download), and both let a
+variable override the default —
 `make desktop-dist ENABLE_MODS=1`. **VOICE is off in a plain download on
 purpose rather than by omission**, and it needs `ENABLE_MULTIPLAYER` (voice
 travels inside a session; the shell refuses the pairing rather than granting a
@@ -563,8 +562,10 @@ microphone nothing can talk into). **Unset means off in a packaged target; a
 build from sources with no switches at all keeps everything**, so a checkout is
 always the whole game. `GIS_STAMP_CAPABILITIES=1` is what makes the stamp
 happen at all, `GIS_PACKAGE_PROFILE=standalone` marks the plain download, and
-`PLATFORM=win|mac|linux` picks one target instead of this machine for the two
-Electron ones. `GIS_STEAM_APP_ID` must be the real app id for a store build —
+`ARGS="--target <triple>"` builds for a target other than this machine.
+`APP_BUNDLE_ID` (and optionally `APP_DISPLAY_NAME`) is the identity the package
+installs under — a release refuses the development one. `GIS_STEAM_APP_ID` must
+be the real app id for a store build —
 `tauri/scripts/package.mjs` refuses a build still pointed at Valve's Spacewar
 test app (480) unless passed `--allow-placeholder`.
 
@@ -603,7 +604,7 @@ Steam at all — how most local shell work happens), `GIS_STEAM_OVERLAY=1|0`
 build) and, Tauri only, `GIS_WEBROOT` (serve the site from elsewhere without
 rebuilding). The native shell's peer of `GIS_GAME_URL` is
 `EXPO_PUBLIC_GAME_URL`. Each shell's README is the detail:
-**`electron/README.md`**, **`tauri/README.md`**, **`native/README.md`**.
+**`tauri/README.md`**, **`native/README.md`**.
 
 ## URL parameters
 
@@ -947,7 +948,7 @@ npm run server:start -- server.config.json    # …from a file
 | `password`                 | `--password`   | none     | A speed bump between the people invited and everybody else, never a wall.                                                                                                                                            |
 | `licensed`                 | `--licensed`   | false    | **The operator's licence CLAIM, and without it this server refuses every join.** A declaration, not a check — the store build carries it in its packaging.                                                           |
 | `noPortMap`                | `--no-portmap` | false    | Never ask the router to forward the bound port. For a box whose ports are already forwarded, or a LAN.                                                                                                               |
-| —                          | `--verbose`    | off      | A detailed status line every second. (`--debug` is reserved by Electron itself.)                                                                                                                                     |
+| —                          | `--verbose`    | off      | A detailed status line every second.                                                                                                                                                                                 |
 | `mods`                     | —              | none     | Mod ids in load order. A joiner whose list differs is refused by name.                                                                                                                                               |
 | `statusEverySec`           | —              | 30       | Console status interval. 0 turns it off.                                                                                                                                                                             |
 | `allowUnlicensedTransport` | —              | false    | The repo's own escape for its suites and the soak fleet. **Dead in a packaged binary** (`server/licence.ts` folds it to `false` for the ship target), because a config file is a thing a determined player can edit. |
@@ -960,10 +961,10 @@ does: whoever operates the machine controls the simulation.
 
 ## Repository pins
 
-| File                          | Pins                                                                                                                                                                                       |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.nvmrc`                      | Node 24 — both local (`nvm use`) and the CI workflows (`node-version-file`) resolve this single file (§10.5). `desktop-electron.yml` is the one that still pins `node-version: 24` inline. |
-| `package.json` `engines.node` | `>=24`, so npm warns on a stale local Node.                                                                                                                                                |
+| File                          | Pins                                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `.nvmrc`                      | Node 24 — both local (`nvm use`) and the CI workflows (`node-version-file`) resolve this single file (§10.5). |
+| `package.json` `engines.node` | `>=24`, so npm warns on a stale local Node.                                                                   |
 
 ## Release configuration
 

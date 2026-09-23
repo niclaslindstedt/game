@@ -38,7 +38,7 @@ function isTouchPrimary(): boolean {
  * whether a buzz fires; this decides whether the setting is worth offering. */
 export function canVibrate(): boolean {
   // The DESKTOP shell is a store shell like the phone app, but a desktop has no
-  // motor and the Electron shell polyfills nothing — so it is excluded here
+  // motor and the desktop shell polyfills nothing — so it is excluded here
   // rather than inheriting the phone's answer. Otherwise the VIBRATION row
   // would appear on Steam as exactly the dead switch this module exists to
   // hide. (A rumbling gamepad is a different feedback channel entirely, and

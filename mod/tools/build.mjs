@@ -132,7 +132,7 @@ import { decodePng, isPng, MAX_PNG_SIDE } from "./png.mjs";
  * where there was a single `data`), and a recording's routing became an
  * ordinary sound def with a `call: sample` voice rather than a parallel bank
  * consulted ahead of the catalog. Costless to bump: the shell COMPILES every
- * mod from its folder on load (`electron/src/mods.ts`), so the bundle is a
+ * mod from its folder on load (`tauri/shell/src/mods.rs`), so the bundle is a
  * wire between two halves of one build rather than anything on disk — no
  * published mod needs rebuilding by its author.
  */
@@ -1496,7 +1496,7 @@ function rasterize(sprite) {
 
 /** How big one recording may be. 2 MiB is about twelve seconds of CD-quality
  * stereo WAV — far past any sound effect, and short of the 16 MiB ceiling the
- * shell's zip reader puts on a single entry (`electron/src/mod-archive.ts`). */
+ * shell's zip reader puts on a single entry (`tauri/shell/src/mod_archive.rs`). */
 const MAX_SAMPLE_BYTES = 2 * 1024 * 1024;
 /** How much recorded audio one mod may ship. A whole 135-sound overhaul in
  * WAV fits; the warning below lands long before the refusal does. */

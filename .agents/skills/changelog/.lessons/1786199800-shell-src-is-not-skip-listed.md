@@ -1,16 +1,15 @@
 ---
 title: The store shells' `src/` is not skip-listed either — only their `scripts|tests|store/` are
 date: 2026-08-08
-scope: electron/src, tauri/shell/src, tauri/src-tauri/src, scripts/release/check-changeset.mjs
+scope: tauri/shell/src, tauri/src-tauri/src, scripts/release/check-changeset.mjs
 concepts: [skip-list, no-changelog, shells, false-red]
 ---
 
 The SKILL.md names `engine/` and `pwa/src/` as the deliberate holes in the
 skip-list. The same trap applies to the desktop shells and is easier to walk
 into, because the skip-list entry beside them reads as if the whole tree were
-covered: what is skipped is **`native|electron|tauri/scripts/`,
-`native|electron|tauri/tests/`, `native|electron/store/` and
-`tauri/{shell,src-tauri}/tests/`** — not `electron/src/`, and not
+covered: what is skipped is **`native|tauri/scripts/`, `native|tauri/tests/`,
+`native|tauri/store/` and `tauri/{shell,src-tauri}/tests/`** — not
 `tauri/shell/src/`, `tauri/src-tauri/src/` or `tauri/src-tauri/tauri.conf.json`.
 
 Read the ALTERNATION, not the comment above it. That comment said "the store

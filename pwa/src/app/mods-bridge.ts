@@ -3,9 +3,9 @@
 //
 //   web → shell   `postToShell(JSON { __gisMods })`  (./shell-bridge.ts)
 //   shell → web   `window.__gisModsEvent(…)` (called from OUTSIDE, via
-//                 `executeJavaScript`, exactly as the other three bridges are)
+//                 `webview.eval`, exactly as the other three bridges are)
 //
-// The protocol (mirrored by electron/src/mods.ts — keep the two in step):
+// The protocol (mirrored by tauri/shell/src/mods.rs — keep the two in step):
 //   → { action: "list", requestId }            compile every installed mod
 //   → { action: "publish", requestId, folder, changeNote }
 //   → { action: "reveal", requestId, which }   show one of OUR folders

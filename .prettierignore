@@ -14,16 +14,16 @@ engine/generated/
 /src/generated/
 native/ios/
 native/android/
-# Desktop shell build artifacts: the copied website, the compiled main process,
-# and electron-builder's installers. All regenerated, none ours to format.
-electron/webroot/
-electron/dist/
-electron/release/
-# The Tauri shell's copied website and its packaged depot. Its Rust is formatted
+# The desktop shell's copied website, its packaged depot and the engine's two
+# compiled Node targets. Its Rust is formatted
 # by `cargo fmt`, which Prettier has nothing to say about, and its placeholder
 # page is a build stub.
 tauri/webroot/
 tauri/release/
+server-src/
+server-dist/
+modtools-lua/
+tsconfig.modtools-lua.json
 tauri/resources/
 tauri/src-tauri/placeholder/
 site/

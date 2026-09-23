@@ -1,14 +1,14 @@
-# Releasing to Steam
+# Releasing to Steam — the store side
 
-Step-by-step for shipping the desktop app in this directory to Windows, macOS
-and Linux. The binary is packaged by
-[electron-builder](https://www.electron.build) and uploaded by
-[steamcmd](https://partner.steamgames.com/doc/sdk/uploading), driven by
-`npm run steam:upload`.
+Everything about shipping the desktop app to Steam that is about the STORE
+rather than the build: the partner account, the app records, the store page
+and its art, and the release itself. Building the depot and uploading it are in
+[`RELEASING.md`](RELEASING.md); this file is the half that is one app on one
+store, whatever builds the binary.
 
-The app **embeds the whole game** (`webroot/`) and serves it from a private
-`game://app` scheme, so it plays offline and is an app rather than a viewer for
-a website — see [`README.md`](README.md).
+The app **embeds the whole game** and serves it from a private scheme, so it
+plays offline and is an app rather than a viewer for a website — see
+[`README.md`](README.md).
 
 > **Licence note.** The repo uses PolyForm Noncommercial 1.0.0 plus the Ada's
 > Trail Feature Terms, which reserve player use of mods and multiplayer for an
@@ -26,7 +26,7 @@ a website — see [`README.md`](README.md).
   [partner.steamgames.com/downloads](https://partner.steamgames.com/downloads/list).
   `steamcmd` lives in `tools/ContentBuilder/builder*/`. Put it on your `PATH`.
 - **A Mac** — required for the macOS build, unlike the mobile app. There is no
-  cloud builder here: electron-builder must run on macOS to produce and sign a
+  cloud builder here: the bundler must run on macOS to produce and sign a
   `.app`, and notarization needs Apple's toolchain.
 
 Log steamcmd in once, interactively, so it can answer Steam Guard and cache the
@@ -69,15 +69,15 @@ It runs from a cold checkout — nothing has to be installed or built — and it
 `STEAM` section is the Steam half (the sections above it are the App Store's).
 
 ```sh
-npm run steam:upload -- --platform windows --dry-run   # from electron/
+npm run steam:upload -- --platform windows --dry-run   # from tauri/
 ```
 
 The **upload**: that a packaged build exists, that Valve's redistributable
 landed beside the executable, and that the embedded website was built for the
-store rather than with the developer menu still in it. It needs `electron/`'s
-dependency tree and a finished build, so it answers "can I upload this" rather
-than "what is left". Each of the things it checks otherwise fails **silently** —
-see [What fails quietly](#what-fails-quietly).
+store rather than with the developer menu still in it. It needs a finished
+depot build, so it answers "can I upload this" rather than "what is left". Each
+of the things it checks otherwise fails **silently** — see
+[What fails quietly](RELEASING.md#what-fails-quietly).
 
 ## 1. Create the app records
 
@@ -179,8 +179,8 @@ see [What fails quietly](#what-fails-quietly).
 
 ## 2. Version
 
-`buildVersion` is read from the root `package.json` by
-`electron-builder.config.cjs`, so there is nothing to bump by hand — the
+The version is read from the root `package.json` by
+`scripts/package.mjs`, so there is nothing to bump by hand — the
 desktop app tracks the game's version like every other surface. Steam itself
 has no version field; builds are identified by their build ID and description,
 and the description is stamped with the version automatically.
@@ -203,7 +203,7 @@ Valve's own dimensions, all required unless noted
 | Library hero     | 3840 × 1240 | Library detail page — **no text** |
 | Library logo     | 1280 × 720  | Over the hero — transparent PNG   |
 
-Put each capsule in `electron/store/capsules/` as `<name>.png` — `header`,
+Put each capsule in `tauri/store/capsules/` as `<name>.png` — `header`,
 `small`, `main`, `vertical`, `library`, `library-header`, `library-hero`,
 `library-logo`. Committed, because they are hand-drawn source art rather than
 build output; `make store-preflight` names the ones that are missing and fails
@@ -219,7 +219,7 @@ with a Steam raster beside them:
 ```sh
 npx playwright install chromium   # playwright itself comes with `npm install`
 cd pwa && npx vite --port 5199 &
-node pwa/scripts/store-shots.mjs --only steam    # → electron/store/screenshots/steam-1080/
+node pwa/scripts/store-shots.mjs --only steam    # → tauri/store/screenshots/steam-1080/
 ```
 
 It shoots at a real 1920×1080 rather than upscaling a phone frame, with a mouse
@@ -244,102 +244,11 @@ real wordmark — the game's own pixel font — composited in afterwards, by
 `scripts/generate-steam-library-logo.mjs` (`library-logo`, which is nothing but
 wordmark). That also keeps the store lettering identical to the game's.
 
-## 4. Build
+## 4. Build and 5. Upload
 
-```sh
-make desktop-steam PLATFORM=win     # → release/win-unpacked/, stamped for the DEPOT
-make desktop-steam PLATFORM=mac     # → release/mac/   (x64; Rosetta on Apple Silicon)
-make desktop-steam PLATFORM=linux   # → release/linux-unpacked/
-```
-
-**Build through the Makefile, not `npm run release:*` directly.** Those scripts
-are the packaging step; what the Makefile adds is the five `GIS_ENABLE_*`
-capability switches, read by `electron-builder.config.cjs` at package time and
-stamped into the packaged manifest. An **unstamped** package carries none of
-them (`NO_CAPABILITIES` in `src/capabilities.ts`), so a depot build made with a
-bare `npm run release:win` has no multiplayer, no mods and no voice — and plays
-perfectly otherwise, which is the fifth entry in
-[What fails quietly](#what-fails-quietly). `make desktop-steam` turns all five
-on; `make desktop-dist` clears them and produces archives for a plain download.
-Override one at a time with the Makefile's `ENABLE_*` variables, e.g.
-`make desktop-dist ENABLE_MODS=1`.
-
-**Use `release:*`, not `dist:*`.** They differ in exactly one way and it is
-invisible: `release:*` bundles the website with `VITE_DEV_TOOLS=off`, which
-strips the hidden sixteen-tap sun reveal, the whole DEVELOPER menu behind it,
-the arsenal and effects galleries, and the commit hash in the title footer.
-`dist:*` keeps them — right for a local build, wrong for the store. The upload
-script checks for the developer chunks and refuses, so this is caught rather
-than shipped, but building the right thing first saves a round trip.
-
-Each platform builds on its own OS. Windows and Linux can cross-build in
-practice; **macOS cannot** — the `.app` must be produced and signed on a Mac.
-
-### Signing
-
-- **Windows** — unsigned is fine for a Steam-launched app; the client is the
-  trust boundary. Sign only if the binary is also distributed outside Steam.
-- **Linux** — nothing to sign.
-- **macOS** — **never unsigned, and for a store build signed and notarized.**
-  An unsigned arm64 app does not merely warn, it does not run: Apple Silicon
-  refuses to execute unsigned arm64 code and macOS reports that as _"the app is
-  damaged"_. The packaging config therefore signs **ad hoc** when it is handed
-  no certificate, which is enough to make the app run and not enough to stop
-  Gatekeeper asking about it — and Gatekeeper blocks an un-notarized app even
-  when Steam is the one launching it. The hardened runtime is already on and the
-  entitlements are in `build/entitlements.mac.plist`; what you supply is the
-  identity:
-
-  ```sh
-  export CSC_LINK=/path/to/developer-id.p12
-  export CSC_KEY_PASSWORD=…
-  export APPLE_ID=… APPLE_APP_SPECIFIC_PASSWORD=… APPLE_TEAM_ID=…
-  npm run release:mac
-  ```
-
-#### Where those five values come from
-
-All of it hangs off **one $99/year Apple Developer Program membership**
-([developer.apple.com/programs](https://developer.apple.com/programs/)) — the
-same membership the iOS app in [`native/`](../native/README.md) already needs, so
-if that ships, this costs nothing extra. Nothing here is obtainable without it:
-Apple issues no Developer ID certificate to a free account.
-
-| Variable                      | Where you get it                                                                                                                                                                                                                                                                                                                                         |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CSC_LINK`                    | A **Developer ID Application** certificate — _not_ the Mac App Store one. Xcode → Settings → Accounts → Manage Certificates → **+** → Developer ID Application. Then Keychain Access → My Certificates → right-click it → **Export…** → `.p12`. `CSC_LINK` is the path to that file (a base64 string of it also works, which is what a CI secret wants). |
-| `CSC_KEY_PASSWORD`            | The password you typed into that export dialog. Nothing generates it — you choose it.                                                                                                                                                                                                                                                                    |
-| `APPLE_ID`                    | The email address of the Apple ID that owns the membership.                                                                                                                                                                                                                                                                                              |
-| `APPLE_APP_SPECIFIC_PASSWORD` | **Not** your Apple ID password. [account.apple.com](https://account.apple.com) → Sign-In and Security → App-Specific Passwords → **+**. Shown once; a `xxxx-xxxx-xxxx-xxxx` string.                                                                                                                                                                      |
-| `APPLE_TEAM_ID`               | The 10-character team id, e.g. `A1B2C3D4E5`. [developer.apple.com/account](https://developer.apple.com/account) → Membership details.                                                                                                                                                                                                                    |
-
-`GIS_MAC_IDENTITY` is the sixth and is only needed when the keychain holds more
-than one usable certificate: it is the identity's name, as `security
-find-identity -v` prints it, minus the `Developer ID Application:` prefix.
-Leave it unset and electron-builder finds the certificate itself.
-
-**For the GitHub release workflow**, the same values go in as repository
-secrets (Settings → Secrets and variables → Actions), named `MAC_CSC_LINK`,
-`MAC_CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`,
-`APPLE_TEAM_ID` and `MAC_SIGN_IDENTITY`. `MAC_CSC_LINK` must be the `.p12`
-**base64-encoded** (`base64 -i developer-id.p12 | pbcopy`), since a secret is a
-string and not a file. Every one of them is optional: with none set the
-workflow still produces a running native arm64 download, ad-hoc signed.
-
-## 5. Upload
-
-```sh
-npm run steam:upload -- --platform windows --dry-run   # check everything first
-npm run steam:upload -- --platform windows             # …then upload
-npm run steam:upload -- --platform macos
-npm run steam:upload -- --platform linux
-```
-
-The build lands in the partner site but **does not go live**. That is
-deliberate: uploading and releasing are different decisions, and a script that
-did both means one mistyped command ships to every player. Set it live yourself
-in **App Admin → Builds**, or pass `--branch beta` to push straight to a branch
-you have already created.
+Both are the desktop shell's, and live in [`RELEASING.md`](RELEASING.md): §1
+builds the depot (through the Makefile, so the capability stamp is set), §2
+checks it, §3 uploads it with `npm run steam:upload`.
 
 ## 6. Release
 
@@ -360,28 +269,17 @@ With the store page live for its 30 days and a build set live on `default`:
 
 ## What fails quietly
 
-Five things in this pipeline break without any error at all. `steam:upload`
-checks the first three; the last two it cannot see:
+The build-side ones — a missing redistributable, a developer build, an
+unstamped package, an ad-hoc signature — are collected in
+[`RELEASING.md`](RELEASING.md#what-fails-quietly). Two are store-side and live
+here:
 
-- **A missing `steam_api64.dll` / `libsteam_api.dylib` / `libsteam_api.so`.**
-  `steam.ts` degrades to "no client" rather than crashing — by design, so a
-  developer without Steam can still run the game — so the app ships, launches,
-  plays perfectly, and simply has no cloud saves or achievements for anyone.
-- **A build made with `dist:*`.** Identical to look at until a player taps the
-  sun sixteen times and wins the click race behind it, finding the developer
-  menu.
 - **App id 480.** Valve's shared Spacewar test app. Everything works; the data
   goes into a sandbox every developer on Steam shares.
 - **An achievement id that isn't in the partner site.** The report is dropped
-  on the floor, silently, forever. `steam:upload` cannot see this one — it is a
+  on the floor, silently, forever. The upload cannot see this one — it is a
   fact about the partner site, not about the build — so it has its own check:
   `make store-steam-achievements ARGS="--verify"` (§1.4).
-- **An unstamped package.** Built with `npm run release:*` on its own rather
-  than through `make desktop-steam`, so no `GIS_ENABLE_*` switch reached the
-  packager and the manifest carries no capabilities at all. Multiplayer, mods
-  and voice are simply absent; everything else plays. Nothing in the upload
-  path looks at the stamp — building through the Makefile is the whole
-  defence (§4).
 
 ## What you do NOT have to build
 
@@ -389,10 +287,9 @@ Worth knowing, because these are the usual "did I forget something" items:
 
 - **An installer or updater.** Steam owns both. The build target is a plain
   directory for exactly this reason.
-- **A leaderboard board.** There is none on Steam — `steamworks.js` binds no
-  leaderboard API and Steam's overlay has no leaderboard page, so the game hides
-  every leaderboard row there. See
-  [`src/leaderboards-provider.ts`](src/leaderboards-provider.ts).
+- **A leaderboard board.** There is none on Steam — Steam's overlay has no
+  leaderboard page, so the game hides every leaderboard row there. See
+  [`shell/src/leaderboards_provider.rs`](shell/src/leaderboards_provider.rs).
 - **Any purchase flow.** The coin store does not exist on Steam; the game is
   bought once. `pwa/src/app/store-bridge.ts` hides the STORE row.
 - **A privacy policy for data collection.** There is no backend and no account.

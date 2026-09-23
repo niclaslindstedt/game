@@ -3,7 +3,7 @@
 // (pwa/src/game/screenshots.ts) and the platform's own share sheet. The
 // protocol is documented on the web side (pwa/src/app/screenshot-bridge.ts);
 // keep the two in step, and in step with the desktop peer
-// (electron/src/screenshots.ts).
+// (tauri/shell/src/screenshots.rs).
 //
 // **WHY THE PAGE CANNOT JUST CALL `navigator.share`.** On iOS it very nearly
 // can — WKWebView has the Web Share API — but on ANDROID a WebView has no Web

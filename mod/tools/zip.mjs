@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-GoneInSpace-Mod-SDK-1.0
 // A ZIP WRITER, small enough to read in one sitting.
 //
-// It exists for the same reason `electron/src/mod-archive.ts` is a reader we
+// It exists for the same reason `tauri/shell/src/mod_archive.rs` is a reader we
 // wrote rather than a dependency, and it is deliberately its mirror image: that
 // module opens a stranger's zip under rules we chose, and this one writes an
 // archive that obeys exactly those rules — stored or deflated entries, no

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! STEAM WORKSHOP — where a player's mods come from, and where an author's
-//! goes. The peer of `electron/src/workshop.ts`, and the seam's third file in
+//! goes. The seam's third file in
 //! the same shape as cloud save's and the achievements': a bridge above it
 //! moves JSON, this declares what a mod portal has to be, and only
 //! `src-tauri/src/workshop.rs` knows Steam exists.

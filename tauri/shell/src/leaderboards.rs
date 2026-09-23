@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! LEADERBOARDS' SHELL half — the peer of `electron/src/leaderboards.ts`. It is
-//! wired up even though [`crate::leaderboards_provider::leaderboards_provider`]
+//! LEADERBOARDS' SHELL half. It is wired up even though [`crate::leaderboards_provider::leaderboards_provider`]
 //! answers `None` on this shell today (see that seam for why), so a future
 //! provider needs no bridge work at all.
 //!

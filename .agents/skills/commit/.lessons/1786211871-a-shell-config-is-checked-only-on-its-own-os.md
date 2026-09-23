@@ -1,7 +1,7 @@
 ---
 title: A shell's config is checked only on the OS it is FOR — `make lint`/`make test` on Linux prove nothing about the macOS branch
 date: 2026-08-08
-scope: tauri/src-tauri, electron, native, .github/workflows
+scope: tauri/src-tauri, native, .github/workflows
 concepts: [quality-gates, ci, shells, packaging, false-green]
 ---
 

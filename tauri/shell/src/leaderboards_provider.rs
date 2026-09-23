@@ -1,19 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE PLATFORM SEAM BEHIND LEADERBOARDS — the peer of
-//! `electron/src/leaderboards-provider.ts`.
+//! THE PLATFORM SEAM BEHIND LEADERBOARDS.
 //!
-//! **There is no Steam provider here either, and the reason has CHANGED — which
-//! is a finding worth the paragraph.** The Electron seam gives two
-//! independent reasons and says either alone would be enough. Exactly one of
-//! them survived the move to Rust:
+//! **There is no Steam provider, and the reason is not the binding — which is
+//! a finding worth the paragraph.**
 //!
-//!  1. ~~**The binding cannot.**~~ It can. `steamworks` 0.13 binds the whole of
+//!  1. **The binding could.** `steamworks` 0.13 binds the whole of
 //!     ISteamUserStats' leaderboard surface — `find_leaderboard`,
 //!     `find_or_create_leaderboard`, `upload_leaderboard_score`,
 //!     `download_leaderboard_entries`, the sort methods and the display types.
-//!     This is the one place the Rust binding is materially richer than
-//!     `steamworks.js`, and it means the API gap Electron records is simply not
-//!     a fact about this shell.
 //!  2. **Steam has no board to open, and the game has none to draw.** This one
 //!     stands, unchanged and on its own. The whole design of the game's
 //!     leaderboards is that it ships NO board UI, because "the ranking, the

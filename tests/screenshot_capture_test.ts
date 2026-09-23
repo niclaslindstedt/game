@@ -79,7 +79,7 @@ describe("the screenshot bind", () => {
   it("ships on F12 in a shell — Steam's own screenshot key", () => {
     // The whole Steam integration rests on this default: the overlay hooks F12
     // and files its own copy, and the game never grabs the key away from it
-    // (electron/src/screenshots-provider.ts).
+    // (tauri/shell/src/screenshots_provider.rs).
     expect(DEFAULT_KEYBINDINGS.screenshot).toBe("F12");
     expect(defaultKeybindings("steam").screenshot).toBe("F12");
   });

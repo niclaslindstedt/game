@@ -75,12 +75,12 @@ const buildRef = process.env.GITHUB_SHA
 // EAS profile passes that (native/scripts/bundle-web.mjs).
 const devTools = process.env.VITE_DEV_TOOLS !== "off";
 
-// Is this build going INSIDE a store shell — native, Electron or Tauri —
+// Is this build going INSIDE a store shell — native or Tauri —
 // rather than onto the web? Each shell's `bundle-web.mjs` passes it, on EVERY
 // profile rather than only `production`: unlike the developer tooling above,
 // which a preview build deliberately keeps so it behaves like the website, the
 // prerendered boot shell is dead weight in any compiled build. Nothing crawls
-// an asar, and its only visible effect there is a blink of an SEO document
+// a packaged app, and its only visible effect there is a blink of an SEO document
 // between the platform splash and the game's own studio card. See
 // `stripBootShell` in pwa-plugin.ts for what it takes out and what survives.
 const shellBuild = process.env.VITE_SHELL_BUILD === "on";

@@ -148,7 +148,7 @@ describe("who may be offered the auto pilot at all", () => {
 
   it("hands it back to a launch that did", () => {
     // …and that launch has no multiplayer left in its list, which is the trade
-    // the shells make (`electron/src/capabilities.ts`).
+    // the shells make (`tauri/shell/src/capabilities.rs`).
     vi.stubGlobal("window", { __GIS_CAPS__: ["mods", "autopilot"] });
     expect(autopilotAllowed()).toBe(true);
     vi.unstubAllGlobals();

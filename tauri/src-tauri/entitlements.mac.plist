@@ -3,21 +3,19 @@
 <!--
   SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 
-  Hardened-runtime entitlements for the macOS build — the peer of
-  electron/build/entitlements.mac.plist, and DELIBERATELY SHORTER than it.
+  Hardened-runtime entitlements for the macOS build, DELIBERATELY SHORT.
 
   Apple's hardened runtime is required for notarization, and it switches off
   several things an app may need. Each entry below is present because something
-  concrete breaks without it; each entry the Electron peer has and this one does
-  NOT is absent because this shell genuinely does not do that thing.
+  concrete breaks without it; an entry that is absent is absent because this
+  shell genuinely does not do that thing.
 
     disable-library-validation
       Valve's `libsteam_api.dylib` is not signed by Apple and is not signed with
       OUR team id either. Library validation refuses it, which surfaces as the
       game launching with Steam silently unavailable rather than as a crash.
-      (The Electron peer needs this for a second reason as well — steamworks.js'
-      native `.node` addon — which has no counterpart here: the Steam binding is
-      compiled INTO this binary and carries our own signature.)
+      (The Steam binding itself is compiled INTO this binary and carries our
+      own signature.)
 
     allow-dyld-environment-variables
       Steam launches games with DYLD_* set. Without this the app is killed on
@@ -37,8 +35,7 @@
   WHAT IS NOT HERE, and why:
 
     allow-jit / allow-unsigned-executable-memory
-      The Electron peer needs both because V8 lives inside the app and compiles
-      JavaScript to machine code in the app's own address space. WKWebView does
+      An app that embeds its own JavaScript engine needs both. WKWebView does
       not: it runs the page in its own out-of-process content and JIT services,
       which carry Apple's entitlements rather than ours. Granting an app
       permission to write executable memory it never writes is a hole with no

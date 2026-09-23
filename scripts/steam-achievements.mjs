@@ -7,7 +7,7 @@
 // reason: an achievement only exists once it has been created in the portal,
 // and a report for an id that isn't there is dropped on the floor. So the
 // manifest is GENERATED from the live catalog and COMMITTED
-// (electron/store/steam-achievements.json): the diff on a catalog change is
+// (tauri/store/steam-achievements.json): the diff on a catalog change is
 // exactly the work list of rows to add or retitle, and the test suite fails
 // when the committed file drifts from the catalog.
 //
@@ -34,7 +34,7 @@ const { PLATFORM_ACHIEVEMENT_LIMIT, STEAM_FULL_CATALOG, steamManifest } =
     pathToFileURL(path.join(root, "pwa/src/game/platform-achievements.ts")).href
   );
 
-const OUT = path.join(root, "electron/store/steam-achievements.json");
+const OUT = path.join(root, "tauri/store/steam-achievements.json");
 
 const rows = steamManifest();
 

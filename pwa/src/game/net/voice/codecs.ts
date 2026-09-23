@@ -16,11 +16,8 @@
 // matter — it is the codec Valve tunes for game chat, it honours the player's
 // Steam-wide microphone device and push-to-talk settings, and it is the only
 // path that could ever respect a Steam MUTE or BLOCK, which is moderation the
-// game cannot otherwise offer. It is not reachable today: `steamworks.js@0.4.0`
-// binds no `voice` namespace and no `friends` namespace at all, so it means an
-// N-API addon and the loss of the prebuilt binaries that let this shell install
-// without a Rust toolchain — precisely the trade `electron/src/steam.ts`
-// records for the missing `ISteamNetworkingSockets`. So it is a LATER provider,
+// game cannot otherwise offer. It is not reachable today: the desktop shell
+// does not bind Steam's voice API. So it is a LATER provider,
 // and the shape below is what keeps it a new file rather than a refactor.
 //
 // **THREE PROPERTIES OF THIS SEAM ARE THERE FOR THAT PROVIDER, NOT FOR THIS

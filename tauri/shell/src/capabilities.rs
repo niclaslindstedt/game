@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! WHAT THIS COPY OF THE APP MAY DO — the peer of `electron/src/capabilities.ts`,
-//! with the same five capabilities, the same command line and the same refusals.
+//! WHAT THIS COPY OF THE APP MAY DO — five capabilities, one command line, and
+//! the refusals that go with them.
 //!
 //! Five of the shell's capabilities are decided when the binary is BUILT rather
 //! than when it runs, because they are not the same product everywhere: a depot
@@ -11,10 +11,9 @@
 //! downloaded, so "it works here" and "it works for a player" mean the same
 //! thing.
 //!
-//! **The stamp is stronger here than on the Electron shell, and that is the one
-//! difference worth knowing.** Electron reads the set out of the packaged
-//! `package.json`, which is a JSON file inside an installed copy; this crate is
-//! handed a [`BuildStamp`] the binary read from `option_env!` — the packager's
+//! **The stamp is baked in, and that is the one fact worth knowing.** A set
+//! read out of a JSON file inside an installed copy could be edited; this crate
+//! is handed a [`BuildStamp`] the binary read from `option_env!` — the packager's
 //! environment, baked in at COMPILE time. So an installed copy has nothing to
 //! edit at all, rather than a file somebody would have to know not to edit.
 //!

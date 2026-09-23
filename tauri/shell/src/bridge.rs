@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! WHAT THE PAGE JUST ASKED FOR — the peer of `routeMessage` in
-//! `electron/src/main.ts`, with the routing decision separated from the acting
-//! on it so the decision can be tested.
+//! WHAT THE PAGE JUST ASKED FOR — the routing decision, separated from the
+//! acting on it so the decision can be tested.
 //!
 //! Every message the page posts is a JSON object carrying ONE `__gis*` flag
 //! that says which protocol it belongs to; that protocol's own bridge validates
@@ -197,8 +196,7 @@ pub fn explain(route: &Route) -> Option<String> {
 /// The JavaScript that hands one event to the page, ready to be evaluated in
 /// the webview.
 ///
-/// The peer of Electron's `executeJavaScript` emit and of the WebView's
-/// `injectJavaScript`: with the page and the shell in separate worlds, the
+/// The desktop's counterpart of the phone WebView's `injectJavaScript`: with the page and the shell in separate worlds, the
 /// RETURN path is the shell calling the page's own `window.__gis*Event(...)`
 /// from outside. That is why the web side needed no change to run on this
 /// shell at all.

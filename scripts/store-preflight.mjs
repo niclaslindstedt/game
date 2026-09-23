@@ -18,8 +18,8 @@
 // question. The Steam section is deliberately the STORE-PAGE half only: the
 // upload's own guards (a packaged build, Valve's redistributable, a website
 // built with the developer menu still in it) live in
-// `electron/scripts/steam-upload.mjs --dry-run`, which needs electron/'s
-// dependency tree and a finished build before it can say anything.
+// `tauri/scripts/steam-upload.mjs --dry-run`, which needs a finished depot
+// build before it can say anything.
 //
 //   make store-preflight
 //
@@ -181,41 +181,51 @@ if (iosSubmit.appleId || easHasKey) {
   );
 }
 
-// The bundle id is defined once in app.config.js; fastlane repeats it and so
-// does the desktop packager, and a drift means deliver would upload this
-// listing onto a different app — or, on the desktop side, sign and notarize a
-// build under an id no store record holds. Both repeats are checked here
-// rather than derived, because neither file can import the other: the Appfile
-// is Ruby and electron-builder's config lives in a separate dependency tree.
+// The bundle id is a deployment fact, not a committed one: the phone build
+// (app.config.js), fastlane (Appfile) and the desktop package
+// (tauri/scripts/package.mjs, over tauri.conf.json) all read APP_BUNDLE_ID and
+// fall back to one development id. A drift in either half means a build
+// signed under an id no store record holds, so both are checked here rather
+// than derived — none of the four files can import the others.
 const appConfig = readFileSync(path.join(native, "app.config.js"), "utf8");
 const appfile = readFileSync(path.join(native, "fastlane", "Appfile"), "utf8");
-const builderConfig = readFileSync(
-  path.join(root, "electron", "electron-builder.config.cjs"),
+const desktopPackager = readFileSync(
+  path.join(root, "tauri", "scripts", "package.mjs"),
   "utf8",
 );
-const configBundle = /BUNDLE_ID = "([^"]+)"/.exec(appConfig)?.[1];
-const fastlaneBundle = /app_identifier\("([^"]+)"\)/.exec(appfile)?.[1];
-const desktopBundle = /BUNDLE_ID = "([^"]+)"/.exec(builderConfig)?.[1];
-if (
-  configBundle &&
-  configBundle === fastlaneBundle &&
-  configBundle === desktopBundle
-) {
+const desktopConf = JSON.parse(
+  readFileSync(
+    path.join(root, "tauri", "src-tauri", "tauri.conf.json"),
+    "utf8",
+  ),
+);
+const devIds = {
+  "app.config.js": /DEV_BUNDLE_ID = "([^"]+)"/.exec(appConfig)?.[1],
+  "fastlane/Appfile": /ENV\["APP_BUNDLE_ID"\] \|\| "([^"]+)"/.exec(
+    appfile,
+  )?.[1],
+  "tauri.conf.json": desktopConf.identifier,
+};
+const readers = {
+  "app.config.js": appConfig.includes("process.env.APP_BUNDLE_ID"),
+  "fastlane/Appfile": appfile.includes('ENV["APP_BUNDLE_ID"]'),
+  "tauri/scripts/package.mjs": desktopPackager.includes("APP_BUNDLE_ID"),
+};
+const devId = devIds["app.config.js"];
+const devDrift = Object.entries(devIds)
+  .filter(([, id]) => id !== devId)
+  .map(([file, id]) => `${file} falls back to ${id}`);
+const deaf = Object.entries(readers)
+  .filter(([, reads]) => !reads)
+  .map(([file]) => `${file} does not read APP_BUNDLE_ID`);
+if (devId && devDrift.length === 0 && deaf.length === 0) {
   ok(
-    `bundle id ${configBundle} ` +
-      `(app.config.js = fastlane/Appfile = electron-builder.config.cjs)`,
+    `bundle id from APP_BUNDLE_ID everywhere, development fallback ${devId} ` +
+      `(app.config.js = fastlane/Appfile = tauri.conf.json)`,
   );
 } else {
-  const drifted = [
-    fastlaneBundle === configBundle
-      ? null
-      : `fastlane/Appfile has ${fastlaneBundle}`,
-    desktopBundle === configBundle
-      ? null
-      : `electron-builder.config.cjs has ${desktopBundle}`,
-  ].filter(Boolean);
   fail(
-    `bundle id drift: app.config.js has ${configBundle}, ${drifted.join("; ")}`,
+    `bundle id drift: ${[...devDrift, ...deaf].join("; ") || "no development id in app.config.js"}`,
     "app.config.js is the source of truth — fix the others to match.",
   );
 }
@@ -493,42 +503,42 @@ else
 
 // ---------------------------------------------------------------------------
 // 6. Steam. The desktop shell ships to a THIRD storefront, and everything
-//    above is Apple's. `electron/scripts/steam-upload.mjs --dry-run` already
+//    above is Apple's. `tauri/scripts/steam-upload.mjs --dry-run` already
 //    guards the UPLOAD (ids, a packaged build, Valve's redistributable, a
 //    website built with the developer menu still in it) — but it can only run
-//    once electron/'s own dependency tree is installed and a build exists, so
+//    once a depot build exists, so
 //    it answers "can I upload this" rather than "what is left". These are the
 //    store-page facts, which are true or false from a cold checkout.
 // ---------------------------------------------------------------------------
 section("STEAM");
 
-const electron = path.join(root, "electron");
-const steamConfigPath = path.join(electron, "store", "steam.json");
+const desktop = path.join(root, "tauri");
+const steamConfigPath = path.join(desktop, "store", "steam.json");
 let steamConfig = {};
 try {
   steamConfig = JSON.parse(readFileSync(steamConfigPath, "utf8"));
 } catch {
   fail(
-    "electron/store/steam.json could not be read",
+    "tauri/store/steam.json could not be read",
     "it holds the app and depot ids the upload writes into its VDF.",
   );
 }
 
 // 480 is Spacewar, Valve's shared test app. Everything works with it — the
 // build uploads, achievements report — into a sandbox every developer on Steam
-// shares. It is the quietest of the four quiet failures in electron/RELEASING.
+// shares. It is the quietest of the quiet failures in tauri/RELEASING.md.
 const steamAppId = Number(process.env.GIS_STEAM_APP_ID || steamConfig.appId);
 if (steamAppId === 480) {
   fail(
-    "electron/store/steam.json → appId is 480 (Valve's Spacewar test app)",
+    "tauri/store/steam.json → appId is 480 (Valve's Spacewar test app)",
     "everything works and the data goes into a sandbox shared with every " +
       "developer on Steam. Use this app's own id.",
   );
 } else if (Number.isInteger(steamAppId) && steamAppId > 0) {
-  ok(`Steam app ${steamAppId} (electron/store/steam.json)`);
+  ok(`Steam app ${steamAppId} (tauri/store/steam.json)`);
 } else {
   fail(
-    "electron/store/steam.json → appId is not set",
+    "tauri/store/steam.json → appId is not set",
     "create the app in Steamworks; the app id is the number in the " +
       "partner-site URL.",
     "steam",
@@ -543,7 +553,7 @@ for (const os of ["windows", "macos", "linux"]) {
   if (Number.isInteger(depot) && depot > 0) ok(`${os} depot ${depot}`);
   else
     fail(
-      `electron/store/steam.json → depots.${os} is not set`,
+      `tauri/store/steam.json → depots.${os} is not set`,
       "App Admin → Depots → create one per platform, then paste its id here.",
       "steam",
     );
@@ -554,7 +564,7 @@ for (const os of ["windows", "macos", "linux"]) {
   const result = run(script, ["--check"]);
   const manifest = JSON.parse(
     readFileSync(
-      path.join(electron, "store", "steam-achievements.json"),
+      path.join(desktop, "store", "steam-achievements.json"),
       "utf8",
     ),
   );
@@ -572,7 +582,7 @@ for (const os of ["windows", "macos", "linux"]) {
     );
   } else if (drifted(result)) {
     fail(
-      "electron/store/steam-achievements.json has drifted from the catalog",
+      "tauri/store/steam-achievements.json has drifted from the catalog",
       `run \`node scripts/${script}\` and create the new rows in the portal.`,
     );
   } else {
@@ -594,7 +604,7 @@ const CAPSULES = [
   ["library-hero", 3840, 1240, "library detail page — no text"],
   ["library-logo", 1280, 720, "over the hero — transparent PNG"],
 ];
-const capsuleDir = path.join(electron, "store", "capsules");
+const capsuleDir = path.join(desktop, "store", "capsules");
 const missingCapsules = [];
 const wrongCapsules = [];
 for (const [name, width, height, where] of CAPSULES) {
@@ -612,12 +622,12 @@ for (const [name, width, height, where] of CAPSULES) {
   }
 }
 if (missingCapsules.length === 0 && wrongCapsules.length === 0) {
-  ok(`${CAPSULES.length} store capsules present (electron/store/capsules/)`);
+  ok(`${CAPSULES.length} store capsules present (tauri/store/capsules/)`);
 }
 if (missingCapsules.length > 0) {
   warn(
     `${missingCapsules.length} of ${CAPSULES.length} Steam capsules are missing`,
-    "drop them in electron/store/capsules/ as <name>.png — " +
+    "drop them in tauri/store/capsules/ as <name>.png — " +
       missingCapsules.join(", "),
   );
 }
@@ -630,23 +640,23 @@ if (wrongCapsules.length > 0) {
 
 // Valve requires at least five, and four of them marked suitable for all ages.
 const STEAM_MIN_SHOTS = 5;
-const steamShots = pngCount(path.join(electron, "store", "screenshots"));
+const steamShots = pngCount(path.join(desktop, "store", "screenshots"));
 if (steamShots >= STEAM_MIN_SHOTS) {
   ok(`${steamShots} Steam screenshots captured`);
 } else {
   warn(
     `${steamShots} of ${STEAM_MIN_SHOTS} required Steam screenshots captured`,
     "`node pwa/scripts/store-shots.mjs --only steam` — the 1920×1080 raster, " +
-      "written to electron/store/screenshots/.",
+      "written to tauri/store/screenshots/.",
   );
 }
 
 // TWO icons per achievement — Steam draws the achieved and locked variants side
 // by side in the overlay.
 const steamBadges = JSON.parse(
-  readFileSync(path.join(electron, "store/steam-achievements.json"), "utf8"),
+  readFileSync(path.join(desktop, "store/steam-achievements.json"), "utf8"),
 ).count;
-const steamArt = pngCount(path.join(electron, "store", "achievements"));
+const steamArt = pngCount(path.join(desktop, "store", "achievements"));
 if (steamArt >= steamBadges * 2) {
   ok(`${steamArt} Steam achievement icons rendered`);
 } else {
@@ -731,7 +741,7 @@ if (nowOnly) {
       console.log(`  ${String(n).padStart(3)} × ${label}`);
   }
   console.log(
-    "see native/RELEASING.md (App Store / Play) and electron/RELEASING.md " +
+    "see native/RELEASING.md (App Store / Play) and tauri/RELEASING.md " +
       "(Steam)\nfor the order these are done in",
   );
 }

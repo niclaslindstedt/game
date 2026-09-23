@@ -84,9 +84,8 @@ fn not_found(path: &str) -> Response<Vec<u8>> {
 
 /// Serve one request off the bundled site.
 ///
-/// **Read whole rather than streamed**, which is the one place this diverges
-/// from the Electron peer and is a difference in the API rather than in the
-/// judgement: Tauri's synchronous protocol handler returns a body, not a
+/// **Read whole rather than streamed**, which is a fact about the API rather
+/// than a judgement: Tauri's synchronous protocol handler returns a body, not a
 /// stream. The biggest thing here is the sprite atlas, so the cost is one
 /// copy of one asset at a time; if a future asset makes that wrong, the
 /// asynchronous handler is the seam to move to.

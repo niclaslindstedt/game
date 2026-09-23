@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE LOBBY — Steam matchmaking, which IS the server browser. The peer of
-//! `electron/src/net-lobby.ts`, with the metadata rules here and the client in
-//! `src-tauri/src/lobby.rs`.
+//! THE LOBBY — Steam matchmaking, which IS the server browser. The metadata
+//! rules are here and the client is in `src-tauri/src/lobby.rs`.
 //!
 //! `getLobbies()` is the game list, and the lobby's own metadata is what makes
 //! that list useful WITHOUT connecting to anything: the session name, the
@@ -18,12 +17,11 @@
 //! fields is checked again for real by `server/net/hub.ts` before a byte
 //! reaches the session, and a mismatch is refused by name.
 //!
-//! **THE KEYS ARE SHORT, STABLE, AND SHARED WITH THE OTHER SHELL.** Steam caps
-//! lobby metadata, and these key names are part of the wire in every sense that
-//! matters: a build that renamed one would silently stop seeing the other
-//! build's sessions, with no error anywhere — and the two builds here are the
-//! Electron shell and this one, which must be able to see each other's games.
-//! `LOBBY_KEYS` in `electron/src/net-lobby.ts` is the same table.
+//! **THE KEYS ARE SHORT AND STABLE.** Steam caps lobby metadata, and these key
+//! names are part of the wire in every sense that matters: a build that renamed
+//! one would silently stop seeing an older build's sessions, with no error
+//! anywhere. They are also the names the earlier Electron build published, so
+//! a player still on it sees the same games.
 
 use std::collections::BTreeMap;
 

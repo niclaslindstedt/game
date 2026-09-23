@@ -5,7 +5,7 @@
 // `@game/core` is consumed by Vite (for the browser) and by
 // `scripts/game-alias-loader.mjs` (for tooling). Neither produces something
 // that ships INSIDE the app, and the session server needs exactly that: the
-// simulation, running under plain Node, inside a `utilityProcess`.
+// simulation, running under plain Node, as a child of the desktop shell.
 //
 // **The type-stripping route was spiked first, and the spike is what chose
 // this one.** The engine's imports already carry `.ts` extensions and the root
@@ -15,14 +15,15 @@
 // `engine/sim/simulate.ts`. Two things killed it anyway:
 //
 //   * **It does not resolve the path ALIASES.** `@game/lib/vec.ts` needs
-//     `scripts/game-alias-loader.mjs` registered, and registering a loader
-//     inside a forked `utilityProcess` means threading `execArgv` through the
-//     fork and hoping Electron keeps honouring it.
-//   * **The runtime is not ours to pin.** `utilityProcess` runs ELECTRON's
-//     bundled Node, whose version moves with Electron. A ship target resting
-//     on an experimental flag in a runtime somebody else upgrades is one that
-//     breaks in a released build, on a player's machine, for a reason nobody
-//     changed.
+//     `scripts/game-alias-loader.mjs` registered, and registering a loader in
+//     the child process the desktop shell spawns means threading `execArgv`
+//     through every launch path, the dedicated server's included.
+//   * **The runtime is not ours to pin.** The desktop package carries whatever
+//     Node the packaging machine ran (`tauri/scripts/package.mjs`), and a
+//     dedicated server runs on whatever its host installed. A ship target
+//     resting on an experimental flag in a runtime somebody else upgrades is
+//     one that breaks in a released build, on a player's machine, for a reason
+//     nobody changed.
 //
 // So the fallback is to precompile, which
 // also makes the standalone dedicated server trivially portable.
@@ -60,9 +61,10 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 /** Where the rewritten copy of the sources is compiled FROM. Gitignored. */
-const stageDir = path.join(root, "electron", "server-src");
-/** Where the compiled server lands. Gitignored; `extraResources` copies it. */
-const outDir = path.join(root, "electron", "server-dist");
+const stageDir = path.join(root, "server-src");
+/** Where the compiled server lands. Gitignored; `tauri/scripts/package.mjs`
+ * copies it into the package. */
+const outDir = path.join(root, "server-dist");
 
 /**
  * Alias prefix → the directory it names, relative to the repo root. Keep in
@@ -128,12 +130,12 @@ function main() {
  * `engine/generated/` is build output like every other generated artifact (§11.2)
  * — gitignored, rebuilt by `npm run levels`, which the root's own `pre*` hooks
  * run ahead of every test, typecheck and lint. This script had no such hook and
- * no way to grow one that helps everybody, because `electron/` is not a
- * workspace member and reaches it as `node ../scripts/build-server.mjs`. A
+ * no way to grow one that helps everybody, because the desktop packager reaches
+ * it as `node scripts/build-server.mjs` from outside the root's hooks. A
  * fresh clone, or one that predates a catalog (`sets`, `talents`, `quests` and
  * the story catalogs each arrived after the ones around them), therefore
  * reached `tsc` and got a wall of TS2307s naming staged copies under
- * `electron/server-src/` — paths that exist in no editor and no git status, and
+ * `server-src/` — paths that exist in no editor and no git status, and
  * which say nothing about the one command that fixes all of them.
  *
  * The check is DERIVED rather than a list: every relative specifier that
@@ -174,10 +176,9 @@ function requireGeneratedCatalogs() {
  * Returns how many TypeScript files were staged. */
 function stage() {
   let count = 0;
-  // The stage sits under `electron/`, whose own manifest has no `type` field —
-  // so `nodenext` would read every staged file as CommonJS and refuse its ESM
-  // syntax outright. One manifest at the stage root settles it, and it has to
-  // be written BEFORE `tsc` looks, not with the output.
+  // One manifest at the stage root pins the module format, so `nodenext` reads
+  // every staged file as ESM whatever sits above it. It has to be written
+  // BEFORE `tsc` looks, not with the output.
   mkdirSync(stageDir, { recursive: true });
   writeFileSync(
     path.join(stageDir, "package.json"),
@@ -252,8 +253,7 @@ function compile() {
       cwd: root,
       // WINDOWS: `node_modules/.bin/tsc.cmd` is a BATCH FILE, and Node will
       // not execute one directly — `execFileSync` fails with EINVAL before
-      // the compiler runs at all. cmd.exe has to interpret it. The same trap
-      // is documented in `electron/scripts/bundle-web.mjs`; it reached here
+      // the compiler runs at all. cmd.exe has to interpret it. It reached here
       // by way of a path only the Windows packaging job takes, and the
       // symptom was a build that exited 1 having printed nothing whatsoever.
       shell: process.platform === "win32",
@@ -321,20 +321,12 @@ function copyRuntimeJson() {
 }
 
 /**
- * `tsc`, from whichever tree has it.
- *
- * The desktop package job installs BOTH trees, but `electron/` is not a
- * workspace member and its own CI installs only itself — so the compiler is
- * looked for in the shell's tree as well as the root's. `typescript` is a
- * declared devDependency of both, which is what makes the fallback honest
- * rather than a hoisting accident.
+ * `tsc`, from the root's install — `typescript` is a declared devDependency
+ * there, and the desktop packager runs after `npm ci` at the root.
  */
 function findTsc() {
   const bin = process.platform === "win32" ? "tsc.cmd" : "tsc";
-  const candidates = [
-    path.join(root, "node_modules", ".bin", bin),
-    path.join(root, "electron", "node_modules", ".bin", bin),
-  ];
+  const candidates = [path.join(root, "node_modules", ".bin", bin)];
   for (const candidate of candidates) {
     try {
       statSync(candidate);
@@ -343,9 +335,7 @@ function findTsc() {
       // Try the next tree.
     }
   }
-  console.error(
-    "server: no `tsc` found. Run `npm ci` at the repo root (or in electron/).",
-  );
+  console.error("server: no `tsc` found. Run `npm ci` at the repo root.");
   process.exit(1);
 }
 

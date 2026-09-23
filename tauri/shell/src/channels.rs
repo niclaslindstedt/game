@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! The names the page and the shell reach each other by — the peer of
-//! `electron/src/channels.ts`.
+//! The names the page and the shell reach each other by.
 //!
 //! Both halves of every bridge protocol are named here so a rename is one edit
 //! rather than a hunt. The page's own half of these names lives in
 //! `pwa/src/app/shell-bridge.ts` and in each bridge module beside it, and is
-//! IDENTICAL on all three shells — the Expo WebView, Electron and this one —
-//! which is the whole reason adding a shell has never changed a protocol.
+//! IDENTICAL on both shells — the Expo WebView and this one — which is the
+//! whole reason adding a shell has never changed a protocol.
 
 /// The Tauri command every JSON bridge message travels on: the page calls it,
 /// the shell routes what arrives.
 ///
 /// This is the pipe, and it is the only thing about a bridge that differs
-/// between shells — `ReactNativeWebView.postMessage` on the phone,
-/// `ipcRenderer.send` under Electron, an `invoke` here.
+/// between shells — `ReactNativeWebView.postMessage` on the phone, an `invoke`
+/// here.
 pub const SHELL_COMMAND: &str = "shell_post";
 
 /// The object the page posts through, exposed by the initialization script.

@@ -2,9 +2,9 @@
 // THE RELAYED TRANSPORT — the seam's second implementation, for peers whose
 // packets cannot reach this process directly.
 //
-// **WHY IT EXISTS AT ALL: THE STEAM CLIENT LIVES IN THE MAIN PROCESS.**
-// `steamworks.init()` is a single global handshake, `electron/src/steam.ts` is
-// its one owner, and `utilityProcess` is a different process — so the Steam P2P
+// **WHY IT EXISTS AT ALL: THE STEAM CLIENT LIVES IN THE SHELL'S PROCESS.**
+// The Steam handshake is a single global one, `tauri/shell/src/steam.rs` is its
+// one owner, and the session is a different process — so the Steam P2P
 // queue can only be pumped where the client is. The alternative would be a
 // second Steam handshake in the session process, which is precisely what that
 // module exists to prevent.

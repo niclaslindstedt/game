@@ -56,9 +56,9 @@ _in_ the game is [`docs/game-content.md`](docs/game-content.md); the plot is
 - **The engine is framework-free.** `engine/` is plain TypeScript with no DOM or
   UI-framework assumptions, so it runs in the browser, in Node and in the test
   suite.
-- **One repo, five shells.** The same built site is wrapped for the web, the App
-  Store, and Steam — twice, in `electron/` and in `tauri/` — and the engine
-  itself compiles for Node as the headless dedicated server for co-op.
+- **One repo, three shells.** The same built site is wrapped for the web, the
+  App Store and Steam (`tauri/`), and the engine itself compiles for Node as the
+  headless dedicated server for co-op.
 
 ## Prerequisites
 
@@ -121,10 +121,10 @@ make test                                # the full test suite
 | `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                             |
 | `npm run library --workspace pwa`     | Rebuild the `/library/` reference pages (part of `make build`)                                     |
 | `npm run server:start`                | Run the standalone session server for co-op (see `docs/multiplayer.md`)                            |
-| `npm run electron:*` / `native:*`     | The Steam and App Store shells — see `electron/README.md` and `native/README.md`                   |
-| `make desktop-steam`                  | Package the RELEASE desktop build as a Steam depot (`desktop-dist` for a plain download)           |
-| `make tauri` / `make tauri-test`      | The second desktop shell — see `tauri/README.md` and `docs/desktop-shells.md`                      |
-| `make desktop-tauri-steam`            | Package that shell as a Steam depot directory (`desktop-tauri-dist` for a plain download)          |
+| `npm run native:*`                    | The App Store shell — see `native/README.md`                                                       |
+| `make desktop-steam`                  | Package the desktop build as a Steam depot (`desktop-dist` for a plain download)                   |
+| `make tauri` / `make tauri-test`      | Run and check the desktop shell — see `tauri/README.md`                                            |
+| `make desktop-steam`                  | Package that shell as a Steam depot directory (`desktop-dist` for a plain download)                |
 | `npm run parity` / `parity:check`     | Rewrite `docs/desktop-parity.md` from the two desktop trees / fail on drift                        |
 | `npm run shell:bench`                 | Weigh the packaged desktop builds, and read this machine's own cold starts                         |
 | `npm run webview:sweep`               | Check the web-platform features the game needs, engine by engine                                   |
@@ -147,8 +147,7 @@ here are drift-tested against a fresh build.
 | `tests/`          | Vitest suites (`*_test.ts`) — `tests/engine/` on fixtures, `tests/content/` on the shipped catalogs |
 | `server/`         | The session server for co-op — the engine compiled for Node                                         |
 | `native/`         | The App Store / Play Store shell (Expo, its own dependency tree)                                    |
-| `electron/`       | The Steam shell (its own dependency tree, its own tests)                                            |
-| `tauri/`          | A second desktop shell in Rust, built out beside `electron/` — packages, but ships nothing yet      |
+| `tauri/`          | The desktop shell (Steam and the release downloads), in Rust, with its own toolchain                |
 | `docs/`           | Reference documentation                                                                             |
 | `.agents/skills/` | Playbooks for each kind of work — also reachable as `.claude/skills` and `.gemini/skills`           |
 

@@ -14,9 +14,8 @@ use serde_json::Value;
 
 #[test]
 fn the_mark_vocabulary_is_ordered_and_starts_where_it_says() {
-    // The list IS the contract with `electron/src/metrics.ts`, and
-    // `scripts/shell-parity.mjs` reads both. These two are what the rest of the
-    // module indexes by name.
+    // The list IS the contract with whatever reads `startup.jsonl`. These two
+    // are what the rest of the module indexes by name.
     assert_eq!(MARKS.first().map(|(mark, _)| *mark), Some(FIRST_MARK));
     assert_eq!(MARKS.last().map(|(mark, _)| *mark), Some(LAST_MARK));
     assert!(known_mark("window-shown"));

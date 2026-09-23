@@ -13,7 +13,7 @@
 // shell that ignores the message leaves the player exactly where they were,
 // which is the right failure.
 //
-// The protocol, answered by `electron/src/main.ts`:
+// The protocol, answered by the desktop shell (`tauri/shell/src/bridge.rs`):
 //
 //   page → shell   { __gisQuit: true }
 //
@@ -23,7 +23,7 @@
 
 import { postToShell, shellAvailable, shellPlatform } from "./shell-bridge.ts";
 
-/** Can this build close itself? Steam's Electron shell can; a browser, an
+/** Can this build close itself? The desktop shell can; a browser, an
  * installed PWA and the mobile app cannot. */
 export function canQuitApp(): boolean {
   return shellAvailable() && shellPlatform() === "steam";

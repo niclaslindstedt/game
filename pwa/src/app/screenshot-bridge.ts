@@ -5,7 +5,7 @@
 //   web → shell   `postToShell(JSON { __gisShots })`
 //   shell → web   `window.__gisShotsEvent(...)` (injected from outside)
 //
-// The protocol (mirrored by electron/src/screenshots.ts and
+// The protocol (mirrored by tauri/shell/src/screenshots.rs and
 // native/src/screenshots.ts — keep the three in step):
 //   → { action: "init" }                                announce the web handler
 //   → { action: "status", requestId }                   what can this shell do?
@@ -61,7 +61,7 @@ export type ShotsStatus = {
    * drive: true when this launch has the Steam overlay injected, which means
    * Steam's OWN screenshot key files its own copy into the player's Steam
    * screenshot library. The gallery says so; see
-   * electron/src/screenshots-provider.ts for why that is the whole of the
+   * tauri/shell/src/screenshots_provider.rs for why that is the whole of the
    * Steam integration and what the alternative would cost.
    */
   steamOverlay?: boolean;

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Detects a STORE SHELL — a build that wraps the site and ships through a
 // storefront rather than over the web. Two exist: the Expo WebView (`native/`,
-// App Store / Play Store) and the Electron desktop app (`electron/`, Steam).
+// App Store / Play Store) and the Tauri desktop app (`tauri/`, Steam).
 // Each sets `window.__GIS_NATIVE__ = true` before the game's scripts run
-// (native/src/injected.ts `HAPTICS_BRIDGE`; electron/src/preload.ts), so this
+// (native/src/injected.ts `HAPTICS_BRIDGE`; tauri/src-tauri/src/page.rs), so this
 // reads true from the very first render inside either app and false in every
 // browser/PWA context.
 //
@@ -26,7 +26,7 @@ declare global {
   }
 }
 
-/** True when running inside a store shell (the Expo WebView or the Electron
+/** True when running inside a store shell (the Expo WebView or the Tauri
  * desktop app), false in a browser or installed PWA. */
 export function isNativeApp(): boolean {
   return typeof window !== "undefined" && window.__GIS_NATIVE__ === true;

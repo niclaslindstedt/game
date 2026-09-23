@@ -13,8 +13,8 @@ but misleading capsule damages reviews, refunds, retention, and trust.
 Treat each capsule as its own composition. Search/list capsules need ruthless
 thumbnail clarity; library heroes need a wide crop-safe center; library logos
 must remain separate transparent artwork. In this repository, the current exact
-rasters live in `electron/RELEASING.md` and
-`electron/store/capsules/PROMPTS.md` and are enforced by store preflight.
+rasters live in `tauri/STEAM.md` and
+`tauri/store/capsules/PROMPTS.md` and are enforced by store preflight.
 
 ## Apple App Store
 

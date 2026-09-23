@@ -7,11 +7,9 @@
 //! adopt a user-data directory, and the cheapest way to guarantee all three is
 //! never to reach the code that does them.
 //!
-//! **THE SERVER IS SPAWNED RATHER THAN IMPORTED**, which is the one difference
-//! from the Electron peer and is the closer match to what an operator expects:
-//! Electron's main process IS Node, so it rewrites its own `process.argv` and
-//! imports the entry into itself, leaving a game shell in the process table
-//! pretending to be a server. Here the thing in the process table is the server.
+//! **THE SERVER IS SPAWNED RATHER THAN IMPORTED**, which is the match to what
+//! an operator expects: the thing in the process table is the server, not a
+//! game shell pretending to be one.
 //!
 //! And it is spawned WITHOUT `--shell` — a dedicated server is driven by a
 //! config file and a signal rather than by a control channel, which is exactly

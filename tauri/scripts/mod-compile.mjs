@@ -5,8 +5,8 @@
 //
 // There is ONE mod compiler, shared verbatim with the CLI a modder runs, so
 // that "it works in my mod" and "it works in the game" mean the same thing.
-// Electron's main process is Node and simply `import()`s it; this shell is Rust
-// and cannot, so the compiler is spawned and what crosses is JSON.
+// This shell is Rust and cannot `import()` it, so the compiler is spawned and
+// what crosses is JSON.
 //
 // **IT IS SHELL CODE RATHER THAN SDK CODE**, which is why it lives here and not
 // under `mod/`. The SDK's own `cli.mjs` is written for a person at a terminal —

@@ -88,7 +88,7 @@ impl Library {
 
 fn options() -> ShotsOptions {
     ShotsOptions {
-        folder: PathBuf::from("/home/ada/Pictures/adastrail-tauri"),
+        folder: PathBuf::from("/home/ada/Pictures/adastrail"),
         steam_overlay: false,
         stamp: 1_700_000_000,
     }
@@ -127,7 +127,7 @@ fn status_tells_the_gallery_where_pictures_go() {
     assert!(status["folder"]
         .as_str()
         .expect("a folder")
-        .ends_with("adastrail-tauri"));
+        .ends_with("adastrail"));
     // ALWAYS false on this shell, INCLUDING where the overlay works: Steam's
     // key photographs the swap chain it hooked, which here is the decoy's empty
     // one. So Steam is NOT filing a copy of the game and the gallery must not
@@ -170,14 +170,14 @@ fn a_picture_lands_in_the_folder_and_in_the_platform_library() {
     assert!(event["path"]
         .as_str()
         .expect("a path")
-        .ends_with("adastrail-tauri/adas-trail-2026-08-08.png"));
+        .ends_with("adastrail/adas-trail-2026-08-08.png"));
     assert_eq!(disk.written().len(), 1);
     // BY PATH and with the real dimensions — Steam is handed the same file the
     // player got rather than a second copy of the bytes.
     assert_eq!(
         library.added(),
         vec![(
-            PathBuf::from("/home/ada/Pictures/adastrail-tauri/adas-trail-2026-08-08.png"),
+            PathBuf::from("/home/ada/Pictures/adastrail/adas-trail-2026-08-08.png"),
             844,
             390,
         )]

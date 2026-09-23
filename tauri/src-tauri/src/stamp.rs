@@ -2,15 +2,12 @@
 //! THE CAPABILITY STAMP, read at COMPILE time.
 //!
 //! `option_env!` resolves when the binary is built, so what a copy of this game
-//! may do is baked into the machine code rather than kept in a file beside it.
-//! That is the one place this shell is stricter than the Electron one, which
-//! reads the same set out of its packaged `package.json`: an installed Tauri
-//! build has nothing to edit at all.
+//! may do is baked into the machine code rather than kept in a file beside it:
+//! an installed build has nothing to edit at all.
 //!
-//! The switches are the SAME names the Makefile already sets for the Electron
-//! packaging targets (`GIS_ENABLE_MULTIPLAYER` and friends), so one set of
-//! build environment variables drives both shells and nobody has to learn a
-//! second vocabulary.
+//! The switches are the names the Makefile's desktop targets set
+//! (`GIS_ENABLE_MULTIPLAYER` and friends), so one set of build environment
+//! variables drives every packaging run.
 //!
 //! **A rebuild is required for a stamp change to take**, and Cargo does not
 //! know that on its own — `option_env!` is not a tracked input. `build.rs`

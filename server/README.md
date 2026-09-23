@@ -56,12 +56,13 @@ either direction**, because tree-shaking is global.
 
 The engine is TypeScript with `.ts` import specifiers and two path aliases; a
 Node process cannot run that directly. `npm run server:build` compiles
-`server/` and `engine/` into `electron/server-dist/` with `tsc` and rewrites the
+`server/` and `engine/` into `server-dist/` with `tsc` and rewrites the
 aliases in the emitted JavaScript — see
-[`scripts/build-server.mjs`](../scripts/build-server.mjs). `electron-builder`
-copies the result to `resources/server/`, and `electron/src/resources.ts`
-resolves between the two layouts on `app.isPackaged`, exactly as it already
-does for the mod toolchain.
+[`scripts/build-server.mjs`](../scripts/build-server.mjs). The desktop
+packager (`tauri/scripts/package.mjs`) copies the result into the package's
+`server/`, beside a Node runtime, and `tauri/shell/src/runtime.rs` resolves
+between the checkout and the packaged layout, exactly as it does for the mod
+toolchain.
 
 `package.json` declares what the compiled tree needs at runtime — nothing today,
 and `tests/content/server_deps_test.ts` walks the real import graph to prove it
@@ -71,25 +72,24 @@ notices the day it grows one.
 ## Running it by hand
 
 ```sh
-npm run server:build          # compile into electron/server-dist/
-node electron/server-dist/server/main.js
+npm run server:build          # compile into server-dist/
+node server-dist/server/main.js
 ```
 
-With no `parentPort` and no `--shell` that IS the dedicated server (below). To
-exercise the FORKED shape, use the test suite —
-`tests/engine/net_session_test.ts` drives a real session and a real client over
-a loopback pair and compares the two states — or the desktop app, which is what
-`electron/src/session-host.ts` forks.
+With no `--shell` that IS the dedicated server (below). To exercise the shape
+the desktop app runs, use the test suite — `tests/engine/net_session_test.ts`
+drives a real session and a real client over a loopback pair and compares the
+two states — or the desktop app itself, which spawns it
+(`tauri/src-tauri/src/session.rs`).
 
 ## Running it standalone — the dedicated server
 
-All three shapes are the same code: everything that makes a session (the
+Both shapes are the same code: everything that makes a session (the
 simulation, the admission desk, the sockets, the router mapping and the one
-fixed-timestep clock) is `host.ts`, and `main.ts`
-picks between them with nobody passing it a mode. A `parentPort` means
-Electron's `utilityProcess` forked it and it is the game's own session server;
-`--shell` means the Tauri shell spawned a plain child (`shell-host.ts`, which
-puts two pipes where Electron has one); neither hands over to `dedicated.ts`.
+fixed-timestep clock) is `host.ts`, and `main.ts` picks between them. `--shell`
+means the desktop shell spawned it as its session server (`shell-host.ts`, a
+control pipe and a loopback socket); without it, it hands over to
+`dedicated.ts`.
 
 ```sh
 npm run server:start                       # build, then run with the defaults

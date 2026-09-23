@@ -227,7 +227,7 @@ export const STEAM_ACHIEVEMENTS: readonly AchievementDef[] = STEAM_FULL_CATALOG
   : PLATFORM_ACHIEVEMENTS;
 
 /**
- * One row of the Steam portal manifest (electron/store/steam-achievements.json).
+ * One row of the Steam portal manifest (tauri/store/steam-achievements.json).
  *
  * Deliberately NOT the same shape as `PlatformAchievementRow`, because the two
  * portals genuinely differ and a shared row would have to carry a field that is
@@ -239,7 +239,7 @@ export const STEAM_ACHIEVEMENTS: readonly AchievementDef[] = STEAM_FULL_CATALOG
  *     can enter.
  *   - **No incremental flag.** Steam CAN draw a progress bar, but only via an
  *     indicator stat configured per achievement, which this game does not have.
- *     The provider reports completions only (electron/src/achievements-steam.ts),
+ *     The provider reports completions only (tauri/src-tauri/src/achievements.rs),
  *     so advertising progress here would describe something that never arrives.
  *
  * What Steam's portal does want is exactly this: an API name, a display name, a

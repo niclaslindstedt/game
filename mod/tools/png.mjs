@@ -20,7 +20,7 @@
 //
 // So the decode is a compile step, and this is it: the non-interlaced PNG
 // spec, in about two hundred lines, on `node:zlib` and nothing else. The mod
-// toolchain ships outside the app's asar and installs no packages of its own
+// toolchain ships beside the app and installs no packages of its own
 // (see `mod/package.json`), which rules out `sharp` and every other native
 // decoder — and is a good thing here, because a decoder we can read end to end
 // is a decoder whose refusals we can explain to the author by line.

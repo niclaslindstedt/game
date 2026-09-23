@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! CLOUD SAVE's SHELL half — the peer of `electron/src/cloud-save.ts`, and
-//! identical in shape to it because the bridge is the part of the seam with no
-//! platform in it at all. The protocol is documented on the web side
+//! CLOUD SAVE's SHELL half — the part of the seam with no platform in it at
+//! all. The protocol is documented on the web side
 //! (`pwa/src/app/cloud-bridge.ts`); keep the two in step.
 //!
 //! This module is deliberately dumb: it moves ONE opaque string in and out of

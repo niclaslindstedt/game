@@ -6,11 +6,10 @@
 //   node scripts/steam-upload.mjs --platform macos --dry-run    # check + print, no upload
 //   node scripts/steam-upload.mjs --platform linux --branch beta
 //
-// The peer of `electron/scripts/steam-upload.mjs`, and it shares that tree's
-// pure half verbatim (`steam-vdf.mjs`: the escaping, the id validation, the
-// "is this actually a store build" test). Sharing rather than copying is the
-// point — a depot uploaded with a mis-escaped content root uploads nothing at
-// all, and two copies of that escaping is two chances to get it wrong.
+// Its pure half lives beside it (`steam-vdf.mjs`: the escaping, the id
+// validation, the "is this actually a store build" test), where the root suite
+// tests it — a depot uploaded with a mis-escaped content root uploads nothing
+// at all.
 //
 // ONE DIFFERENCE FROM THE PEER, and it is the packager's rather than a
 // judgement: this tree's `package.mjs` produces ONE depot directory, on the
@@ -52,9 +51,9 @@ import { fileURLToPath } from "node:url";
 import {
   buildAppVdf,
   looksLikeDeveloperBuild,
-  PLATFORM_DIRS,
+  PLATFORMS,
   validateIds,
-} from "../../electron/scripts/steam-vdf.mjs";
+} from "./steam-vdf.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const appDir = resolve(here, "..");
@@ -71,9 +70,9 @@ const platform = flag("platform", "");
 const branch = flag("branch", "");
 const dryRun = has("dry-run");
 
-if (!Object.hasOwn(PLATFORM_DIRS, platform)) {
+if (!PLATFORMS.includes(platform)) {
   fail(
-    `--platform must be one of ${Object.keys(PLATFORM_DIRS).join(", ")}` +
+    `--platform must be one of ${PLATFORMS.join(", ")}` +
       (platform ? ` (got "${platform}")` : ""),
   );
 }
@@ -84,10 +83,8 @@ if (!Object.hasOwn(PLATFORM_DIRS, platform)) {
 
 const problems = [];
 
-// THE SAME app and depot ids as the other wrapper, deliberately: this is the
-// same product on the same store, and a second ids file would be a second thing
-// to fill in and a second thing to get wrong.
-const configPath = join(repoRoot, "electron", "store", "steam.json");
+// The app and depot ids, beside the rest of the Steam page (`tauri/store/`).
+const configPath = join(appDir, "store", "steam.json");
 let config = {};
 try {
   config = JSON.parse(readFileSync(configPath, "utf8"));
@@ -108,7 +105,7 @@ const contentRoot = join(appDir, "release", "depot");
 if (!existsSync(contentRoot)) {
   problems.push(
     `no packaged build at ${rel(contentRoot)} — run ` +
-      "`make desktop-tauri-steam` first (NOT `--profile standalone`, which " +
+      "`make desktop-steam` first (NOT `--profile standalone`, which " +
       "produces installers for a download rather than a depot).",
   );
 } else {
@@ -233,7 +230,7 @@ function checkPayload(root) {
     found.push(
       "the embedded website still has the DEVELOPER tooling in it (the hidden " +
         "sun-tap reveal, the developer menu, the arsenal and effects " +
-        "galleries). Rebuild with `make desktop-tauri-steam`, which uses the " +
+        "galleries). Rebuild with `make desktop-steam`, which uses the " +
         "production profile.",
     );
   }

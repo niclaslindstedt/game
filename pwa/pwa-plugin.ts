@@ -68,7 +68,7 @@ type GamePwaOptions = {
   appVersion: string;
   // All deploy-slot bases sharing this origin. Defaults to `DEPLOY_SLOTS`.
   slots?: string[];
-  // Is this build going INSIDE a store shell (native / Electron / Tauri)
+  // Is this build going INSIDE a store shell (native / Tauri)
   // rather than onto the web? Set from `VITE_SHELL_BUILD` by each shell's
   // `bundle-web.mjs`. The one thing it changes is that `index.html` ships
   // without the prerendered boot shell — see `stripBootShell`.
@@ -344,8 +344,8 @@ const DOC_PAGES = [
  * a search engine and a no-JS reader, and the one thing on screen while the app
  * bundle is still on the wire. In a browser it earns every byte.
  *
- * In a compiled, distributed shell it earns none of them. Nothing crawls an
- * asar, a webroot.zip or a Tauri resource bundle; JavaScript is never off; and
+ * In a compiled, distributed shell it earns none of them. Nothing crawls a
+ * webroot.zip or a Tauri resource bundle; JavaScript is never off; and
  * the bundle is on local disk, so the gap it fills is a few tens of
  * milliseconds. What it does instead is flash — the platform splash lifts, an
  * SEO document with a "SYSTEM ONLINE" console and four library links paints for

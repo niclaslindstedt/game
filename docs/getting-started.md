@@ -73,16 +73,15 @@ npm run preview --workspace pwa
 | `pwa/`            | The deployable app — Vite + Preact PWA shell                                              |
 | `server/`         | The session server — the engine compiled for Node, and the dedicated server               |
 | `native/`         | The App Store / Play Store shell (Expo). Its own dependency tree                          |
-| `electron/`       | The Steam shell. Its own dependency tree, its own `tsc`, its own vitest                   |
-| `tauri/`          | The second desktop shell, in Rust. Checked by `make tauri-test` / `-lint`                 |
+| `tauri/`          | The desktop shell (Steam), in Rust. Checked by `make tauri-test` / `-lint`                |
 | `scripts/`        | The instruments — renderers, simulators, calculators, catalog generators                  |
 | `tests/`          | The root suite — `tests/engine/` on fixtures, `tests/content/` on the catalogs            |
 | `docs/`           | These reference pages                                                                     |
 | `.agents/skills/` | Playbooks for each kind of work (also reachable as `.claude/skills` and `.gemini/skills`) |
 
-The three shell trees sit OUTSIDE the npm workspace, so `make test`, `make lint`
+The two shell trees sit OUTSIDE the npm workspace, so `make test`, `make lint`
 and `make build` stop at their edge; the root `package.json` forwards to them
-with `npm --prefix` (`npm run native:*`, `npm run electron:*`, `npm run tauri:*`).
+with `npm --prefix` (`npm run native:*`, `npm run tauri:*`).
 
 ## 6. If you are here to make a mod
 

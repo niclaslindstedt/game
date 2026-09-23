@@ -73,8 +73,8 @@ const TARGETS = [
   {
     key: "steam",
     label: "Steam",
-    manifest: "electron/store/steam-achievements.json",
-    out: "electron/store/achievements",
+    manifest: "tauri/store/steam-achievements.json",
+    out: "tauri/store/achievements",
     size: 64,
     margin: 0,
     variants: [

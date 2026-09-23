@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE STEAM P2P PUMP's rules — the peer of `electron/src/net-steam-p2p.ts`,
-//! with the queue itself in `src-tauri/src/p2p.rs`.
+//! THE STEAM P2P PUMP's rules, with the queue itself in `src-tauri/src/p2p.rs`.
 //!
 //! It exists in the shell rather than beside the UDP transport for one forced
 //! reason: the Steam handshake is a single global one, `src-tauri/src/steam.rs`

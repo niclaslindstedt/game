@@ -23,7 +23,7 @@
 // leaves somebody's machine is their mod and nothing else. See validate.mjs.
 //
 // The desktop game runs this same compiler on every mod it loads (see
-// electron/src/mods.ts), so a mod that passes here is a mod the game accepts —
+// tauri/shell/src/mods.rs), so a mod that passes here is a mod the game accepts —
 // that is the whole point of there being one compiler rather than a friendly
 // one here and a strict one at load.
 //
@@ -740,7 +740,7 @@ function whereToPutIt() {
       `     published is what somebody authored, never a zip they were sent.\n` +
       `     Both folders sort after your subscriptions, so the mod you just\n` +
       `     added wins its clashes.\n\n` +
-      `The data folder is the desktop shell's own (Electron's userData). If the\n` +
+      `The data folder is the desktop app's own. If the\n` +
       `path above does not exist, launch the game once — it is created on the\n` +
       `first look.`,
   );
@@ -749,11 +749,11 @@ function whereToPutIt() {
 /**
  * The one-line version of the DATA folder, for the `new` hint.
  *
- * Derived from the desktop package's name rather than from the game's title:
- * the shell asks Electron for `userData`, which is named after the packaged
- * app, and the product name deliberately differs from the title (an apostrophe
- * cannot go in a path — see electron-builder.config.cjs). Guessing from the
- * title is how this printed a folder the game never reads.
+ * Derived from the name the desktop app declares for its folder
+ * (`tauri/shell/src/user_data.rs`, APP_DIR_NAME) rather than from the game's
+ * title: an apostrophe cannot go in a path, and guessing from the title is how
+ * this printed a folder the game never reads. On Linux it is under
+ * XDG_DATA_HOME, where the desktop app keeps its data.
  */
 function localModsHint() {
   const app = "adastrail";
@@ -761,7 +761,7 @@ function localModsHint() {
   if (process.platform === "darwin") {
     return `~/Library/Application Support/${app}/mods/`;
   }
-  return `~/.config/${app}/mods/`;
+  return `~/.local/share/${app}/mods/`;
 }
 
 function fail(message) {

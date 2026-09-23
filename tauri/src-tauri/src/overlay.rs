@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! VALVE'S OVERLAY, GIVEN SOMETHING TO DRAW ON — the effects half of the overlay
-//! block in [`adastrail_shell::steam`], and the peer of the two Chromium
-//! switches `electron/src/steam.ts` appends.
+//! block in [`adastrail_shell::steam`].
 //!
 //! The whole argument for why a decoy swap chain is what a webview shell has to
 //! offer lives at that seam. What lives HERE is the three moments it takes:
@@ -25,9 +24,7 @@
 //!
 //! **Shift+Tab never reaches this process.** The keystroke belongs to the
 //! webview, which is a process this shell does not own, so the chord is listened
-//! for in the PAGE (`crate::page`) and arrives here as a command. That is the one
-//! piece Electron gets for free: its overlay is hooked into a Chromium the shell
-//! started, so Steam's own input hook sees the key first.
+//! for in the PAGE (`crate::page`) and arrives here as a command.
 //!
 //! Everything Windows-shaped is `#[cfg(windows)]` and the rest of the file is the
 //! no-op every other desktop gets, because the decoy is a DXGI arrangement — see

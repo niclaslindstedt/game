@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! HOW LONG THE SHELL TOOK TO GET OUT OF THE WAY — the peer of
-//! `electron/src/metrics.ts`, and the one module in this tree that exists for
+//! HOW LONG THE SHELL TOOK TO GET OUT OF THE WAY — the one module in this tree
+//! that exists for
 //! the people measuring the shell rather than for the game.
 //!
 //! A desktop wrapper is judged on two numbers, and only one of them can be
@@ -40,11 +40,10 @@ pub const KEEP_LAUNCHES: usize = 20;
 
 /// A moment worth stamping, and what it means.
 ///
-/// **The list is the contract between the two shells**, which is why it is a
-/// table with prose beside it rather than five string literals scattered
-/// through two startup paths. `scripts/shell-parity.mjs` reads this list and
-/// `electron/src/metrics.ts`'s and refuses a build where they disagree — a mark
-/// only one shell records is a column the comparison silently loses.
+/// **The list is the contract with whatever reads `startup.jsonl`** (the bench
+/// harness, `scripts/shell-bench.mjs`), which is why it is a table with prose
+/// beside it rather than five string literals scattered through the startup
+/// path — a mark renamed here is a column a reader silently loses.
 pub const MARKS: &[(&str, &str)] = &[
     (
         "process",
@@ -183,9 +182,9 @@ impl StartupMetrics {
 
     /// The launch's own line in `startup.jsonl`.
     ///
-    /// `shell` is `"tauri"` or `"electron"`; the bench harness groups by it and
-    /// the file itself is the only place a stray copy says which build wrote
-    /// it.
+    /// `shell` names the build that wrote it (`"tauri"`; older files may say
+    /// `"electron"`); the bench harness groups by it and the file itself is the
+    /// only place a stray copy says which build wrote it.
     pub fn document(&self, shell: &str, version: &str, stamp_seconds: u64) -> Value {
         let marks: serde_json::Map<String, Value> = self
             .marks

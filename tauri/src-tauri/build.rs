@@ -9,7 +9,7 @@
 //! thing `src/stamp.rs` cannot do for itself. `option_env!` resolves at compile
 //! time but is NOT a tracked input, so Cargo would happily reuse a binary
 //! stamped from a previous packaging run's environment — a `make
-//! desktop-tauri-dist` immediately after a `make desktop-tauri-steam` would ship
+//! desktop-dist` immediately after a `make desktop-steam` would ship
 //! the depot build's capabilities in a plain download.
 //!
 //! **VALVE'S REDISTRIBUTABLE has to end up beside the executable.** The
@@ -45,8 +45,8 @@ use std::path::{Path, PathBuf};
 use std::{env, fs};
 
 /// The packaging environment `src/stamp.rs` reads, and therefore the set a
-/// change to must force a rebuild. The same names the Makefile sets for the
-/// Electron packaging targets, so one vocabulary drives both shells.
+/// change to must force a rebuild. The same names the Makefile's desktop
+/// targets set, so one vocabulary drives every packaging run.
 const STAMP_VARIABLES: &[&str] = &[
     "GIS_STAMP_CAPABILITIES",
     "GIS_ENABLE_MULTIPLAYER",

@@ -1,31 +1,28 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE SESSION SIDECAR'S PROTOCOL AND LIFECYCLE RULES — the peer of
-//! `electron/src/session-host.ts`, minus the process itself.
+//! THE SESSION SIDECAR'S PROTOCOL AND LIFECYCLE RULES, minus the process
+//! itself.
 //!
-//! One process per SESSION, not per app, for the same three reasons that file
-//! gives: a 60 Hz simulation must not compete with the shell, the engine holds
+//! One process per SESSION, not per app, for three reasons (`server/main.ts`
+//! gives them in full): a 60 Hz simulation must not compete with the shell, the engine holds
 //! process-global mutable bindings that two runs would fight over, and it makes
 //! the host's own renderer just another client.
 //!
-//! **WHERE THE TWO SHELLS DIVERGE IS THE PIPE, AND ONLY THE PIPE.** Electron
-//! forks a `utilityProcess`, which is a real Node child with an IPC channel and
-//! the ability to be handed a `MessagePort` that reaches the renderer. Tauri can
-//! spawn a child and nothing more, so:
+//! **THE PIPE IS WHAT A TAURI SHELL CAN OFFER.** It can spawn a child and
+//! nothing more — no Node IPC channel, no `MessagePort` to hand the page — so:
 //!
-//! | | Electron | Here |
-//! | --- | --- | --- |
-//! | the child | `utilityProcess.fork` | `std::process::Command` on a Node runtime |
-//! | control | the Node IPC channel | the child's STDIO, newline-delimited JSON |
-//! | snapshots | a transferred `MessagePort` | a loopback socket the PAGE opens |
-//! | reaping | `before-quit` kills it | stdin's EOF, which the child watches |
+//! | | Here |
+//! | --- | --- |
+//! | the child | `std::process::Command` on a Node runtime |
+//! | control | the child's STDIO, newline-delimited JSON |
+//! | snapshots | a loopback socket the PAGE opens |
+//! | reaping | stdin's EOF, which the child watches |
 //!
 //! `server/shell-host.ts` is the far end of all four rows and carries the
 //! argument for each. What is HERE is everything that can be decided without a
 //! process: what a reply is, which replies nobody is waiting on, how long a
 //! stop may take, and what the child's first line means.
 //!
-//! **A CRASHED SESSION MUST LOOK LIKE A CRASHED SESSION**, which is the one
-//! rule that survived the move unchanged: the reason is recorded BEFORE the kill
+//! **A CRASHED SESSION MUST LOOK LIKE A CRASHED SESSION**: the reason is recorded BEFORE the kill
 //! and read back in the exit handler, because otherwise a server that died
 //! mid-run and one the player asked to stop are indistinguishable and the HOST
 //! screen says "stopped" over a crash.
@@ -34,7 +31,7 @@ use serde_json::Value;
 
 /// How long a `stop` may take to be honoured before the process is killed.
 ///
-/// Short, exactly as on the Electron side: the server's own stop is
+/// Short: the server's own stop is
 /// synchronous, so anything past this is a process that is no longer answering,
 /// and a host that will not quit is worse than one that is killed.
 pub const SHUTDOWN_GRACE_MS: u64 = 2_000;

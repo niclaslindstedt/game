@@ -43,16 +43,12 @@ docs/_build/
 # The engine's Node ship target: the staged sources and the compiled server
 # (scripts/build-server.mjs). Build output like engine/generated/ — regenerated on
 # every desktop build, never committed.
-electron/server-src/
-electron/server-dist/
-electron/webroot/
-electron/dist/
-electron/release/
-electron/node_modules/
+/server-src/
+/server-dist/
 
-# The Tauri desktop shell (docs/tauri-migration.md). Same shape as electron/'s
-# above: the copied website, Cargo's output, the RGBA re-encode of the app icon
-# (the ART is pwa/public/), and Tauri's generated permission schemas.
+# The desktop shell (tauri/README.md): the copied website, Cargo's output, the
+# RGBA re-encode of the app icon (the ART is pwa/public/), and Tauri's
+# generated permission schemas.
 tauri/webroot/
 tauri/target/
 tauri/src-tauri/icons/
@@ -94,9 +90,9 @@ mob-hp-curve.html
 native/store/store.config.json
 native/store/screenshots/
 native/store/achievements/
-electron/store/screenshots/
-electron/store/achievements/
-electron/store/preview/output/
+tauri/store/screenshots/
+tauri/store/achievements/
+tauri/store/preview/output/
 
 # fastlane: the metadata tree and staged screenshots are GENERATED from
 # native/store/listing.yaml + native/store/screenshots by `npm run store:stage`
@@ -123,9 +119,9 @@ native/*.p8
 .codex/
 
 # The Lua VM compiled for the SHIPPED mod compiler (scripts/build-lua.mjs) — the
-# desktop shell's main process has no TypeScript, so the validator reads this
-# instead of engine/lib/lua/. It sits beside server-dist/ rather than under mod/,
+# packaged toolchain runs under plain Node with no TypeScript, so the validator
+# reads this instead of engine/lib/lua/. It sits beside server-dist/ rather than under mod/,
 # which is licence-split territory. Build output like engine/generated/;
 # regenerated, never committed.
-electron/modtools-lua/
-electron/tsconfig.modtools-lua.json
+/modtools-lua/
+/tsconfig.modtools-lua.json

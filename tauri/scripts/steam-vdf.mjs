@@ -26,15 +26,9 @@ export function escapeVdf(value) {
   return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
-/**
- * The platforms a depot can be built for, and the electron-builder output
- * directory each one produces. Keep in step with electron-builder.config.cjs.
- */
-export const PLATFORM_DIRS = {
-  windows: "win-unpacked",
-  macos: "mac",
-  linux: "linux-unpacked",
-};
+/** The platforms a depot can be built for — one depot id each in
+ * `tauri/store/steam.json`. */
+export const PLATFORMS = ["windows", "macos", "linux"];
 
 /**
  * Validate the app/depot id configuration, returning a list of problems.

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! CLOUD SAVE on Steam — the [`CloudProvider`] implementation, and the peer of
-//! `electron/src/cloud-steam.ts`.
+//! CLOUD SAVE on Steam — the [`CloudProvider`] implementation.
 //!
 //! Steam Cloud is a FILE store (ISteamRemoteStorage) where iCloud is a key-value
 //! store, so the mapping is: our one save key becomes one file name. Everything
@@ -8,8 +7,7 @@
 //! merge, and the per-device coin ledger on the web side never learn that this
 //! platform is different.
 //!
-//! Two Steam-specific facts shape this file, and both are the same two the
-//! Electron peer records:
+//! Two Steam-specific facts shape this file:
 //!
 //!  1. **Cloud can be off two different ways.** Steam lets the PLAYER disable
 //!     cloud sync per game, and lets the DEVELOPER not enable it for the app at

@@ -54,7 +54,7 @@ fn windows_treats_a_command_that_would_not_run_as_blocked() {
 fn the_windows_rule_name_never_changes() {
     // The check looks it up by name, so renaming it would leave every existing
     // player with an invisible orphan rule — and it is the SAME name the
-    // Electron shell writes, so a player with both installed has one rule.
+    // earlier Electron build wrote, so a player who ran it keeps one rule.
     assert_eq!(RULE_NAME, "Ada's Trail (multiplayer)");
     assert!(windows_check(PORT)
         .args

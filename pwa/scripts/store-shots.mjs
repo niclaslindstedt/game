@@ -45,7 +45,7 @@
 // outcome nobody asked for.
 //
 // The Apple rasters land in native/store/screenshots/; the Steam one writes to
-// electron/store/screenshots/ instead, because the staging step ships whatever
+// tauri/store/screenshots/ instead, because the staging step ships whatever
 // it finds under native/store/screenshots to App Store Connect and a 16:9
 // desktop frame is not a valid iPhone screenshot.
 

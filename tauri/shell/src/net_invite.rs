@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! THE INVITE THAT ARRIVES BEFORE THE GAME DOES — `+connect_lobby <id>` and
-//! `--connect <address>`. The peer of `electron/src/net-invite.ts`, rule for
-//! rule.
+//! `--connect <address>`.
 //!
 //! Steam launches the binary with `+connect_lobby <id>` on the command line
 //! when a friend accepts an invite while the game is closed, so a shell that
@@ -10,15 +9,13 @@
 //! address is worth copying out of the HOST panel.
 //!
 //! **IT ARRIVES BEFORE THE WINDOW EXISTS, SO IT IS PARKED.** Both forms are
-//! read at startup, when there is no page to hand them to; and — on the
-//! Electron shell — on a `second-instance` event, when there IS a page but the
-//! argument went to a process that is about to exit.
+//! read at startup, when there is no page to hand them to; and on a second
+//! launch, when there IS a page but the argument went to a process that is
+//! about to exit.
 //!
-//! **THE SECOND INSTANCE IS THE ONE THING THAT DIFFERS HERE, AND IT IS A
-//! PLUGIN RATHER THAN A LIFECYCLE EVENT.** Electron has
-//! `app.requestSingleInstanceLock()` built in; Tauri's peer is
-//! `tauri-plugin-single-instance`, whose callback is handed the second
-//! process's argv. Same fact, same parking, same delivery — see
+//! **THE SECOND INSTANCE IS A PLUGIN RATHER THAN A LIFECYCLE EVENT.**
+//! `tauri-plugin-single-instance`'s callback is handed the second process's
+//! argv. Same fact, same parking, same delivery — see
 //! `src-tauri/src/main.rs`.
 //!
 //! **AND IT IS CONSUMED, NOT REMEMBERED.** An invite is a one-shot instruction;

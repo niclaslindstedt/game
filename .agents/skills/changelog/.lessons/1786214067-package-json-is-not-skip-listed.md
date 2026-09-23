@@ -1,7 +1,7 @@
 ---
 title: A dependency-audit PR needs the `no-changelog` label the moment it touches a package.json — only package-lock.json is skip-listed
 date: 2026-08-08
-scope: package.json, native/package.json, electron/package.json, pwa/package.json, scripts/release/check-changeset.mjs
+scope: package.json, native/package.json, tauri/package.json, pwa/package.json, scripts/release/check-changeset.mjs
 concepts: [no-changelog, skip-list, dependencies, false-red, changeset]
 ---
 

@@ -66,7 +66,7 @@ export function steamCredentials() {
 }
 
 /**
- * The app id, resolved the way `electron/scripts/steam-upload.mjs` resolves it:
+ * The app id, resolved the way `tauri/scripts/steam-upload.mjs` resolves it:
  * an explicit override, then CI's environment, then the committed ids. Returns
  * `{ id, source }` with `id` null when nothing names one.
  */
@@ -80,14 +80,14 @@ export function steamAppId(root, override) {
       source: "GIS_STEAM_APP_ID",
     };
   }
-  const file = path.join(root, "electron/store/steam.json");
+  const file = path.join(root, "tauri/store/steam.json");
   if (existsSync(file)) {
     try {
       const config = JSON.parse(readFileSync(file, "utf8"));
       if (config.appId !== null && config.appId !== undefined) {
         return {
           id: Number(config.appId),
-          source: "electron/store/steam.json",
+          source: "tauri/store/steam.json",
         };
       }
     } catch {

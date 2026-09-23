@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! EVERY DECISION THE STEAM HANDSHAKE NEEDS — the peer of the top half of
-//! `electron/src/steam.ts`, minus the client itself.
+//! EVERY DECISION THE STEAM HANDSHAKE NEEDS, minus the client itself.
 //!
 //! The client lives in `src-tauri/src/steam.rs`, because a `steamworks::Client`
 //! is a handle to a running program; what lives HERE is everything that has to
@@ -15,18 +14,15 @@
 //! ## THE ORDER OF THE PRE-READY WORK, and why it is a decision rather than a
 //! detail
 //!
-//! Two things must happen before the event loop, and only one of them survived
-//! the move from Electron:
+//! Two things must happen before the event loop:
 //!
 //!  1. **`restart_app_if_necessary`** — relaunch through the Steam client if the
 //!     player started the binary directly. Same call, same rule, same reason:
 //!     Steam's APIs need the client, and a process that is about to be replaced
 //!     must not go on to build a window. [`restart_wanted`] is the decision.
-//!  2. **The overlay** — which the migration doc called impossible here and
-//!     which now works, by a different route than Electron's. Electron appends
-//!     two CHROMIUM command line switches; a platform webview has no command
-//!     line, so this shell gives Valve's injected library a SURFACE OF ITS OWN
-//!     to hook instead: see [`OverlaySupport`] and [`overlay_plan`].
+//!  2. **The overlay.** A platform webview has no surface Valve's injected
+//!     library can hook, so this shell gives it a SURFACE OF ITS OWN to hook
+//!     instead: see [`OverlaySupport`] and [`overlay_plan`].
 //!
 //! There is a third ordering trap that is specific to the Rust binding and bites
 //! silently: `Client::init_app` STAMPS `SteamAppId` and `SteamGameId` into this
@@ -60,12 +56,10 @@ pub fn process_env(name: &str) -> Option<String> {
 /// environment (a developer pointing a checkout somewhere), then the id the
 /// PACKAGER baked in, then Valve's Spacewar.
 ///
-/// **The stamp is what makes an installed copy right**, and it is the one place
-/// this shell is stricter than the Electron peer: `electron/src/config.ts` reads
-/// the same variable at launch and has nowhere to bake one, so a packaged copy
-/// falls back to Spacewar unless the machine's environment happens to say
-/// otherwise. Here `src-tauri/src/stamp.rs` reads it with `option_env!`, so the
-/// app id is a property of the binary. Ship-blocking either way:
+/// **The stamp is what makes an installed copy right**: a variable read only at
+/// launch would leave a packaged copy on Spacewar unless the machine's
+/// environment happened to say otherwise. Here `src-tauri/src/stamp.rs` reads
+/// it with `option_env!`, so the app id is a property of the binary. Ship-blocking either way:
 /// [`is_placeholder_app_id`] is what the packaging script checks so a 480 build
 /// cannot be shipped by accident.
 pub fn steam_app_id(env: Env, stamped: Option<&str>) -> u32 {
@@ -107,8 +101,7 @@ pub fn restart_wanted(enabled: bool, app_id: u32) -> bool {
 /// The Steam client stamps these variables into a game's environment when it
 /// launches it, so their presence is the one honest way to tell a copy started
 /// from the library apart from a copy started from a checkout. `GIS_STEAM_OVERLAY=1`
-/// forces the answer on for testing, `=0` forces it off — the same two escape
-/// hatches the Electron shell has.
+/// forces the answer on for testing, `=0` forces it off.
 ///
 /// **Ask this BEFORE the handshake.** See the module header: the Rust binding
 /// writes two of these three variables itself.
@@ -156,16 +149,10 @@ pub fn current_webview() -> Webview {
 /// frames with (D3D/OpenGL/Vulkan/Metal) and draws over the swap chain. A game
 /// gets it for free precisely because it owns that surface.
 ///
-/// A webview shell does not own that surface — the webview does — and the two
-/// shells reach the overlay from opposite ends:
+/// A webview shell does not own that surface — the webview does — and a
+/// platform webview has no command line through which to move its GPU work
+/// into a process Steam has hooked. So:
 ///
-///  - **Electron** exposes `electronEnableSteamOverlay()`, which is not a
-///    request to draw anything: it appends the Chromium switches
-///    `in-process-gpu` and `disable-direct-composition`, moving the GPU work
-///    into the browser process and off the compositor path, which is what leaves
-///    a swap chain in the process Steam has hooked. That is a CHROMIUM
-///    arrangement, reached through Chromium's own command line, and a platform
-///    webview has no such command line to reach.
 ///  - **This shell gives the injected library a surface of its own.** A
 ///    transparent, click-through, undecorated window is opened over the game's
 ///    window and a thread presents EMPTY frames into it at vsync through a real
@@ -182,8 +169,7 @@ pub fn current_webview() -> Webview {
 /// the decision of whether to raise it at all — see [`overlay_plan`].
 ///
 /// Two things the surface does NOT buy, and both are why
-/// [`crate::screenshots_provider`] still exists on this shell and does not on
-/// Electron's:
+/// [`crate::screenshots_provider`] exists:
 ///
 ///  - **Steam's screenshot key still photographs the decoy**, whose frames are
 ///    empty by construction. So the game goes on filing its own pictures through
@@ -248,8 +234,8 @@ pub enum OverlayPlan {
 ///
 /// `GIS_STEAM_OVERLAY=1` forces the last of those on, which is how the overlay
 /// is tested from a checkout launched under Spacewar; `=0` forces it off. Both
-/// are already [`steam_overlay_wanted`]'s, so the escape hatch is the same one
-/// the Electron shell has and is spelled the same way.
+/// are already [`steam_overlay_wanted`]'s, so the escape hatch is spelled the
+/// same way.
 pub fn overlay_plan(webview: Webview, enabled: bool, started_by_steam: bool) -> OverlayPlan {
     match overlay_support(webview) {
         OverlaySupport::NotYet => OverlayPlan::NoDecoy,

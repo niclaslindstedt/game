@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! A MOD IN A .ZIP — the peer of `electron/src/mod-archive.ts`, rule for rule
-//! and refusal for refusal.
+//! A MOD IN A .ZIP — what is safely inside one, rule by rule and refusal by
+//! refusal.
 //!
 //! [`crate::workshop`] says the Workshop path deliberately has no archive
 //! parser: a subscription is downloaded and unpacked by Steam, so a stranger's

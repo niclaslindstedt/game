@@ -29,8 +29,8 @@
 //
 // The failure it exists for is silent and permanent: an achievement id the
 // partner site doesn't have is dropped on the floor with no error anywhere, so
-// the badge simply never appears for anybody (electron/RELEASING.md → What
-// fails quietly). One typo anywhere in the transcription costs a badge nobody
+// the badge simply never appears for anybody (tauri/STEAM.md → What fails
+// quietly). One typo anywhere in the transcription costs a badge nobody
 // can ever earn, and nothing in the game, the build or the upload notices.
 //
 // Built for the SECOND run as much as this one: Steam caps a new app at 100
@@ -67,7 +67,7 @@ import {
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
-const MANIFEST = "electron/store/steam-achievements.json";
+const MANIFEST = "tauri/store/steam-achievements.json";
 const GENERATOR = "steam-achievements.mjs";
 
 const USAGE = `usage: node scripts/steam-achievements-portal.mjs [options]
@@ -76,7 +76,7 @@ const USAGE = `usage: node scripts/steam-achievements-portal.mjs [options]
   --strict              --verify also fails on drifted text, not only missing rows
   --format <fmt>        form (default) | tsv | csv
   --out <file>          write the worksheet to a file instead of stdout
-  --app <id>            the Steam app id (default: electron/store/steam.json)
+  --app <id>            the Steam app id (default: tauri/store/steam.json)
   --art <dir>           where the badge PNGs are (default: ${DEFAULT_ART_DIR})
   --language <name>     the schema language to read back (default: english)
   --help
@@ -283,9 +283,9 @@ async function main(opts) {
   const { id: appId, source } = steamAppId(root, opts.app);
   if (!Number.isInteger(appId) || appId <= 0) {
     throw new Error(
-      "no Steam app id — electron/store/steam.json → appId is not set and no " +
+      "no Steam app id — tauri/store/steam.json → appId is not set and no " +
         "--app was given. The app has to exist first; the id is the number in " +
-        "the partner-site URL (electron/RELEASING.md §1).",
+        "the partner-site URL (tauri/STEAM.md §1).",
     );
   }
   if (appId === SPACEWAR_APP_ID) {

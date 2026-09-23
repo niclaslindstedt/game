@@ -3,8 +3,7 @@
 //! [`adastrail_shell::media`], and the thing the macOS microphone entitlement is a
 //! promise of.
 //!
-//! Electron has ONE permission handler for every webview it owns. The three
-//! platform webviews have three different mechanisms and Tauri surfaces exactly
+//! The three platform webviews have three different mechanisms and Tauri surfaces exactly
 //! one of them, so this shell answers at two depths and says so rather than
 //! implying a gate it does not have:
 //!

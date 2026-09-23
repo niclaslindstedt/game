@@ -32,8 +32,8 @@ fi
 # removes it; prune it here so a cached container heals itself. Retire this
 # alongside the .gitignore/.prettierignore/eslint entries that suppress it,
 # once no cached working copy predates #1046.
-# Anchored absolutely on purpose: SIX directories in this repo are named
-# `src/` (pwa, native, electron, tauri/shell, tauri/src-tauri) and only the
+# Anchored absolutely on purpose: FIVE directories in this repo are named
+# `src/` (pwa, native, tauri/shell, tauri/src-tauri) and only the
 # ROOT one is the retired engine tree. A bare `src/generated` would be a
 # `rm -rf` whose meaning depends on the working directory.
 rm -rf "$CLAUDE_PROJECT_DIR/src/generated"

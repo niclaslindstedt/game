@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! ACHIEVEMENTS on Steam — the [`AchievementsProvider`] implementation, and the
-//! peer of `electron/src/achievements-steam.ts`.
+//! ACHIEVEMENTS on Steam — the [`AchievementsProvider`] implementation.
 //!
 //! The web side speaks PERCENT for every badge (0…100), because Game Center
 //! does. Steam does not: `SetAchievement` is a switch with no partial state, so
@@ -21,8 +20,8 @@
 //! developer choose each achievement's API name, so the game's own badge id IS
 //! the Steam id and both sides read the same names.
 //!
-//! **`show` opens the overlay's ACHIEVEMENTS dialog exactly as the Electron peer
-//! does — on a launch that HAS an overlay.** This shell earns one by giving
+//! **`show` opens the overlay's ACHIEVEMENTS dialog — on a launch that HAS an
+//! overlay.** This shell earns one by giving
 //! Valve's injected library a surface of its own to draw on
 //! ([`adastrail_shell::steam::overlay_support`], [`crate::overlay`]), which is a
 //! per-launch and per-platform fact rather than a build-wide one. So the call is

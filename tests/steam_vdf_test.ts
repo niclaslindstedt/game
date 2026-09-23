@@ -13,10 +13,10 @@ import {
   buildAppVdf,
   escapeVdf,
   looksLikeDeveloperBuild,
-  PLATFORM_DIRS,
+  PLATFORMS,
   SPACEWAR_APP_ID,
   validateIds,
-} from "../scripts/steam-vdf.mjs";
+} from "../tauri/scripts/steam-vdf.mjs";
 
 describe("escapeVdf", () => {
   it("escapes backslashes so a Windows path survives", () => {
@@ -160,12 +160,8 @@ describe("buildAppVdf", () => {
   });
 });
 
-describe("PLATFORM_DIRS", () => {
-  it("covers the three platforms electron-builder produces", () => {
-    expect(Object.keys(PLATFORM_DIRS).sort()).toEqual([
-      "linux",
-      "macos",
-      "windows",
-    ]);
+describe("PLATFORMS", () => {
+  it("covers the three platforms a depot is built for", () => {
+    expect([...PLATFORMS].sort()).toEqual(["linux", "macos", "windows"]);
   });
 });

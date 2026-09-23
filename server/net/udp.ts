@@ -2,11 +2,10 @@
 // THE DIRECT PATH — `node:dgram`, one socket, the reliability layer above it.
 //
 // **THE DIRECT PATH IS NOT A NICE-TO-HAVE.** It is the insurance policy on the
-// whole topology: `steamworks.js` binds only the LEGACY, deprecated
-// `ISteamNetworking` P2P API, and if that proves flaky under load the fallback
-// is landing `ISteamNetworkingSockets` upstream or writing an N-API addon — the
-// latter costing the prebuilt binaries that make the desktop shell installable
-// without a Rust toolchain. It is also, on its own, the feature that makes a
+// whole topology: the desktop shell's Steam path rides the LEGACY, deprecated
+// `ISteamNetworking` P2P API (`tauri/src-tauri/src/p2p.rs`), and if that proves
+// flaky under load the fallback is moving it to `ISteamNetworkingSockets`. It
+// is also, on its own, the feature that makes a
 // LAN party, a Steam Deck with the internet off, and the headless dedicated
 // server all work with no Steam client on either end.
 //

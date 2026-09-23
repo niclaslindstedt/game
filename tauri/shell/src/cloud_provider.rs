@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE PLATFORM SEAM BEHIND CLOUD SAVE — the peer of
-//! `electron/src/cloud-provider.ts`, so the bridge above it
-//! ([`crate::cloud_save`]) is the same dumb string-mover on both shells.
+//! THE PLATFORM SEAM BEHIND CLOUD SAVE, so the bridge above it
+//! ([`crate::cloud_save`]) can stay a dumb string-mover.
 //!
 //! Today: Steam, implemented in `src-tauri/src/cloud.rs`. A second desktop
 //! storefront (GOG Galaxy, Epic) would be one new file there and one line at the
@@ -10,10 +9,9 @@
 //! **The one member that did not travel is `subscribe`, and its absence is the
 //! finding rather than an omission.** The mobile seam has it because iCloud
 //! pushes a change to a running app; Steam Cloud does not — it reconciles at
-//! launch and at exit, so there is nothing to notify a running game about. The
-//! Electron peer keeps the member and its Steam implementation returns a no-op
-//! unsubscribe, which is a member that exists to do nothing on the only platform
-//! that implements it. Here it is simply not declared, and the `changed` event
+//! launch and at exit, so there is nothing to notify a running game about. A
+//! member here would exist to do nothing on the only platform that implements
+//! it, so it is simply not declared, and the `changed` event
 //! is never emitted; the game's own pull-at-boot and pull-on-focus carry the
 //! reconciliation, and the merge is idempotent so an extra pull is free.
 //!

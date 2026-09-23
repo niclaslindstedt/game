@@ -31,7 +31,7 @@
 //      Steam's overlay hooks the same key at the swap chain and files its own
 //      copy in the player's Steam screenshot library, which is the library
 //      Steam players expect a screenshot to reach; the game neither drives nor
-//      swallows that. `electron/src/screenshots-provider.ts` carries the whole
+//      swallows that. `tauri/shell/src/screenshots_provider.rs` carries the whole
 //      reasoning and what calling ISteamScreenshots directly would cost.
 
 import { canvasToPng, rasterizeElement } from "@ui/lib/dom-raster.ts";

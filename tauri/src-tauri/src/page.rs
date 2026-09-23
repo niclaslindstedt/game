@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE PAGE'S WHOLE VIEW OF THE SHELL — the peer of `electron/src/preload.ts`
-//! and of `native/src/injected.ts`.
+//! THE PAGE'S WHOLE VIEW OF THE SHELL — the peer of `native/src/injected.ts`.
 //!
 //! It is one initialization script, evaluated before the game's own scripts on
 //! every load, and it exposes exactly eight things — six constants, the page →
@@ -11,7 +10,7 @@
 //! | Global                | What it says                                              |
 //! | --------------------- | --------------------------------------------------------- |
 //! | `__GIS_NATIVE__`      | a store shell, so the PWA update lifecycle is off         |
-//! | `__GIS_PLATFORM__`    | WHICH PLATFORM — `steam`, the same product Electron ships |
+//! | `__GIS_PLATFORM__`    | WHICH PLATFORM — `steam`                                  |
 //! | `__GIS_SHELL__`       | WHICH BINARY — `tauri`, for a bug report and nothing else |
 //! | `__GIS_CAPS__`        | what this launch may honour, as plain names               |
 //! | `__GIS_UNLOCKED__`    | …and whether the COMMAND LINE is what turned it on        |
@@ -27,8 +26,7 @@
 //!
 //! The RETURN path is not here: the shell calls the page's own
 //! `window.__gis*Event(...)` from outside (`webview.eval`), exactly as the
-//! mobile shell calls them with `injectJavaScript` and Electron with
-//! `executeJavaScript`. That is why the web side's receiving half needed no
+//! mobile shell calls them with `injectJavaScript`. That is why the web side's receiving half needed no
 //! change to run on this shell.
 //!
 //! **The page never sees Tauri.** `withGlobalTauri` is off, `capabilities/
@@ -52,9 +50,8 @@ pub const SHELL_ID: &str = "tauri";
 
 /// The internal command the fullscreen key press invokes.
 ///
-/// Electron intercepts F11 and Alt+Enter with `before-input-event`, which a
-/// webview has no counterpart for — the keys never reach the native side at
-/// all. So the shell listens for them IN the page, on the capture phase, and
+/// A webview has no way to intercept F11 and Alt+Enter natively — the keys
+/// never reach the native side at all. So the shell listens for them IN the page, on the capture phase, and
 /// asks itself to toggle. It stays shell code either way: the game has no
 /// fullscreen of its own to fight over, since the Fullscreen API belongs to a
 /// browser chrome this window does not have.
@@ -63,9 +60,8 @@ pub const FULLSCREEN_COMMAND: &str = "shell_toggle_fullscreen";
 /// The internal command Shift+Tab invokes.
 ///
 /// **The chord never reaches this process.** Valve's overlay catches Shift+Tab
-/// with an input hook inside the game's own process — which on the Electron
-/// build is the process showing the page, and here is not: the keystroke belongs
-/// to the webview's process, which this shell does not own. So the shell listens
+/// with an input hook inside the game's own process — which here is not the
+/// process showing the page: the keystroke belongs to the webview's process, which this shell does not own. So the shell listens
 /// for it in the page, exactly as it does for F11, and asks Steam to raise the
 /// overlay itself.
 ///

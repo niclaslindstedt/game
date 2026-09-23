@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Render the INTERNAL Steam listing mock into one complete-page PNG. This is a
 // visual-QA artifact, never a Steam About image or a substitute for the real
-// gameplay screenshots under electron/store/screenshots/.
+// gameplay screenshots under tauri/store/screenshots/.
 
 /* global document */
 

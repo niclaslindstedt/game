@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE LOBBY ROW — the browser's whole content, written by one shell and read
-//! by the other.
+//! THE LOBBY ROW — the browser's whole content, written by one build and read
+//! by another.
 //!
 //! The keys are the point. They are short because Steam caps lobby metadata,
 //! and they are FIXED because a build that renamed one would silently stop
-//! seeing the other build's sessions with no error anywhere — and during this
-//! migration the two builds are Electron and Tauri, which have to be able to
-//! find each other's games.
+//! seeing an older build's sessions with no error anywhere.
 
 use std::collections::BTreeMap;
 

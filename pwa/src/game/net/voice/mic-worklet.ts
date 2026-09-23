@@ -7,7 +7,7 @@
 // scope with no bundler, no imports and no `window`. Every way of shipping one
 // through Vite is a build-config commitment — an entry point, a `?url` asset, a
 // worker plugin — and each of them has to survive three different builds (the
-// dev server, the site build, and the copy `electron/scripts/bundle-web.mjs`
+// dev server, the site build, and the copy `tauri/scripts/bundle-web.mjs`
 // stages into the desktop app). A `Blob` URL made at runtime survives all three
 // by not involving the bundler at all, and the processor is forty lines with no
 // dependencies, which is exactly the size where that trade is obviously right.

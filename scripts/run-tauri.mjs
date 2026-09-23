@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // `npm run tauri` — build the Tauri shell and launch the desktop game.
 //
-// The peer of scripts/run-electron.mjs, and it is a Node launcher for the same
-// ONE portability trap: `GIS_STEAM=off npm …` is Bourne shell syntax for "run
+// It is a Node launcher for ONE portability trap: `GIS_STEAM=off npm …` is Bourne shell syntax for "run
 // this command with that variable set", and npm runs a script through the
 // platform's own shell. On Windows that shell is `cmd.exe`, which has no such
 // syntax — it reads the assignment as the name of a program and answers
@@ -27,8 +26,7 @@ const WINDOWS = process.platform === "win32";
  * The environment the shell is launched with.
  *
  * Only fills in `GIS_STEAM` when the caller left it unset, so the default is
- * "no Steam" without taking away the ability to ask for it — the same contract
- * the Electron launcher makes, so the two can be started the same way.
+ * "no Steam" without taking away the ability to ask for it.
  */
 export function launchEnv(env = process.env) {
   return { ...env, GIS_STEAM: env.GIS_STEAM ?? "off" };
@@ -72,8 +70,8 @@ function main() {
       console.error(
         `run-tauri: the game exited with code ${code}. The Tauri shell writes ` +
           "every launch to `launch.log` in its user-data directory (Windows: " +
-          "%APPDATA%\\adastrail-tauri, macOS: ~/Library/Application " +
-          "Support/adastrail-tauri, Linux: ~/.local/share/adastrail-tauri). " +
+          "%APPDATA%\\adastrail, macOS: ~/Library/Application " +
+          "Support/adastrail, Linux: ~/.local/share/adastrail). " +
           "If it never got that far, the Rust toolchain and the platform " +
           "webview libraries are what to check first — tauri/README.md lists " +
           "them per platform.",

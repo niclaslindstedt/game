@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE SIDECAR'S TWO CHANNELS — the mode a shell with no `utilityProcess` drives
-// a session through (`server/shell-host.ts`).
+// THE SIDECAR'S TWO CHANNELS — the mode the desktop shell drives a session
+// through (`server/shell-host.ts`).
 //
 // Two things are worth proving here and neither can be proved from the Rust
 // side, because the Rust side is the OTHER end of both pipes:
@@ -181,8 +181,7 @@ describe("the sidecar's control channel", () => {
   });
 
   it("treats the end of stdin as the shell going away", async () => {
-    // Electron reaps its utility process in `before-quit`; a spawned child has
-    // to reap itself, and EOF is the signal it has. Without this a session
+    // A spawned child has to reap itself, and EOF is the signal it has. Without this a session
     // holds a whole level in memory for the rest of the login session.
     const shell = await harness();
     expect(shell.orphaned()).toBe(false);

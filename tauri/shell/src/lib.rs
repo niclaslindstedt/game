@@ -1,48 +1,46 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! The Tauri desktop shell's decision layer.
 //!
-//! Every module here is the peer of a file in [`electron/src/`], and answers
-//! the same question with the same name — deliberately, so that a change to one
-//! shell is a visible gap in the other rather than a silent divergence. What is
-//! NOT here is anything that draws, opens or talks to something: those live in
+//! Every module here answers one question, named after it. What is NOT here
+//! is anything that draws, opens or talks to something: those live in
 //! `src-tauri/`, which is the only crate in this tree that knows Tauri exists.
 //!
-//! | Here                       | Its Electron peer            | Answers                             |
-//! | -------------------------- | ---------------------------- | ----------------------------------- |
-//! | [`capabilities`]           | `capabilities.ts`            | what this copy of the app may do    |
-//! | [`bridge`]                 | `main.ts`'s `routeMessage`   | which protocol a page message is    |
-//! | [`channels`]               | `channels.ts`                | what the one IPC command is called  |
-//! | [`config`]                 | `config.ts`                  | where the app points itself         |
-//! | [`output`]                 | `output.ts`                  | where a diagnostic line goes        |
-//! | [`user_data`]              | `user-data.ts`               | what the app's folder is called     |
-//! | [`webroot`]                | `webroot.ts`                 | which file one request path is      |
-//! | [`window_state`]           | `window-state.ts`            | where the window opens              |
-//! | [`steam`]                  | `steam.ts`                   | which app id, and whether to relaunch |
-//! | [`cloud_save`]             | `cloud-save.ts`              | what one cloud message is answered with |
-//! | [`cloud_provider`]         | `cloud-provider.ts`          | what a platform cloud has to be     |
-//! | [`achievements`]           | `achievements.ts`            | what one badge batch is answered with |
-//! | [`achievements_provider`]  | `achievements-provider.ts`   | what a badge service has to be      |
-//! | [`leaderboards`]           | `leaderboards.ts`            | what one score batch is answered with |
-//! | [`leaderboards_provider`]  | `leaderboards-provider.ts`   | why there is no board on this shell |
-//! | [`screenshots`]            | `screenshots.ts`             | where a picture goes, and under what name |
-//! | [`screenshots_provider`]   | `screenshots-provider.ts`    | whether the platform keeps a copy   |
-//! | [`net`]                    | `net.ts`                     | what one multiplayer message means  |
-//! | [`net_lobby`]              | `net-lobby.ts`               | what a lobby row says               |
-//! | [`net_invite`]             | `net-invite.ts`              | what a launch argument asked to join |
-//! | [`net_firewall`]           | `net-firewall.ts`            | whether the port is open, and how to open it |
-//! | [`steam_p2p`]              | `net-steam-p2p.ts`           | when to accept a peer, and when it is gone |
-//! | [`session_host`]           | `session-host.ts`            | what the session process just said  |
-//! | [`snapshot`]               | (`net.ts`'s `MessagePort`)   | how twenty frames a second reach the page |
-//! | [`mods`]                   | `mods.ts`                    | which folders hold mods, and what may be published |
-//! | [`mod_archive`]            | `mod-archive.ts`             | what is safely inside a `.zip`      |
-//! | [`workshop`]               | `workshop.ts`                | what a mod portal has to be         |
-//! | [`runtime`]                | `resources.ts`               | where the things that are not Rust are |
-//! | [`dedicated`]              | `dedicated-mode.ts`          | what a windowless server is handed  |
-//! | [`media`]                  | `main.ts`'s permission handler | whether the page may open a microphone |
-//! | [`display`]                | (Electron refuses this itself) | whether there is anywhere to put a window |
-//! | [`steam_pump`]             | (`steam.ts`'s callback loop) | how often Steam's queue is drained  |
-//! | [`metrics`]                | `metrics.ts`                 | how long the shell took to get out of the way |
-//! | [`roster`]                 | `roster.ts`                  | whether the cloud holds the roster that went into it |
+//! | Module                     | Answers                                          |
+//! | -------------------------- | ------------------------------------------------ |
+//! | [`capabilities`]           | what this copy of the app may do                 |
+//! | [`bridge`]                 | which protocol a page message is                 |
+//! | [`channels`]               | what the one IPC command is called               |
+//! | [`config`]                 | where the app points itself                      |
+//! | [`output`]                 | where a diagnostic line goes                     |
+//! | [`user_data`]              | what the app's folder is called                  |
+//! | [`webroot`]                | which file one request path is                   |
+//! | [`window_state`]           | where the window opens                           |
+//! | [`steam`]                  | which app id, and whether to relaunch            |
+//! | [`cloud_save`]             | what one cloud message is answered with          |
+//! | [`cloud_provider`]         | what a platform cloud has to be                  |
+//! | [`achievements`]           | what one badge batch is answered with            |
+//! | [`achievements_provider`]  | what a badge service has to be                   |
+//! | [`leaderboards`]           | what one score batch is answered with            |
+//! | [`leaderboards_provider`]  | why there is no board on this shell              |
+//! | [`screenshots`]            | where a picture goes, and under what name        |
+//! | [`screenshots_provider`]   | whether the platform keeps a copy                |
+//! | [`net`]                    | what one multiplayer message means               |
+//! | [`net_lobby`]              | what a lobby row says                            |
+//! | [`net_invite`]             | what a launch argument asked to join             |
+//! | [`net_firewall`]           | whether the port is open, and how to open it     |
+//! | [`steam_p2p`]              | when to accept a peer, and when it is gone       |
+//! | [`session_host`]           | what the session process just said               |
+//! | [`snapshot`]               | how twenty frames a second reach the page        |
+//! | [`mods`]                   | which folders hold mods, and what may be published |
+//! | [`mod_archive`]            | what is safely inside a `.zip`                   |
+//! | [`workshop`]               | what a mod portal has to be                      |
+//! | [`runtime`]                | where the things that are not Rust are           |
+//! | [`dedicated`]              | what a windowless server is handed               |
+//! | [`media`]                  | whether the page may open a microphone           |
+//! | [`display`]                | whether there is anywhere to put a window        |
+//! | [`steam_pump`]             | how often Steam's queue is drained               |
+//! | [`metrics`]                | how long the shell took to get out of the way    |
+//! | [`roster`]                 | whether the cloud holds the roster that went into it |
 //!
 //! **The four platform seams are the SAME three-file shape the rest of the game
 //! uses** — bridge → provider → platform — with the third file the only one that
@@ -54,8 +52,6 @@
 //! Tests for all of it live in `tests/` as their own files (OSS_GAME_SPEC §20.1) —
 //! which is the second reason this is a library crate rather than a module of
 //! the binary: a Rust integration test can only reach a crate's public API.
-//!
-//! [`electron/src/`]: https://github.com/niclaslindstedt/game/tree/main/electron/src
 
 pub mod achievements;
 pub mod achievements_provider;

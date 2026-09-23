@@ -1,7 +1,7 @@
 ---
 title: A list moved out of a config breaks the test that GREPS that config — point the test at the new home and assert every consumer still reads it
 date: 2026-08-08
-scope: tests/content, electron/electron-builder.config.cjs, scripts/modtools-manifest.cjs
+scope: tests/content, tauri/scripts/package.mjs, scripts/modtools-manifest.cjs
 concepts: [quality-gates, drift-tests, packaging, declared-once]
 ---
 

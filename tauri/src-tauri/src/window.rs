@@ -45,9 +45,8 @@ pub fn app_origin() -> String {
 /// conversion happens here — and per monitor rather than once, because a laptop
 /// with an external display routinely has two different scale factors.
 ///
-/// It is the full monitor rather than Electron's `workArea` (which excludes the
-/// taskbar and the dock), because no desktop webview library exposes a work
-/// area. The difference only matters for a window parked entirely inside the
+/// It is the full monitor rather than the work area (which excludes the taskbar
+/// and the dock), because no desktop webview library exposes a work area. The difference only matters for a window parked entirely inside the
 /// taskbar, which is not a rect anybody drags a game to on purpose.
 fn display_areas(window: &WebviewWindow) -> Vec<DisplayArea> {
     let Ok(monitors) = window.available_monitors() else {
@@ -229,9 +228,7 @@ fn open_externally(app: &AppHandle, url: &str) {
 /// Hooked to the CLOSE REQUEST rather than to anything later, because the rect
 /// has to be read while the window still exists. That covers the player closing
 /// the window — but NOT the QUIT row, which exits the process outright and never
-/// asks a window to close, so [`remember_now`] is called there too. Electron
-/// gets both from one handler because `app.quit()` closes its windows on the way
-/// down; this is the same fact reached by a second call.
+/// asks a window to close, so [`remember_now`] is called there too.
 fn remember_geometry(window: &WebviewWindow, user_data: PathBuf) {
     let handle = window.clone();
     window.on_window_event(move |event| {

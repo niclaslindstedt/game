@@ -101,8 +101,8 @@ kit onto the `Effect` (via the event's `defId`), so a mod's rain lands in its ow
 colours rather than in MOONFALL's grey.
 
 The Workshop itself is the same three-file seam as cloud save and the
-achievements: `electron/src/workshop.ts` is the ONLY module that knows Steam
-exists, `electron/src/mods.ts` is the bridge above it, and what is uploaded is
+achievements: `tauri/shell/src/workshop.rs` is the ONLY module that knows Steam
+exists, `tauri/shell/src/mods.rs` is the bridge above it, and what is uploaded is
 the **authored folder**, not a compiled bundle, so a published mod stays
 readable and forkable the way the game's own content is. The BUILD SYSTEM travels too: the three passive TALENT trees are
 `content/talents.yaml`, so a conversion's hero no longer grows this game's
@@ -116,12 +116,12 @@ to add to) and the loot economy itself (`item_quality.yaml`/`item_rarity.yaml` �
 a mod that moved the tier ladder would be rebalancing the campaign rather than
 adding to it). A CONVERSION may also rename the game itself on the title screen
 (`brand:` in its manifest) — the screen only, never the storage prefix, the
-precache id or any discovery surface, and never for an addon. **THE COMPILER SHIPS OUTSIDE THE ASAR**, in a tree that MIRRORS
-the repo's layout under `resources/modtools/` (`extraResources` in
-`electron-builder.config.cjs`, resolved by `electron/src/resources.ts`): every
-module in it finds its neighbours by relative path, so a flattened copy resolves
-to nothing, and `yaml` has to travel with it because a package inside the asar
-is not resolvable from a module outside it. Every `scripts/` directory the
+precache id or any discovery surface, and never for an addon. **THE COMPILER SHIPS AS REAL FILES**, in a tree that MIRRORS
+the repo's layout under the package's `modtools/` (copied by
+`tauri/scripts/package.mjs` from `scripts/modtools-manifest.cjs`, resolved by
+`tauri/shell/src/runtime.rs`): every module in it finds its neighbours by
+relative path, so a flattened copy resolves to nothing, and `yaml` has to travel
+with it because the package has no repo root to resolve it from. Every `scripts/` directory the
 compiler imports has to be listed there — a missing one is a mod that compiles in
 the repo and fails on a player's machine with a resolve error, which is what
 `tests/content/mod_toolchain_deps_test.ts` now walks the import graph to prove.

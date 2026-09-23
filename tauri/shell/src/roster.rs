@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! IS THE ROSTER IN THE CLOUD THE ONE THAT WENT IN — the peer of
-//! `electron/src/roster.ts`.
+//! IS THE ROSTER IN THE CLOUD THE ONE THAT WENT IN.
 //!
 //! ## Why a shell mode exists for this at all
 //!
@@ -193,7 +192,8 @@ pub fn digest(blob: &str) -> String {
 /// Everything one shell can say about the cloud in one go.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RosterReport {
-    /// `"tauri"` or `"electron"`.
+    /// Which build wrote it — `"tauri"`, or `"electron"` in a report from the
+    /// earlier Electron build.
     pub shell: String,
     /// Which platform cloud answered, or `None` where there was none at all.
     pub provider: Option<String>,

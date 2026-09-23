@@ -3,22 +3,22 @@
 // is rather than the way a socket would suggest.
 //
 // **POLLED, PACKET-SHAPED, AND EXPLICIT ABOUT RELIABILITY**, because that is
-// what the NARROWER of the two implementations forces. `steamworks.js` binds
-// the LEGACY `ISteamNetworking` P2P API and nothing else: no sockets, no
-// callbacks, no channels — `isP2PPacketAvailable()` and `readP2PPacket()`, on
-// a pump somebody else has to run. A seam designed around `node:dgram`'s
+// what the NARROWER of the two implementations forces. The Steam path is the
+// LEGACY `ISteamNetworking` P2P API: no sockets, no callbacks, no channels —
+// `is_p2p_packet_available()` and `read_p2p_packet()`, on a pump somebody else
+// has to run. A seam designed around `node:dgram`'s
 // richer shape could not accommodate that, and the whole point of having a
 // seam is that both paths ride it: the Steam friend list is the frictionless
 // door, and a typed address is the one that works on a LAN, on a Steam Deck
 // with no internet, and against the headless dedicated server.
 //
-// **IT LIVES IN `server/`, NOT IN `electron/src/`, and the placement is
-// deliberate.** An `electron/src/net-transport*.ts` would be the natural spot
-// for shell code — but the dedicated server must be "the same file" as the
-// session host, minus Electron, and both cannot be true:
+// **IT LIVES IN `server/`, NOT IN THE DESKTOP SHELL, and the placement is
+// deliberate.** The shell would be the natural spot for platform code — but
+// the dedicated server must be "the same file" as the session host, minus the
+// shell, and both cannot be true:
 // a transport in the shell is a transport the standalone server does not have.
 // So the seam and the UDP implementation sit here, where the session already
-// is, and the STEAM one stays in the shell because only the main process may
+// is, and the STEAM one stays in the shell because only the shell's process may
 // hold the Steam client. It reaches the session as a RELAY over the control
 // channel (`relay.ts`), which is the one honest arrangement: each half lives
 // where the resource it needs lives, and the session sees one interface.

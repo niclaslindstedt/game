@@ -4,7 +4,7 @@
 //
 // The design is a thin surface (`Haptics`) over a swappable backend
 // (`HapticsDriver`). Today the only backend is the browser Vibration API;
-// tomorrow a native shell (React Native, Capacitor, an Electron bridge) can
+// tomorrow a native shell (React Native, Capacitor, a desktop bridge) can
 // register its own driver via `setDriver` without any caller changing. When
 // no backend can vibrate — iOS Safari and iOS home-screen PWAs never expose
 // `navigator.vibrate` — the driver auto-selects the no-op and every call is

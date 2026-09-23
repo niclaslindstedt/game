@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! Where the desktop shell points itself — the peer of `electron/src/config.ts`.
+//! Where the desktop shell points itself.
 //!
 //! By default the app is self-contained: it serves the website copied inside it
 //! (`webroot/`, a gitignored build artifact from `scripts/bundle-web.mjs`) over
@@ -22,8 +22,7 @@ pub const APP_SCHEME: &str = "game";
 
 /// The host the bundled site is served under.
 ///
-/// `localhost` rather than Electron's `app`, and that is a platform fact rather
-/// than a preference: WebView2 maps a registered scheme onto
+/// `localhost`, and that is a platform fact rather than a preference: WebView2 maps a registered scheme onto
 /// `http://<scheme>.localhost`, so the host has to be one the platform will
 /// accept in that shape. What matters is that it is a CONSTANT — the origin is
 /// what the player's roster is keyed to, so changing this word later orphans

@@ -3,7 +3,7 @@
 // can import the plain-JavaScript module without `any`. Keep in step with
 // steam-achievement-plan.mjs.
 
-/** One row of electron/store/steam-achievements.json. */
+/** One row of tauri/store/steam-achievements.json. */
 export type SteamAchievementRow = {
   id: string;
   name: string;

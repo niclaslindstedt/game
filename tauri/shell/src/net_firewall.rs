@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! THE OS FIREWALL — the one layer of the three that cannot be opened
-//! silently. The peer of `electron/src/net-firewall.ts`, with every command and
-//! every reading of its output here and only the running of them in
+//! silently. Every command and every reading of its output here and only the running of them in
 //! `src-tauri/src/firewall.rs`.
 //!
 //! The router is a packet on the LAN and needs nobody's permission
@@ -48,9 +47,9 @@ pub const COMMAND_TIMEOUT_MS: u64 = 5_000;
 /// The rule's name on Windows and in every message about it.
 ///
 /// Stable, because the check looks it up by name — renaming it would leave
-/// every existing player with an invisible orphan rule. The same string the
-/// Electron shell uses, so a player who has both installed has one rule rather
-/// than two.
+/// every existing player with an invisible orphan rule. It is also the string
+/// the earlier Electron build wrote, so a player who ran that one keeps one
+/// rule rather than two.
 pub const RULE_NAME: &str = "Ada's Trail (multiplayer)";
 
 /// Which host firewall this machine has, which is the same question as which
@@ -357,7 +356,7 @@ pub fn read_firewalld(port: u16, state: &str, ports: Option<&str>) -> FirewallSt
     // `firewall-cmd --state` prints exactly `running` or `not running`, and the
     // second CONTAINS the first — so a substring test alone reports a stopped
     // firewalld as running and then offers a remedy for a problem the machine
-    // does not have. (The Electron peer had that bug; it is fixed there too.)
+    // does not have.
     let state = state.to_lowercase();
     if !state.contains("running") || state.contains("not running") {
         return FirewallState::NotNeeded {

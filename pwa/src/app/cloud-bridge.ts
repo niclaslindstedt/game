@@ -7,8 +7,8 @@
 //
 //   web → shell   `postToShell(JSON { __gisCloud })`  (./shell-bridge.ts)
 //   shell → web   the shell calls `window.__gisCloudEvent(...)` from outside
-//                 (`injectJavaScript` on the WebView, `executeJavaScript` in
-//                 Electron)
+//                 (`injectJavaScript` on the WebView, `webview.eval` on the
+//                 desktop)
 //
 // The protocol (mirrored by native/src/cloud-save.ts — keep the two in step):
 //   → { action: "init" }                       announce the web handler is up

@@ -17,7 +17,7 @@
 //
 // THE SHELL STATES THE FACT; THE GAME SAYS THE WORDS. All that crosses is this
 // one boolean, stamped onto `window` before the page's first module evaluates
-// (`electron/src/preload.ts`, `tauri/src-tauri/src/page.rs`) — the same delivery
+// (`tauri/src-tauri/src/page.rs`, `tauri/src-tauri/src/page.rs`) — the same delivery
 // `__GIS_CAPS__` and `__GIS_POLICY__` use, and for the same reason: the answer
 // is wanted while the app is deciding what to paint, so a round trip would show
 // the menu first and the notice after it.

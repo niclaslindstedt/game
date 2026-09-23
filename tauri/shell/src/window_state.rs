@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! Remembering the window's size, position and maximized/fullscreen state
-//! between launches — the peer of `electron/src/window-state.ts`.
+//! between launches.
 //!
 //! A browser tab has no such memory and needs none — the browser owns the
 //! window. A desktop app that reopens at 1280×720 in the middle of the screen

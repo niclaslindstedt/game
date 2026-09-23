@@ -4,9 +4,9 @@
 //
 //   web → shell   `postToShell(JSON { __gisNet })`  (./shell-bridge.ts)
 //   shell → web   `window.__gisNetEvent(…)` (called from OUTSIDE, via
-//                 `executeJavaScript`, exactly as the other four bridges are)
+//                 `webview.eval`, exactly as the other four bridges are)
 //
-// The protocol (mirrored by electron/src/net.ts — keep the two in step):
+// The protocol (mirrored by tauri/shell/src/net.rs — keep the two in step):
 //   → { action: "host", requestId, params, adopt?, password?, maxClients?, mods? }
 //   → { action: "listen", requestId, port?, udp?, steam?, publicListing?, name? }
 //   → { action: "stop", requestId }             end it
@@ -227,7 +227,7 @@ export function netBridgeAvailable(): boolean {
  * talking inside one are separately sold: the depot build carries both, a plain
  * download carries neither unless somebody asked, and a build with sessions but
  * no voice is a perfectly good silent co-op game rather than a broken noisy one
- * (`electron/src/capabilities.ts` explains why a microphone is its own
+ * (`tauri/shell/src/capabilities.rs` explains why a microphone is its own
  * capability rather than part of multiplayer).
  *
  * Read before anything opens a device or draws a settings page: the capability

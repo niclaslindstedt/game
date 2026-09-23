@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE PLATFORM SEAM BEHIND ACHIEVEMENTS — the peer of
-//! `electron/src/achievements-provider.ts`, so the bridge above it
-//! ([`crate::achievements`]) is the same dumb forwarder on both shells.
+//! THE PLATFORM SEAM BEHIND ACHIEVEMENTS, so the bridge above it
+//! ([`crate::achievements`]) can stay a dumb forwarder.
 //!
 //! Today: Steam, implemented in `src-tauri/src/achievements.rs`.
 //!

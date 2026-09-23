@@ -27,6 +27,6 @@ blit(canvas, shadow, x, y + 5);
 blit(canvas, logo, x, y);
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const out = path.join(root, "electron/store/capsules/library-logo.png");
+const out = path.join(root, "tauri/store/capsules/library-logo.png");
 await writePng(canvas, out);
 console.log(`wrote ${TEXT} wordmark (${WIDTH}x${HEIGHT}) -> ${out}`);

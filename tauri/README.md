@@ -2,13 +2,6 @@
 
 # Ada's Trail — the desktop app
 
-**This is the SECOND desktop wrapper, and it is not the one that ships today** —
-[`electron/`](../electron/README.md) is. It is not a prototype either: it plays
-the whole game, carries every platform seam, packages itself and attaches its
-downloads to every release. Which of the two a player gets turns on
-measurements, and [`docs/desktop-shells.md`](../docs/desktop-shells.md) owns
-that decision.
-
 A desktop wrapper around the game for **Windows, macOS and Linux**. It is a thin
 [Tauri](https://tauri.app) shell whose entire content is the built website, so
 the app **looks and plays exactly like the site** — and because the site is
@@ -22,8 +15,7 @@ tab cannot give a game is added around it: Steam Cloud, achievements,
 screenshots, the Workshop, a session server in a process of its own, and voice
 chat.
 
-**Valve's in-game overlay works here too, by a route Electron does not need** —
-the shell hands the injected library a surface of its own to draw on, because a
+**Valve's in-game overlay works here, by a route of its own** — the shell hands the injected library a surface of its own to draw on, because a
 webview shell has none to offer it. Windows today; see
 [below](#the-overlay).
 
@@ -134,9 +126,8 @@ into the process, which hooks the graphics API the game presents its frames with
 and draws over the swap chain. A game gets it for free precisely because it owns
 that surface — and a webview shell does not. WebView2 does its GPU work in a
 browser process this app never started, so the injected hook sits waiting for a
-frame that never comes and quietly gives up. Electron's
-`electronEnableSteamOverlay()` fixes that with two Chromium command line
-switches; a platform webview has no command line to pass them on.
+frame that never comes and quietly gives up — and a platform webview has no
+command line through which to move that work somewhere the hook can see it.
 
 So the shell gives the hook something else to find. A transparent,
 click-through, undecorated window is opened over the game's window, and a thread
@@ -162,8 +153,7 @@ Three things follow, and each is a thing to know rather than a thing to fix:
   swap chain Steam hooked, which is the decoy's, whose frames are empty by
   design. So **the game goes on filing its own Steam screenshots** through
   `add_screenshot_to_library`, which is why this shell's `screenshots_provider`
-  answers with a Steam library at all — Electron's peer seam exists too and
-  returns null, because `steamworks.js` binds no `ISteamScreenshots`.
+  answers with a Steam library at all.
 - **macOS and Linux have no decoy yet.** The overlay is injected into native
   games on both, so the same trick is portable in principle — but a Metal or a
   Vulkan sheet is a different piece of work, and until somebody writes it the
@@ -203,13 +193,12 @@ make tauri                # the same thing
 
 Arguments reach the game: `npm run tauri -- --multiplayer`. A launch that turns
 multiplayer, mods or voice on from the command line rather than from its
-packaging stops on the game's own licence acknowledgement before the title menu,
-exactly as the Electron build does — this shell states the fact in the
+packaging stops on the game's own licence acknowledgement before the title menu:
+this shell states the fact in the
 initialization script (`__GIS_UNLOCKED__`, `shell/src/channels.rs`) and the page
 draws it (`pwa/src/game/LaunchNotice.tsx`).
 
-`--autopilot` goes the other way, and this shell answers it exactly as the
-Electron one does: the AUTO PILOT ride is in no desktop build (a copy that plays
+`--autopilot` goes the other way: the AUTO PILOT ride is in no desktop build (a copy that plays
 itself is a cheat in somebody else's session), there is no build switch for it,
 and the flag is a DEVELOPER one that costs the launch its multiplayer, voice and
 licence. The fact reaches the page as `__GIS_AUTOPILOT__` beside the licence
@@ -217,7 +206,7 @@ one, into the same box.
 
 The binary talks to Steam on every launch unless told not to — but
 `scripts/run-tauri.mjs` fills in `GIS_STEAM=off` when the caller left it unset,
-exactly as the Electron launcher does, because a checkout being run by a
+because a checkout being run by a
 developer is the case with no Steam session to talk to. `GIS_STEAM=on npm run
 tauri` is how the Steam path is exercised locally; a value already in the
 environment wins. Either way, a machine with no Steam client running simply
@@ -286,8 +275,8 @@ a different roster unless told to in as many words.
 ### The launch log, when it does not start
 
 The shell writes **every launch** to `launch.log` in its user-data directory
-(`%APPDATA%\adastrail-tauri` on Windows, `~/Library/Application
-Support/adastrail-tauri` on macOS, `~/.local/share/adastrail-tauri` on Linux),
+(`%APPDATA%\adastrail` on Windows, `~/Library/Application
+Support/adastrail` on macOS, `~/.local/share/adastrail` on Linux),
 keeping the previous one beside it as `launch.log.prev`. A packaged game has no
 console, so that file — plus the error dialog anything fatal raises — is the
 whole diagnosis. Attach it to a bug report.
@@ -323,9 +312,9 @@ nothing to edit. `src-tauri/build.rs` declares them as build inputs, because
 ## Building for a store
 
 ```sh
-make desktop-tauri-steam                      # a DEPOT DIRECTORY, for Steam
-make desktop-tauri-dist                       # installers/archives, for a download
-make desktop-tauri-steam ARGS="--target aarch64-apple-darwin"
+make desktop-steam                      # a DEPOT DIRECTORY, for Steam
+make desktop-dist                       # installers/archives, for a download
+make desktop-steam ARGS="--target aarch64-apple-darwin"
 ```
 
 Both go through `scripts/package.mjs`, which **refuses** a build nothing stamped

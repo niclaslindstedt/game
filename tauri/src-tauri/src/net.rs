@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE NET BRIDGE, wired up — the effects half of [`adastrail_shell::net`], and
-//! the peer of `createNetBridge` in `electron/src/net.ts`.
+//! THE NET BRIDGE, wired up — the effects half of [`adastrail_shell::net`].
 //!
 //! Everything it DECIDES lives in the shell crate: what a request means, what
 //! goes down to the session, what comes back to the page. What is here is the
@@ -185,8 +184,7 @@ impl NetBridge {
                 .and_then(Value::as_u64)
                 .unwrap_or(u64::from(DEFAULT_MAX_PLAYERS)) as u32;
         }
-        // The page opens its own channel BEFORE the session is told to build,
-        // exactly as Electron's port travels with the message that starts it:
+        // The page opens its own channel BEFORE the session is told to build:
         // the server tolerates either order, and arriving first is what makes
         // the first snapshot the first thing the client sees.
         self.open_snapshot(&sidecar);

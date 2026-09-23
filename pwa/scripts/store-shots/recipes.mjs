@@ -123,7 +123,7 @@ export const DEVICES = [
     css: { width: 1920, height: 1080 },
     scale: 1,
     raster: { width: 1920, height: 1080 },
-    out: "electron/store/screenshots",
+    out: "tauri/store/screenshots",
     touch: false,
     layout: "bleed",
   },

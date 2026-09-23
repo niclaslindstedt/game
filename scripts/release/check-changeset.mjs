@@ -47,13 +47,13 @@ const SKIP_PATTERNS = [
   /^prompts\//,
   /^scripts\//,
   /^pwa\/scripts\//,
-  // The store shells (native/, electron/, tauri/) are self-contained projects
+  // The store shells (native/, tauri/) are self-contained projects
   // with their own tooling, tests and config. Their BUILD machinery is no more
   // player-facing than the root's is — but note `engine/` is deliberately NOT
   // here: a change to what a shell DOES is a change to the shipped app.
-  /^(native|electron|tauri)\/scripts\//,
-  /^(native|electron|tauri)\/tests\//,
-  /^(native|electron)\/store\//,
+  /^(native|tauri)\/scripts\//,
+  /^(native|tauri)\/tests\//,
+  /^(native|tauri)\/store\//,
   // The Tauri shell is Rust, so its tests are integration tests living inside
   // the crate whose public API they reach rather than in a tree-level tests/.
   /^tauri\/(shell|src-tauri)\/tests\//,
@@ -68,9 +68,9 @@ const SKIP_PATTERNS = [
   /^\.npmrc$/,
   /^eslint\.config\.js$/,
   /^vitest\.config\.ts$/,
-  /^(native|electron)\/vitest\.config\.mts$/,
+  /^native\/vitest\.config\.mts$/,
   /^pwa\/vite\.config\.ts$/,
-  /^(pwa\/|native\/|electron\/)?tsconfig.*\.json$/,
+  /^(pwa\/|native\/)?tsconfig.*\.json$/,
   /^package-lock\.json$/,
 ];
 

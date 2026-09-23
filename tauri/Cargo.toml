@@ -8,12 +8,10 @@
 # `cargo test -p adastrail-shell` therefore runs the entire decision layer on a
 # machine with a Rust toolchain and nothing else installed — no WebKitGTK, no
 # WebView2, no Xcode. That is what makes this tree's logic coverable on an
-# ordinary CI runner, and it is the Rust-shaped version of the discipline the
-# Electron shell keeps by hand (its window-state.ts takes the displays as an
-# argument precisely so it needs no Electron).
+# ordinary CI runner.
 #
-# See ../README.md for the tree, and ../../docs/desktop-shells.md for how the
-# two desktop wrappers are held against each other.
+# See ../README.md for the tree, and ../../docs/desktop-shells.md for the
+# engineering record behind it.
 
 [workspace]
 members = ["shell", "src-tauri"]

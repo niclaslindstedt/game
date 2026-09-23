@@ -50,15 +50,15 @@ node scripts/sprite-preview.mjs names <sprite...> --out pwa/assets-preview/store
   authored YAML, sprite, effect, balance, test, catalog, and changeset workflow.
 - Bosses read best in the deep background; elites can carry the immediate
   foreground threat.
-- The approved Steam header is `electron/store/capsules/header.png`; use it as
+- The approved Steam header is `tauri/store/capsules/header.png`; use it as
   the canonical abstraction/style reference for subsequent capsules.
-- The approved helmet close-up is `electron/store/capsules/small.png`.
+- The approved helmet close-up is `tauri/store/capsules/small.png`.
 
 ## Repository destinations and checks
 
-- Steam art: `electron/store/capsules/`
-- Steam requirements/prompts: `electron/store/capsules/PROMPTS.md`
-- Release checklist: `electron/RELEASING.md`
+- Steam art: `tauri/store/capsules/`
+- Steam requirements/prompts: `tauri/store/capsules/PROMPTS.md`
+- Release checklist: `tauri/STEAM.md` (store side), `tauri/RELEASING.md` (build and upload)
 - Store preflight: `make store-preflight`
 
 The real wordmark must be composited from the game's font. Never generate it.

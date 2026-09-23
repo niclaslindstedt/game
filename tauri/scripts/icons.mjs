@@ -3,9 +3,8 @@
 //
 // **Tauri refuses a paletted PNG at COMPILE time**, inside `generate_context!`,
 // with `icon … is not RGBA` — and every icon the website ships is paletted,
-// because that is what a 64×64 icon should be everywhere else. electron-builder
-// takes them as they are, which is why `electron/` can point straight at
-// `pwa/public/` and this tree cannot.
+// because that is what a 64×64 icon should be everywhere else — which is why
+// this tree cannot point straight at `pwa/public/`.
 //
 // So the icons are RE-ENCODED rather than re-drawn: one source raster, the same
 // one the desktop shell and the manifest already use, widened to 8-bit RGBA at
@@ -26,8 +25,7 @@ import sharp from "sharp";
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_DIR = resolve(APP_DIR, "..");
 
-/** The one raster everything else is derived from — the same file
- * `electron-builder.config.cjs` names as the desktop icon. */
+/** The one raster everything else is derived from. */
 const SOURCE = join(REPO_DIR, "pwa/public/maskable-icon-512x512.png");
 const OUT_DIR = join(APP_DIR, "src-tauri/icons");
 

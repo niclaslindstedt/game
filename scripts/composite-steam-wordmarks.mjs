@@ -12,7 +12,7 @@ import { renderText } from "./asset-tools/font.mjs";
 import { blit, createSurface, upscale } from "./asset-tools/surface.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const capsules = path.join(root, "electron/store/capsules");
+const capsules = path.join(root, "tauri/store/capsules");
 const MINT = [0x7e, 0xf0, 0xc8, 0xff];
 const SHADOW = [0x00, 0x00, 0x00, 0x8c];
 const TEXT = "ADA'S TRAIL";

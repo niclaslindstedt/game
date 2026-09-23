@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// PACKAGING THE TAURI SHELL — the peer of `electron/electron-builder.config.cjs`,
-// and a script rather than a config file for the same reason that one is a
-// `.cjs` rather than a `.yml`: brand identity is centralized in
-// `game.config.json` (AGENTS.md — "Never re-hardcode a brand string elsewhere"),
-// the capability stamp comes out of the build environment, and neither can be
-// written into static JSON. `tauri.conf.json` holds everything that IS static;
+// PACKAGING THE DESKTOP APP — a script rather than a config file because
+// brand identity is centralized in `game.config.json` (AGENTS.md — "Never
+// re-hardcode a brand string elsewhere"), the deployment's own name and
+// identifier arrive as APP_DISPLAY_NAME / APP_BUNDLE_ID, the capability stamp
+// comes out of the build environment, and none of them can be written into
+// static JSON. `tauri.conf.json` holds everything that IS static;
 // this script computes the rest and hands it over as a `--config` patch.
 //
 // **THE DEFAULT OUTPUT IS A DEPOT DIRECTORY, NOT AN INSTALLER, because Steam
@@ -30,8 +30,9 @@
 //                       (scripts/build-server.mjs). Only in a build stamped with
 //                       multiplayer.
 //   modtools/           the MOD COMPILER and everything it reaches
-//                       (scripts/modtools-manifest.cjs, shared with the Electron
-//                       packager). Only in a build stamped with mods.
+//                       (scripts/modtools-manifest.cjs), plus the Lua VM it
+//                       validates scripts with (scripts/build-lua.mjs). Only in
+//                       a build stamped with mods.
 //   runtime/node        A NODE RUNTIME, because both of the above are Node
 //                       programs and a player has no reason to have one. It is
 //                       the ONE place this shell is fatter than the promise
@@ -45,6 +46,8 @@
 //   node scripts/package.mjs --target <triple>     # cross/explicit target
 //   node scripts/package.mjs --skip-web            # reuse an existing webroot
 //   node scripts/package.mjs --skip-server         # reuse an existing server-dist
+//   node scripts/package.mjs --skip-lua            # reuse an existing Lua VM build
+//   node scripts/package.mjs --require-identity    # a release: refuse the dev identity
 
 import { execFileSync } from "node:child_process";
 import {
@@ -52,13 +55,11 @@ import {
   cpSync,
   existsSync,
   mkdirSync,
-  readdirSync,
   readFileSync,
-  renameSync,
   rmSync,
 } from "node:fs";
 import { createRequire } from "node:module";
-import { basename, dirname, join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -76,8 +77,8 @@ const require = createRequire(import.meta.url);
 const identity = JSON.parse(
   readFileSync(join(REPO_DIR, "game.config.json"), "utf8"),
 );
-/** THE GAME's version, not the shell crate's — the same rule the Electron
- * packager follows. `tauri/src-tauri/Cargo.toml` keeps its own number and
+/** THE GAME's version, not the shell crate's. `tauri/src-tauri/Cargo.toml`
+ * keeps its own number and
  * nothing updates it, so a download named after it would claim a version no
  * release ever had. */
 const { version } = JSON.parse(
@@ -106,8 +107,7 @@ if (!["steam", "standalone"].includes(profile)) {
 // Five capabilities belong to the BUILD rather than to the machine that runs
 // it. They are read from the build environment (`GIS_ENABLE_MULTIPLAYER=1` and
 // friends, via the Makefile) and baked into the machine code by
-// `src-tauri/src/stamp.rs` — which is stricter than the Electron shell's
-// packaged `package.json`, because an installed copy then has nothing to edit.
+// `src-tauri/src/stamp.rs`, so an installed copy has nothing to edit.
 //
 // A packaging run that did not deliberately stamp itself is refused outright
 // rather than quietly shipping a developer build: the absence of the stamp is
@@ -116,7 +116,7 @@ if (!["steam", "standalone"].includes(profile)) {
 if (process.env.GIS_STAMP_CAPABILITIES !== "1") {
   fail(
     "GIS_STAMP_CAPABILITIES=1 is required to package.\n" +
-      "  Use `make desktop-tauri-steam` or `make desktop-tauri-dist`, which set " +
+      "  Use `make desktop-steam` or `make desktop-dist`, which set " +
       "it along with the five capability switches.",
   );
 }
@@ -136,6 +136,30 @@ if (appId === SPACEWAR_APP_ID && !flag("allow-placeholder")) {
       "package a test build anyway.",
   );
 }
+
+// THE DEPLOYMENT'S IDENTITY — the same two variables, under the same names, the
+// phone build reads (native/app.config.js) and every app in the fleet uses.
+// `tauri.conf.json` commits a development identifier; a store or download
+// build merges the real one over it. The identifier is also where each
+// desktop webview keeps its storage, so an installed copy's progress belongs
+// to the identifier it shipped under — which is why it is fixed per deployment
+// rather than derived. The display name is optional, as it is for the phone
+// app: the game keeps one name everywhere, so it falls back to the committed
+// `productName`.
+const bundleId = process.env.APP_BUNDLE_ID?.trim() ?? "";
+const displayName = process.env.APP_DISPLAY_NAME?.trim() ?? "";
+if (flag("require-identity") && !bundleId) {
+  fail(
+    "APP_BUNDLE_ID is not set. A release package needs the deployment's " +
+      "identifier rather than the development one — set it as a repository " +
+      "secret. See tauri/RELEASING.md.",
+  );
+}
+const tauriConf = JSON.parse(
+  readFileSync(join(APP_DIR, "src-tauri", "tauri.conf.json"), "utf8"),
+);
+/** What the bundle is called — the name of the `.app` on macOS. */
+const productName = displayName || tauriConf.productName;
 
 // ---------------------------------------------------------------------------
 // The build
@@ -168,20 +192,17 @@ rmSync(STAGE_DIR, { recursive: true, force: true });
 
 if (WANTS_SESSIONS) {
   if (!flag("skip-server")) {
-    // The ENGINE's Node ship target, shared with the Electron shell — one
-    // compiler and one server, so "the dedicated server is the same file" stays
-    // true. It writes into `electron/server-dist/`, which is history rather
-    // than ownership (see `shell/src/runtime.rs`).
+    // The ENGINE's Node ship target — one compiler and one server, so "the
+    // dedicated server is the same file" stays true.
     run("node", [join(REPO_DIR, "scripts", "build-server.mjs")]);
   }
-  const built = join(REPO_DIR, "electron", "server-dist");
+  const built = join(REPO_DIR, "server-dist");
   requireFile(join(built, "server", "main.js"), "the compiled session server");
   cpSync(built, join(STAGE_DIR, "server"), { recursive: true });
 }
 
 if (WANTS_MODS) {
-  // ONE list, shared with `electron/electron-builder.config.cjs` — see
-  // `scripts/modtools-manifest.cjs` for why two would drift.
+  // ONE list — see `scripts/modtools-manifest.cjs`.
   for (const { from, to } of require(
     join(REPO_DIR, "scripts", "modtools-manifest.cjs"),
   )) {
@@ -203,6 +224,16 @@ if (WANTS_MODS) {
       recursive: true,
     });
   }
+  // THE LUA VM, compiled (scripts/build-lua.mjs). The script validator IS the
+  // engine's own interpreter and the shipped toolchain runs under plain Node
+  // with no TypeScript, so the compiled copy travels beside the toolchain that
+  // imports it — at `modtools/lua-vm/`, which is where
+  // `scripts/asset-tools/script-schema.mjs` looks for it in a package.
+  if (!flag("skip-lua"))
+    run("node", [join(REPO_DIR, "scripts", "build-lua.mjs")]);
+  const lua = join(REPO_DIR, "modtools-lua");
+  requireFile(join(lua, "lib", "lua", "index.js"), "the compiled Lua VM");
+  cpSync(lua, join(STAGE_DIR, "modtools", "lua-vm"), { recursive: true });
   // The adapter the Rust shell reaches the compiler through.
   cpSync(
     join(APP_DIR, "scripts", "mod-compile.mjs"),
@@ -248,6 +279,8 @@ if (WANTS_SESSIONS || WANTS_MODS) {
  */
 const patch = {
   version,
+  ...(bundleId ? { identifier: bundleId } : {}),
+  ...(displayName ? { productName: displayName } : {}),
   bundle: {
     // A DEPOT wants no installer at all — see the header — and `--no-bundle`
     // below is what says so, so the targets are only named for the standalone
@@ -296,7 +329,8 @@ if (!standalone) tauriArgs.push("--no-bundle");
 if (target) tauriArgs.push("--target", target);
 
 console.log(
-  `• packaging the Tauri shell — profile ${profile}, app ${appId}` +
+  `• packaging ${productName} (${bundleId || "development identifier"}) — ` +
+    `profile ${profile}, app ${appId}` +
     `${appId === SPACEWAR_APP_ID ? " (SPACEWAR TEST APP)" : ""}, version ${version}`,
 );
 run(WINDOWS ? "npx.cmd" : "npx", tauriArgs, APP_DIR);
@@ -306,7 +340,6 @@ run(WINDOWS ? "npx.cmd" : "npx", tauriArgs, APP_DIR);
 // ---------------------------------------------------------------------------
 
 if (standalone) {
-  renameForTheReleasePage();
   console.log(`✓ bundles → ${profileDir()}/bundle`);
   process.exit(0);
 }
@@ -317,11 +350,10 @@ mkdirSync(depot, { recursive: true });
 
 if (process.platform === "darwin") {
   // macOS keeps the executable buried in `Contents/MacOS` and its resources in
-  // `Contents/Resources`, so the whole .app is the unit that travels — the same
-  // thing electron-builder's `dir` target produces.
-  const app = join(profileDir(), "bundle", "macos", "Adas Trail.app");
+  // `Contents/Resources`, so the whole .app is the unit that travels.
+  const app = join(profileDir(), "bundle", "macos", `${productName}.app`);
   requireFile(app, "the macOS app bundle");
-  cpSync(app, join(depot, "Adas Trail.app"), { recursive: true });
+  cpSync(app, join(depot, `${productName}.app`), { recursive: true });
 } else {
   const executable = join(
     profileDir(),
@@ -354,51 +386,6 @@ if (process.platform === "darwin") {
 console.log(`✓ depot → ${depot}`);
 
 // ---------------------------------------------------------------------------
-
-/**
- * GIVE EVERY DOWNLOAD THE `-tauri` SUFFIX, and the suffix is the whole
- * mechanism rather than a decoration.
- *
- * Both shells package the same product at the same version for the same
- * platforms, so without it the release workflow's two jobs race to upload files
- * with colliding names and the Release ends up with whichever finished last.
- * Electron's are `adastrail-<version>-<os>-<arch>.<ext>`; these are
- * `adastrail-<version>-tauri-<os>-<arch>.<ext>`.
- *
- * That is also what makes the comparison real rather than a thought
- * experiment: both builds are downloadable from the same release page, so the
- * install-size and cold-start numbers the choice between them turns on can be
- * measured by anybody, from artifacts nobody staged. The suffix stays for
- * exactly as long as both wrappers exist — see docs/desktop-shells.md.
- *
- * Renamed AFTERWARDS rather than configured, because the bundler's own
- * `artifactName` is per-target and several of these targets do not honour one.
- */
-function renameForTheReleasePage() {
-  const bundles = join(profileDir(), "bundle");
-  if (!existsSync(bundles)) return;
-  for (const file of walk(bundles)) {
-    const name = basename(file);
-    // The version is already in every artifact's name; the suffix goes
-    // straight after it, which is where a reader looks for a variant.
-    const renamed = name.includes(`-${version}-tauri`)
-      ? null
-      : name.replace(`-${version}`, `-${version}-tauri`);
-    if (!renamed || renamed === name) continue;
-    renameSync(file, join(dirname(file), renamed));
-  }
-}
-
-/** Every file under a directory, depth first. */
-function walk(dir) {
-  const out = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const path = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...walk(path));
-    else out.push(path);
-  }
-  return out;
-}
 
 /**
  * NEVER UNSIGNED on macOS — see the bundle patch above. Named once so the

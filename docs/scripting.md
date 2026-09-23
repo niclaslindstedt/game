@@ -171,7 +171,7 @@ The absent half of the standard library is the security model:
 Everything else is Lua 5.4 as you know it, minus `goto` (refused at compile time
 rather than mis-parsed) and with one number type rather than the integer/float
 split — so a formula behaves identically in the browser, in the Node session
-server, in Electron and in the mobile shells.
+server, and in the desktop and mobile shells.
 
 ## When it goes wrong
 

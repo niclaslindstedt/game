@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! THE CONTAINMENT CHECK, which is the one thing in this crate an attacker
-//! would go at — the peer of `electron/tests/webroot_test.ts`.
+//! would go at.
 //!
 //! The URL path is attacker-influenced in principle (any link the page
 //! follows), and the webroot sits inside the player's install next to whatever

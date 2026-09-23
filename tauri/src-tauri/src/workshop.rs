@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! STEAM UGC — the seam's third file, and the only one in the mods feature that
-//! knows Steam exists. The effects half of [`adastrail_shell::workshop`], and
-//! the peer of `electron/src/workshop.ts`.
+//! knows Steam exists. The effects half of [`adastrail_shell::workshop`].
 //!
 //! Two directions, asymmetric on purpose: a SUBSCRIPTION is downloaded and
 //! unpacked by Steam and we only ask where it went, while a PUBLISH hands Steam

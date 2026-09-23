@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE SESSION SERVER'S ENTRY POINT — what Electron's `utilityProcess` forks,
-// and what the standalone dedicated server runs unchanged.
+// THE SESSION SERVER'S ENTRY POINT — what the desktop shell spawns, and what
+// the standalone dedicated server runs unchanged.
 //
-// **TWO ENTRIES, ONE SERVER, AND THE FORK IS THE ONLY THING THAT TELLS THEM
-// APART.** With a `parentPort` this process is the game's own session server,
-// driven down a control channel. Without one, nobody forked it — so it is a
-// person at a terminal, and it hands over to `dedicated.ts`. Everything that
+// **TWO ENTRIES, ONE SERVER, AND ONE FLAG TELLS THEM APART.** Started with
+// `--shell`, this process is the game's own session server, driven down a
+// control channel by the desktop shell. Without it, no shell started it — so
+// it is a person at a terminal, and it hands over to `dedicated.ts`. Everything that
 // makes a session (the simulation, the admission desk, the sockets, the router
 // mapping and the one fixed-timestep clock) is `host.ts`, used identically by
 // both, which is what makes "the dedicated server is the same file" true
 // rather than aspirational.
 //
 // It is deliberately thin. Everything interesting is in `session.ts`; this file
-// is the process's edges: the control channel in, the `MessagePort` that
-// carries snapshots out, and an orderly death.
+// is the process's edges: the control channel in, the snapshot channel that
+// carries frames out, and an orderly death.
 //
-// **WHY A UTILITY PROCESS AND NOT THE MAIN ONE** — three reasons, each enough
-// on its own. A 60 Hz simulation must not
-// compete with the main process's IPC, window, Workshop-compile and Steam
-// duties. The engine holds 36 process-global mutable bindings — the `BALANCE`
+// **WHY A PROCESS OF ITS OWN AND NOT THE SHELL'S** — three reasons, each
+// enough on its own. A 60 Hz simulation must not compete with the shell's
+// IPC, window, Workshop-compile and Steam duties. The engine holds 36 process-global mutable bindings — the `BALANCE`
 // tuning object, the six flags in `engine/game/flags.ts`, and every `activeXDefs`
 // catalog `registerDefs` swaps when a mod loads — none of it per-`GameState`,
 // so a process boundary is what stops one session's `/players 8`, another's mod
@@ -163,10 +162,9 @@ type ControlReply =
   | {
       kind: "ready";
       protocol: number;
-      /** WHERE THE PAGE MUST OPEN THE SNAPSHOT CHANNEL — present only in the
-       * SIDECAR entry, where there is no `MessagePort` to hand anybody and the
-       * page connects a loopback socket instead (`shell-host.ts`). The
-       * Electron entry transfers a port and never sets this. */
+      /** WHERE THE PAGE MUST OPEN THE SNAPSHOT CHANNEL — there is no
+       * `MessagePort` to hand anybody, so the page connects a loopback socket
+       * instead (`shell-host.ts`). */
       snapshot?: { port: number; token: string; path: string };
     }
   | { kind: "started"; levelId: string }
@@ -210,18 +208,6 @@ type ControlReply =
   | { kind: "stopped"; reason: string }
   | { kind: "error"; detail: string };
 
-/** The port the main process posts on and this process replies to. Typed
- * structurally: `electron`'s own types are not available in this tree (the
- * server is engine code compiled for Node, and pulling Electron's types into
- * it would make the dedicated-server build need Electron). */
-type ParentPort = {
-  on(
-    event: "message",
-    listener: (event: { data: unknown; ports?: unknown[] }) => void,
-  ): void;
-  postMessage(message: unknown): void;
-};
-
 /** The renderer's end of the snapshot channel, once it has been handed over. */
 type ClientPort = {
   postMessage(message: unknown, transfer?: unknown[]): void;
@@ -264,42 +250,28 @@ let admitted = false;
  */
 const resumeTickets = new Map<string, string>();
 
-const parent = (process as unknown as { parentPort?: ParentPort }).parentPort;
-
-/** The argv the two parentless entries read. */
+/** The argv both entries read. */
 const argv = process.argv.slice(2);
 
 /**
- * A SHELL SPAWNED US AS A PLAIN CHILD — the third entry, and the one the Tauri
- * desktop shell uses because it has no `utilityProcess` and no port transfer.
- * See `shell-host.ts` for the two pipes it puts in place of the one.
+ * THE DESKTOP SHELL SPAWNED US AS A CHILD — the game's own session server. See
+ * `shell-host.ts` for the two pipes it talks to us over.
  */
 const SHELL_FLAG = "--shell";
 
 /**
  * Where an unsolicited reply goes, set by whichever entry is live.
  *
- * A function rather than the parent port itself, because the sidecar entry has
- * no port — and because `post` is called from the session's own callbacks,
- * which must not learn which of the three shapes this process took.
+ * A function rather than a channel, because `post` is called from the
+ * session's own callbacks, which must not learn which shape this process took.
  */
 let upstream: ((event: ControlReply) => void) | null = null;
 
-if (parent) {
-  upstream = (event) => parent.postMessage(event);
-  parent.on("message", (event) => {
-    const port = event.ports?.[0] as ClientPort | undefined;
-    if (port) attachClient(port);
-    handleControl(event.data as ControlMessage, (reply) =>
-      parent.postMessage(reply),
-    );
-  });
-  parent.postMessage({ kind: "ready", protocol: PROTOCOL_VERSION });
-} else if (argv.includes(SHELL_FLAG)) {
+if (argv.includes(SHELL_FLAG)) {
   void startSidecar();
 } else {
-  // NO PARENT MEANS NOBODY FORKED US, so this is a person running the server
-  // from a terminal — the standalone dedicated server. It is the same process
+  // NO `--shell` MEANS NO SHELL STARTED US, so this is a person running the
+  // server from a terminal — the standalone dedicated server. It is the same process
   // over the same `host.ts`; what differs is only where the instructions come
   // from (a config file and a signal, rather than a control channel) and where
   // the log goes. Making it the same ENTRY as well as the same code is what
@@ -308,13 +280,12 @@ if (parent) {
 }
 
 /**
- * THE SIDECAR ENTRY — two pipes where Electron has one, and nothing else
- * different.
+ * THE SIDECAR ENTRY.
  *
  * The control channel is this process's own stdio and the snapshot channel is a
  * loopback socket the PAGE opens; `shell-host.ts` owns both and the argument
  * for them. Everything below this line — `handleControl`, `attachClient`, the
- * session, the transports — is the same code the forked entry runs.
+ * session, the transports — is the same code the dedicated server runs.
  *
  * A bind that fails is FATAL rather than degraded: the shell is waiting on the
  * ready line to tell the page where to connect, and a session whose frames can
@@ -326,9 +297,8 @@ async function startSidecar(): Promise<void> {
       onControl: (message, reply) =>
         handleControl(message as ControlMessage, reply),
       onClient: (port) => attachClient(port as ClientPort),
-      // The shell went away. Electron reaps its utility process in
-      // `before-quit`; a spawned child has to reap itself, and stdin's EOF is
-      // the signal it has.
+      // The shell went away. A spawned child has to reap itself, and stdin's
+      // EOF is the signal it has.
       onOrphaned: () => {
         stop("orphaned");
         process.exit(0);
@@ -392,8 +362,8 @@ function joinHost(): void {
 }
 
 /** Send something nobody asked for — an outbound relayed packet, an invite
- * request. The request/reply queue in `electron/src/net.ts` matches replies to
- * waiters by ORDER, so an unsolicited message must never wear a kind that
+ * request. The shell's request/reply queue (`tauri/src-tauri/src/net.rs`) matches
+ * replies to waiters by ORDER, so an unsolicited message must never wear a kind that
  * anything is waiting on. */
 function post(event: ControlReply): void {
   upstream?.(event);
@@ -694,8 +664,7 @@ function stop(reason: string): void {
   steamOpen = false;
 }
 
-/** Monotonic ms. `performance.now()` where it exists (it does in Electron's
- * Node and in Node 16+), so a system clock change cannot make a tick take a
+/** Monotonic ms. `performance.now()` where it exists (it does in Node 16+), so a system clock change cannot make a tick take a
  * negative amount of time. */
 function now(): number {
   return typeof performance !== "undefined" ? performance.now() : Date.now();

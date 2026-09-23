@@ -3,8 +3,7 @@
 <!--
   SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 
-  Extra Info.plist keys, merged into the generated one by the Tauri bundler —
-  the peer of `extendInfo` in electron/electron-builder.config.cjs.
+  Extra Info.plist keys, merged into the generated one by the Tauri bundler.
 
   There is exactly one, and it is stamped into EVERY macOS build rather than
   only into one carrying the voice capability. That is not belt-and-braces: on
