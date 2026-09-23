@@ -246,45 +246,45 @@ manages its own dependencies.
 
 ## Layout
 
-| File                              | Purpose                                                                               |
-| --------------------------------- | ------------------------------------------------------------------------------------- |
-| `App.tsx`                         | The WebView shell, message bridge, loading/offline states.                            |
-| `src/local-server.ts`             | Unzips the bundled site on first launch and serves it over a local HTTP server.       |
-| `src/config.ts`                   | Bundled by default; the optional `EXPO_PUBLIC_GAME_URL` remote override.              |
-| `src/injected.ts`                 | JS injected into the page: the `navigator.vibrate` bridge + viewport hardening.       |
-| `src/native-haptics.ts`           | Translates Web-Vibration patterns → Taptic Engine impacts.                            |
-| `src/store-purchases.ts`          | The coin store's native half: StoreKit / Play Billing via expo-iap.                   |
-| `src/cloud-save.ts`               | Cloud save's native half: the save blob in and out of the platform cloud.             |
-| `src/cloud-provider.ts`           | The cloud platform seam — Apple today, Google Play behind the same interface.         |
-| `src/cloud-icloud.ts`             | The Apple provider: iCloud key-value storage (name via `game-center.ts`).             |
-| `modules/cloud-save/`             | Local Expo module (Swift): `NSUbiquitousKeyValueStore`.                               |
-| `src/achievements.ts`             | Achievements' native half: badge progress out to the platform's service.              |
-| `src/achievements-provider.ts`    | The achievements platform seam — Game Center today, Play Games behind it.             |
-| `src/achievements-gamecenter.ts`  | The Apple provider: badges reported to Game Center.                                   |
-| `src/leaderboards.ts`             | Leaderboards' native half: board scores out to the platform's service.                |
-| `src/leaderboards-provider.ts`    | The leaderboards platform seam — Game Center today, Play Games behind it.             |
-| `src/leaderboards-gamecenter.ts`  | The Apple provider: scores submitted to Game Center.                                  |
-| `src/game-center.ts`              | The shell's one handle on Game Center — sign-in memoized for all three features.      |
-| `modules/game-center/`            | Local Expo module (Swift): `GKLocalPlayer` + `GKAchievement` + `GKLeaderboard`.       |
-| `src/device-settings.ts`          | The device content switches' native half — pushed to the page, never asked for.       |
-| `src/device-settings-provider.ts` | The device-settings platform seam — Apple today, Android behind the same interface.   |
-| `src/device-settings-ios.ts`      | The Apple provider: the Settings.bundle switches, read out of `UserDefaults`.         |
-| `modules/device-settings/`        | Local Expo module (Swift): `UserDefaults` + its change notification.                  |
-| `plugins/with-settings-bundle.js` | Prebuild plugin: writes `ios/Settings.bundle` and adds it to the Xcode target.        |
-| `scripts/bundle-web.mjs`          | Builds the website and packs `dist/` into `assets/webroot.zip`.                       |
-| `metro.config.js`                 | Teaches Metro that `.zip` is a bundled asset.                                         |
-| `app.config.js`                   | Dynamic Expo config; reads identity from `game.config.json`, pins the EAS project id. |
-| `eas.json`                        | EAS build/submit profiles.                                                            |
+| File                              | Purpose                                                                             |
+| --------------------------------- | ----------------------------------------------------------------------------------- |
+| `App.tsx`                         | The WebView shell, message bridge, loading/offline states.                          |
+| `src/local-server.ts`             | Unzips the bundled site on first launch and serves it over a local HTTP server.     |
+| `src/config.ts`                   | Bundled by default; the optional `EXPO_PUBLIC_GAME_URL` remote override.            |
+| `src/injected.ts`                 | JS injected into the page: the `navigator.vibrate` bridge + viewport hardening.     |
+| `src/native-haptics.ts`           | Translates Web-Vibration patterns → Taptic Engine impacts.                          |
+| `src/store-purchases.ts`          | The coin store's native half: StoreKit / Play Billing via expo-iap.                 |
+| `src/cloud-save.ts`               | Cloud save's native half: the save blob in and out of the platform cloud.           |
+| `src/cloud-provider.ts`           | The cloud platform seam — Apple today, Google Play behind the same interface.       |
+| `src/cloud-icloud.ts`             | The Apple provider: iCloud key-value storage (name via `game-center.ts`).           |
+| `modules/cloud-save/`             | Local Expo module (Swift): `NSUbiquitousKeyValueStore`.                             |
+| `src/achievements.ts`             | Achievements' native half: badge progress out to the platform's service.            |
+| `src/achievements-provider.ts`    | The achievements platform seam — Game Center today, Play Games behind it.           |
+| `src/achievements-gamecenter.ts`  | The Apple provider: badges reported to Game Center.                                 |
+| `src/leaderboards.ts`             | Leaderboards' native half: board scores out to the platform's service.              |
+| `src/leaderboards-provider.ts`    | The leaderboards platform seam — Game Center today, Play Games behind it.           |
+| `src/leaderboards-gamecenter.ts`  | The Apple provider: scores submitted to Game Center.                                |
+| `src/game-center.ts`              | The shell's one handle on Game Center — sign-in memoized for all three features.    |
+| `modules/game-center/`            | Local Expo module (Swift): `GKLocalPlayer` + `GKAchievement` + `GKLeaderboard`.     |
+| `src/device-settings.ts`          | The device content switches' native half — pushed to the page, never asked for.     |
+| `src/device-settings-provider.ts` | The device-settings platform seam — Apple today, Android behind the same interface. |
+| `src/device-settings-ios.ts`      | The Apple provider: the Settings.bundle switches, read out of `UserDefaults`.       |
+| `modules/device-settings/`        | Local Expo module (Swift): `UserDefaults` + its change notification.                |
+| `plugins/with-settings-bundle.js` | Prebuild plugin: writes `ios/Settings.bundle` and adds it to the Xcode target.      |
+| `scripts/bundle-web.mjs`          | Builds the website and packs `dist/` into `assets/webroot.zip`.                     |
+| `metro.config.js`                 | Teaches Metro that `.zip` is a bundled asset.                                       |
+| `app.config.js`                   | Dynamic Expo config; reads identity from `game.config.json` and the environment.    |
+| `eas.json`                        | EAS build/submit profiles.                                                          |
 
 ## Prerequisites
 
 - Node 24 (repo `.nvmrc`).
-- An [Expo account](https://expo.dev) with access to the linked project
-  (`180cff05-a398-48e3-ae63-a9b0bd408321`).
+- An [Expo account](https://expo.dev) with access to the EAS project.
 - `npm install --global eas-cli`, then `eas login`.
 
-The project is already linked (its id is pinned in `app.config.js`). If you need
-to re-link it interactively, run `eas init --id 180cff05-a398-48e3-ae63-a9b0bd408321`.
+The project id is not committed: `app.config.js` reads it from `EAS_PROJECT_ID`
+(a repository secret for CI, and an EAS environment variable on the project).
+Export it before running `eas` locally.
 
 ## Bundling
 

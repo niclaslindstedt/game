@@ -6,17 +6,17 @@
 // tracks the game version in the root package.json so the app and site never
 // disagree; store build numbers are auto-incremented by EAS (see eas.json).
 //
-// `eas init --id <projectId>` normally writes extra.eas.projectId for you; we
-// pin it here so the project is linked without an interactive login.
+// `eas init` normally writes extra.eas.projectId for you; this config is
+// dynamic, so the id arrives as EAS_PROJECT_ID instead (a repository secret,
+// and an EAS environment variable on the project).
 
 const identity = require("../game.config.json");
 const { version } = require("../package.json");
 
-// The Expo project this app builds under (from `eas init --id ...`). Read from
-// EAS_PROJECT_ID like the rest of the fleet, falling back to the project this
-// repo was first linked to.
-const EAS_PROJECT_ID =
-  process.env.EAS_PROJECT_ID?.trim() || "180cff05-a398-48e3-ae63-a9b0bd408321";
+// The Expo project this app builds under. Read from EAS_PROJECT_ID like the
+// rest of the fleet, with no committed fallback: an id pinned here outlives the
+// project it names, and `eas init` then fails on it instead of creating one.
+const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID?.trim() ?? "";
 
 // Reverse-DNS app id on the PUBLISHER's domain: Agilator AB is the entity that
 // holds the store agreements, the bank account and the trader registration, so
@@ -157,7 +157,7 @@ module.exports = () => ({
       // To point a debug build at a deployed slot, set EXPO_PUBLIC_GAME_URL at
       // build time; `src/config.ts` reads that env var directly, so it needs no
       // entry here.
-      eas: { projectId: EAS_PROJECT_ID },
+      ...(EAS_PROJECT_ID ? { eas: { projectId: EAS_PROJECT_ID } } : {}),
     },
   },
 });
