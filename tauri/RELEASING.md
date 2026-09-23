@@ -88,6 +88,33 @@ same wording as a corrupted download. The default is an ad-hoc signature, which
 satisfies the kernel; set `APPLE_SIGNING_IDENTITY` to a Developer ID for a real
 release, with notarization on top.
 
+### Signing and notarizing in CI
+
+`release.yml` and a dispatched `desktop-tauri.yml` sign the macOS app from a
+certificate, through `.github/actions/apple-signing`: it imports the `.p12`
+into a throwaway keychain, reads the identity out of it, and exports
+`APPLE_SIGNING_IDENTITY` for `scripts/package.mjs`. The bundler then notarizes
+and staples, because the Apple ID environment is set. Six repository
+**secrets**:
+
+| Secret                        | What it is                                                                          |
+| ----------------------------- | ----------------------------------------------------------------------------------- |
+| `MAC_CSC_LINK`                | the Developer ID Application certificate, a base64 `.p12` (`base64 -i c.p12`)       |
+| `MAC_CSC_KEY_PASSWORD`        | the password the `.p12` was exported with                                           |
+| `MAC_SIGN_IDENTITY`           | optional — `Developer ID Application: Name (TEAMID)`; read from the cert when unset |
+| `APPLE_ID`                    | the Apple Account that notarizes                                                    |
+| `APPLE_APP_SPECIFIC_PASSWORD` | an app-specific password for it (appleid.apple.com)                                 |
+| `APPLE_TEAM_ID`               | the ten-character team id                                                           |
+
+**Without them the build is exactly what it was**: no certificate means no
+identity is exported — `MAC_SIGN_IDENTITY` alone is ignored, since a runner
+has no key for it — so the app is ad-hoc signed and not notarized, and a fork
+with no Apple account still packages. The release notes say which one shipped:
+the "notarized" wording appears only when `MAC_CSC_LINK` and `APPLE_ID` are
+both set. The bundled Node runtime is signed with the same identity, and under
+a real one with the hardened runtime and the JIT entitlements in
+`src-tauri/entitlements.node.plist` that V8 needs.
+
 ### What the five capability switches do
 
 `make desktop-steam` turns all five on; `make desktop-dist` turns
@@ -168,6 +195,6 @@ Collected in one place, because every entry produces a game that starts:
   playing perfectly otherwise. Refused by the packager in §1.
 - **An ad-hoc macOS signature shipped as a release.** Runs everywhere the
   developer tested and is refused by Gatekeeper on a machine that downloaded it.
-  Set `APPLE_SIGNING_IDENTITY`.
+  Set `APPLE_SIGNING_IDENTITY` — in CI, the `MAC_CSC_LINK` secrets in §1.
 - **A depot built for the wrong target.** The redistributable check in §2 is
   what catches this, because the library is the file that does not travel.

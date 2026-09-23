@@ -330,6 +330,8 @@ it is the whole `.app`, which keeps its resources inside itself.
 
 **macOS is never signed with nothing** — Apple Silicon refuses to execute
 unsigned arm64 code at all, so the default is an ad-hoc signature and
-`APPLE_SIGNING_IDENTITY` is what a release sets instead.
+`APPLE_SIGNING_IDENTITY` is what a release sets instead — in CI, from the
+Developer ID certificate in the `MAC_CSC_LINK` secret, notarized with
+`APPLE_ID` (the six secrets are listed in `RELEASING.md` §1).
 → [`RELEASING.md`](RELEASING.md) §1, which also has the whole release procedure
 and the checks that guard a depot upload.

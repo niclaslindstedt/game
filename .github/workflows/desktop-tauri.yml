@@ -195,10 +195,14 @@ jobs:
       GIS_ENABLE_UPNP: "1"
       GIS_ENABLE_VOICE: "1"
       GIS_ENABLE_LICENSED: "1"
-      # macOS signing, exactly as release.yml passes it: an absent secret means
-      # an ad-hoc signature, which is the minimum an arm64 app needs to run at
-      # all.
-      APPLE_SIGNING_IDENTITY: ${{ secrets.MAC_SIGN_IDENTITY }}
+      # macOS notarization, exactly as release.yml passes it. The bundler acts
+      # on these only once the `Apple signing` step below has imported a
+      # Developer ID certificate — which makes a dispatch here a rehearsal of
+      # the release's macOS half, the one way to find out a certificate or an
+      # app-specific password is wrong WITHOUT tagging a version first.
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - name: Skip unselected platform
         if: inputs.platform != 'all' && inputs.platform != matrix.target
@@ -230,6 +234,17 @@ jobs:
       - name: Install the workspace
         if: inputs.platform == 'all' || inputs.platform == matrix.target
         run: npm ci
+
+      # macOS signing, exactly as release.yml does it: no certificate secret
+      # means an ad-hoc signature, which is the minimum an arm64 app needs to
+      # run at all.
+      - name: Apple signing
+        if: matrix.target == 'macos' && (inputs.platform == 'all' || inputs.platform == 'macos')
+        uses: ./.github/actions/apple-signing
+        with:
+          certificate: ${{ secrets.MAC_CSC_LINK }}
+          certificate-password: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          identity: ${{ secrets.MAC_SIGN_IDENTITY }}
 
       - name: Package
         if: inputs.platform == 'all' || inputs.platform == matrix.target

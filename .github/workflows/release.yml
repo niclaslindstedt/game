@@ -132,10 +132,14 @@ jobs:
         run: node scripts/release/collate-changelog.mjs "${{ steps.bump.outputs.version }}"
 
       # The notes are the changelog section, plus a standing footer about the
-      # downloads. The macOS half of that footer is not decoration: the app is
-      # signed but not notarized (see tauri/RELEASING.md), so Gatekeeper asks
-      # about it once, and a player with no answer to that prompt has no game.
+      # downloads. The macOS half of that footer is not decoration: without a
+      # Developer ID certificate the app is ad-hoc signed and not notarized
+      # (see tauri/RELEASING.md), so Gatekeeper asks about it once, and a
+      # player with no answer to that prompt has no game. NOTARIZED is the
+      # same condition the `desktop` job's signing turns on.
       - name: Extract release-notes body
+        env:
+          NOTARIZED: ${{ secrets.MAC_CSC_LINK != '' && secrets.APPLE_ID != '' }}
         run: |
           node scripts/release/extract-section.mjs "${{ steps.bump.outputs.version }}" > .release-notes.md
           cat >> .release-notes.md <<'NOTES'
@@ -147,12 +151,23 @@ jobs:
           Pick the one for your machine — the `.exe` installer on Windows,
           the `.dmg` on macOS (Apple Silicon), the `.AppImage` or the `.deb`
           on Linux.
+          NOTES
+
+          if [ "$NOTARIZED" = "true" ]; then
+            cat >> .release-notes.md <<'NOTES'
+
+          **macOS:** signed and notarized by Apple — it opens like any other
+          app.
+          NOTES
+          else
+            cat >> .release-notes.md <<'NOTES'
 
           **macOS:** the app is signed but not notarized, so the first launch
           is refused. Open **System Settings → Privacy & Security**, scroll to
           the message about Ada's Trail and choose **Open Anyway**. macOS
           remembers after that.
           NOTES
+          fi
 
       - name: make build
         run: make build
@@ -246,11 +261,14 @@ jobs:
       # app id only if one is configured — and `--allow-placeholder` is what
       # lets a repo with no Steam app still produce downloads.
       GIS_STEAM_APP_ID: ${{ vars.STEAM_APP_ID }}
-      # NEVER UNSIGNED on macOS: Apple Silicon refuses to execute unsigned
-      # arm64 code and reports it to the player as "the app is damaged". An
-      # absent secret means the ad-hoc signature `scripts/package.mjs` falls
-      # back to — the app runs, and the player answers one Gatekeeper prompt.
-      APPLE_SIGNING_IDENTITY: ${{ secrets.MAC_SIGN_IDENTITY }}
+      # NOTARIZATION. The bundler acts on these three only once the app is
+      # signed with a real Developer ID (the `Apple signing` step below), and
+      # ignores them otherwise — so an unconfigured repo still packages, it
+      # just packages the ad-hoc build. `APPLE_PASSWORD` is the bundler's
+      # name for an app-specific password.
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -274,6 +292,20 @@ jobs:
       # The website build and the session server both live in the root
       # workspace; the shell carries their output.
       - run: npm ci
+
+      # NEVER UNSIGNED on macOS: Apple Silicon refuses to execute unsigned
+      # arm64 code and reports it to the player as "the app is damaged". This
+      # step turns `scripts/package.mjs`'s ad-hoc fallback into a real
+      # Developer ID signature, and with it unlocks the notarization the env
+      # above configures. With no certificate secret it is a no-op with a
+      # warning, and the app ships ad hoc — the player answers one prompt.
+      - name: Apple signing
+        if: matrix.target == 'macos'
+        uses: ./.github/actions/apple-signing
+        with:
+          certificate: ${{ secrets.MAC_CSC_LINK }}
+          certificate-password: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          identity: ${{ secrets.MAC_SIGN_IDENTITY }}
 
       - name: Package
         shell: bash

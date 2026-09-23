@@ -252,12 +252,27 @@ if (WANTS_SESSIONS || WANTS_MODS) {
   // macOS refuses to EXECUTE an unsigned arm64 binary, and a nested one inside
   // a signed .app has to carry its own signature — the bundle's does not cover
   // it. Signed here, before the bundler runs, so whatever it does afterwards
-  // the runtime is already valid.
+  // the runtime is already valid. With a real Developer ID the notary service
+  // also wants what an ad-hoc signature cannot carry: the hardened runtime and
+  // a secure timestamp — and, because re-signing drops the entitlements Node
+  // shipped with, the JIT ones V8 needs to run at all under that runtime
+  // (`src-tauri/entitlements.node.plist`).
   if (MACOS) {
+    const signer = macIdentity();
+    const signArgs =
+      signer === "-"
+        ? ["--timestamp=none"]
+        : [
+            "--timestamp",
+            "--options",
+            "runtime",
+            "--entitlements",
+            join(APP_DIR, "src-tauri", "entitlements.node.plist"),
+          ];
     try {
       execFileSync(
         "codesign",
-        ["--force", "--sign", macIdentity(), "--timestamp=none", runtime],
+        ["--force", "--sign", signer, ...signArgs, runtime],
         { stdio: "inherit" },
       );
     } catch (err) {
@@ -392,7 +407,9 @@ console.log(`✓ depot → ${depot}`);
  * nested Node runtime and the app itself carry the same signature.
  */
 function macIdentity() {
-  return process.env.APPLE_SIGNING_IDENTITY ?? "-";
+  // `||`, not `??`: a workflow that maps an absent secret passes "", which is
+  // no identity at all.
+  return process.env.APPLE_SIGNING_IDENTITY || "-";
 }
 
 /** Where cargo puts a release build for this target. */
