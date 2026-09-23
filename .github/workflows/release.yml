@@ -260,7 +260,7 @@ jobs:
       # A download is not the Steam edition, so it is packaged against the real
       # app id only if one is configured — and `--allow-placeholder` is what
       # lets a repo with no Steam app still produce downloads.
-      GIS_STEAM_APP_ID: ${{ vars.STEAM_APP_ID }}
+      GIS_STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
       # NOTARIZATION. The bundler acts on these three only once the app is
       # signed with a real Developer ID (the `Apple signing` step below), and
       # ignores them otherwise — so an unconfigured repo still packages, it

@@ -186,7 +186,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       # The real binary must never be built against Valve's shared test app.
-      GIS_STEAM_APP_ID: ${{ vars.STEAM_APP_ID }}
+      GIS_STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
       # A depot build is the full product: sessions, the Workshop, the router
       # mapping the HOST screen's ROUTER row reports on, and VOICE CHAT.
       GIS_STAMP_CAPABILITIES: "1"
@@ -255,7 +255,7 @@ jobs:
         shell: bash
         run: |
           if [ -z "${GIS_STEAM_APP_ID}" ] || [ "${GIS_STEAM_APP_ID}" = "480" ]; then
-            echo "::warning::Built against Spacewar (480). Set the STEAM_APP_ID repository variable before shipping this to a depot."
+            echo "::warning::Built against Spacewar (480). Set the STEAM_APP_ID repository secret before shipping this to a depot."
           fi
 
       # THE DEPOT and THE BUNDLES land in different places, and both are worth

@@ -2916,7 +2916,7 @@ the navigation guard on the desktop
 website, where the row is a `target="_blank"` anchor: whatever the surface, a
 run lives in the game's document, and steering that document at a chat invite
 would throw the run away. The address itself is not in the source — it is the
-`COMMUNITY_URL` repo variable (`docs/configuration.md`), because invites expire,
+`COMMUNITY_URL` repo secret (`docs/configuration.md`), because invites expire,
 and a build never given one simply does not offer the row.
 
 ### The library's two picture surfaces

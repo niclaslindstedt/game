@@ -158,7 +158,7 @@ export function buildExtrasMenu(ctx: MenuContext): MenuEntry[] {
       // `onShouldStartLoadWithRequest`).
       //
       // ABSENT when the build was given no address (see `__COMMUNITY_URL__`).
-      // The invite lives in a repo variable because those links expire and get
+      // The invite lives in a repo secret because those links expire and get
       // spammed, so it has to be rotatable without a commit — and a build that
       // was never told where the players are has nowhere to send them. Absent
       // beats a row that leads to a dead link.

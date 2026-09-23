@@ -645,7 +645,7 @@ describe("the title menu tree", () => {
     // Not a click handler assigning `location`: an anchor is what both store
     // shells intercept to hand the URL to the player's own browser, and
     // `external` is what keeps a run in this document alive through the trip.
-    // The address is the build's (`__COMMUNITY_URL__` — a repo variable in
+    // The address is the build's (`__COMMUNITY_URL__` — a repo secret in
     // production, a stand-in here; see vitest.config.ts), which is why this
     // asserts the row's SHAPE rather than a hardcoded server.
     const row = buildMenu("extras", ctxFor()).find(

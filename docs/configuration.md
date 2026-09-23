@@ -490,13 +490,13 @@ to the committed default key. Set the secret to rotate the key.
 **`SUPPORT_EMAIL`** — read by `pwa/vite.config.ts` (build-time). The support
 address the contact page and the privacy policy print, and the one App Store
 Connect lists as the app's support contact. Kept in the `SUPPORT_EMAIL` repo
-VARIABLE rather than the source so it can change without a commit and isn't
+SECRET rather than the source so it can change without a commit and isn't
 sitting in a public tree for scrapers. A build without it prints a visible
 placeholder rather than a dead link.
 
 **`COMMUNITY_URL`** — read by `pwa/vite.config.ts` (build-time). Where EXTRAS ->
 COMMUNITY sends a player: the chat server the players keep. Kept in the
-`COMMUNITY_URL` repo VARIABLE rather than the source because chat invites expire
+`COMMUNITY_URL` repo SECRET rather than the source because chat invites expire
 and a leaked one gets spammed, so it has to be rotatable without a commit. A
 build without it does not offer the row at all — unlike the support address, a
 destination is better absent than dead. Both store shells hand the link to the

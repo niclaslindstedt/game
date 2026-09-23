@@ -140,7 +140,7 @@ export default defineConfig({
     __BUILD_COMMIT_URL__: JSON.stringify(commitUrl),
     __DEV_TOOLS__: JSON.stringify(devTools),
     // The support address printed by the contact page and the privacy policy.
-    // Supplied by the `SUPPORT_EMAIL` repo variable through the Pages workflow
+    // Supplied by the `SUPPORT_EMAIL` repo secret through the Pages workflow
     // rather than hardcoded, so it can change without a commit and isn't left
     // in a public tree for scrapers. The placeholder makes an unset variable
     // obvious on the page instead of silently shipping a dead link.
@@ -148,7 +148,7 @@ export default defineConfig({
       process.env.SUPPORT_EMAIL ?? "support-address-not-configured",
     ),
     // Where the EXTRAS -> COMMUNITY row sends a player: the chat server the
-    // players keep. Supplied by the `COMMUNITY_URL` repo variable through the
+    // players keep. Supplied by the `COMMUNITY_URL` repo secret through the
     // Pages workflow rather than hardcoded, so the invite can be rotated (they
     // expire, and a leaked one gets spammed) without a commit.
     //

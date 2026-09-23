@@ -173,24 +173,26 @@ jobs:
     env:
       # The support address the contact page and the privacy policy print, and
       # the one App Store Connect lists as the app's support contact. Kept in a
-      # repo VARIABLE rather than the source so it can be changed without a
-      # commit and isn't sitting in a public tree for scrapers. Set it under
-      # Settings -> Secrets and variables -> Actions -> Variables. A build
+      # repo SECRET rather than the source so it can be changed without a
+      # commit and isn't sitting in a public tree for scrapers — every setting
+      # this repo takes is a secret, none is a variable. Set it under
+      # Settings -> Secrets and variables -> Actions -> Secrets. A build
       # without it falls back to a placeholder (see pwa/vite.config.ts).
-      SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
+      SUPPORT_EMAIL: ${{ secrets.SUPPORT_EMAIL }}
       # Signs exported character archives so a hand-edited save fails to
       # re-import (see pwa/src/game/character-transfer.ts). Optional — an empty
       # secret falls back to the committed default key baked into the bundle.
       # Set the `CHARACTER_SIGNING_KEY` repo secret to rotate it.
       VITE_CHARACTER_SIGNING_KEY: ${{ secrets.CHARACTER_SIGNING_KEY }}
       # Where EXTRAS -> COMMUNITY sends a player: the chat server the players
-      # keep. A repo VARIABLE rather than a secret — the invite is printed on
-      # the page for anyone to click, so there is nothing to hide — and not a
+      # keep. A repo SECRET — not because the invite is hidden (it is printed
+      # on the page for anyone to click) but because every setting this repo
+      # takes is a secret, so there is one place to look — and not a
       # hardcoded constant, because chat invites expire and a leaked one gets
       # spammed, so it has to be rotatable without a commit. Set it under
-      # Settings -> Secrets and variables -> Actions -> Variables. A build
+      # Settings -> Secrets and variables -> Actions -> Secrets. A build
       # without it simply does not offer the row (see pwa/vite.config.ts).
-      COMMUNITY_URL: ${{ vars.COMMUNITY_URL }}
+      COMMUNITY_URL: ${{ secrets.COMMUNITY_URL }}
     steps:
       # THIS SLOT'S OWN REF, checked out directly. `fetch-depth: 0` because
       # the library's `lastModified` (and the sitemap's `lastmod` with it) is
