@@ -14,7 +14,7 @@ repo root before any build so that bundle exists.
 Store identities are wired in [`app.config.js`](app.config.js):
 
 - iOS `ios.bundleIdentifier` and Android `android.package` — both from
-  `APP_BUNDLE_ID`, a repository variable and an EAS environment variable. Unset,
+  `APP_BUNDLE_ID`, a repository secret and an EAS environment variable. Unset,
   a build runs under `dev.local.adastrail`; a `production` profile without it
   fails rather than shipping under the development id.
 

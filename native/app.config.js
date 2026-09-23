@@ -25,7 +25,7 @@ const EAS_PROJECT_ID =
 // UNCHANGEABLE once an app record ships under it.
 // A store listing's identifier is a fact about a deployment, not about the
 // code, so it arrives as a build variable and is not committed: APP_BUNDLE_ID,
-// a repository variable and an EAS environment variable, named identically in
+// a repository secret and an EAS environment variable, named identically in
 // every app in the fleet so a secret is pasted rather than translated. Unset,
 // a checkout builds under the development id below and runs; a `production`
 // profile without it throws rather than shipping a binary under that id.
@@ -45,7 +45,7 @@ if (process.env.EAS_BUILD_PROFILE === "production") {
       throw new Error(
         `${key} is not set. A production build needs it — set it as an EAS ` +
           `environment variable on the EAS project (and as a repository ` +
-          `variable for the build workflow). See native/README.md.`,
+          `secret for the build workflow). See native/README.md.`,
       );
     }
   }
