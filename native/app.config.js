@@ -12,8 +12,11 @@
 const identity = require("../game.config.json");
 const { version } = require("../package.json");
 
-// The Expo project this app builds under (from `eas init --id ...`).
-const EAS_PROJECT_ID = "180cff05-a398-48e3-ae63-a9b0bd408321";
+// The Expo project this app builds under (from `eas init --id ...`). Read from
+// EAS_PROJECT_ID like the rest of the fleet, falling back to the project this
+// repo was first linked to.
+const EAS_PROJECT_ID =
+  process.env.EAS_PROJECT_ID?.trim() || "180cff05-a398-48e3-ae63-a9b0bd408321";
 
 // Reverse-DNS app id on the PUBLISHER's domain: Agilator AB is the entity that
 // holds the store agreements, the bank account and the trader registration, so
@@ -22,7 +25,7 @@ const EAS_PROJECT_ID = "180cff05-a398-48e3-ae63-a9b0bd408321";
 // UNCHANGEABLE once an app record ships under it.
 // A store listing's identifier is a fact about a deployment, not about the
 // code, so it arrives as a build variable and is not committed: APP_BUNDLE_ID,
-// a repository secret and an EAS environment variable, named identically in
+// a repository variable and an EAS environment variable, named identically in
 // every app in the fleet so a secret is pasted rather than translated. Unset,
 // a checkout builds under the development id below and runs; a `production`
 // profile without it throws rather than shipping a binary under that id.
@@ -37,12 +40,12 @@ const BUNDLE_ID = process.env.APP_BUNDLE_ID?.trim() || DEV_BUNDLE_ID;
 const DISPLAY_NAME = process.env.APP_DISPLAY_NAME?.trim() || null;
 
 if (process.env.EAS_BUILD_PROFILE === "production") {
-  for (const key of ["APP_BUNDLE_ID", "EAS_PROJECT_ID"]) {
+  for (const key of ["APP_BUNDLE_ID"]) {
     if (!process.env[key]?.trim()) {
       throw new Error(
         `${key} is not set. A production build needs it — set it as an EAS ` +
           `environment variable on the EAS project (and as a repository ` +
-          `secret for the build workflow). See native/README.md.`,
+          `variable for the build workflow). See native/README.md.`,
       );
     }
   }

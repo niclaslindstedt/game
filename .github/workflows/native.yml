@@ -69,6 +69,10 @@ jobs:
         run: npm run bundle -- --profile "${{ inputs.profile }}"
 
       - name: EAS build
+        env:
+          APP_DISPLAY_NAME: ${{ vars.APP_DISPLAY_NAME }}
+          APP_BUNDLE_ID: ${{ vars.APP_BUNDLE_ID }}
+          EAS_PROJECT_ID: ${{ vars.EAS_PROJECT_ID }}
         run: |
           eas build \
             --non-interactive \
