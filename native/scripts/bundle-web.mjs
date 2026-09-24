@@ -32,8 +32,8 @@
 //   node scripts/bundle-web.mjs --profile production   # strip developer tooling
 //
 // The zip is a build artifact (gitignored). Generate it before `eas build`
-// (the App Build workflow and the `bundle` npm script do this for you); a
-// `.easignore` keeps it in the EAS upload despite the .gitignore entry.
+// (the App Build workflow and the `bundle` npm script do this for you); the
+// root `.easignore` keeps it in the EAS upload despite the .gitignore entry.
 
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";

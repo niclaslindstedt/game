@@ -302,8 +302,8 @@ The whole website is shipped inside the app and served locally:
    removed.
 
 2. The zip rides in the app bundle (`assetBundlePatterns`). It is a build
-   artifact — **gitignored**, but a `.easignore` re-includes it in the EAS
-   upload, so it must exist before a build (the `build:*` scripts and the CI
+   artifact — **gitignored**, but the root `.easignore` re-includes it in the
+   EAS upload, so it must exist before a build (the `build:*` scripts and the CI
    workflow run `npm run bundle` for you).
 3. On first launch (and after each app update) `src/local-server.ts` unzips it
    into the document directory and starts a local HTTP server

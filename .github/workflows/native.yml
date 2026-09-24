@@ -56,7 +56,7 @@ jobs:
 
       # The app bundles the website on-device (assets/webroot.zip). Build it
       # here — root deps for the website build, then the app's bundle script
-      # (vite build + zip). The .easignore keeps the generated zip in the
+      # (vite build + zip). The root .easignore keeps the generated zip in the
       # upload despite .gitignore.
       - name: Install root + website dependencies
         working-directory: ${{ github.workspace }}

@@ -1,0 +1,107 @@
+# What `eas build` leaves out of the upload. EAS reads this file from the
+# REPOSITORY ROOT only — a native/.easignore is never consulted — and when it
+# exists it replaces every .gitignore in the tree. So the rules below are the
+# .gitignore files' own, with one deliberate difference:
+#
+#   native/assets/webroot.zip is NOT ignored. It is the packed web app — the
+#   game itself — built by `npm run bundle` (in CI by native.yml, with the
+#   build profile). It is gitignored as build output; left out of the upload,
+#   the EAS worker fails at "Unable to resolve module ../assets/webroot.zip".
+#
+# /native/ios/ and /native/android/ (expo prebuild output, regenerated on the
+# worker) keep their leading slash, so the hand-written modules/*/ios
+# (cloud-save, device-settings, game-center) still go up.
+#
+# Keep this in step with the .gitignore files when they change. Check with
+#   (cd native && npx eas-cli build:inspect -p ios -s archive -o <dir>)
+# that the archive holds native/assets/webroot.zip.
+
+# .gitignore
+.DS_Store
+*.log
+*.tmp
+.env
+.env.local
+.vscode/
+.idea/
+*.swp
+.coverage/
+coverage/
+pwa/node_modules/
+pwa/dist/
+pwa/src/generated/
+engine/generated/
+/src/generated/
+pwa/src/game/assets/
+pwa/assets-preview/
+docs/_build/
+/server-src/
+/server-dist/
+tauri/webroot/
+tauri/target/
+tauri/src-tauri/icons/
+tauri/src-tauri/gen/
+tauri/node_modules/
+tauri/release/
+tauri/resources/
+measurements/
+node_modules/
+dist/
+.next/
+.turbo/
+site/
+site-*/
+*.tsbuildinfo
+progression.html
+progression.json
+mob-hp-curve.html
+native/store/store.config.json
+native/store/screenshots/
+native/store/achievements/
+tauri/store/screenshots/
+tauri/store/achievements/
+tauri/store/preview/output/
+native/fastlane/metadata/
+native/fastlane/screenshots/
+native/fastlane/report.xml
+native/fastlane/Preview.html
+native/fastlane/test_output/
+native/.env
+native/*.p8
+.library-images/
+.claude/worktrees/
+.codex/
+/modtools-lua/
+/tsconfig.modtools-lua.json
+
+# native/.gitignore, re-anchored under native/ (rules the root file already
+# applies repo-wide are not repeated).
+native/**/.expo/
+native/**/web-build/
+native/**/expo-env.d.ts
+native/**/.kotlin/
+native/**/*.orig.*
+native/**/*.jks
+native/**/*.p8
+native/**/*.p12
+native/**/*.key
+native/**/*.mobileprovision
+native/**/.metro-health-check*
+native/**/npm-debug.*
+native/**/yarn-debug.*
+native/**/yarn-error.*
+native/**/*.pem
+native/**/.env*.local
+!native/**/.env.example
+/native/ios
+/native/android
+
+# tauri/.gitignore, re-anchored under tauri/ (rules the root file already
+# applies repo-wide are not repeated).
+tauri/**/webroot/
+tauri/**/target/
+/tauri/src-tauri/icons/
+/tauri/src-tauri/gen/
+tauri/**/release/
+tauri/**/resources/
+tauri/**/steam_appid.txt
