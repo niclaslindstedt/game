@@ -206,7 +206,7 @@ jobs:
     steps:
       - name: Skip unselected platform
         if: inputs.platform != 'all' && inputs.platform != matrix.target
-        run: echo "not selected" && exit 0
+        run: echo "not selected"
 
       - uses: actions/checkout@v4
         if: inputs.platform == 'all' || inputs.platform == matrix.target
