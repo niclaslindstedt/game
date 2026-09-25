@@ -10456,7 +10456,9 @@ canvas.tier-artifact {
   align-items: center;
   justify-content: center;
   background: rgba(8, 10, 14, 0.94);
-  padding: 1rem;
+  padding: max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -10667,7 +10669,9 @@ canvas.tier-artifact {
   align-items: center;
   justify-content: center;
   background: rgba(8, 10, 14, 0.7);
-  padding: 1rem;
+  padding: max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -10740,7 +10744,7 @@ canvas.tier-artifact {
    that releasing here destroys it for good. */
 .discard-hint {
   position: fixed;
-  top: 0.75rem;
+  top: max(0.75rem, env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 60;
@@ -10988,7 +10992,9 @@ canvas.tier-artifact {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
   background: rgba(11, 13, 16, 0.72);
 }
 
@@ -12641,7 +12647,9 @@ canvas.tier-artifact {
   align-items: center;
   justify-content: center;
   background: rgba(8, 10, 14, 0.94);
-  padding: 1rem;
+  padding: max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -12900,7 +12908,9 @@ canvas.tier-artifact {
   align-items: center;
   justify-content: center;
   background: rgba(8, 10, 14, 0.7);
-  padding: 1rem;
+  padding: max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
   overflow-y: auto;
   overscroll-behavior: contain;
 }
