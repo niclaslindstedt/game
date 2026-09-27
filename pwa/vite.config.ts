@@ -8,7 +8,12 @@ import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
-import { commitUrlForBase, gamePwa, prelaunchCss } from "./pwa-plugin.ts";
+import {
+  commitUrlForBase,
+  gamePwa,
+  prelaunchCss,
+  shellIdentityJson,
+} from "./pwa-plugin.ts";
 
 // The GitHub Pages base path is injected by the `pages.yml` workflow via
 // VITE_BASE so the same source builds for `/` (release), `/preview/` (main),
@@ -83,6 +88,12 @@ const devTools = process.env.VITE_DEV_TOOLS !== "off";
 // a packaged app, and its only visible effect there is a blink of a document
 // between the platform splash and the game's own studio card. See
 // `stripBootShell` in pwa-plugin.ts for what it takes out and what survives.
+//
+// It is ALSO what keeps the source out of a store build (owner decision D17):
+// the client bundle is served `shellIdentity(game.config.json)`, with the
+// web-edition, repository and author addresses cleared, and the prerendered
+// pages drop the share tags that carry them. The bundle scripts then refuse a
+// webroot that still names the domain's owner anywhere.
 const shellBuild = process.env.VITE_SHELL_BUILD === "on";
 
 // The built commit, shown next to the version in the title footer — short, the
@@ -99,7 +110,8 @@ const commit = !devTools ? "" : commitSha.slice(0, 7) || "unknown";
 //
 // The FULL sha, not the seven characters printed: both resolve on the forge,
 // but only one of them is still unambiguous after the repo has grown.
-const commitUrl = !devTools ? "" : commitUrlForBase(base, commitSha);
+const commitUrl =
+  !devTools || shellBuild ? "" : commitUrlForBase(base, commitSha);
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
@@ -163,6 +175,9 @@ export default defineConfig({
     // without waiting on the app bundle. Unlike `gamePwa` it is not build-only:
     // the shell is on screen in dev too, until the app mounts over it.
     prelaunchCss(),
+    // A store build's `game.config.json` has no address of the website or the
+    // source in it — see `shellIdentity`.
+    ...(shellBuild ? [shellIdentityJson()] : []),
     gamePwa({ base, version, shellBuild }),
   ],
   resolve: {

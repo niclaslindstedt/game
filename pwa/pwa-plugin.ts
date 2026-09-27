@@ -17,6 +17,7 @@ import {
   FULL_TITLE,
   SOCIAL_TITLE,
   SHARE_DESCRIPTION,
+  type GameIdentity,
 } from "./src/identity.ts";
 
 // Hand-rolls the game's service worker at build time so the deployed app is an
@@ -66,10 +67,64 @@ type GamePwaOptions = {
   slots?: string[];
   // Is this build going INSIDE a store shell (native / Tauri)
   // rather than onto the web? Set from `VITE_SHELL_BUILD` by each shell's
-  // `bundle-web.mjs`. The one thing it changes is that `index.html` ships
-  // without the prerendered boot shell — see `stripBootShell`.
+  // `bundle-web.mjs`. It changes two things: `index.html` ships without the
+  // prerendered boot shell (see `stripBootShell`), and the build carries no
+  // address of the website or the source at all (see `shellIdentity`).
   shellBuild?: boolean;
 };
+
+/**
+ * THE IDENTITY A STORE BUILD CARRIES: `game.config.json` with every field that
+ * points back at the web edition or the source repository CLEARED.
+ *
+ * Owner decision D17, and strictly so: the phone and desktop apps link to
+ * nothing of the kind — no repository, no issues, no author page, no
+ * web-edition domain — and the domain's owner name may not appear in their
+ * bundles in any form. Emptied rather than special-cased at each reader,
+ * because "empty means absent" is already the rule every surface here follows
+ * (`commitUrlForBase`, the store links in `LaunchNotice.tsx`): a surface that
+ * reads one of these renders nothing rather than a link.
+ *
+ * Cleared at BUILD time, so the strings are not in the shipped bytes at all —
+ * `shellIdentityJson` below swaps the JSON module the client bundle imports,
+ * and the bundle scripts refuse a webroot that still contains one.
+ */
+export function shellIdentity<
+  T extends {
+    siteUrl: string;
+    repoUrl: string;
+    author: { name: string; url: string };
+  },
+>(identity: T): T {
+  return {
+    ...identity,
+    siteUrl: "",
+    repoUrl: "",
+    author: { ...identity.author, url: "" },
+  };
+}
+
+/**
+ * Serve the client bundle `shellIdentity(game.config.json)` instead of the file
+ * on disk. `identity.ts` re-exports the WHOLE config object, so Rollup inlines
+ * every field of it whether or not the app reads it; swapping the module's
+ * source before Vite's JSON plugin sees it is what keeps the cleared fields out
+ * of the bundle rather than merely unread. `enforce: "pre"` is load-bearing:
+ * after `vite:json` the source is JavaScript, not JSON.
+ */
+export function shellIdentityJson(): Plugin {
+  return {
+    name: "game-shell-identity",
+    enforce: "pre",
+    transform(code, id) {
+      if (!/[\\/]game\.config\.json(?:\?.*)?$/.test(id)) return null;
+      return {
+        code: JSON.stringify(shellIdentity(JSON.parse(code) as GameIdentity)),
+        map: null,
+      };
+    },
+  };
+}
 
 // Public assets we never want in the precache: source maps are dead weight
 // offline, the OG card is only ever fetched by link unfurlers, and the install
@@ -142,7 +197,19 @@ const escapeHtml = (s: string): string =>
 // Fill the `{{TOKEN}}` placeholders in index.html from the identity config so
 // every brand-shaped string in the shell has one source of truth
 // (game.config.json). Runs at build time — dev never renders the shell.
-function fillIdentityTokens(html: string): string {
+//
+// A STORE BUILD first drops every tag whose content is an address on the web
+// edition — `og:url`, `og:image`, `twitter:image` — rather than fill it with an
+// empty origin: nothing unfurls a webroot, and a relative `og:url` is a wrong
+// value where an absent one is merely no value. See `shellIdentity`.
+export function fillIdentityTokens(html: string, shellBuild = false): string {
+  const identity = shellBuild ? shellIdentity(IDENTITY) : IDENTITY;
+  const source = shellBuild
+    ? html.replace(
+        /^[ \t]*<meta\b[^>]*content="\{\{(?:SITE_URL|REPO_URL)\}\}[^"]*"[^>]*>[ \t]*\r?\n?/gm,
+        "",
+      )
+    : html;
   const tokens: Record<string, string> = {
     TITLE: escapeHtml(IDENTITY.title),
     FULL_TITLE: escapeHtml(FULL_TITLE),
@@ -153,8 +220,8 @@ function fillIdentityTokens(html: string): string {
     // `TITLE`: a tab has no room for a suffix (see `SOCIAL_TITLE`).
     SOCIAL_TITLE: escapeHtml(SOCIAL_TITLE),
     SHARE_DESCRIPTION: escapeHtml(SHARE_DESCRIPTION),
-    SITE_URL: IDENTITY.siteUrl,
-    REPO_URL: IDENTITY.repoUrl,
+    SITE_URL: identity.siteUrl,
+    REPO_URL: identity.repoUrl,
     OG_IMAGE_ALT: escapeHtml(IDENTITY.ogImageAlt),
     HERO_PARAGRAPHS: IDENTITY.heroParagraphs
       .map((p) => `<p>${escapeHtml(p)}</p>`)
@@ -162,7 +229,7 @@ function fillIdentityTokens(html: string): string {
     SHELL_SECTIONS: renderShellSections(),
     FAQ: renderFaq(),
   };
-  return html.replace(
+  return source.replace(
     /\{\{([A-Z_]+)\}\}/g,
     (match, key: string) => tokens[key] ?? match,
   );
@@ -355,6 +422,10 @@ type DocPage = {
 // Turn the built `index.html` into a document page's shell: same hashed asset
 // URLs (so nothing has to be rewritten or re-bundled), its own head metadata,
 // and its own prerendered body.
+//
+// A store build's `index.html` has no `og:url` to rewrite (`fillIdentityTokens`
+// took it out), so the replace below finds nothing there — the address is only
+// ever composed for the web.
 function renderDocHtml(indexHtml: string, base: string, page: DocPage): string {
   const url = `${IDENTITY.siteUrl}${base}${page.slug}/`;
   const title = escapeHtml(page.title);
@@ -800,7 +871,7 @@ export function gamePwa({
     // is meant to be found through search.
     transformIndexHtml(html): IndexHtmlTransformResult {
       return {
-        html: fillIdentityTokens(html),
+        html: fillIdentityTokens(html, shellBuild),
         tags: [
           // THE BOOT SCREEN'S WATCHDOG (src/app/boot-watchdog.ts), inlined as a
           // classic script because what it exists to survive is the module

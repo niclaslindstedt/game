@@ -18,6 +18,18 @@ export const SITE_URL = identity.siteUrl;
 export const TITLE = identity.title;
 
 /**
+ * Is this library going INSIDE a store shell (the phone or desktop app) rather
+ * than onto the web? `VITE_SHELL_BUILD=on` is set by each shell's
+ * `bundle-web.mjs` and reaches this script through `npm run build`.
+ *
+ * A store build carries no address of the web edition (owner decision D17 —
+ * see `shellIdentity` in pwa-plugin.ts), so its pages drop the share tags that
+ * are nothing BUT such an address: `og:url`, `og:image`, `twitter:image`.
+ * Nothing unfurls a page served off the device anyway.
+ */
+const SHELL_BUILD = process.env.VITE_SHELL_BUILD === "on";
+
+/**
  * THE ONE THING THESE PAGES ASK FOR: get the app.
  *
  * A library page's job, once read, is to send the reader somewhere,
@@ -221,16 +233,24 @@ export function page({
     }
     <meta property="og:title" content="${head}" />
     <meta property="og:description" content="${desc}" />
-    <meta property="og:url" content="${url}" />
+${
+  SHELL_BUILD
+    ? ""
+    : `    <meta property="og:url" content="${url}" />
     <meta property="og:image" content="${card.url}" />
     <meta property="og:image:width" content="${card.width}" />
     <meta property="og:image:height" content="${card.height}" />
     <meta property="og:image:alt" content="${escapeHtml(card.alt)}" />
-    <meta name="twitter:card" content="summary_large_image" />
+`
+}    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${head}" />
-    <meta name="twitter:description" content="${desc}" />
+    <meta name="twitter:description" content="${desc}" />${
+      SHELL_BUILD
+        ? ""
+        : `
     <meta name="twitter:image" content="${card.url}" />
-    <meta name="twitter:image:alt" content="${escapeHtml(card.alt)}" />
+    <meta name="twitter:image:alt" content="${escapeHtml(card.alt)}" />`
+    }
   </head>
   <body>
     <div class="ground" aria-hidden="true"${ground ? ` style="--ground: url('${ground}')"` : ""}></div>

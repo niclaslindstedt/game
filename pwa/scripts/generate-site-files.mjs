@@ -22,6 +22,13 @@ const DIST = resolve(__dirname, "../dist");
 // Single source of truth for the domain/title lives in game.config.json.
 const SITE_URL = identity.siteUrl;
 
+// A STORE BUILD (the phone or desktop app; `VITE_SHELL_BUILD=on`, set by each
+// shell's `bundle-web.mjs`) carries no address of the web edition — owner
+// decision D17, see `shellIdentity` in pwa/pwa-plugin.ts. Its 404 page drops
+// the share tags and sends "back to the game" to the root it is served from.
+const SHELL_BUILD = process.env.VITE_SHELL_BUILD === "on";
+const HOME = SHELL_BUILD ? "/" : `${SITE_URL}/`;
+
 if (!existsSync(DIST)) {
   console.error(
     "generate-site-files: dist/ is missing — run `vite build` first",
@@ -47,9 +54,13 @@ function render404() {
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Not found — ${identity.title}" />
     <meta property="og:description" content="This page does not exist. The game itself lives at the site root." />
-    <meta property="og:url" content="${SITE_URL}/" />
+${
+  SHELL_BUILD
+    ? ""
+    : `    <meta property="og:url" content="${SITE_URL}/" />
     <meta property="og:image" content="${SITE_URL}/og-default.png" />
-    <style>
+`
+}    <style>
       body { margin: 0; min-height: 100vh; display: grid; place-items: center;
              background: #0b0d10; color: #e6e8eb;
              font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -65,7 +76,7 @@ function render404() {
         spawned, or maybe it did not survive. The game itself lives at the
         site root and is fully playable offline once it has loaded.
       </p>
-      <p><a href="${SITE_URL}/">Back to the game</a></p>
+      <p><a href="${HOME}">Back to the game</a></p>
     </main>
   </body>
 </html>

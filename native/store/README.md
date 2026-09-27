@@ -26,9 +26,12 @@ pull request helps nobody. Regenerate them whenever you submit.
 ## The metadata
 
 `listing.yaml` is the only file to edit. Brand-shaped fields are **not** in it —
-the listing title, marketing URL, privacy-policy URL and copyright line are
-composed from `game.config.json` by the generator, so renaming the game updates
-the store listing the same way it updates the manifest.
+the listing title and copyright line are composed from `game.config.json` by the
+generator, so renaming the game updates the store listing the same way it
+updates the manifest, and the marketing and privacy-policy URLs are the game's
+pages on apps.agilator.se (`APPS_PAGE` in the generator; `supportUrl` in the
+YAML is the third). No listing field may name the source repository or the web
+edition's domain — the generator fails one that does (owner decision D17).
 
 The generator (`scripts/generate-store-metadata.mjs`) enforces every Apple
 limit and **fails rather than truncates**:

@@ -2976,9 +2976,9 @@ bought once with no coin store in it. The two are driven by `appStoreUrl` and
 `steamUrl` in `game.config.json`, each rendering NOTHING while its field is
 empty: hundreds of pages carrying a dead or guessed link is worse than the same
 hundreds carrying none, so filling those fields is the whole of turning them
-on. The library deliberately does not advertise the free web build — the App
-Store listing's own homepage link points back here, and a reference page talking
-a buyer out of the purchase would close that loop the wrong way round.
+on. The library deliberately does not advertise the free web build — a
+reference page talking a buyer out of the purchase would close the loop from the
+store the wrong way round.
 
 Improve it with the `library-improvement` skill (generate → screenshot → judge →
 fix the generator → loop).

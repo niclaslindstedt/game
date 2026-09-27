@@ -109,24 +109,19 @@ apple:
         The whole campaign, six maps, four difficulties, hardcore heroes, and
         cross-device saves through iCloud — all playable offline.
 
-      # marketingUrl — the "homepage" link on the product page — is composed by
-      # the generator as the site's /library/, NOT its root. The root IS the
-      # free web build, and linking that from a paid listing hands a buyer the
-      # thing they were about to pay for. The library is the reference material
-      # around the game — the bestiary, the arsenal, the mission guide and the
-      # story, all of it generated from the same content the game runs on — so
-      # it is a homepage that helps someone decide to buy instead of one that
-      # talks them out of it. The library holds up its end: its pages carry no
-      # play-in-your-browser link at all, and the one call to action they do
-      # carry points back at this listing (`appStoreUrl` in game.config.json,
-      # which is EMPTY until the app is published — see docs/architecture.md).
+      # marketingUrl — the "homepage" link on the product page — and
+      # privacyPolicyUrl are composed by the generator (`APPS_PAGE` in
+      # scripts/generate-store-metadata.mjs) as the game's page and privacy
+      # policy on apps.agilator.se, the company's site with one page per app.
+      # NOT the web edition: that is the free game a buyer was about to pay
+      # for, and a store listing names no source repository and no personal
+      # domain at all (owner decision D17 — the generator fails a listing that
+      # does).
       #
       # supportUrl is REQUIRED by Apple and must be an http(s) URL (a mailto:
-      # is rejected), so it has to resolve somewhere. It deliberately does NOT
-      # point at the source repository or the game's own front page; set it to
-      # a plain support/contact page. privacyPolicyUrl is composed by the
-      # generator from the site's /privacy/ page, which Apple also requires.
-      supportUrl: https://game.niclaslindstedt.se/contact/
+      # is rejected), so it has to resolve somewhere: the game's support page
+      # on the same site.
+      supportUrl: https://apps.agilator.se/adas-trail/support/
 
   # ---------------------------------------------------------------------------
   # Where the app files on the store. First entry is the primary category; a

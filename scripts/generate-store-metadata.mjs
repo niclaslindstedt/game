@@ -8,10 +8,11 @@
 //
 // It does three jobs the YAML alone can't:
 //
-//  1. COMPOSES the brand-shaped fields from game.config.json — the listing
-//     title, the marketing URL, the privacy-policy URL, and the copyright
-//     line — so a rename flows into the store listing the way it flows into
-//     the manifest and the app name, instead of being re-typed here.
+//  1. COMPOSES the brand-shaped fields — the listing title and the copyright
+//     line from game.config.json, so a rename flows into the store listing the
+//     way it flows into the manifest and the app name, and the marketing and
+//     privacy-policy URLs from the game's pages on apps.agilator.se
+//     (`APPS_PAGE`), never the web edition's domain.
 //
 //  2. VALIDATES every Apple length limit and FAILS the build on an overrun.
 //     App Store Connect silently truncates an over-long subtitle or promo
@@ -42,6 +43,19 @@ const LISTING = here("../native/store/listing.yaml");
 const OUT = here("../native/store/store.config.json");
 
 const identity = JSON.parse(readFileSync(here("../game.config.json"), "utf8"));
+
+// THE GAME'S PAGES ON THE COMPANY'S APPS SITE — the only place a store listing
+// sends anyone. apps.agilator.se carries a page, a privacy policy and a support
+// page for every app it lists, generated from one row per app; the listing
+// points there and NOT at the web edition's domain (owner decisions D14, D17):
+// the web edition is the free game a buyer was about to pay for, and a store
+// listing links to no source, repository or personal domain at all.
+// `supportUrl` in listing.yaml is the third of the three.
+const APPS_PAGE = "https://apps.agilator.se/adas-trail";
+
+// What no listing field may contain, anywhere (D17): the source repository's
+// forge, and the name of the domain the web edition is served from.
+const FORBIDDEN_IN_LISTING = ["github.com", "niclaslindstedt"];
 const pkg = JSON.parse(readFileSync(here("../package.json"), "utf8"));
 
 const errors = [];
@@ -124,17 +138,15 @@ for (const [locale, authored] of Object.entries(listing.apple.info)) {
   info[locale] = {
     // Composed, not authored.
     title: identity.title,
-    // The listing's homepage: THE LIBRARY, not the site root. The root IS the
-    // free web build, and linking it from a paid listing sends a buyer to the
-    // thing they were about to pay for; the library is the game's reference
-    // material — the bestiary, the arsenal, the mission guide and the story —
-    // which is what a store visitor deciding whether to buy actually wants to
-    // read. Composed here rather than authored, like every other brand-shaped
-    // value. See the note in listing.yaml.
-    marketingUrl: `${identity.siteUrl}/library/`,
-    // The page pwa-plugin.ts emits from pwa/src/PrivacyPage.tsx. Apple treats
-    // this field as required; the URL must actually resolve at review time.
-    privacyPolicyUrl: `${identity.siteUrl}/privacy/`,
+    // The listing's homepage: the game's page on apps.agilator.se, not the
+    // web edition. The web edition IS the free game, and linking it from a
+    // paid listing sends a buyer to the thing they were about to pay for.
+    // Composed here rather than authored, like every other brand-shaped value.
+    // See `APPS_PAGE` and the note in listing.yaml.
+    marketingUrl: `${APPS_PAGE}/`,
+    // Apple treats this field as required; the URL must actually resolve at
+    // review time.
+    privacyPolicyUrl: `${APPS_PAGE}/privacy/`,
     // Authored.
     ...authored,
     keywords,
@@ -218,6 +230,35 @@ for (const edge of [skus[0], skus[skus.length - 1]]) {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// No source, no personal domain (D17). Every string the listing will upload —
+// authored or composed, any locale, the review block included — is walked, so
+// a URL pasted into a description is caught as surely as a composed one.
+// ---------------------------------------------------------------------------
+function walkStrings(value, at, visit) {
+  if (typeof value === "string") visit(at, value);
+  else if (Array.isArray(value))
+    value.forEach((v, i) => walkStrings(v, `${at}[${i}]`, visit));
+  else if (value && typeof value === "object")
+    for (const [k, v] of Object.entries(value))
+      walkStrings(v, at ? `${at}.${k}` : k, visit);
+}
+walkStrings(
+  { ...listing, apple: { ...listing.apple, info } },
+  "",
+  (at, text) => {
+    for (const bad of FORBIDDEN_IN_LISTING) {
+      if (text.toLowerCase().includes(bad)) {
+        fail(
+          `${at}: contains "${bad}" — a store listing links to the game's ` +
+            `pages on apps.agilator.se, never to the source or the web ` +
+            `edition's domain (D17)`,
+        );
+      }
+    }
+  },
+);
 
 // ---------------------------------------------------------------------------
 // Emit.

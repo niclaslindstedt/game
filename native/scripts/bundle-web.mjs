@@ -26,6 +26,12 @@
 // in `pwa/dist/` — a webroot re-zipped from a plain website build carries the
 // boot shell and the developer tooling. Every release path builds.
 //
+// It also takes the SOURCE out (owner decision D17): a shell build carries no
+// repository, author or web-edition address (`shellIdentity` in
+// pwa/pwa-plugin.ts), and this script REFUSES a webroot in which any file still
+// names the domain's owner (scripts/shell-bundle-guard.mjs) — so a
+// `--skip-build` over a plain website build is refused rather than zipped.
+//
 // Usage:
 //   node scripts/bundle-web.mjs            # build the site, then zip dist/
 //   node scripts/bundle-web.mjs --skip-build   # re-zip an existing dist/
@@ -36,11 +42,22 @@
 // root `.easignore` keeps it in the EAS upload despite the .gitignore entry.
 
 import { execFileSync } from "node:child_process";
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import {
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { zipSync } from "fflate";
+
+import {
+  offendingFiles,
+  refuseIfNamed,
+} from "../../scripts/shell-bundle-guard.mjs";
 
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_DIR = resolve(APP_DIR, "..");
@@ -122,6 +139,14 @@ if (count === 0 || !files["index.html"]) {
     `dist/ has no index.html (${count} files) — the website build looks empty.`,
   );
 }
+
+// NOTHING IN HERE MAY NAME THE SOURCE (owner decision D17): no repository,
+// author or web-edition address, in any file. The build clears them
+// (`VITE_SHELL_BUILD`); this refuses the zip if one survived, and removes a
+// previous zip so an EAS build cannot pick up a stale one instead.
+const named = offendingFiles(files);
+if (named.length > 0) rmSync(OUT_ZIP, { force: true });
+refuseIfNamed(named, "the phone webroot");
 
 // Deterministic zip: pin every entry to the ZIP epoch (1980-01-01) so the
 // artifact is reproducible and doesn't drift by build time.

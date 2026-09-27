@@ -24,6 +24,12 @@
 // `pwa/dist/` — a webroot re-copied from a plain website build carries the boot
 // shell and the developer tooling. Every release path builds.
 //
+// It also takes the SOURCE out (owner decision D17): a shell build carries no
+// repository, author or web-edition address (`shellIdentity` in
+// pwa/pwa-plugin.ts), and this script REFUSES a webroot in which any file still
+// names the domain's owner (scripts/shell-bundle-guard.mjs) — so a
+// `--skip-build` over a plain website build is refused rather than copied.
+//
 // Usage:
 //   node scripts/bundle-web.mjs                      # build the site, then copy
 //   node scripts/bundle-web.mjs --skip-build         # re-copy an existing dist/
@@ -33,6 +39,11 @@ import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, rmSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import {
+  offendingFilesIn,
+  refuseIfNamed,
+} from "../../scripts/shell-bundle-guard.mjs";
 
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_DIR = resolve(APP_DIR, "..");
@@ -86,6 +97,14 @@ if (!existsSync(join(DIST_DIR, "index.html"))) {
   console.error(`✗ ${DIST_DIR} has no index.html — that is not a site build.`);
   process.exit(1);
 }
+
+// NOTHING IN HERE MAY NAME THE SOURCE (owner decision D17): no repository,
+// author or web-edition address, in any file. The build clears them
+// (`VITE_SHELL_BUILD`); this refuses the copy if one survived, and removes the
+// previous webroot so a desktop build cannot package a stale one instead.
+const named = offendingFilesIn(DIST_DIR);
+if (named.length > 0) rmSync(OUT_DIR, { recursive: true, force: true });
+refuseIfNamed(named, "the desktop webroot");
 
 // Replace wholesale rather than merge: a stale chunk left behind from a
 // previous build is the exact failure mode that shows up as a blank window
