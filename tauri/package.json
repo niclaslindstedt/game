@@ -20,6 +20,6 @@
     "steam:upload": "node scripts/steam-upload.mjs"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2"
+    "@tauri-apps/cli": "^2.12.0"
   }
 }

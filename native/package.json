@@ -1,7 +1,7 @@
 {
   "name": "adas-trail-app",
   "version": "0.1.0",
-  "description": "Native (Expo/React Native) App Store wrapper around the Ada's Trail PWA \u2014 bundles the game on-device and serves it locally, plus Taptic haptics and an audio session.",
+  "description": "Native (Expo/React Native) App Store wrapper around the Ada's Trail PWA — bundles the game on-device and serves it locally, plus Taptic haptics and an audio session.",
   "main": "index.ts",
   "private": true,
   "scripts": {
@@ -23,21 +23,22 @@
     "deliver": "bundle exec fastlane metadata"
   },
   "dependencies": {
-    "@dr.pogodin/react-native-static-server": "^0.27.0",
-    "expo": "~57.0.6",
-    "expo-asset": "~57.0.5",
-    "expo-audio": "~57.0.2",
-    "expo-build-properties": "~57.0.6",
-    "expo-constants": "~57.0.5",
-    "expo-file-system": "~57.0.1",
-    "expo-haptics": "~57.0.1",
+    "@dr.pogodin/react-native-static-server": "^0.28.0",
+    "expo": "~57.0.25",
+    "expo-asset": "~57.0.18",
+    "expo-audio": "~57.0.5",
+    "expo-build-properties": "~57.0.22",
+    "expo-constants": "~57.0.19",
+    "expo-file-system": "~57.0.7",
+    "expo-haptics": "~57.0.3",
     "expo-iap": "^4.6.0",
-    "expo-sharing": "~57.0.4",
-    "expo-splash-screen": "~57.0.4",
+    "expo-sharing": "~57.0.22",
+    "expo-splash-screen": "~57.0.9",
     "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.4",
     "fflate": "^0.8.3",
     "react": "19.2.3",
-    "react-native": "0.86.0",
+    "react-native": "0.86.3",
     "react-native-webview": "13.16.1"
   },
   "devDependencies": {
@@ -45,6 +46,8 @@
     "typescript": "~6.0.3"
   },
   "overrides": {
-    "uuid": "^11.1.1"
+    "xcode": {
+      "uuid": "^11.1.1"
+    }
   }
 }

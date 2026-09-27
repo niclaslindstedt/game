@@ -10,7 +10,7 @@
 // (SEO/OG generators) can import the very same values without a TS toolchain.
 // This module re-exports it as typed constants for the app + build plugin.
 
-import config from "../../game.config.json";
+import config from "../../game.config.json" with { type: "json" };
 
 export type GameIdentity = {
   /** Display title. */
