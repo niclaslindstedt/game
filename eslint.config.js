@@ -69,6 +69,7 @@ export default [
         __BUILD_COMMIT_URL__: "readonly",
         __DEV_TOOLS__: "readonly",
         __SUPPORT_EMAIL__: "readonly",
+        __SHELL_BUILD__: "readonly",
         __COMMUNITY_URL__: "readonly",
       },
     },

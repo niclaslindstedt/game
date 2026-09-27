@@ -41,3 +41,8 @@ declare const __SUPPORT_EMAIL__: string;
  * simply not offered (see `menus-main.ts`). Set by the `COMMUNITY_URL` repo
  * variable (see pwa/vite.config.ts and docs/configuration.md). */
 declare const __COMMUNITY_URL__: string;
+
+/** True in the phone and desktop builds (`VITE_SHELL_BUILD=on`), false on the
+ * website. A literal, so `__SHELL_BUILD__ ? … : …` folds at build time and
+ * the website-only branch is not in an app bundle at all. */
+declare const __SHELL_BUILD__: boolean;

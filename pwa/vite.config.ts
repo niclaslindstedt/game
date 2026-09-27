@@ -140,6 +140,9 @@ export default defineConfig({
     __BUILD_COMMIT__: JSON.stringify(commit),
     __BUILD_COMMIT_URL__: JSON.stringify(commitUrl),
     __DEV_TOOLS__: JSON.stringify(devTools),
+    // A phone or desktop build (VITE_SHELL_BUILD=on) rather than the website:
+    // the privacy page leaves out what only the website does.
+    __SHELL_BUILD__: JSON.stringify(shellBuild),
     // The support address printed by the contact page and the privacy policy.
     // Supplied by the `SUPPORT_EMAIL` repo secret through the Pages workflow
     // rather than hardcoded, so it can change without a commit and isn't left

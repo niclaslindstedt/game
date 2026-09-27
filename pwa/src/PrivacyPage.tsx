@@ -20,7 +20,11 @@ import { IDENTITY } from "./identity.ts";
 // Last meaningful change to the policy text below. Bump this whenever the
 // wording is edited — it renders verbatim at the top of the page and is the
 // only line a reader has to look at to see how fresh the policy is.
-const LAST_UPDATED = "2026-07-26";
+const LAST_UPDATED = "2026-09-27";
+
+// The same policy as published for the App Store listing, on the publisher's
+// site — the page App Store review reads (agilatorab/apps).
+const STORE_POLICY_URL = "https://apps.agilator.se/adas-trail/privacy/";
 
 export function PrivacyPage() {
   return (
@@ -171,23 +175,25 @@ export function PrivacyPage() {
         </p>
       </Section>
 
-      <Section title="Server logs">
-        <p>
-          The website is served as a static bundle by{" "}
-          <Strong>GitHub Pages</Strong>. GitHub may record standard request
-          metadata — IP address, user agent, requested path — in order to
-          operate the service, as described in{" "}
-          <a
-            href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement"
-            className="text-amber-400 hover:underline"
-          >
-            GitHub&apos;s privacy statement
-          </a>
-          . We run no additional logging service and have no access to those
-          logs beyond what GitHub shows any repository owner. The installed app
-          does not fetch the website at all, so it produces no such logs.
-        </p>
-      </Section>
+      {!__SHELL_BUILD__ && (
+        <Section title="Server logs">
+          <p>
+            The website is served as a static bundle by{" "}
+            <Strong>GitHub Pages</Strong>. GitHub may record standard request
+            metadata — IP address, user agent, requested path — in order to
+            operate the service, as described in{" "}
+            <a
+              href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement"
+              className="text-amber-400 hover:underline"
+            >
+              GitHub&apos;s privacy statement
+            </a>
+            . We run no additional logging service and have no access to those
+            logs beyond what GitHub shows any repository owner. The installed
+            app does not fetch the website at all, so it produces no such logs.
+          </p>
+        </Section>
+      )}
 
       <Section title="Children">
         <p>
@@ -210,6 +216,13 @@ export function PrivacyPage() {
         <p>
           For anything at all — including a question about this policy or a
           request about your data — write to <MailLink />.
+        </p>
+        <p>
+          This policy is also published at{" "}
+          <a href={STORE_POLICY_URL} className="text-amber-400 hover:underline">
+            apps.agilator.se/adas-trail/privacy
+          </a>
+          .
         </p>
       </Section>
     </DocShell>
