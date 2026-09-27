@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The single source of truth for the game's brand identity — title, tagline,
-// domain, storage/cache prefixes, and the marketing copy the discovery
-// surfaces (title tag, OG/Twitter cards, JSON-LD, the prerendered shell) all
-// read from. Nothing brand-shaped should be re-hardcoded elsewhere: renaming
+// domain, storage/cache prefixes, and the copy the page surfaces (title tag,
+// meta description, OG/Twitter cards, the prerendered shell) all read from. Nothing brand-shaped should be re-hardcoded elsewhere: renaming
 // the game for a sequel is editing `game.config.json` at the repo root and
 // regenerating icons/OG art.
 //
 // The raw data lives in `game.config.json` (repo root) so node build scripts
-// (SEO/OG generators) can import the very same values without a TS toolchain.
+// (the OG and library generators) can import the very same values without a TS toolchain.
 // This module re-exports it as typed constants for the app + build plugin.
 
 import config from "../../game.config.json" with { type: "json" };
@@ -24,37 +23,31 @@ export type GameIdentity = {
   /** Shorter description used by the manifest. */
   shortDescription: string;
   /**
-   * SEARCH voice, as opposed to the brand voice above.
+   * A STRANGER'S voice, as opposed to the brand voice above.
    *
    * `title`/`tagline` are what the GAME calls itself — they are drawn on the
    * title screen (`TitleScreen.tsx`) and baked into the OG card art, so they
-   * are written to be read by someone already looking at the game. That makes
-   * them the wrong strings to be indexed on: nobody searches "survive the
-   * search for your lost love", and the brand alone loses the query it shares
-   * with a television franchise.
+   * are written to be read by someone already looking at the game. A shared
+   * link lands in front of someone who is not, and "survive the search for
+   * your lost love" tells them nothing about what they would be opening.
    *
-   * These two carry the words a stranger actually types — the genre, the
-   * platform, the price — and feed the `<title>`, the meta description, and
-   * the social cards ONLY. Keeping them apart is what lets the title screen
-   * stay poetry while the search result stays findable; collapsing them back
-   * into one field means one of the two jobs gets done badly.
+   * These two say what the thing IS — the genre, the platform, the price —
+   * and feed the meta description and the share cards ONLY. Keeping them
+   * apart is what lets the title screen stay poetry while a pasted link still
+   * explains itself. (The site is not meant to be found through search: every
+   * page carries `noindex`, by owner decision.)
    */
-  seo: {
+  share: {
     /**
      * Appended after the title with an em dash to form the OG / Twitter card
      * title (`SOCIAL_TITLE`). Keep the whole result under ~60 characters —
-     * Google truncates past that — and lead with what the thing IS, not what
-     * happens in it. The `<title>` is the brand alone: see `SOCIAL_TITLE`.
+     * an unfurl truncates past that — and lead with what the thing IS, not
+     * what happens in it. The `<title>` is the brand alone: see `SOCIAL_TITLE`.
      */
     titleSuffix: string;
-    /** The search snippet (≤160 chars): what it is first, the hook second. */
+    /** The share-card blurb (≤160 chars): what it is first, the hook second. */
     description: string;
   };
-  /**
-   * The game's genres, as the `VideoGame` JSON-LD reports them to search
-   * engines. Plain words a person would search for, not internal taxonomy.
-   */
-  genre: string[];
   /** Absolute origin, no trailing slash (e.g. the deployed site URL). */
   siteUrl: string;
   /**
@@ -103,11 +96,10 @@ export type GameIdentity = {
    *
    * `heroParagraphs` is the pitch and stays short. These are the sections under
    * it, each a heading and a couple of paragraphs, and they exist because the
-   * home page is the site's strongest URL and had 154 words on it: everything a
-   * stranger might type — the genre, the controls, the venues, the price — was
-   * reachable only through the `<title>` and the meta description. Write them
-   * plainly and in the present tense; this is the copy a search snippet is cut
-   * from, not the title screen's voice.
+   * home page had 154 words on it: everything a stranger wants to know — the
+   * genre, the controls, the venues, the price — was nowhere on it. Write them
+   * plainly and in the present tense; this is the copy a newcomer reads, not
+   * the title screen's voice.
    *
    * `list` names a generated list to render inside the section — today only
    * `"venues"`, the campaign in order, read from the level catalog rather than
@@ -120,9 +112,9 @@ export type GameIdentity = {
    */
   sections: { heading: string; list?: string; paragraphs: string[] }[];
   /**
-   * The questions the shell answers, and the `FAQPage` JSON-LD built from them.
+   * The questions the shell answers.
    *
-   * These are the SHAPE the queries actually arrive in — "is it free", "does it
+   * These are the SHAPE the questions actually arrive in — "is it free", "does it
    * work offline", "do I need an account" — and every answer already existed
    * somewhere on the site (the privacy page, the hero paragraphs, the in-game
    * how-to-play copy) without ever being phrased as the question. Keep an answer
@@ -141,18 +133,18 @@ export const IDENTITY: GameIdentity = config;
 export const FULL_TITLE = `${IDENTITY.title} — ${IDENTITY.tagline}`;
 
 /**
- * `${title} — ${seo.titleSuffix}`: the OG / Twitter card title, in search voice.
- * Deliberately NOT `FULL_TITLE` — see `GameIdentity.seo`.
+ * `${title} — ${share.titleSuffix}`: the OG / Twitter card title, in a
+ * stranger's voice. Deliberately NOT `FULL_TITLE` — see `GameIdentity.share`.
  *
  * The `<title>` is deliberately NOT this: a browser tab is ~20 characters wide,
  * so a suffix there is never read — it is truncated to an ellipsis while eating
  * the room the brand needs. A card unfurl has a full line and no such squeeze,
- * which is where the search voice still earns its place.
+ * which is where the stranger's voice still earns its place.
  */
-export const SOCIAL_TITLE = `${IDENTITY.title} — ${IDENTITY.seo.titleSuffix}`;
+export const SOCIAL_TITLE = `${IDENTITY.title} — ${IDENTITY.share.titleSuffix}`;
 
-/** The meta / OG / Twitter description, in search voice. See `GameIdentity.seo`. */
-export const SEO_DESCRIPTION = IDENTITY.seo.description;
+/** The meta / OG / Twitter description, in a stranger's voice. See `GameIdentity.share`. */
+export const SHARE_DESCRIPTION = IDENTITY.share.description;
 
 /** A namespaced localStorage key, `<storagePrefix>:<name>`. */
 export function storageKey(name: string): string {

@@ -10,8 +10,7 @@
 // reason. NEW GAME never arms this leaf and therefore stays local.
 //
 // **IT IS IMPORT-FREE APART FROM SETTINGS, AND MUST STAY THAT WAY.** The HOST
-// and JOIN screens are TITLE MENU screens, i.e. the app's startup path, where
-// the 170 KB critical-path budget forbids reaching `@game/core`. Everything
+// and JOIN screens are TITLE MENU screens, i.e. the app's startup path, where the startup-path import rule forbids reaching `@game/core`. Everything
 // here is plain values; the module that acts on them
 // (`pwa/src/game/net/driver.ts`) is behind the run's own lazy chunk.
 //

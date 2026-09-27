@@ -3,8 +3,7 @@
 // pwa/src/lib/, the pool a later game keeps as-is.
 
 /** A sprite's source rectangle inside an atlas texture — a compact
- * `[x, y, w, h]` tuple, the shape the atlas manifest ships in (it rides the
- * app's critical-path budget, so it pays for no field names). */
+ * `[x, y, w, h]` tuple, the shape the atlas manifest ships in (it rides the app's startup path, so it pays for no field names). */
 export type AtlasRect = readonly [number, number, number, number];
 
 /**

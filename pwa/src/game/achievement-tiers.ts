@@ -11,8 +11,7 @@
 // buzzes). A type-only import would have been erased at build time and still
 // have failed `tests/content/net_reachability_test.ts`, which walks the import
 // graph rather than the bundle — correctly, because the next edit to either
-// module turns the type import into a value one and nobody notices until the
-// 170 KB budget guard trips. So the ladder lives in a leaf, the same shape as
+// module turns the type import into a value one and nobody notices until the reachability walk trips. So the ladder lives in a leaf, the same shape as
 // the engine's own `engine/game/flags.ts`, and `achievement-defs.ts` re-exports
 // it so the catalog stays the one door for everything else about a badge.
 //

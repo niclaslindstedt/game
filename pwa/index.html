@@ -18,30 +18,35 @@
          the identity config (game.config.json) by pwa/pwa-plugin.ts, so a
          rename touches one file, not this shell.
 
-         The indexed strings are `SEO_*`/`SOCIAL_TITLE`, not
+         The share strings are `SHARE_DESCRIPTION`/`SOCIAL_TITLE`, not
          `FULL_TITLE`/`DESCRIPTION`: the title screen's own voice ("survive the
          search for your lost love") is written for someone already looking at
-         the game, and contains no word a stranger would type. The brand voice
-         still runs the page — it is the <h1>, the tagline under it, and the
-         manifest's app name — but the strings a search engine reads lead with
-         what the thing IS.
+         the game, and says nothing to the stranger a pasted link lands in
+         front of. The brand voice still runs the page — it is the <h1>, the
+         tagline under it, and the manifest's app name — but a share card
+         leads with what the thing IS.
 
          The `<title>` is the ONE exception, and the reason is the browser tab:
          it shows about twenty characters, so a genre suffix there is never read
          — it is truncated away while crowding out the brand that has to survive
-         a row of pinned tabs. So the tab and the crawler's first line are the
-         name alone, and the search voice rides the card titles below, where a
-         full line is available. -->
+         a row of pinned tabs. So the tab is the name alone, and the stranger's
+         voice rides the card titles below, where a full line is available.
+
+         THE SITE IS NOT MEANT TO BE FOUND through a search engine — the stores
+         are where people should find the game — so every page carries
+         `noindex`, by owner decision. Every page
+         the build derives from this shell (`/privacy/`, `/contact/`) inherits
+         it. -->
 
     <title>{{TITLE}}</title>
-    <meta name="description" content="{{SEO_DESCRIPTION}}" />
-    <link rel="canonical" href="{{SITE_URL}}/" />
+    <meta name="robots" content="noindex" />
+    <meta name="description" content="{{SHARE_DESCRIPTION}}" />
 
     <meta property="og:site_name" content="{{TITLE}}" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="{{SOCIAL_TITLE}}" />
-    <meta property="og:description" content="{{SEO_DESCRIPTION}}" />
+    <meta property="og:description" content="{{SHARE_DESCRIPTION}}" />
     <meta property="og:url" content="{{SITE_URL}}/" />
     <meta property="og:image" content="{{SITE_URL}}/og-default.png" />
     <meta property="og:image:width" content="1200" />
@@ -50,85 +55,14 @@
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="{{SOCIAL_TITLE}}" />
-    <meta name="twitter:description" content="{{SEO_DESCRIPTION}}" />
+    <meta name="twitter:description" content="{{SHARE_DESCRIPTION}}" />
     <meta name="twitter:image" content="{{SITE_URL}}/og-default.png" />
     <meta name="twitter:image:alt" content="{{OG_IMAGE_ALT}}" />
-
-    <!-- One `@graph`, three nodes, each with a stable `@id` the rest of the
-         site points at rather than restates. THE LIBRARY'S ~390 PAGES ALL
-         DECLARE `isPartOf: {"@id": ".../#website"}` AND `about: {"@id":
-         ".../#game"}` (pwa/scripts/library/html.mjs `pageSchema`), so this
-         block is where those two ids have to be DEFINED — a reference to an
-         `@id` that nothing anywhere declares is a dangling edge, and the whole
-         point of giving the game one id across four hundred pages is that a
-         crawler can join them into a single entity. Adding a node here without
-         an `@id`, or renaming one of these, silently unhooks all of them. -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "WebSite",
-            "@id": "{{SITE_URL}}/#website",
-            "url": "{{SITE_URL}}/",
-            "name": "{{TITLE}}",
-            "description": "{{SEO_DESCRIPTION}}",
-            "inLanguage": "en",
-            "publisher": { "@id": "{{SITE_URL}}/#author" }
-          },
-          {
-            "@type": "Person",
-            "@id": "{{SITE_URL}}/#author",
-            "name": "{{AUTHOR_NAME}}",
-            "url": "{{AUTHOR_URL}}",
-            "sameAs": ["{{AUTHOR_URL}}"]
-          },
-          {
-            "@type": "VideoGame",
-            "@id": "{{SITE_URL}}/#game",
-            "name": "{{TITLE}}",
-            "url": "{{SITE_URL}}/",
-            "description": "{{DESCRIPTION}}",
-            "image": "{{SITE_URL}}/og-default.png",
-            "screenshot": [
-              "{{SITE_URL}}/screenshot-wide.png",
-              "{{SITE_URL}}/screenshot-narrow.png"
-            ],
-            "genre": {{GENRE_JSON}},
-            "applicationCategory": "GameApplication",
-            "applicationSubCategory": "Action game",
-            "operatingSystem": "Any (web browser)",
-            "gamePlatform": ["Web browser", "Progressive Web App"],
-            "playMode": "SinglePlayer",
-            "numberOfPlayers": {
-              "@type": "QuantitativeValue",
-              "minValue": 1,
-              "maxValue": 1
-            },
-            "inLanguage": "en",
-            "softwareVersion": "{{VERSION}}",
-            "browserRequirements": "Requires JavaScript and HTML5 canvas. Runs offline once loaded.",
-            "installUrl": "{{SITE_URL}}/",
-            "isPartOf": { "@id": "{{SITE_URL}}/#website" },
-            "author": { "@id": "{{SITE_URL}}/#author" },
-            "isAccessibleForFree": true,
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "USD",
-              "availability": "https://schema.org/InStock",
-              "url": "{{SITE_URL}}/"
-            }
-          },
-          {{FAQ_JSON}}
-        ]
-      }
-    </script>
   </head>
   <body>
     <div id="root">
-      <!-- Prerendered shell (§11.3.1): real content crawlers can index without
-           running JavaScript, and it doubles as the no-JS fallback. React
+      <!-- Prerendered shell (§11.3.1): real content without running
+           JavaScript — the no-JS fallback, and what paints first. React
            replaces it with the live title screen. It's dressed as the game
            BOOTING — a starfield boot console rather than a document — so the
            hand-off to the real title screen reads as one continuous screen.
@@ -191,16 +125,13 @@
              Everything above is the boot console — the title, the pitch, the
              roads out — and it is what a returning player sees for the moment
              before React mounts over it. This is what sits under it for the
-             one who arrived from a search: the genre, the campaign, the
+             one who arrived from a shared link: the genre, the campaign, the
              controls, and the six questions that get asked before anyone
-             plays anything. It was all reachable only through the <title> and
-             the meta description, on the most-linked URL the site has.
+             plays anything.
 
              Copy lives in `game.config.json` (`sections`, `faq`) like the hero
              paragraphs above it, and the venue list is read from the LEVEL
-             CATALOG rather than typed there — see `renderVenues`. The FAQ is
-             rendered here and described by the `FAQPage` node in the head,
-             both from the same entries. -->
+             CATALOG rather than typed there — see `renderVenues`. -->
         <div class="prelaunch-more">{{SHELL_SECTIONS}} {{FAQ}}</div>
       </main>
     </div>

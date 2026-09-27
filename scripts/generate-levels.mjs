@@ -163,8 +163,7 @@ export const GENERATED_LEVELS: MissionDef[] = ${JSON.stringify(defs, null, 2)} a
 // its module was placed, and the module was on the startup path.
 //
 // Read through `defs/levels/summary.ts`, which is a leaf; `levelDef()` next door
-// still answers with the whole def for anything inside a run. See
-// pwa/scripts/check-seo.mjs for the budget this protects.
+// still answers with the whole def for anything inside a run.
 const summaries = Object.fromEntries(
   defs.map((def) => [def.id, { name: def.name, foes: def.foes }]),
 );

@@ -23,8 +23,7 @@
 //
 // **WHY THE TABLE IS HERE AND NOT IN `server/wire/`.** The wire's vocabulary
 // imports NOTHING of the engine — `server/wire/protocol.ts` is read from
-// screens on the app's startup path, where the 170 KB critical-path budget
-// forbids anything that drags `@game/core` behind it, and the allow-list next
+// screens on the app's startup path, where the startup-path import rule forbids anything that drags `@game/core` behind it, and the allow-list next
 // door in `server/wire/frames.ts` (which imports nothing at all) obeys the same
 // rule. A table that calls engine functions plainly cannot live there. So the
 // wire keeps a literal copy of the NAMES for its allow-list, this module owns

@@ -8,9 +8,7 @@
 // module that imports `@game/core` — and one import away sit the level catalog,
 // the loot roller, the enemy defs and the whole step pipeline. Tree-shaking does
 // not save you: it is global, so an export used by ANY chunk keeps its bytes
-// wherever its module was placed, and the module was on the startup path. The
-// 170 KB gzipped critical-path budget (`pwa/scripts/check-seo.mjs`) is what
-// notices.
+// wherever its module was placed, and the module was on the startup path.
 //
 // So this is the same move `engine/game/flags.ts` makes for the engine's runtime
 // toggles: the STATE lives in a leaf that imports nothing, and the module that

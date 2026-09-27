@@ -20,7 +20,7 @@
  *
  * This module is deliberately IMPORT-FREE: it is read from the interface's
  * sound bank as well as the run's, and `sfx/ui.ts` sits on the app's startup
- * path where the critical-path budget is measured. One `import type` costs
+ * path. One `import type` costs
  * nothing at runtime today, but it is an edge into `@game/core` on exactly the
  * module that must not have one — and `ViewRect` is four numbers.
  */

@@ -90,8 +90,7 @@ run against synthetic fixtures with no shipped content (see
   `registerDefs({ blueprints })` swaps a mod's recipes in without the def
   registry importing the carve. Nothing outside a run imports this —
   the menus reach levels through `defs/levels/summary.ts`, and pulling the
-  generator onto the startup path would put the whole level catalog in the
-  critical-path budget. The generator itself is the `mapgen-improvement` skill.
+  generator onto the startup path would put the whole level catalog in every player's first download. The generator itself is the `mapgen-improvement` skill.
 - **`engine/game/config/`** — the GLOBAL balance knobs (player, jumping, XP
   curve, stat effects, loot rules), one module per system re-exported by an
   `index.ts` barrel, nothing hardcoded in logic.
@@ -250,7 +249,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   their log and their flags are banked on the character per difficulty and
   seeded back at run setup. The shape and the merge live in the second file, a
   LEAF whose only import is a type, because the app's roster stores this record
-  and the roster is on the 170 KB startup path — which is why `@game/menu`
+  and the roster is on the startup path — which is why `@game/menu`
   re-exports it. The merge keeps the FURTHER reading of each errand, so progress
   can never walk backwards.
 - **`engine/game/disposition.ts`** — WHO IS ACTUALLY IN THE FIGHT. One predicate,
@@ -278,7 +277,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   walker, a stdlib whose absent half IS the security model); `script/catalog.ts`
   is an IMPORT-FREE LEAF holding what a mod registered, for the same reason
   `flags.ts` and `mapgen/blueprints.ts` are leaves — `registerDefs` is reachable
-  from the startup path and the 170 KB budget has no room for an interpreter, so
+  from the startup path and an interpreter has no place on it, so
   what a mod registers is SOURCE TEXT and the compile happens on the first hook
   call, inside a run; `script/env.ts` builds the frozen `game.config` /
   `game.balance` / `game.run` views; `script/host.ts` resolves a hook, contains
@@ -1419,8 +1418,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   physical `blockedByObstacle` a body and a bullet ask). **And what is not drawn is
   not shot at**: `clearOfFog` (the sibling **`engine/game/fog.ts`**, which owns the
   sweep too — both are kept out of map.ts because `engine/menu.ts` re-exports
-  map.ts's grid arithmetic and so puts that whole module inside the 170 KB
-  critical-path budget, and the sweep would drag the collision module in with
+  map.ts's grid arithmetic and so puts that whole module on the startup path, and the sweep would drag the collision module in with
   it) is the engine's own deterministic reading of that
   same frontier — no unexplored cell centre within `MAP.fogBand`. A hero who
   fires into the blackness is acting on knowledge the player does not have. It
@@ -1937,33 +1935,13 @@ consequences worth knowing before touching it:
   overrides a sprite, and how `restoreBaseDefs` puts the shipped one back —
   by deleting the override and letting the atlas answer again).
 
-#### Bundle budgets
+#### Bundle size
 
-`pwa/scripts/check-seo.mjs` polices the result, and since the app started
-entering at the studio card (`Boot.tsx`) rather than at `App.tsx` it weighs TWO
-paths rather than one — because "how long until the player sees something" and
-"how long until the player can press something" stopped being the same number:
-
-| Path                     | Budget    | Today   | What it is                                              |
-| ------------------------ | --------- | ------- | ------------------------------------------------------- |
-| **Card** (critical path) | 40 KB gz  | ~21 KB  | What the entry HTML pulls, before anything is on screen |
-| **Menu-ready**           | 170 KB gz | ~142 KB | That plus everything `src/App.tsx` statically drags in  |
-
-170 is web.dev's performance-budget figure, the one behind a ~5 s
-time-to-interactive on a slow 3G phone, with no allowance added on top. It
-stood at 200 for as long as the app rendered with React, because react-dom was
-~50 KB gzipped of the path and no app-side surgery could return that; swapping
-the renderer for Preact did, and the 30 KB of slack came off the budget with
-it. Menu-ready is that same budget under a new name, and it is still the one
-that catches a startup module reaching back through `@game/core`.
-
-Menu-ready is measured from **Vite's build manifest** (`build.manifest` in
-`pwa/vite.config.ts`) rather than from the HTML, because the HTML by design
-says nothing about a chunk fetched at runtime; the walk follows `imports`
-(static) and never `dynamicImports`, which is exactly what it must not count —
-the game screen, the drive, the gallery, the scores. The manifest is kept out
-of the service worker's precache (`pwa-plugin.ts`): it is a build artifact, and
-nothing the player runs ever asks for it.
+There are no size budgets, by owner decision — no bundle-size check, no
+Lighthouse audit, and Vite's own chunk warning is raised out of reach in
+`pwa/vite.config.ts`. The splits described here (the card, the lazy app shell,
+`@game/menu` beside `@game/core`) stay because they make the first paint fast,
+not to satisfy a number; do not split code only to shrink one.
 
 `engine/output.ts` remains the central output module (OSS_GAME_SPEC §19.4) through
 which all diagnostic output flows: semantic helpers
@@ -1985,8 +1963,7 @@ deploy-shaped:
   gzipped before a pixel could be drawn. The card is up for a second or three
   regardless, so all of it now arrives DURING the card (`warmBoot`) instead of
   before it, and the card holds until it has: the menu is exactly as finished
-  when the card clears as it was when it was eager. Measured as two budgets —
-  see _Bundle budgets_ below.
+  when the card clears as it was when it was eager.
 - **`pwa/src/app-shell.ts`** — the one place `App.tsx` is imported from, so the
   renderer's `lazy()` and `warmBoot`'s prefetch name one specifier and share one
   chunk and one fetch instead of racing into two.
@@ -2025,11 +2002,11 @@ deploy-shaped:
   and the app shell that ARE racing the card.
   **In a STORE SHELL it is the first thing painted**: a shell build strips the
   prerendered boot shell out of `index.html` (`VITE_SHELL_BUILD`, applied by
-  `stripBootShell` in `pwa-plugin.ts`), because that markup is SEO and nothing
-  crawls a `webroot.zip` or a Tauri resource bundle — all it did in
-  there was flash an SEO document between the platform splash lifting and the
-  card. The web keeps it: it is the crawlable copy AND what a first-time
-  visitor reads while the bundle is still on the wire.
+  `stripBootShell` in `pwa-plugin.ts`), because JavaScript is never off inside
+  a `webroot.zip` or a Tauri resource bundle — all it did in there was flash a
+  document between the platform splash lifting and the card. The web keeps it:
+  it is the no-JS fallback AND what a first-time visitor reads while the bundle
+  is still on the wire.
 - **`pwa/src/game/`** — the presentation of the engine:
   `TitleScreen.tsx` (the Doom-style splash menu: starfield, logo,
   keyboard-and-pointer navigation, NEW GAME → the difficulty ladder,
@@ -2286,9 +2263,11 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   REINSTALL. It ships INLINE in the shell (`bootWatchdogScript` pastes
   `watchBoot.toString()`), because a watchdog inside the bundle cannot report
   the bundle not arriving; `markAppMounted()` in `main.tsx` calls it off.
-- **`pwa/scripts/`** — source-data extraction (§11.2), SEO generation
-  (sitemap/robots/llms/404, §11.3), and the structural SEO checker
-  (§11.3.9).
+- **`pwa/scripts/`** — source-data extraction (§11.2) and the post-build
+  site files (`generate-site-files.mjs`: `robots.txt` and a `noindex` 404).
+  There is no sitemap, no `llms.txt` and no SEO checker: the site is not
+  meant to be found through search, and every page carries `noindex`, by
+  owner decision.
 - **`pwa/scripts/generate-screenshots.mjs`** — the manifest's install-prompt
   screenshots (§11.4.1), captured as REAL frames of the running game: it serves
   the build, hands a run to the engine autopilot, and shoots a live fight at the
@@ -2297,7 +2276,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   the files — an install prompt is a promise about what the player is about to
   get, so composed marketing art has no place in that slot. Run via
   `make screenshots` (Playwright installed ephemerally, like the playtest
-  harness); `check-seo` fails the build on a named file that is missing.
+  harness).
 
 The app keeps its PWA update lifecycle and other game-agnostic plumbing in the
 dedicated `engine/lib/` and `pwa/src/lib/` areas. This keeps the game self-contained
@@ -2844,8 +2823,7 @@ retrofit:
   not use `pwa-plugin.ts`'s doc-page mechanism (which copies the built
   `index.html`, inheriting the entry script and every `modulepreload`) — right
   for two pages beside the app, ruinous for hundreds. It has its own minimal
-  template: one small stylesheet, one webfont. The critical-path budget keeps
-  measuring the game's own preload set and is unaffected.
+  template: one small stylesheet, one webfont. The game's own startup path is unaffected.
 - **It wears the game's skin without copying it.** The window skin is inlined
   verbatim from `pwa/src/lib/pixel-panel.css` and the ITEM CARD from
   `pwa/src/lib/item-card.css` (both of which `styles.css` also imports, so one
@@ -2877,18 +2855,16 @@ retrofit:
   the game ships that nobody wrote about, or a chapter whose scenes disagree
   with the level's own `prelude` chain each stop the build.
 
-`pwa/scripts/generate-seo.mjs` enumerates the sitemap from the same route model
-that renders the pages — so a page without an entry, or an entry without a page,
-is impossible by construction — and dates each one from the git history of the
-YAML it is compiled from. Each slot's service worker denies `/library/`
+Each page is dated (its Open Graph `article:*` times) from the git history of
+the YAML it is compiled from, and carries `noindex` like every page on the
+site. Each slot's service worker denies `/library/`
 navigations, or the cached app shell would shadow every page in it.
 `tests/content/library_test.ts` holds the whole thing to the engine.
 
 **The title menu's LIBRARY row is the only way in.** The prerendered boot shell
 carries a link too, but the app replaces that shell the moment it mounts — so
-before the row existed a human never saw the link, and neither did a crawler
-that runs JavaScript, which left every reference page orphaned from the site's
-own front door and reachable only through the sitemap. The row leaves the app
+before the row existed a human never saw the link, which left every reference
+page orphaned from the site's own front door. The row leaves the app
 with a plain navigation rather than routing inside it: the library is documents
 that deliberately carry none of the game's JavaScript, so it cannot be a screen.
 
@@ -2929,11 +2905,9 @@ different pictures because they are read by different things.
   and a rarity halo the common tiers deliberately do not get. It sits on a clean
   field — an earlier pass tiled it with the venue's floor, and at thumbnail size
   a busy texture behind the title only costs legibility.
-- **The search picture** (`drop-shot.mjs` for items, `spawn-shot.mjs` for
-  monsters) is what goes into Google Images, which ranks images it finds IN the
-  page and reads the alt text and caption around them — `og:image` is a
-  social-unfurl signal it does not reliably fetch. So these are real `<img>`
-  elements, and `generate-seo.mjs` lists them in the sitemap's `image:` entries.
+- **The page picture** (`drop-shot.mjs` for items, `spawn-shot.mjs` for
+  monsters) is a real `<img>` in the page, with alt text and a caption that say
+  what it shows — where `og:image` only feeds a share card.
   An item's is THE GAME'S OWN ITEM CARD, photographed rather than redrawn, laid
   on a patch of the floor it drops on. A monster's is the mob staged on its
   venue at spawn scale — sprite and ground blown up by the SAME factor, so it
@@ -2953,7 +2927,7 @@ part of the build that needs a browser and by far the slowest, and their answer
 changes only when the content does — so `LIBRARY_IMAGES_DIR` gates them, and it
 is set only by `pages.yml` and `library-images.yml`. Every other job builds with
 them off, and a page then wears the site's shared default card and omits its
-drop figure; `check-seo` passes either way.
+drop figure.
 
 They are cached rather than committed. A set is ~32 MB and git keeps every
 version forever, so a few regenerations would put the repo into gigabytes. The

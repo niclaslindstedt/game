@@ -6,8 +6,7 @@
 // The list exists TWICE on purpose (see `engine/game/commands.ts`): the engine
 // owns what each verb does, and `server/wire/frames.ts` keeps a literal copy
 // of the NAMES because the page reads that leaf from screens on the app's
-// startup path, where the 170 KB critical-path budget forbids reaching
-// `@game/core`. A copy nobody checks is a copy that drifts, so this file is the
+// startup path, where the startup-path import rule forbids reaching `@game/core`. A copy nobody checks is a copy that drifts, so this file is the
 // check — the same shape `mod/catalog.json` and the Game Center manifests use.
 //
 // The argument suite is not paperwork. These arguments arrive from an open UDP

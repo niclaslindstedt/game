@@ -29,7 +29,7 @@
 // stops a dependency — or a careless `npm install` — from putting react back
 // in the tree. Two renderers would then both be reachable, the compat alias
 // would go on pointing at Preact, and the only symptom would be ~50 KB of
-// react-dom sitting in the critical path that `check-seo.mjs` measures. So the
+// react-dom sitting in the critical path. So the
 // dependency tree is asserted to be free of it.
 
 import { readdirSync, readFileSync } from "node:fs";

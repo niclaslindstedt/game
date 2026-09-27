@@ -204,11 +204,11 @@ DEVELOPER tree (level warp, balance multipliers, free coins) on a shipped store
 build. `scripts/menu-data/load-yaml.mjs` takes no directory (the one loader that
 doesn't) and `mod/tools/build.mjs` REFUSES such a mod rather than ignoring it.
 
-**THE 170 KB CRITICAL-PATH BUDGET.** The title menu is the app's STARTUP path.
-A menu screen may import `@game/menu` and the import-free `@game/wire/*` leaves
-— never `@game/core` or `pwa/src/game/net/`. `pwa/scripts/check-seo.mjs`
-measures it; when it trips, find what reached back through `@game/core` (or make
-that screen lazy). Do not raise the number.
+**THE STARTUP PATH.** The title menu is the app's STARTUP path. A menu screen
+may import `@game/menu` and the import-free `@game/wire/*` leaves — never
+`@game/core` or `pwa/src/game/net/`; `tests/content/net_reachability_test.ts`
+walks the import graph and says which edge broke it. (There is no size budget,
+by owner decision — this is an import rule, not a number.)
 
 **`__DEV_TOOLS__` MEANS THE CODE IS GONE, NOT HIDDEN.** It is a build-time
 literal, so `if (__DEV_TOOLS__ && screen === "developer")` lets Rollup drop

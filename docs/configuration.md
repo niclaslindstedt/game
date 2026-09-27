@@ -459,15 +459,14 @@ it.
 when the site being built is going INSIDE a store shell rather than onto the
 web. It does one thing: `index.html` ships without the prerendered boot shell
 (`stripBootShell` in `pwa/pwa-plugin.ts`), leaving `<div id="root"></div>` and
-the brand background until the studio card mounts. That markup is SEO —
-crawlable copy and the no-JS fallback — and a compiled build has neither a
-crawler nor a browser with JS off, so all it did there was flash an SEO document
-between the platform splash lifting and the card. Set by all three shells'
+the brand background until the studio card mounts. That markup is the no-JS
+fallback, and a compiled build never has JS off, so all it did there was flash a
+document between the platform splash lifting and the card. Set by all three shells'
 `bundle-web.mjs` on EVERY profile, unlike `VITE_DEV_TOOLS` above, which only
 `production` turns off — this is about the medium, not the audience. `/privacy/`
 and `/contact/` are untouched (both app stores require them, and they are
 derived from `index.html` before the strip runs); so is every web and
-deploy-slot build, which is what `pwa/scripts/check-seo.mjs` measures.
+deploy-slot build.
 
 **`PLAYWRIGHT_CHROMIUM`** — read by every Playwright-driven script in
 `pwa/scripts/`. Path to a Chromium binary for the harnesses that drive a real

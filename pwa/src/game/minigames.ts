@@ -19,8 +19,7 @@
 //
 // STARTUP PATH. The main menu reads this to decide whether the MINIGAMES row
 // exists at all, so it must stay a leaf: no `@game/core`, no renderer, nothing
-// that drags the simulation into the entry chunk (see AGENTS.md → the 170 KB
-// budget). What a cabinet IS lives behind the lazy `MinigameScreen`.
+// that drags the simulation into the entry chunk (see AGENTS.md → the engine's two entry points). What a cabinet IS lives behind the lazy `MinigameScreen`.
 
 import { DIFFICULTY_ORDER, type Difficulty } from "@game/menu";
 

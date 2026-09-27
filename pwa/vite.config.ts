@@ -80,7 +80,7 @@ const devTools = process.env.VITE_DEV_TOOLS !== "off";
 // profile rather than only `production`: unlike the developer tooling above,
 // which a preview build deliberately keeps so it behaves like the website, the
 // prerendered boot shell is dead weight in any compiled build. Nothing crawls
-// a packaged app, and its only visible effect there is a blink of an SEO document
+// a packaged app, and its only visible effect there is a blink of a document
 // between the platform splash and the game's own studio card. See
 // `stripBootShell` in pwa-plugin.ts for what it takes out and what survives.
 const shellBuild = process.env.VITE_SHELL_BUILD === "on";
@@ -120,19 +120,8 @@ const version = `v${appVersion} · ${buildRef}`;
 export default defineConfig({
   base,
   build: {
-    // The simulation is deliberately a lazy, run-only chunk. Its minified
-    // size sits above Vite's generic warning while the separately enforced
-    // gzipped startup path remains within the SEO budget. Keep an explicit
-    // ceiling here so genuine engine-chunk growth still raises a build warning.
-    chunkSizeWarningLimit: 900,
-    // WRITTEN FOR `scripts/check-seo.mjs`, which weighs two paths rather than
-    // one: the CARD (what the entry HTML pulls before anything is on screen)
-    // and MENU-READY (that plus the app shell the card fetches behind itself —
-    // see Boot.tsx). The second is the one that still catches a startup module
-    // reaching back through `@game/core`, and it needs to know which chunks
-    // `src/App.tsx` statically drags in, which only the build knows. Reading it
-    // out of the manifest beats guessing from hashed filenames.
-    manifest: true,
+    // No size budgets, by owner decision; this only keeps Vite's own warning quiet.
+    chunkSizeWarningLimit: 100_000,
   },
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
@@ -174,7 +163,7 @@ export default defineConfig({
     // without waiting on the app bundle. Unlike `gamePwa` it is not build-only:
     // the shell is on screen in dev too, until the app mounts over it.
     prelaunchCss(),
-    gamePwa({ base, version, appVersion, shellBuild }),
+    gamePwa({ base, version, shellBuild }),
   ],
   resolve: {
     // The engine lives at the repository root (`../engine`); the app imports it
@@ -189,9 +178,7 @@ export default defineConfig({
     // have to be rewritten to move the renderer — and, more to the point, they
     // do not have to be rewritten BACK if the compat layer ever stops being the
     // right answer for one of them. The bytes are what this was for: dropping
-    // react-dom took the measured critical path from 183 KB gzipped to ~133 KB,
-    // which is what lets `check-seo.mjs` hold the budget at web.dev's 170 KB
-    // instead of the 200 KB React needed.
+    // react-dom took the measured critical path from 183 KB gzipped to ~133 KB.
     //
     // MOST SPECIFIC FIRST — `react-dom/client` (where `createRoot` lives, and
     // it is NOT re-exported from `preact/compat`) must be matched before the

@@ -4,8 +4,8 @@
 //
 // Two things are worth a test here and they pull in opposite directions.
 //
-// The strip has to be COMPLETE: what it exists to remove is a flash of an SEO
-// document — a "SYSTEM ONLINE" console, four library links, a FAQ — between the
+// The strip has to be COMPLETE: what it exists to remove is a flash of a
+// prerendered document — a "SYSTEM ONLINE" console, four library links, a FAQ — between the
 // platform splash lifting and the game's own studio card, in a build nothing
 // can crawl and where JavaScript is never off. Half a strip is still a flash.
 //
@@ -94,7 +94,6 @@ describe("a shell build's emitted bundle", () => {
     const plugin = gamePwa({
       base: "/",
       version: "v0.0.0 · test",
-      appVersion: "0.0.0",
       shellBuild,
     });
     const bundle: Record<string, { type: "asset"; source: string }> = {

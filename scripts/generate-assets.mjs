@@ -143,7 +143,7 @@ if (wantSpritePreviews) {
 // One committed atlas + source rects instead of one PNG per sprite — the
 // app slices it at load time (pwa/src/game/assets.ts). The rects ship as
 // COMPACT `[x, y, w, h]` tuples, one per line: the manifest rides the app's
-// critical-path budget (pwa/scripts/check-seo.mjs), and the keyed-object
+// startup path, and the keyed-object
 // pretty print cost ~1.7 KB gzipped (85 KB raw) for nothing a reader needs —
 // while one entry per line keeps the committed file's diffs per-sprite.
 const { atlas, rects } = packAtlas(surfaces);

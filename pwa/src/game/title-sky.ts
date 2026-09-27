@@ -520,10 +520,9 @@ export function startTitleSky(els: SkyElements): () => void {
   // Give every body a real, textured, rotating globe: a canvas child that the
   // shader (planet-globe.ts) paints each frame.
   //
-  // THE SHADER AND ITS GEOGRAPHY ARE LOADED LAZILY, and that is a budget
+  // THE SHADER AND ITS GEOGRAPHY ARE LOADED LAZILY, and that is a first-paint
   // decision rather than a style one: the title screen is the app's critical
-  // path (170 KB gzipped — see pwa/scripts/check-seo.mjs), and the world maps
-  // are ~11 KB of it. Nothing is lost by waiting, because the bodies already
+  // path, and the world maps are ~11 KB of it. Nothing is lost by waiting, because the bodies already
   // have a resting look — the flat CSS gradient the stylesheet gives them, and
   // the same one prefers-reduced-motion never leaves — so the sky is correct
   // from the first frame and simply gains its globes a moment later.

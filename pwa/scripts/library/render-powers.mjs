@@ -16,8 +16,6 @@ import {
   escapeHtml,
   img,
   page,
-  pageSchema,
-  SITE_URL,
   table,
   TITLE,
 } from "./html.mjs";
@@ -174,7 +172,6 @@ export function powerPage(
   { base, groundFor, venueName, hasImages },
 ) {
   const sprites = `${base}library/sprites/`;
-  const canonical = `${SITE_URL}${base}library/${power.path}/`;
   const description = powerDescription(power);
   const cardSpec = powerCardSpec(power);
   const card = hasImages
@@ -244,14 +241,7 @@ ${poolsSection(power, base)}`;
     ground: groundFor(power.introducedBy?.id ?? null),
     ogImage: card,
     body,
-    schema: pageSchema({
-      type: "Article",
-      canonical,
-      name: `${power.name} — ${TITLE} powers`,
-      description,
-      // Same object as the og:image tag — see the note in render-bestiary.
-      image: card.url,
-    }),
+    ogType: "article",
   });
 }
 
@@ -291,7 +281,6 @@ ${powers
  * that away, and it is the single most useful thing the section knows.
  */
 export function powersIndex(model, { base, groundFor }) {
-  const canonical = `${SITE_URL}${base}library/powers/`;
   const sprites = `${base}library/sprites/`;
   const powers = model.powers;
 
@@ -339,11 +328,6 @@ ${rack(group.entries, base, sprites)}`;
           : ""
       }</p>
 ${groups}`,
-    schema: pageSchema({
-      type: "CollectionPage",
-      canonical,
-      name: `Powers — every powerup in ${TITLE}`,
-      description,
-    }),
+    ogType: "website",
   });
 }

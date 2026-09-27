@@ -1006,8 +1006,7 @@ export {
 // THE DRIVE — the playable interlude between the garage and GOODCO, and the
 // same road home (engine/game/drive/). RUN-FACING ONLY: it must never reach
 // `engine/menu.ts`, because the road drags the crowd, the traffic, the impact
-// model and the car behind it, and the startup path's budget has no room for
-// any of that. The app imports it from the GAME screen, never from the title.
+// model and the car behind it, and none of that belongs on the startup path. The app imports it from the GAME screen, never from the title.
 export {
   cityEndPx,
   cityLength,

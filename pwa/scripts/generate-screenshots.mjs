@@ -13,8 +13,6 @@
 //
 // The output is COMMITTED, like the icons and the OG card: the manifest names
 // these files, so a build without them would ship a manifest pointing at 404s.
-// `check-seo` asserts every manifest screenshot resolves in dist/, which is
-// what stops that happening quietly.
 //
 // Playwright is a devDependency of this repo (same as the playtest harness it
 // borrows its menu walk from), so `npm install` brings it. Only its browser

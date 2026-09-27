@@ -11,7 +11,7 @@
 // served from it. Online that is an invisible extra round trip. Offline — an
 // installed PWA on a phone, which is what this game is — the module script
 // never arrives, nothing mounts, and the player is left looking at the
-// prerendered SEO document with "BOOTING…" blinking under it. Force-quitting
+// prerendered document with "BOOTING…" blinking under it. Force-quitting
 // fixes it, which is the tell: closing the last client is what finally lets the
 // new worker activate and make the cache coherent again.
 //
@@ -46,7 +46,6 @@ function emitWorker(options: {
   const plugin = gamePwa({
     base,
     version: options.version ?? "v0.0.0 · test",
-    appVersion: "0.0.0",
   });
   const bundle: Record<string, { type: "asset"; source: string }> = {
     "index.html": { type: "asset", source: INDEX },

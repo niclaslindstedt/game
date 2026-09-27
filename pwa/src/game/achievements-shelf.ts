@@ -5,7 +5,7 @@
 // rather than each calling `lazy(() => import(...))` on their own, so there is
 // one import site, one chunk, and one place the lazy contract is stated.
 //
-// Lazy at all for the critical-path budget (`pwa/scripts/check-seo.mjs`): the
+// Lazy at all to keep the startup path light: the
 // shelf is a destination, never startup code, and it drags the whole badge
 // catalog in behind it.
 

@@ -121,8 +121,7 @@ description: "Use when game may have drifted from OSS_GAME_SPEC.md. Walks the sp
    # the suites that own it rather than grepping:
    npx vitest run tests/content/server_deps_test.ts tests/content/net_reachability_test.ts
 
-   # §23.9 — the startup-path budget is gated, not just documented
-   grep -rn "gzip" pwa/scripts/check-seo.mjs | head -5
+   # §23.9 — deliberately not met: no size budgets, by owner decision
 
    # §24.3 — generated content is gitignored and uncommitted
    git ls-files 'engine/generated/*' 'pwa/src/generated/*' \

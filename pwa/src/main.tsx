@@ -12,9 +12,8 @@ import { markAppMounted } from "./app/boot-watchdog.ts";
 
 // Both document pages are lazily loaded, and must STAY lazy: they are walls of
 // prose that nobody reaching the game ever loads, and bundling them into the
-// entry chunk pushes the critical path over the SEO checker's 1000 KB budget
-// (`pwa/scripts/check-seo.mjs`). Their own chunks cost the rare visitor a fetch
-// and cost every player nothing.
+// entry chunk would make every player download them before the first frame.
+// Their own chunks cost the rare visitor a fetch and cost every player nothing.
 const PrivacyPage = lazy(() =>
   import("./PrivacyPage.tsx").then((m) => ({ default: m.PrivacyPage })),
 );

@@ -21,9 +21,7 @@ import {
   escapeHtml,
   img,
   page,
-  pageSchema,
   reveal,
-  SITE_URL,
   table,
   TITLE,
 } from "./html.mjs";
@@ -366,7 +364,6 @@ export function questPage(
   model,
   { base, groundFor, venueName, hasImages },
 ) {
-  const canonical = `${SITE_URL}${base}library/${quest.path}/`;
   const description = questDescription(quest);
   const cardSpec = questCardSpec(quest);
   const card = hasImages
@@ -433,14 +430,7 @@ ${talkSection(quest)}`;
     ground: groundFor(quest.venue?.id ?? null),
     ogImage: card,
     body,
-    schema: pageSchema({
-      type: "Article",
-      canonical,
-      name: `${quest.name} — ${TITLE} errands`,
-      description,
-      // Same object as the og:image tag — see the note in render-bestiary.
-      image: card.url,
-    }),
+    ogType: "article",
   });
 }
 
@@ -450,7 +440,6 @@ export function giverPage(
   model,
   { base, groundFor, venueName, hasImages },
 ) {
-  const canonical = `${SITE_URL}${base}library/${giver.path}/`;
   const description = giverDescription(giver);
   const cardSpec = giverCardSpec(giver);
   const card = hasImages
@@ -551,13 +540,7 @@ ${reveal({ id: "reveal-giver-said", label: "WHAT THEY SAY", body: said })}`
     ground: groundFor(giver.venue?.id ?? null),
     ogImage: card,
     body,
-    schema: pageSchema({
-      type: "Article",
-      canonical,
-      name: `${giver.name} — ${TITLE} quest givers`,
-      description,
-      image: card.url,
-    }),
+    ogType: "article",
   });
 }
 
@@ -588,8 +571,6 @@ ${quests
  * facts a reader needs to find the one they half-remember.
  */
 export function questsIndex(model, { base, groundFor }) {
-  const canonical = `${SITE_URL}${base}library/errands/`;
-
   const groups = model.groups
     .map((group) => {
       const people = group.givers
@@ -653,11 +634,6 @@ ${orphans.length > 0 ? rack(orphans, base) : ""}`;
       to the run you are in rather than to the hero, so a chain can never cross
       a map or be picked up where you left it.</p>
 ${groups}`,
-    schema: pageSchema({
-      type: "CollectionPage",
-      canonical,
-      name: `Errands — every quest in ${TITLE}`,
-      description,
-    }),
+    ogType: "website",
   });
 }

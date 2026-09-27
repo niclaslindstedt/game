@@ -14,10 +14,10 @@
 // or preview build behaves exactly like the website.
 //
 // VITE_SHELL_BUILD is set on EVERY profile, because it is about the medium
-// rather than the audience: it drops the prerendered SEO boot shell from
+// rather than the audience: it drops the prerendered boot shell from
 // `index.html` (`stripBootShell` in pwa/pwa-plugin.ts). Nothing crawls a
 // resource bundle, JavaScript is never off in here, and the site is on local
-// disk — so all that markup did was flash an SEO document between the window
+// disk — so all that markup did was flash a document between the window
 // opening and the game's own studio card.
 //
 // BOTH ARE BUILD-TIME, so `--skip-build` copies whatever the last build left in
@@ -64,7 +64,7 @@ if (!skipBuild) {
     // directly (EINVAL); cmd.exe must interpret them.
     shell: WINDOWS,
     // VITE_SHELL_BUILD is unconditional, on every profile: this is a
-    // compiled build, so the prerendered SEO boot shell has nothing to be
+    // compiled build, so the prerendered boot shell has nothing to be
     // read by and only flashes on the way to the game (see `stripBootShell`
     // in pwa/pwa-plugin.ts). The developer tooling beside it is profile-led,
     // because a preview build wants to behave exactly like the website.

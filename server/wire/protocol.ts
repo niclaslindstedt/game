@@ -6,8 +6,7 @@
 // This module is deliberately a LEAF: types, constants and narrow guards, no
 // engine import at all. Both ends of the wire read it — the server inside its
 // utility process and the page inside the renderer — and the page reaches it
-// from a screen that sits on the app's STARTUP path, where the 170 KB
-// critical-path budget forbids anything that drags `@game/core` behind it.
+// from a screen that sits on the app's STARTUP path, where the startup-path import rule forbids anything that drags `@game/core` behind it.
 // A `type` import of `GameInput` would be free, but a value import would not,
 // and the distinction is too easy to lose; so nothing here knows the engine
 // exists and the shapes that must name engine types do so structurally.
@@ -106,8 +105,7 @@ export type SessionParams = {
    * still is, and the overall wear ladder.
    *
    * OPAQUE HERE, like `loadout` and `campaignQuests` and for the same reason:
-   * this leaf imports nothing (it is read from the app's startup path, where
-   * the budget forbids `@game/core`), so the wire moves it and the engine reads
+   * this leaf imports nothing (it is read from the app's startup path, where nothing may reach `@game/core`), so the wire moves it and the engine reads
    * it. Nothing is lost by not naming the shape — `applyCarDamage` re-clamps
    * every field on the way in, so a frame carrying a rung nothing has a sprite
    * for lands as a straight panel rather than as a hole in the picture.

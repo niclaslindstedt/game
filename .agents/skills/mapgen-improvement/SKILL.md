@@ -154,8 +154,7 @@ Each of these was a bug first. Re-deriving them costs a session.
   onto a carved grid they land on whatever is there. Only districts override the
   floor.
 - **Nothing outside a run may import `mapgen/`.** The menus reach levels through
-  `defs/levels/summary.ts`. Pulling the generator onto the startup path drags the
-  whole level catalog into the 170 KB critical-path budget.
+  `defs/levels/summary.ts`. Pulling the generator onto the startup path drags the whole level catalog into every player's first download.
 - **An OPEN border narrower than a body is a wall, not a way through.** Two cells
   of one open district have no wall between them, so any overlap used to read as
   connectivity — including the thirty-pixel slivers the carve leaves where two

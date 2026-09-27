@@ -17,10 +17,8 @@ import {
   escapeHtml,
   img,
   page,
-  pageSchema,
   reveal,
   revealAll,
-  SITE_URL,
   table,
   TITLE,
 } from "./html.mjs";
@@ -467,7 +465,6 @@ ${table({ head: ["ERRAND", "HANDED OUT ON", "FROM RUNG"], rows })}`;
 
 export function chapterPage(chapter, context, position, total) {
   const { base, groundFor, linkGroups } = context;
-  const canonical = `${SITE_URL}${base}library/${chapter.path}/`;
   const href = (path) => `${base}library/${path}/`;
   const sprites = `${base}library/sprites/`;
   const at = { href, sprites };
@@ -478,7 +475,7 @@ export function chapterPage(chapter, context, position, total) {
     href,
     seen: new Set(),
   };
-  // Under 160 characters, or Google truncates it (check-seo warns) — and the
+  // Under 160 characters, or a share card truncates it — and the
   // tail is where the spoiler warning would be, so it is the half that has to
   // survive being cut.
   const description =
@@ -542,18 +539,12 @@ ${nav.length > 0 ? `      <nav class="campaign-nav">${nav.join("")}</nav>` : ""}
     ],
     ground: groundFor(chapter.venue?.id ?? null),
     body,
-    schema: pageSchema({
-      type: "Article",
-      canonical,
-      name: `${chapter.name} — the story of ${TITLE}`,
-      description,
-    }),
+    ogType: "article",
   });
 }
 
 /** The story's front page: the premise, and the chapters in order. */
 export function storyIndex(model, { base, groundFor, linkGroups }) {
-  const canonical = `${SITE_URL}${base}library/story/`;
   const href = (path) => `${base}library/${path}/`;
   const story = model.story;
   const chapters = story.chapters;
@@ -622,11 +613,6 @@ ${reveal({
   label: "THE REFRAIN",
   body: story.refrain.map((thought) => pinnedBeat(thought)).join("\n"),
 })}`,
-    schema: pageSchema({
-      type: "CollectionPage",
-      canonical,
-      name: `The story of ${TITLE}`,
-      description,
-    }),
+    ogType: "website",
   });
 }

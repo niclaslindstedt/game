@@ -7,8 +7,7 @@
 // catalog: every wall, spawner, wave budget, loot table and decor prop of every
 // map. The difficulty ladder, the level picker, the high-score board and a
 // saved run's id check need none of that, so they come here and the maps stay
-// out of the app's startup chunk (see pwa/scripts/check-seo.mjs's critical-path
-// budget). Inside a run, `levelDef()` next door still answers with the whole
+// out of the app's startup chunk. Inside a run, `levelDef()` next door still answers with the whole
 // def.
 //
 // `setLevelSummaries` keeps the `registerDefs` seam honest: a fixture catalog

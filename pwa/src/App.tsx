@@ -40,7 +40,7 @@ import type { CabinetReturn } from "./game/title-screen/menu-model.ts";
 import { TitleScreen } from "./game/TitleScreen.tsx";
 import { UpdateModal } from "./game/UpdateModal.tsx";
 
-// Lazy for the SEO critical-path budget: the title menu is startup; the
+// Lazy to keep the startup path light: the title menu is startup; the
 // playable game (and the engine renderer it pulls in) is only reached once a
 // run begins, so it loads on demand rather than in the entry chunk.
 const GameScreen = lazy(() =>

@@ -21,9 +21,7 @@ import {
   escapeHtml,
   img,
   page,
-  pageSchema,
   reveal,
-  SITE_URL,
   table,
   TITLE,
 } from "./html.mjs";
@@ -178,7 +176,6 @@ export function allyPage(
   model,
   { base, groundFor, venueName, hasImages },
 ) {
-  const canonical = `${SITE_URL}${base}library/${ally.path}/`;
   const description = allyDescription(ally);
   const cardSpec = allyCardSpec(ally);
   const card = hasImages
@@ -290,14 +287,7 @@ ${reveal({ id: "reveal-ally-said", label: "WHAT IT SAYS", body: said })}`
     ground: groundFor(recruit?.venue?.id ?? null),
     ogImage: card,
     body,
-    schema: pageSchema({
-      type: "Article",
-      canonical,
-      name: `${ally.name} — ${TITLE} companions`,
-      description,
-      // Same object as the og:image tag — see the note in render-bestiary.
-      image: card.url,
-    }),
+    ogType: "article",
   });
 }
 
@@ -347,7 +337,6 @@ ${allies
  * page, because every one is true of all of them.
  */
 export function alliesIndex(model, { base, groundFor }) {
-  const canonical = `${SITE_URL}${base}library/allies/`;
   const total = model.allies.length;
   const description = alliesDescription(model);
   // Where the offers are made, said once here rather than on every row: a value
@@ -386,11 +375,6 @@ ${rack(model.allies, base)}
 ${paragraphs(partyProse(model)).replace(/^ {8}/gm, "      ")}
 ${reviveNote(model, base)}
       </section>`,
-    schema: pageSchema({
-      type: "CollectionPage",
-      canonical,
-      name: `Allies — every companion in ${TITLE}`,
-      description,
-    }),
+    ogType: "website",
   });
 }

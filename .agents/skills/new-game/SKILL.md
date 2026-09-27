@@ -27,7 +27,7 @@ should hardcode the old name.
       `author`, `storagePrefix`, `cacheIdPrefix`, `ogImageAlt`, `og.*`, and
       `heroParagraphs`. App code reads it via `pwa/src/identity.ts`; the
       shell (`index.html`) and `manifest.webmanifest` are filled/generated
-      from it at build time by `pwa/pwa-plugin.ts`; the SEO/OG node
+      from it at build time by `pwa/pwa-plugin.ts`; the OG and library node
       scripts import the JSON directly.
 - [ ] Update **`package.json`** and **`pwa/package.json`** `name` /
       `description` (npm metadata — the identity config cannot reach them).
@@ -140,7 +140,7 @@ Author the new game on the untouched engine, one catalog at a time:
 ## 5. Verify
 
 - [ ] `make build && make test && make lint && make assets`
-- [ ] `npm run check:seo` (from `pwa/`, after a build)
+- [ ] Every `.html` under `pwa/dist` carries `noindex` (after a build)
 - [ ] `git grep -i "<old title>\|<old domain>"` is clean (CHANGELOG/.changes
       history aside).
 

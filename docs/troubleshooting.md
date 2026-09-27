@@ -94,7 +94,7 @@ before the denylist is still controlling the origin, unregister it
 ### After an update, the app opens on the boot screen and stays there
 
 The "BOOTING…" console with the game's description under it is the prerendered
-shell — the SEO document and the no-JS fallback — so seeing it means the bundle
+shell — the no-JS fallback — so seeing it means the bundle
 never ran, not that anything is loading.
 
 It should now recover on its own: `pwa/src/app/boot-watchdog.ts` notices the

@@ -143,9 +143,7 @@ const cook = (list) =>
 // SPLIT IN TWO, for the same reason `sfx/ui.ts` is not re-exported from the sfx
 // barrel: the interface's sounds are on the app's STARTUP path (a menu makes a
 // noise before any run exists), and the run's are not. One catalog would park
-// every kill, explosion and jingle in the entry chunk to click a button — which
-// is the 170 KB critical-path budget's whole concern, and measurably so: it
-// cost 4 KB gzipped before this split.
+// every kill, explosion and jingle in the entry chunk to click a button — which is exactly what the startup path should not carry, and measurably so: it cost 4 KB gzipped before this split.
 const UI_PREFIX = "ui_";
 const uiEntries = entries.filter((e) => e.id.startsWith(UI_PREFIX));
 const runEntries = entries.filter((e) => !e.id.startsWith(UI_PREFIX));

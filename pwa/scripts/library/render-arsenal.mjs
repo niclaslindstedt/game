@@ -25,8 +25,6 @@ import {
   escapeHtml,
   img,
   page,
-  pageSchema,
-  SITE_URL,
   table,
   TITLE,
 } from "./html.mjs";
@@ -441,7 +439,6 @@ export function itemPage(
   { base, groundFor, venueOf, venueName, hasImages },
 ) {
   const sprites = `${base}library/sprites/`;
-  const canonical = `${SITE_URL}${base}library/${item.path}/`;
   const description = itemDescription(item);
   const cardSpec = itemCardSpec(item);
   // Without a generated set this build has no card of its own to name, so the
@@ -582,14 +579,7 @@ ${sourcesSection(item, base)}`;
     ground: groundFor(venueOf(item)),
     ogImage: card,
     body,
-    schema: pageSchema({
-      type: "Article",
-      canonical,
-      name: `${item.name} — ${TITLE} arsenal`,
-      description,
-      // Same object as the og:image tag — see the note in render-bestiary.
-      image: card.url,
-    }),
+    ogType: "article",
   });
 }
 
@@ -616,7 +606,6 @@ ${items
 
 /** The arsenal index: the bases by slot, then the named chase by rarity. */
 export function arsenalIndex(model, { base, groundFor }) {
-  const canonical = `${SITE_URL}${base}library/arsenal/`;
   const sprites = `${base}library/sprites/`;
   const byLevel = (a, b) =>
     a.levelReq - b.levelReq || a.name.localeCompare(b.name);
@@ -687,11 +676,6 @@ ${slots}
       is built on one of the shapes above and carries an authored block of
       bonuses that never rolls.</p>
 ${chase}`,
-    schema: pageSchema({
-      type: "CollectionPage",
-      canonical,
-      name: `Arsenal — every item in ${TITLE}`,
-      description,
-    }),
+    ogType: "website",
   });
 }

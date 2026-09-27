@@ -15,7 +15,7 @@
 // Three rules make the data cheap to write and cheap to ship:
 //
 //   • A polygon is a STRING of "lon,lat" pairs. Compact in source, compact
-//     after gzip (the title screen is on the 170 KB critical path), and
+//     after gzip (the title screen is on the startup path), and
 //     editable by hand — which matters, because these were iterated against
 //     rendered maps until each continent read right.
 //   • LAND polygons may be drawn GENEROUSLY and the enclosed seas punched back

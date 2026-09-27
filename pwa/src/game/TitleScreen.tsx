@@ -98,7 +98,7 @@ import {
   useViewportMetrics,
 } from "./title-screen/use-title-layout.ts";
 
-// The ACHIEVEMENTS browser is lazy for the SEO critical-path budget — a menu
+// The ACHIEVEMENTS browser is lazy to keep the startup path light — a menu
 // destination, not startup code — through the ONE shared handle in
 // achievements-shelf.ts, which a live run mounts too.
 // Same reasoning for the developer EFFECTS GALLERY: it drags the whole renderer

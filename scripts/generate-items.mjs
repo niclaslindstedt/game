@@ -245,8 +245,7 @@ export const ITEM_RARITY: ItemRarity = ${json(
 // unique is minted by the loot roller inside a run. Sharing one module put the
 // whole chase roster in the app's startup chunk, because tree-shaking is
 // global — an export used by ANY chunk keeps the bytes wherever its module was
-// placed, and `items.ts` is placed on the startup path. See
-// pwa/scripts/check-seo.mjs for the budget this protects.
+// placed, and `items.ts` is placed on the startup path.
 // …and the BASES' LORE rides its own module for the same reason, one level
 // further down. A base's `description` is a paragraph written for a READER: the
 // library prints it under the portrait, and nothing in the shipped game ever

@@ -313,8 +313,7 @@ state (`GameState.carvedLevel`) and `runLevelDef` is the ONE accessor; the rule
 is flat — inside a run, nothing reads the catalog for its own level.
 
 **Nothing outside a run may import `mapgen/`.** The menus reach levels through
-`defs/levels/summary.ts`; pulling the generator onto the startup path would put
-the whole level catalog and the carve in the app's critical-path budget.
+`defs/levels/summary.ts`; pulling the generator onto the startup path would put the whole level catalog and the carve in every player's first download.
 
 LOOK at a map rather than reading its JSON: `node scripts/level-render.mjs <id>
 --seed 3 --dormant` draws one run's carve with the real sprites and

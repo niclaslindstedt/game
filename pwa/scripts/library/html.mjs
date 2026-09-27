@@ -4,9 +4,10 @@
 //
 // A library page is a DOCUMENT. It links one stylesheet, loads one webfont, and
 // runs NO JavaScript — not the game's bundle, not a router, not a byte. That is
-// the constraint the whole exercise rests on: these pages exist to be found, and
-// a reference table that downloads a game engine to render itself does not get
-// found.
+// the constraint the whole exercise rests on: these pages exist to be read, and
+// a reference table that downloads a game engine to render itself is slow to
+// read. (They are not meant to be found through search: every page carries
+// `noindex`, by owner decision.)
 
 import identity from "../../../game.config.json" with { type: "json" };
 import { escapeHtml } from "./escape.mjs";
@@ -19,7 +20,7 @@ export const TITLE = identity.title;
 /**
  * THE ONE THING THESE PAGES ASK FOR: get the app.
  *
- * A library page's job is to be found and then to send the reader somewhere,
+ * A library page's job, once read, is to send the reader somewhere,
  * and the somewhere is the STORE build — the same game plus the things a
  * browser cannot give it (Taptic haptics, an audio session that plays through
  * the ringer switch, Game Center, and a roster and coin bank that follow the
@@ -53,18 +54,13 @@ export function storeNudge(lead = "") {
 
 export { escapeHtml };
 
-/** JSON safe to inline in a `<script>` — a literal `</script>` would close it. */
-const jsonLd = (node) => JSON.stringify(node, null, 2).replace(/</g, "\\u003c");
-
 /**
  * The card a page unfurls as when it has no subject art of its own — the index
  * pages, the mission guide, the story chapters. The bestiary and arsenal pages
  * each build their own (og-card.mjs) and pass it in.
  *
- * `cardFor` is what a renderer calls to name one. It exists so that ONE value
- * reaches both the `og:image` tag and the JSON-LD `image` property: check-seo
- * fails the build when an Article's schema image disagrees with its `og:image`,
- * and the way to never trip it is for the two never to be written separately.
+ * `cardFor` is what a renderer calls to name one, so every card URL is built
+ * the same way.
  */
 export const DEFAULT_CARD = {
   url: `${SITE_URL}/og-default.png`,
@@ -87,11 +83,10 @@ export function cardFor(base, slug, alt) {
  * THE DROP SHOT on a page (drop-shot.mjs): the subject standing on the venue it
  * comes from, as a real `<img>` in the document.
  *
- * It is an `<img>` and not merely an `og:image` on purpose — Google Images ranks
- * what it finds IN the page, and reads the alt text and the caption beneath it
- * as the description of what the picture shows. So both are written to say the
- * thing a person would have searched for: the subject's name, what it is, and
- * where in the game it comes from.
+ * It is an `<img>` and not merely an `og:image` on purpose — it is part of the
+ * page a reader reads, and the alt text and the caption beneath it describe
+ * what the picture shows: the subject's name, what it is, and where in the
+ * game it comes from.
  */
 export function dropFigure({ src, alt, caption }) {
   return `      <figure class="drop-shot">
@@ -101,33 +96,21 @@ ${img({ src, alt, width: 1200, height: 630, className: "drop-shot-img" })}
 }
 
 /**
- * Secondary deploy slots must never be indexed (§11.5.1) — `/preview/library/`
- * competing with `/library/` would be the library losing to itself.
- */
-const robotsFor = (base) =>
-  base.endsWith("/preview/") || base.endsWith("/branch/")
-    ? "noindex,nofollow"
-    : "index,follow,max-image-preview:large";
-
-/**
  * WHEN THIS PAGE FIRST APPEARED AND WHEN IT LAST CHANGED, keyed by route.
  *
- * Google reads `dateModified` off an Article before it reads the body, and the
- * honest answer already exists: the sitemap dates every URL by the commit that
- * last touched the content it is compiled from. Reading it from the SAME
- * `libraryRoutes()` list the sitemap enumerates means the two can't disagree —
- * a page claiming one date in its markup and another in the sitemap is worse
- * than a page claiming neither.
+ * An article's Open Graph card carries `article:modified_time`, and the honest
+ * answer already exists: the commit that last touched the content the page is
+ * compiled from, read off the same `libraryRoutes()` list that renders it.
  *
- * `datePublished` is the same question asked at the other end of the history
- * (`firstPublished`), and it is here because an Article that only says when it
- * changed has no age — the pair is what the field is read as.
+ * `article:published_time` is the same question asked at the other end of the
+ * history (`firstPublished`), and it is here because an article that only says
+ * when it changed has no age — the pair is what the fields are read as.
  *
  * THE PAIR IS ORDERED BEFORE IT SHIPS. A page compiled from several sources can
  * be handed a first-add that post-dates its last-change — one source file gets
  * split or renamed, its ADD lands after an older sibling's last edit — and
- * "published after it was modified" is a contradiction a validator will call
- * out and a crawler is right to distrust. Where that happens the two collapse
+ * "published after it was modified" is a contradiction nobody should be
+ * shown. Where that happens the two collapse
  * to the one date that is certainly true.
  *
  * Built on first use, not at import: `libraryRoutes()` walks the whole model,
@@ -192,30 +175,17 @@ export function page({
   ground = null,
   ogImage = null,
   body,
-  schema,
+  // `article` for an entry about one subject, `website` for an index page.
+  ogType = "website",
 }) {
   const root = `${base}library/`;
-  const canonical = `${SITE_URL}${root}${path ? `${path}/` : ""}`;
+  const url = `${SITE_URL}${root}${path ? `${path}/` : ""}`;
   const card = ogImage ?? DEFAULT_CARD;
   const head = escapeHtml(title);
   const desc = escapeHtml(description);
-  // Derived from the schema rather than stated twice: an index page whose
-  // JSON-LD calls itself a `CollectionPage` was also telling Open Graph it was
-  // an article, and the two disagreeing about what a page IS is exactly the
-  // kind of contradiction structured data exists to avoid.
-  const ogType = schema["@type"] === "Article" ? "article" : "website";
-  // Stamped here rather than at ten `pageSchema` call sites: the dates are a
-  // property of the ROUTE, and `path` is the only thing that identifies one.
-  // `datePublished` rides along on articles only — it is an Article field, and
-  // a `CollectionPage` claiming one says nothing about anything.
+  // Stamped here rather than at every call site: the dates are a property of
+  // the ROUTE, and `path` is the only thing that identifies one.
   const dates = datesFor(path);
-  const dated = dates
-    ? {
-        ...schema,
-        ...(ogType === "article" ? { datePublished: dates.published } : {}),
-        dateModified: dates.modified,
-      }
-    : schema;
   const crumbHtml = crumbs.length
     ? `<nav class="crumb" aria-label="Breadcrumb">${crumbs
         .map((c) =>
@@ -235,15 +205,13 @@ export function page({
     <meta name="theme-color" content="#0b0d10" />
     <title>${head}</title>
     <meta name="description" content="${desc}" />
-    <link rel="canonical" href="${canonical}" />
-    <meta name="robots" content="${robotsFor(base)}" />
+    <meta name="robots" content="noindex" />
     <link rel="stylesheet" href="${root}library.css" />
     <link rel="icon" href="${base}icon.svg" type="image/svg+xml" />
     <meta property="og:site_name" content="${escapeHtml(TITLE)}" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="${ogType}" />${
-      // Open Graph's own half of the pair the JSON-LD states. An `og:type` of
-      // `article` opens the `article:*` namespace, and a page that declares the
+      // An `og:type` of `article` opens the `article:*` namespace, and a page that declares the
       // type and then none of its properties is telling an unfurler it is an
       // article about nothing.
       ogType === "article" && dates
@@ -253,7 +221,7 @@ export function page({
     }
     <meta property="og:title" content="${head}" />
     <meta property="og:description" content="${desc}" />
-    <meta property="og:url" content="${canonical}" />
+    <meta property="og:url" content="${url}" />
     <meta property="og:image" content="${card.url}" />
     <meta property="og:image:width" content="${card.width}" />
     <meta property="og:image:height" content="${card.height}" />
@@ -263,9 +231,6 @@ export function page({
     <meta name="twitter:description" content="${desc}" />
     <meta name="twitter:image" content="${card.url}" />
     <meta name="twitter:image:alt" content="${escapeHtml(card.alt)}" />
-    <script type="application/ld+json">
-${jsonLd(graphFor(dated, crumbs))}
-    </script>
   </head>
   <body>
     <div class="ground" aria-hidden="true"${ground ? ` style="--ground: url('${ground}')"` : ""}></div>
@@ -307,11 +272,9 @@ ${body}
       </main>
       <!-- The store nudge inside this footer renders only once there is an app
            to link to; the two store-mandated documents below it are never
-           conditional. Both were in the sitemap with NOTHING on the site linking
-           to them, which left a sitemap entry as the only road in — the weakest
-           discovery there is, for the two pages a store review and a wary reader
-           both go looking for. The library is where this site's links live, so
-           this is where they go. -->
+           conditional. They are the two pages a store review and a wary reader
+           both go looking for, and the library is where this site's links live,
+           so this is where they go. -->
       <footer class="site-foot">
 ${storeNudge() ? `        <p>${storeNudge()}</p>\n` : ""}        <p class="site-foot-links">
           <a href="${base}privacy/">Privacy</a>
@@ -324,88 +287,7 @@ ${storeNudge() ? `        <p>${storeNudge()}</p>\n` : ""}        <p class="site-
 `;
 }
 
-/**
- * The shared JSON-LD spine. Every page describes ITSELF and points at the game
- * through `about`/`isPartOf`, so the game keeps exactly one `@id` across the
- * whole site rather than four hundred pages each claiming to be it. Both ids
- * (`#website`, `#game`) are DEFINED by the home page's own `@graph` — see the
- * JSON-LD block in `pwa/index.html`; renaming one there orphans every page here.
- */
-export function pageSchema({ type, canonical, name, description, image }) {
-  // `Article` is the type these reference entries claim, and Google reads an
-  // Article's `headline`/`author` before it reads anything else on it. Left off,
-  // the markup parses and then says nothing — so the two are filled in here
-  // rather than at four hundred call sites, and by REFERENCE to the author node
-  // the home page declares, not by restating a name.
-  const isArticle = type === "Article";
-  return {
-    "@context": "https://schema.org",
-    "@type": type,
-    "@id": `${canonical}#page`,
-    url: canonical,
-    name,
-    ...(isArticle ? { headline: name } : {}),
-    // WHICH PAGE THIS ARTICLE IS THE POINT OF. Without it an Article is a
-    // description of a thing that could have been syndicated from anywhere;
-    // with it the article and the URL are the same object, which is what lets
-    // the `@id` below be joined to the crawl of this address rather than merely
-    // found at it. It is the canonical, always — a library page has exactly one
-    // subject and exactly one home.
-    ...(isArticle ? { mainEntityOfPage: { "@id": `${canonical}#page` } } : {}),
-    description,
-    inLanguage: "en",
-    ...(image ? { image } : {}),
-    ...(isArticle
-      ? {
-          author: { "@id": `${SITE_URL}/#author` },
-          publisher: { "@id": `${SITE_URL}/#author` },
-        }
-      : {}),
-    isPartOf: {
-      "@type": "WebSite",
-      "@id": `${SITE_URL}/#website`,
-      url: `${SITE_URL}/`,
-      name: TITLE,
-    },
-    about: { "@id": `${SITE_URL}/#game` },
-  };
-}
-
-/**
- * The page's schema plus a `BreadcrumbList` built from THE VERY CRUMBS THE PAGE
- * DRAWS — the same array `page()` renders into the visible trail, so the two can
- * never disagree. Google wants the markup to describe the breadcrumb the reader
- * actually sees, and the way to guarantee that is to have one source, not two;
- * a hand-maintained second copy would drift the first time a section moved.
- *
- * The labels go in verbatim, uppercase and all, for the same reason. The final
- * crumb is the current page and carries no `href`, which is exactly the item
- * Google says to leave without an `item` URL — so the shapes line up already.
- *
- * A page with no crumbs (the library landing page) gets no list rather than a
- * one-item one: a breadcrumb trail to the page you are on is not a trail.
- */
-function graphFor(schema, crumbs) {
-  if (crumbs.length === 0) return schema;
-  const { "@context": context, ...page } = schema;
-  return {
-    "@context": context,
-    "@graph": [
-      page,
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: crumbs.map((crumb, i) => ({
-          "@type": "ListItem",
-          position: i + 1,
-          name: crumb.label,
-          ...(crumb.href ? { item: `${SITE_URL}${crumb.href}` } : {}),
-        })),
-      },
-    ],
-  };
-}
-
-/** An `<img>` with everything check-seo (and a good Core Web Vitals score) wants. */
+/** An `<img>` with its dimensions, alt text and lazy loading — what a good Core Web Vitals score wants. */
 export function img({
   src,
   alt,

@@ -17,7 +17,7 @@
 // reader less than the game already tells them.
 
 import { spriteSize } from "./art.mjs";
-import { escapeHtml, img, page, pageSchema, SITE_URL, TITLE } from "./html.mjs";
+import { escapeHtml, img, page, TITLE } from "./html.mjs";
 import {
   achievementsDescription,
   achievementsLede,
@@ -129,7 +129,6 @@ const blocksHtml = (blocks, base, sprites) =>
 /** One category of the shelf. */
 export function categoryPage(category, model, { base, groundFor }) {
   const sprites = `${base}library/sprites/`;
-  const canonical = `${SITE_URL}${base}library/${category.path}/`;
   const description = categoryDescription(category);
   const siblings = model.categories.filter((entry) => entry.id !== category.id);
 
@@ -164,12 +163,7 @@ ${blocksHtml(category.blocks, base, sprites)}
     ],
     ground: groundFor(null),
     body,
-    schema: pageSchema({
-      type: "Article",
-      canonical,
-      name: `${category.label} achievements — ${TITLE}`,
-      description,
-    }),
+    ogType: "article",
   });
 }
 
@@ -183,7 +177,6 @@ ${blocksHtml(category.blocks, base, sprites)}
  * why a third of them reach a profile and the rest do not.
  */
 export function achievementsIndex(model, { base, groundFor }) {
-  const canonical = `${SITE_URL}${base}library/achievements/`;
   const sprites = `${base}library/sprites/`;
   const description = achievementsDescription(model);
 
@@ -240,11 +233,6 @@ ${paragraphs(economyProse(model), "        ")}
 ${paragraphs(platformProse(model), "        ")}
       </section>
 ${panels}`,
-    schema: pageSchema({
-      type: "CollectionPage",
-      canonical,
-      name: `Achievements — every badge in ${TITLE}`,
-      description,
-    }),
+    ogType: "website",
   });
 }

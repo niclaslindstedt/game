@@ -26,10 +26,8 @@ import {
   escapeHtml,
   img,
   page,
-  pageSchema,
   reveal,
   revealAll,
-  SITE_URL,
   storeNudge,
   table,
   TITLE,
@@ -372,7 +370,6 @@ ${
 export function enemyPage(enemy, { base, groundFor, hasImages }) {
   const size = spriteSize(enemy.sprite);
   const sprites = `${base}library/sprites/`;
-  const canonical = `${SITE_URL}${base}library/${enemy.path}/`;
   const cardSpec = enemyCardSpec(enemy);
   // See the note in render-arsenal: no generated set, no card of its own.
   const card = hasImages
@@ -459,16 +456,7 @@ ${storySection(enemy, base)}`;
     ground: enemy.home ? groundFor(enemy.home.id) : null,
     ogImage: card,
     body,
-    schema: pageSchema({
-      type: "Article",
-      canonical,
-      name: `${enemy.distinctName} — ${TITLE} bestiary`,
-      description: metaDescription(enemy),
-      // The page's own card, not the site default — and the SAME object the
-      // og:image tag above is written from, because check-seo fails a build
-      // where an Article's schema image and its og:image disagree.
-      image: card.url,
-    }),
+    ogType: "article",
   });
 }
 
@@ -523,7 +511,6 @@ const byRank = (a, b) => RANK_ORDER[a.role] - RANK_ORDER[b.role];
  * middle of the mob list where no reader could avoid reading it.
  */
 export function bestiaryIndex(model, { base, groundFor }) {
-  const canonical = `${SITE_URL}${base}library/bestiary/`;
   const total = model.enemies.length;
 
   const groups = model.groups
@@ -593,18 +580,12 @@ ${
       behind them under a cover.</p>
 ${revealAll({ id: "reveal-named", label: "EVERY NAME" })}
 ${groups}`,
-    schema: pageSchema({
-      type: "CollectionPage",
-      canonical,
-      name: `Bestiary — every monster in ${TITLE}`,
-      description,
-    }),
+    ogType: "website",
   });
 }
 
 /** The library's front door. */
 export function landing(model, { base, groundFor }) {
-  const canonical = `${SITE_URL}${base}library/`;
   const total =
     model.enemies.length +
     model.allies.allies.length +
@@ -789,11 +770,6 @@ ${rack(givers, () => "")}
         <p><a href="${base}library/story/">Read the story</a></p>
       </section>
 ${storeNudge() ? `      <p>${storeNudge()}</p>` : ""}`,
-    schema: pageSchema({
-      type: "CollectionPage",
-      canonical,
-      name: `The ${TITLE} library`,
-      description,
-    }),
+    ogType: "website",
   });
 }

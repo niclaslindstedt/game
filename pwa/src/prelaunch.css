@@ -16,14 +16,13 @@
    inline block or nothing, which is also what keeps it honest about its size.
    Keep it small; anything that grows here is paid for on every first visit. */
 
-/* The prerendered SEO / no-JS shell (pwa/index.html `.prelaunch`). Its JOB
-   is search + the no-JS fallback, so the real copy stays plain, readable, and
-   crawlable — a genuine <h1>, full descriptive paragraphs, descriptive link
-   text; nothing hidden or shrunk to a keyword-stuffed whisper. On top of that
+/* The prerendered no-JS shell (pwa/index.html `.prelaunch`). Its JOB is the
+   no-JS fallback and the first paint, so the real copy stays plain and
+   readable — a genuine <h1>, full descriptive paragraphs, descriptive link
+   text; nothing hidden or shrunk to a whisper. On top of that
    it's DRESSED as the game booting (the title screen's starfield + in-game
    teal, a monospace "console" voice) so the flash before React mounts the live
-   TitleScreen reads as one continuous screen rather than a document. Styling is
-   invisible to crawlers, so the look costs the SEO nothing. All sizes are rem/
+   TitleScreen reads as one continuous screen rather than a document. All sizes are rem/
    clamp so the ≥700px 2× root scaling carries them like the rest of the UI. */
 .prelaunch {
   --prelaunch-mono:

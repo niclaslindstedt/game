@@ -13,11 +13,8 @@
 // and the card refuses to lift until it has landed (`SplashScreen` `warm`), so
 // the menu is exactly as finished when the card clears as it was before.
 //
-// Which makes the split invisible to the player and load-bearing for the
-// budget: `pwa/scripts/check-seo.mjs` now weighs BOTH paths — the card alone
-// against the 170 KB critical-path budget, and the card plus the whole app
-// shell against a MENU-READY budget that is the old number. The second one is
-// what still catches a startup module reaching back through `@game/core`.
+// Which makes the split invisible to the player and load-bearing for the first
+// paint: the card is on screen before the app shell has finished arriving.
 //
 // THE CARD OWNS ITS OWN LIFETIME AND NOTHING ELSE. It is decided once from the
 // URL, never re-raised, and the app underneath it does not know it exists.

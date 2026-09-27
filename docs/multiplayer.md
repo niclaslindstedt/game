@@ -303,9 +303,7 @@ joining cost one small module rather than a second client.
 
 `server/wire/` is the vocabulary both ends speak, and it imports nothing at
 all — not even the engine. Both halves read it, and the page reads it from
-screens that may sit on the app's startup path, where the 170 KB critical-path
-budget forbids reaching `@game/core`. The split INSIDE that folder is the same
-budget one level down: `protocol.ts` is what the title menu genuinely reads
+screens that may sit on the app's startup path, where the startup-path import rule forbids reaching `@game/core`. The split INSIDE that folder is the same rule one level down: `protocol.ts` is what the title menu genuinely reads
 (the handshake shapes, `PROTOCOL_VERSION`, the refusal texts) and `frames.ts`
 is the RUNTIME vocabulary behind the run's lazy chunk (the frame tags, the
 transport constants, the `COMMANDS` allow-list). **No value re-export may

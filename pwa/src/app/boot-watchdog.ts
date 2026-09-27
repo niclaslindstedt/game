@@ -2,8 +2,8 @@
 // THE BOOT SCREEN MUST NOT LIE.
 //
 // `index.html` ships a prerendered `.prelaunch` console — the title, the pitch,
-// the library links — ending in a blinking "BOOTING…". It is the SEO document,
-// the no-JS fallback, and the frame the app mounts over. What it is NOT is a
+// the library links — ending in a blinking "BOOTING…". It is the no-JS
+// fallback, and the frame the app mounts over. What it is NOT is a
 // progress indicator: nothing about it is wired to the bundle, so when the
 // module script fails to arrive the caret goes on blinking over a page that is
 // never going to become a game. The player is left reading a description of the

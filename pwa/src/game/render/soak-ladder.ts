@@ -8,8 +8,7 @@
 // keeps the live run's soak, necessarily names a `GameState`. Under
 // `verbatimModuleSyntax` an `import { type GameState } from "@game/core"` still
 // emits the module for its side effects, so importing that file from the
-// paper-doll dragged the WHOLE ENGINE into the 170 KB critical-path budget (it
-// went to 328 KB, and CI said so). Splitting the ladder off is what keeps the
+// paper-doll dragged the WHOLE ENGINE onto the startup path (it went to 328 KB). Splitting the ladder off is what keeps the
 // menus reaching only the arithmetic.
 //
 // So: no engine import here, no canvas, no run state. Five numbers in, sprite

@@ -9,13 +9,11 @@
 // AND IT IS A SEPARATE FILE FROM map.ts FOR A REACHABILITY REASON, not a
 // tidiness one. `engine/menu.ts` re-exports map.ts's `mapCols`/`mapRows` — the
 // level map's grid arithmetic is genuinely something the STARTUP path draws
-// with — so the whole of map.ts sits inside the app's 170 KB critical-path
-// budget (pwa/scripts/check-seo.mjs), where tree-shaking cannot help: an export
-// used by any chunk keeps its bytes wherever its module was placed. Nothing
-// that only a RUNNING RUN asks may live there; put it here instead, where the
-// menus never reach. Adding this to map.ts is what tripped the budget the first
-// time, back when react-dom still ate ~50 KB of the path. The sweep lives here
-// for that same reason and a sharper one: it reads the level's OBSTACLES, so
+// with — so the whole of map.ts sits on the app's startup path, where
+// tree-shaking cannot help: an export used by any chunk keeps its bytes
+// wherever its module was placed. Nothing that only a RUNNING RUN asks may live
+// there; put it here instead, where the menus never reach. The sweep lives here
+// for that reason and a sharper one: it reads the level's OBSTACLES, so
 // leaving it in map.ts would drag the whole collision module onto the startup
 // path.
 

@@ -35,11 +35,10 @@
 // It is reached through the `@game/client` alias, which resolves to this file
 // in all four config maps (root tsconfig, pwa tsconfig, vitest, vite).
 //
-// **THE 170 KB CRITICAL-PATH BUDGET IS A LIVE HAZARD HERE.** This module imports
-// `@game/core`, so nothing on the app's startup path may import it: the HOST and
-// JOIN screens are title-menu screens and must reach `@game/menu` and the
-// import-free `@game/wire/*` leaves alone. `pwa/scripts/check-seo.mjs` is what
-// catches the mistake; do not raise the number.
+// **THE STARTUP PATH IS A LIVE HAZARD HERE.** This module imports `@game/core`,
+// so nothing on the app's startup path may import it: the HOST and JOIN screens
+// are title-menu screens and must reach `@game/menu` and the import-free
+// `@game/wire/*` leaves alone, or the whole simulation loads before the menu.
 
 import {
   createRunFromParams,

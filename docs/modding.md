@@ -869,8 +869,7 @@ The rest of what is load-bearing in `menus-mods.ts`:
   roller and the whole step pipeline. So the mod system's TYPES and the
   "which mod is on" state live in an import-free leaf (the same move
   `engine/game/flags.ts` makes for the engine's runtime toggles), and the apply
-  itself is a **dynamic** import inside the row's own handler. The 170 KB
-  gzipped critical-path budget (`pwa/scripts/check-seo.mjs`) is what notices.
+  itself is a **dynamic** import inside the row's own handler.
 
 ## The shell handler, and what ships with it
 

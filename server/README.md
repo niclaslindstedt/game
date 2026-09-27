@@ -45,8 +45,7 @@ server/
 
 Everything under `wire/` imports **nothing** outside `wire/` — not even the
 engine. Both ends read it, and the page reads it from screens that may sit on
-the app's startup path, where the 170 KB critical-path budget forbids reaching
-`@game/core`. A wire that knows nothing about the simulation also cannot fall
+the app's startup path, where the startup-path import rule forbids reaching `@game/core`. A wire that knows nothing about the simulation also cannot fall
 out of step with it. **`protocol.ts` and `frames.ts` are split by that same
 budget** — the first is what the title menu genuinely reads, the second sits
 behind the run's lazy chunk — and **no value re-export may connect them in

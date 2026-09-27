@@ -563,8 +563,8 @@ function enemyModel(def, placementIndex, summonedBy, venueById) {
       dialogue: def.dialogue ?? [],
       lastWords: def.lastWords ?? [],
     },
-    // The YAML this page is compiled from, so the sitemap can date the page by
-    // when its content last actually changed.
+    // The YAML this page is compiled from, so the page can be dated by when its
+    // content last actually changed.
     sources: sourcesFor(def),
   };
 }
@@ -703,8 +703,6 @@ export function libraryModel() {
 
 /**
  * Every route the library emits, with the sources each page is dated from.
- * `generate-seo.mjs` reads this to enumerate the sitemap, so a page that exists
- * without a sitemap entry (or the reverse) is impossible by construction.
  */
 export function libraryRoutes() {
   const {

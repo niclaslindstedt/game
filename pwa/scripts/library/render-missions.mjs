@@ -11,16 +11,7 @@
 
 import { DIFFICULTY_DEFS } from "./catalogs.mjs";
 import { spriteSize } from "./art.mjs";
-import {
-  escapeHtml,
-  img,
-  page,
-  pageSchema,
-  reveal,
-  SITE_URL,
-  table,
-  TITLE,
-} from "./html.mjs";
+import { escapeHtml, img, page, reveal, table, TITLE } from "./html.mjs";
 import { list } from "./prose.mjs";
 import {
   hazardNotes,
@@ -412,7 +403,6 @@ ${chapter}`;
 
 /** One mission's page. */
 export function missionPage(mission, { base, groundFor, mapFor }, sprites) {
-  const canonical = `${SITE_URL}${base}library/${mission.path}/`;
   const description = missionDescription(mission);
 
   const chips = [
@@ -470,19 +460,12 @@ ${nav.length > 0 ? `      <nav class="campaign-nav">${nav.join("")}</nav>` : ""}
     ],
     ground: groundFor(mission.id),
     body,
-    schema: pageSchema({
-      type: "Article",
-      canonical,
-      name: `${mission.name} — ${TITLE} mission guide`,
-      description,
-      image: `${SITE_URL}/og-default.png`,
-    }),
+    ogType: "article",
   });
 }
 
 /** The mission index: the campaign in the order it is played. */
 export function missionsIndex(model, { base, groundFor }) {
-  const canonical = `${SITE_URL}${base}library/missions/`;
   const description = `All ${model.missions.length} missions in ${TITLE} — the venue, its monsters, its loot pool, its powers and its map, one page each.`;
 
   const entries = model.missions
@@ -523,11 +506,6 @@ ${bosses ? `        <li><span class="stat-key">GUARDED BY</span>${bosses}.</li>`
       every rung, who is waiting in it, what it pays out — and, behind covers,
       its map and what the hero says when he gets there.</p>
 ${entries}`,
-    schema: pageSchema({
-      type: "CollectionPage",
-      canonical,
-      name: `Missions — every level in ${TITLE}`,
-      description,
-    }),
+    ogType: "website",
   });
 }

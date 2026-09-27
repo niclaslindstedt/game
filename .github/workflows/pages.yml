@@ -195,7 +195,7 @@ jobs:
       COMMUNITY_URL: ${{ secrets.COMMUNITY_URL }}
     steps:
       # THIS SLOT'S OWN REF, checked out directly. `fetch-depth: 0` because
-      # the library's `lastModified` (and the sitemap's `lastmod` with it) is
+      # the library's `lastModified` (each page's Open Graph date) is
       # the commit date of the newest commit touching each page's sources —
       # a shallow clone answers "the build ran just now" for everything.
       - uses: actions/checkout@v7

@@ -110,7 +110,7 @@ export const SHIPPED_CUE_KEYS = GENERATED_CUE_KEYS;
 // `sfx/ui.ts` directly, because this module statically pulls every domain
 // module in — the run's whole sound palette — and a title screen that wanted one
 // button click used to download the combat, world, pickup, powerup and jingle
-// banks with it (see pwa/scripts/check-seo.mjs's critical-path budget). This
+// banks with it. This
 // barrel is the RUN's event bus; `sfx/ui.ts` is the interface's.
 
 /**

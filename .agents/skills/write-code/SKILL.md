@@ -252,12 +252,11 @@ rebuild and lets a stale artifact agree with an equally stale build), and run
   `scripts/game-alias-loader.mjs` (how a plain `node` script imports an aliased
   module) and `tests/content/net_reachability_test.ts` (which resolves them to
   walk the import graph). A new alias missing from either is a script that
-  cannot start, or a budget guard that silently stops following an edge.
+  cannot start, or a reachability walk that silently stops following an edge.
 - **The app renders with Preact and still spells it `react`.** `react`,
   `react-dom` and `react-dom/client` are aliased to `preact/compat`, so a
   component keeps importing `useState` from `"react"`. React is NOT installed —
-  `tests/preact_renderer_test.ts` keeps it out, because its react-dom would
-  silently eat ~50 KB of the 170 KB critical-path budget. Four differences, all
+  `tests/preact_renderer_test.ts` keeps it out, because its react-dom would silently add ~50 KB to the startup path. Four differences, all
   settled by spelling it Preact's way: `RefObject<T>` already includes the null
   (`useRef<HTMLDivElement>(null)`); an event type is generic in the element
   (`PointerEvent<HTMLElement>`, and `e.currentTarget` is the typed half);

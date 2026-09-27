@@ -32,8 +32,7 @@ import { setHapticsEnabled } from "./haptics.ts";
 // The renderer's projection leaf — imported directly rather than through
 // `render.ts`, which is the whole renderer: settings is on the app's STARTUP
 // path, and `tilt.ts` is an import-free leaf (the same trick `engine/game/flags.ts`
-// plays for the engine's own runtime toggles). See the critical-path budget in
-// AGENTS.md.
+// plays for the engine's own runtime toggles). See the engine's two entry points in AGENTS.md.
 import {
   clampFx,
   defaultFx,

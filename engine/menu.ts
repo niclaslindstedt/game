@@ -11,8 +11,7 @@
 // `createGame`, the step pipeline, the autopilot, the loot roller, the spawners
 // and the hazards in the same chunk as the menu, because they are all one
 // module graph away. That is ~150 KB of JavaScript downloaded and parsed before
-// the player has pressed anything, on a game whose critical-path budget the SEO
-// check (`pwa/scripts/check-seo.mjs` §11.3.8) polices.
+// the player has pressed anything.
 //
 // So the shell imports `@game/menu` and the game imports `@game/core`. Both
 // aliases resolve to the SAME underlying modules — `index.ts` re-exports this

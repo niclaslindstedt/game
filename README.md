@@ -6,7 +6,6 @@ desktop builds — and the **mod SDK** its content is authored with. The desktop
 release is intended for Steam and has not been published yet.
 
 [![CI](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml)
-[![SEO](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml)
 [![Pages](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml)
 [![License: PolyForm NC + feature terms](https://img.shields.io/badge/license-PolyForm%20NC%20%2B%20feature%20terms-blue.svg)](LICENSE)
 

@@ -33,8 +33,7 @@ const BLOCK_SCALE = 2;
 const atlasMeta = JSON.parse(readFileSync(join(ASSETS, "atlas.json"), "utf8"));
 
 /** The atlas cell of a sprite name — `{ x, y, w, h }`, or undefined. The
- * manifest ships compact `[x, y, w, h]` tuples (it rides the app's
- * critical-path budget — see generate-assets.mjs); this is the one place
+ * manifest ships compact `[x, y, w, h]` tuples (it rides the app's startup path — see generate-assets.mjs); this is the one place
  * they widen back to named fields. */
 export const spriteCell = (name) => {
   const cell = atlasMeta[name];
@@ -43,8 +42,8 @@ export const spriteCell = (name) => {
 
 /**
  * The intrinsic size of a sprite's 8× preview file, for the `width`/`height`
- * every `<img>` needs (check-seo fails a build without them, and a page that
- * reflows as its images land is a page that scores badly).
+ * every `<img>` needs (a page that reflows as its images land is a page that
+ * scores badly).
  */
 export function spriteSize(name) {
   const cell = spriteCell(name);

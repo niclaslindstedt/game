@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The split guard for `@game/menu` (engine/menu.ts) — the engine's menu-side entry
 // point, which exists so the app's startup path can read the catalogs without
-// reaching the simulation behind them (see the file header there, and the
-// critical-path budget in pwa/scripts/check-seo.mjs).
+// reaching the simulation behind them (see the file header there).
 //
 // Two things can silently undo that split, and neither shows up as a type
 // error:
@@ -14,8 +13,6 @@
 //   2. `menu.ts` re-exports from the same modules `index.ts` does, so a symbol
 //      that drifts between the two barrels would resolve to a different
 //      implementation depending on which alias the importer used.
-//
-// A budget breach is caught in CI by check-seo; these are the correctness half.
 
 import { describe, expect, it } from "vitest";
 

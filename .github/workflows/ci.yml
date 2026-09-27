@@ -18,8 +18,7 @@ on:
 # so they are four jobs and CI is as long as the SLOWEST. The suite is split
 # again across shards, because on its own it is longer than the other three
 # together. A job costs ~15s of checkout + install to start, which every one of
-# these earns back many times over. Lighthouse is a scheduled/manual advisory
-# audit rather than a PR gate; its former runner now buys a third test shard.
+# these earns back many times over.
 jobs:
   build:
     runs-on: ubuntu-latest

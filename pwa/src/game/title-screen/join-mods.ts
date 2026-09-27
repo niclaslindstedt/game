@@ -5,12 +5,11 @@
 // through the door), or a refusal with the Workshop behind it.
 //
 // **A LAZY CHUNK, DELIBERATELY.** `use-sessions.ts` sits on the app's startup
-// path, where the 170 KB critical-path budget is measured — and this logic is
+// path — and this logic is
 // only meaningful once the SESSIONS screen is open and a list of other
 // people's games is on screen. So the browser screen imports it the way the
 // run imports the net client: on demand, behind its own chunk, and the entry
-// pays nothing for it. (`check-seo` tripped on exactly this code living
-// inline; moving it here is the fix the budget's own rule prescribes.)
+// pays nothing for it.
 
 import { listMods, type InstalledMod } from "../../app/mods-bridge.ts";
 import { activeMods, type ModBundle } from "../mod-state.ts";

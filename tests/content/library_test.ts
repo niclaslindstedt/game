@@ -1058,26 +1058,22 @@ describe("library pages", () => {
 
   it("runs no JavaScript at all", () => {
     // The constraint the whole exercise rests on: a reference page that
-    // downloads a game engine to render a stat table does not get found.
+    // downloads a game engine to render a stat table is slow to read.
     for (const [name, html] of Object.entries(pages)) {
-      expect(html, name).not.toMatch(
-        /<script(?![^>]*type="application\/ld\+json")/,
-      );
+      expect(html, name).not.toMatch(/<script\b/);
       expect(html, name).not.toContain("modulepreload");
     }
   });
 
   it("carries the head signals a page has to have", () => {
     for (const [name, html] of Object.entries(pages)) {
-      expect(html, name).toMatch(
-        /<link rel="canonical" href="https:\/\/[^"]+\/"/,
-      );
-      // 20 chars or it says nothing; 160 or Google cuts it mid-sentence in the
-      // result — which on these pages is where the spoiler warning lives.
+      // The site is not meant to be found through search, by owner decision.
+      expect(html, name).toContain('<meta name="robots" content="noindex" />');
+      // 20 chars or it says nothing; 160 or a share card cuts it mid-sentence
+      // — which on these pages is where the spoiler warning lives.
       expect(html, name).toMatch(
         /<meta name="description" content="[^"]{20,160}"/,
       );
-      expect(html, name).toContain('type="application/ld+json"');
       expect((html.match(/<h1[\s>]/g) ?? []).length, name).toBe(1);
     }
   });
@@ -1574,15 +1570,6 @@ describe("library pictures", () => {
     expect(ogImage(bossBare)).toMatch(/\/og-default\.png$/);
   });
 
-  it("keeps the Article's schema image and og:image identical", () => {
-    // check-seo fails the build when these disagree; catching it here says
-    // WHICH page and WHY rather than failing a whole deploy on a diff of URLs.
-    for (const html of [relicShot, bossShot, relicBare, bossBare]) {
-      const schema = html.match(/"image":\s*"([^"]+)"/)?.[1];
-      expect(schema).toBe(ogImage(html));
-    }
-  });
-
   it("embeds the search shot as a real <img>, as WebP", () => {
     // An <img> in the document, not merely an og:image: Google Images ranks
     // what it finds ON the page and reads the alt text around it.
@@ -1601,24 +1588,5 @@ describe("library pictures", () => {
     for (const html of [relicBare, bossBare]) {
       expect(html).not.toContain('class="drop-shot"');
     }
-  });
-
-  it("gives every page a breadcrumb trail matching its visible one", () => {
-    // Google wants the markup to describe the breadcrumb the reader sees, so
-    // the list is built from the very crumbs the page renders.
-    const block = relicShot.match(
-      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
-    )?.[1];
-    expect(block).toBeTruthy();
-    const graph = JSON.parse(block as string);
-    const crumbs = graph["@graph"].find(
-      (n: { "@type": string }) => n["@type"] === "BreadcrumbList",
-    );
-    expect(crumbs.itemListElement.map((i: { name: string }) => i.name)).toEqual(
-      ["LIBRARY", "ARSENAL", "EXCALIBUR"],
-    );
-    // The last crumb is the page itself and carries no URL — exactly the item
-    // Google says to leave without one.
-    expect(crumbs.itemListElement.at(-1).item).toBeUndefined();
   });
 });

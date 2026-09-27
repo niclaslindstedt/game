@@ -17,8 +17,6 @@ import {
   escapeHtml,
   img,
   page,
-  pageSchema,
-  SITE_URL,
   table,
   TITLE,
 } from "./html.mjs";
@@ -153,7 +151,6 @@ ${talents
 /** One talent's page. */
 export function talentPage(talent, model, { base, groundFor, hasImages }) {
   const sprites = `${base}library/sprites/`;
-  const canonical = `${SITE_URL}${base}library/${talent.path}/`;
   const description = talentDescription(talent);
   const cardSpec = talentCardSpec(talent);
   const card = hasImages
@@ -224,14 +221,7 @@ ${rack(siblings, base, sprites, talent.tree.accent)}`
     ground: groundFor(null),
     ogImage: card,
     body,
-    schema: pageSchema({
-      type: "Article",
-      canonical,
-      name: `${talent.name} — ${TITLE} talents`,
-      description,
-      // Same object as the og:image tag — see the note in render-bestiary.
-      image: card.url,
-    }),
+    ogType: "article",
   });
 }
 
@@ -244,7 +234,6 @@ ${rack(siblings, base, sprites, talent.tree.accent)}`
  * alphabetical index would throw it away for nothing.
  */
 export function talentsIndex(model, { base, groundFor }) {
-  const canonical = `${SITE_URL}${base}library/talents/`;
   const sprites = `${base}library/sprites/`;
   const total = model.talents.length;
 
@@ -276,11 +265,6 @@ ${rack(tree.entries, base, sprites, tree.accent)}`,
       what carrying it to the top costs a build.</p>
 ${paragraphs(economyProse(model)).replace(/^ {8}/gm, "      ")}
 ${trees}`,
-    schema: pageSchema({
-      type: "CollectionPage",
-      canonical,
-      name: `Talents — every passive talent in ${TITLE}`,
-      description,
-    }),
+    ogType: "website",
   });
 }

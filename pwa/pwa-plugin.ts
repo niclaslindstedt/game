@@ -16,7 +16,7 @@ import {
   IDENTITY,
   FULL_TITLE,
   SOCIAL_TITLE,
-  SEO_DESCRIPTION,
+  SHARE_DESCRIPTION,
 } from "./src/identity.ts";
 
 // Hand-rolls the game's service worker at build time so the deployed app is an
@@ -62,10 +62,6 @@ type GamePwaOptions = {
   // build timestamp). Embedding it in the SW also guarantees the worker's
   // bytes differ between deploys even when no asset hash changed.
   version: string;
-  // The bare semantic version (`0.1.0`), without the build ref `version`
-  // carries. It is what the shell's JSON-LD reports as `softwareVersion`, which
-  // wants the release the page describes and not this deploy's commit.
-  appVersion: string;
   // All deploy-slot bases sharing this origin. Defaults to `DEPLOY_SLOTS`.
   slots?: string[];
   // Is this build going INSIDE a store shell (native / Tauri)
@@ -86,17 +82,12 @@ const PUBLIC_SKIP = new Set([
   "screenshot-wide.png",
 ]);
 
-/** Vite's build manifest (`build.manifest` in vite.config.ts) — read by
- * `scripts/check-seo.mjs` at build time and by nothing at runtime. */
-const BUILD_MANIFEST = ".vite/manifest.json";
-
 /**
  * Is this base one of the DEVELOPMENT slots — `/preview/` (every `main` push)
  * or `/branch/` (a parked branch) — rather than the released site at `/`?
  *
- * The two differ from the root slot in what they are FOR: nobody arrives at
- * them by searching, they exist to be looked at by whoever pushed the commit.
- * So they are the slots that must never be indexed, and the slots whose title
+ * The two differ from the root slot in what they are FOR: they exist to be
+ * looked at by whoever pushed the commit, so they are the slots whose title
  * footer links its commit hash back to the source (see `commitUrlForBase`).
  *
  * `endsWith`, not equality: a fork served from a sub-path (`/game/preview/`)
@@ -131,14 +122,6 @@ export function commitUrlForBase(
   return `${repoUrl.replace(/\/+$/, "")}/commit/${sha}`;
 }
 
-// Secondary slots must never be indexed (§11.5.1): only the production slot
-// carries an indexable robots meta.
-function robotsContentForBase(base: string): string {
-  return isSecondarySlot(base)
-    ? "noindex,nofollow"
-    : "index,follow,max-image-preview:large";
-}
-
 function listFiles(dir: string): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -159,37 +142,25 @@ const escapeHtml = (s: string): string =>
 // Fill the `{{TOKEN}}` placeholders in index.html from the identity config so
 // every brand-shaped string in the shell has one source of truth
 // (game.config.json). Runs at build time — dev never renders the shell.
-function fillIdentityTokens(html: string, appVersion: string): string {
+function fillIdentityTokens(html: string): string {
   const tokens: Record<string, string> = {
     TITLE: escapeHtml(IDENTITY.title),
     FULL_TITLE: escapeHtml(FULL_TITLE),
     TAGLINE: escapeHtml(IDENTITY.tagline),
     DESCRIPTION: escapeHtml(IDENTITY.description),
-    // Search voice, not brand voice — these feed the meta description and the
-    // social cards. See `GameIdentity.seo`. The `<title>` takes plain `TITLE`:
-    // a tab has no room for a suffix (see `SOCIAL_TITLE`).
+    // Stranger's voice, not brand voice — these feed the meta description and
+    // the share cards. See `GameIdentity.share`. The `<title>` takes plain
+    // `TITLE`: a tab has no room for a suffix (see `SOCIAL_TITLE`).
     SOCIAL_TITLE: escapeHtml(SOCIAL_TITLE),
-    SEO_DESCRIPTION: escapeHtml(SEO_DESCRIPTION),
+    SHARE_DESCRIPTION: escapeHtml(SHARE_DESCRIPTION),
     SITE_URL: IDENTITY.siteUrl,
     REPO_URL: IDENTITY.repoUrl,
-    AUTHOR_NAME: escapeHtml(IDENTITY.author.name),
-    AUTHOR_URL: IDENTITY.author.url,
     OG_IMAGE_ALT: escapeHtml(IDENTITY.ogImageAlt),
-    VERSION: escapeHtml(appVersion),
-    // JSON, not HTML text — this one lands inside the JSON-LD block, so it is
-    // serialised rather than entity-escaped (a `&amp;` there would be a parse
-    // error, not an escape).
-    GENRE_JSON: JSON.stringify(IDENTITY.genre),
     HERO_PARAGRAPHS: IDENTITY.heroParagraphs
       .map((p) => `<p>${escapeHtml(p)}</p>`)
       .join("\n        "),
     SHELL_SECTIONS: renderShellSections(),
     FAQ: renderFaq(),
-    // JSON, like GENRE_JSON — this one lands inside the JSON-LD `@graph`.
-    FAQ_JSON: JSON.stringify(faqSchema(), null, 2)
-      .replace(/</g, "\\u003c")
-      .split("\n")
-      .join("\n          "),
   };
   return html.replace(
     /\{\{([A-Z_]+)\}\}/g,
@@ -285,43 +256,19 @@ function renderFaq(): string {
           </section>`;
 }
 
-/**
- * The `FAQPage` node for the home page's `@graph`, built from the SAME `faq`
- * entries the shell renders — the whole point of structured data is that it
- * describes what is on the page, and two copies of a question is how it stops
- * doing that.
- */
-function faqSchema(): unknown {
-  return {
-    "@type": "FAQPage",
-    "@id": `${IDENTITY.siteUrl}/#faq`,
-    isPartOf: { "@id": `${IDENTITY.siteUrl}/#website` },
-    about: { "@id": `${IDENTITY.siteUrl}/#game` },
-    mainEntity: IDENTITY.faq.map((item) => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: { "@type": "Answer", text: item.a },
-    })),
-  };
-}
-
 // The DOCUMENT pages. Each is served by copying the built `index.html` and
 // rewriting its head + prerendered body, so they cost one HTML file each and no
 // second bundle; `main.tsx` reads `location.pathname` and mounts the matching
 // component. Without the rewrite a copy would inherit the game's title,
-// description, and — worst — a canonical pointing at `/`, which tells search
-// engines the document IS the home page.
+// description and share card, and unfurl as the home page.
 //
 // Both URLs are required by the app stores: a privacy policy, and a support
 // page because App Store Connect rejects a bare `mailto:`. They therefore have
-// to be real, indexable pages rather than aliases. Keep this table in step with
-// the path switch in `main.tsx` and the sitemap in `scripts/generate-seo.mjs`.
+// to be real pages rather than aliases. Keep this table in step with the path
+// switch in `main.tsx`.
 const DOC_PAGES = [
   {
     slug: "privacy",
-    // schema.org has no privacy-policy type; a plain WebPage `about` the game
-    // is the accurate description of what this document is.
-    schemaType: "WebPage",
     title: `Privacy policy — ${IDENTITY.title}`,
     description: `How ${IDENTITY.title} handles your data: no account, no analytics, no backend — saves stay on your device, and sync only through your own iCloud.`,
     body: () => `<p>${escapeHtml(IDENTITY.title)} runs entirely on your own device. There is no account, no sign-up, no backend of ours, no cookies, and no analytics or tracking. Your heroes, settings, and progress are stored on the device you play on, and we never receive them.</p>
@@ -329,7 +276,6 @@ const DOC_PAGES = [
   },
   {
     slug: "contact",
-    schemaType: "ContactPage",
     title: `Contact and support — ${IDENTITY.title}`,
     description: `Support for ${IDENTITY.title} — report a bug, ask about a purchase, or get help with your heroes.`,
     body: () => `<p>Support for ${escapeHtml(IDENTITY.title)}. Questions, bugs, crashes, problems with a purchase, or anything about your saved heroes all go to one address, read by a person.</p>
@@ -340,15 +286,15 @@ const DOC_PAGES = [
 /**
  * TAKE THE BOOT SHELL OUT — what a STORE build's `index.html` gets instead.
  *
- * The `.prelaunch` markup is prerendered SEO: real, crawlable copy in front of
- * a search engine and a no-JS reader, and the one thing on screen while the app
- * bundle is still on the wire. In a browser it earns every byte.
+ * The `.prelaunch` markup is the prerendered shell: real copy in front of a
+ * no-JS reader, and the one thing on screen while the app bundle is still on
+ * the wire. In a browser it earns every byte.
  *
  * In a compiled, distributed shell it earns none of them. Nothing crawls a
  * webroot.zip or a Tauri resource bundle; JavaScript is never off; and
  * the bundle is on local disk, so the gap it fills is a few tens of
- * milliseconds. What it does instead is flash — the platform splash lifts, an
- * SEO document with a "SYSTEM ONLINE" console and four library links paints for
+ * milliseconds. What it does instead is flash — the platform splash lifts, a
+ * prerendered document with a "SYSTEM ONLINE" console and four library links paints for
  * one blink, and only then does the game's own studio card come up over it.
  *
  * So a shell build ships `<div id="root"></div>` and paints its brand
@@ -370,15 +316,14 @@ export function stripBootShell(html: string): string {
     );
 }
 
-// The prerendered body for a document page. Crawlers (and a no-JS reader) get
-// the gist without running the app, which is also what keeps check-seo's
-// "substantive body" rule satisfied; the app swaps in the full page.
+// The prerendered body for a document page. A no-JS reader gets the gist
+// without running the app; the app swaps in the full page.
 //
 // IT ENDS IN LINKS, and that is not decoration either. These two pages are
-// reached from the library's footer and from the sitemap, and until now they
-// carried NOT ONE outbound link of their own — a reader who followed a store
-// listing's privacy link landed on a page with no way onward but the back
-// button, and a crawler landed on a leaf. They are the two pages a store review
+// reached from the library's footer and from the store listings, and until now
+// they carried NOT ONE outbound link of their own — a reader who followed a
+// store listing's privacy link landed on a page with no way onward but the back
+// button. They are the two pages a store review
 // and a wary player both go looking for, so they are also the two most likely
 // to be somebody's first sight of the site; a first page should lead somewhere.
 function renderDocShell(base: string, page: DocPage): string {
@@ -398,45 +343,9 @@ function renderDocShell(base: string, page: DocPage): string {
       </main>`;
 }
 
-/**
- * A document page's own JSON-LD node. It describes THIS document and points at
- * the game through `about`/`isPartOf` rather than restating it, so the game
- * keeps exactly one `@id` across the site (`{siteUrl}/#game`) and the two
- * documents read as pages belonging to it.
- *
- * `<` for `<` because the block is inlined into HTML: a literal `</script>`
- * anywhere inside the JSON would close the tag early. JSON.stringify does not
- * escape it, so we do — check-seo un-escapes before parsing.
- */
-function renderDocJsonLd(page: DocPage, canonical: string): string {
-  const node = {
-    "@context": "https://schema.org",
-    "@type": page.schemaType,
-    "@id": `${canonical}#page`,
-    url: canonical,
-    name: page.title,
-    description: page.description,
-    inLanguage: "en",
-    isPartOf: {
-      "@type": "WebSite",
-      "@id": `${IDENTITY.siteUrl}/#website`,
-      url: `${IDENTITY.siteUrl}/`,
-      name: IDENTITY.title,
-    },
-    // The one cross-page reference, and the point of the whole node: this
-    // document is ABOUT the game defined on the home page. A bare `@id` is how
-    // a site-wide graph is linked; everything else here resolves locally.
-    about: { "@id": `${IDENTITY.siteUrl}/#game` },
-  };
-  const json = JSON.stringify(node, null, 2).replace(/</g, "\\u003c");
-  return `<script type="application/ld+json">\n${json}\n    </script>`;
-}
-
 /** One document page served alongside the game (see `DOC_PAGES`). */
 type DocPage = {
   slug: string;
-  /** schema.org @type for the page's own JSON-LD (see `renderDocJsonLd`). */
-  schemaType: string;
   title: string;
   description: string;
   /** Prerendered body HTML — already escaped by the caller. */
@@ -447,49 +356,36 @@ type DocPage = {
 // URLs (so nothing has to be rewritten or re-bundled), its own head metadata,
 // and its own prerendered body.
 function renderDocHtml(indexHtml: string, base: string, page: DocPage): string {
-  const canonical = `${IDENTITY.siteUrl}${base}${page.slug}/`;
+  const url = `${IDENTITY.siteUrl}${base}${page.slug}/`;
   const title = escapeHtml(page.title);
   const description = escapeHtml(page.description);
-  return (
-    indexHtml
-      .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
-      .replace(
-        /(<meta\s+name="description"\s+content=")[^"]*(")/,
-        `$1${description}$2`,
-      )
-      .replace(/(<link\s+rel="canonical"\s+href=")[^"]*(")/, `$1${canonical}$2`)
-      .replace(
-        /(<meta\s+property="og:title"\s+content=")[^"]*(")/,
-        `$1${title}$2`,
-      )
-      .replace(
-        /(<meta\s+property="og:description"\s+content=")[^"]*(")/,
-        `$1${description}$2`,
-      )
-      .replace(
-        /(<meta\s+property="og:url"\s+content=")[^"]*(")/,
-        `$1${canonical}$2`,
-      )
-      .replace(
-        /(<meta\s+name="twitter:title"\s+content=")[^"]*(")/,
-        `$1${title}$2`,
-      )
-      .replace(
-        /(<meta\s+name="twitter:description"\s+content=")[^"]*(")/,
-        `$1${description}$2`,
-      )
-      // The VideoGame JSON-LD describes the game, not this document — two pages
-      // claiming the same @id is worse than none. Swap in the page's OWN node,
-      // which points back at the game rather than impersonating it.
-      .replace(
-        /<script type="application\/ld\+json">[\s\S]*?<\/script>/,
-        renderDocJsonLd(page, canonical),
-      )
-      .replace(
-        /<main class="prelaunch">[\s\S]*?<\/main>/,
-        renderDocShell(base, page),
-      )
-  );
+  return indexHtml
+    .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+    .replace(
+      /(<meta\s+name="description"\s+content=")[^"]*(")/,
+      `$1${description}$2`,
+    )
+    .replace(
+      /(<meta\s+property="og:title"\s+content=")[^"]*(")/,
+      `$1${title}$2`,
+    )
+    .replace(
+      /(<meta\s+property="og:description"\s+content=")[^"]*(")/,
+      `$1${description}$2`,
+    )
+    .replace(/(<meta\s+property="og:url"\s+content=")[^"]*(")/, `$1${url}$2`)
+    .replace(
+      /(<meta\s+name="twitter:title"\s+content=")[^"]*(")/,
+      `$1${title}$2`,
+    )
+    .replace(
+      /(<meta\s+name="twitter:description"\s+content=")[^"]*(")/,
+      `$1${description}$2`,
+    )
+    .replace(
+      /<main class="prelaunch">[\s\S]*?<\/main>/,
+      renderDocShell(base, page),
+    );
 }
 
 // The web manifest, generated from identity so `name`/`short_name`/
@@ -613,8 +509,8 @@ export function isStalePrecache(
 export function bootWatchdogScript(base: string, cacheId: string): string {
   const options = {
     flag: BOOT_FLAG,
-    // Generous on purpose: the critical path is budgeted for ~5 s on a slow 3G
-    // phone, and the fast failures (a 404, a refused fetch) are caught by the
+    // Generous on purpose: a slow 3G phone takes seconds over the startup path,
+    // and the fast failures (a 404, a refused fetch) are caught by the
     // error listener within a round trip rather than by this. What is left for
     // the timeout to catch is a fetch that HANGS, where crying wolf at a
     // connection that was merely slow is the worse mistake.
@@ -682,7 +578,7 @@ function buildServiceWorker(
 // which asks for the new build's hashed bundle: paths that are not in the old
 // worker's precache and so are not served from it. Online that is an invisible
 // extra round trip. Offline, or on a connection that drops, it is the app
-// opening to its own no-JS SEO document with "BOOTING…" blinking under it
+// opening to its own prerendered no-JS document with "BOOTING…" blinking under it
 // forever — the game unreachable until the player force-quits, which works
 // only because closing the last client is what finally lets the new worker
 // activate.
@@ -799,11 +695,10 @@ self.addEventListener("fetch", (event) => {
  * first round trip.
  *
  * The `.prelaunch` markup in `index.html` exists to put real content in front
- * of a crawler and a no-JS reader without running the app — and it was then
+ * of a no-JS reader without running the app — and it was then
  * made to wait on `/assets/index-*.css`, 180 KB of app stylesheet (36 KB over
  * the wire) of which it uses about two. On the reference device — a phone on a
- * slow connection, the same one the 170 KB critical-path budget is written for
- * — that is a second network round trip spent before anything is legible, on
+ * slow connection — that is a second network round trip spent before anything is legible, on
  * the one screen whose entire job is to be legible early.
  *
  * `prelaunch.css` is not imported by `main.tsx`, so this is the only thing that
@@ -874,7 +769,6 @@ function minifyCss(css: string): string {
 export function gamePwa({
   base,
   version,
-  appVersion,
   slots = DEPLOY_SLOTS,
   shellBuild = false,
 }: GamePwaOptions): Plugin {
@@ -900,13 +794,13 @@ export function gamePwa({
       config = resolved;
     },
 
-    // Wire the manifest, icons, robots policy, and iOS install metadata into
-    // the shell. Done here (not in index.html) so every slot gets
-    // base-correct hrefs and the correct per-slot robots meta (§11.5.1) from
-    // a single source of truth.
+    // Wire the manifest, icons and iOS install metadata into the shell. Done
+    // here (not in index.html) so every slot gets base-correct hrefs from a
+    // single source of truth. The `noindex` is static in index.html: no slot
+    // is meant to be found through search.
     transformIndexHtml(html): IndexHtmlTransformResult {
       return {
-        html: fillIdentityTokens(html, appVersion),
+        html: fillIdentityTokens(html),
         tags: [
           // THE BOOT SCREEN'S WATCHDOG (src/app/boot-watchdog.ts), inlined as a
           // classic script because what it exists to survive is the module
@@ -923,22 +817,8 @@ export function gamePwa({
                 },
               ]),
           {
-            tag: "meta",
-            attrs: { name: "robots", content: robotsContentForBase(base) },
-            injectTo: "head",
-          },
-          {
             tag: "link",
             attrs: { rel: "manifest", href: `${base}manifest.webmanifest` },
-            injectTo: "head",
-          },
-          {
-            tag: "link",
-            attrs: {
-              rel: "sitemap",
-              type: "application/xml",
-              href: `${base}sitemap.xml`,
-            },
             injectTo: "head",
           },
           {
@@ -1032,11 +912,6 @@ export function gamePwa({
 
       // Hashed build output (JS, CSS, the HTML shell, any emitted assets).
       for (const [fileName, output] of Object.entries(bundle)) {
-        // …except Vite's own build manifest (`build.manifest`), which exists
-        // for `scripts/check-seo.mjs` to weigh the two startup paths with and
-        // is never requested by anything the player runs. Precaching it would
-        // spend a slice of every player's offline budget on a build artifact.
-        if (fileName === BUILD_MANIFEST) continue;
         const bytes =
           output.type === "chunk"
             ? Buffer.byteLength(output.code)

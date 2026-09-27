@@ -215,32 +215,18 @@ leaf `engine/game/flags.ts`, and compiled content is emitted in menu-facing and
 run-facing halves (`generated/level-index.ts` beside `generated/levels.ts`),
 read through `defs/levels/summary.ts`.
 
-**AND THE APP ENTERS AT THE STUDIO CARD, NOT AT THE APP — so
-`pwa/scripts/check-seo.mjs` weighs TWO paths and you have to know which one you
-tripped.** `pwa/src/Boot.tsx` is the whole entry chunk (the card, its pixel
-font, and the fetch of everything else); `App.tsx` and the title menu behind it
-are a lazy chunk the card pulls while it is held up (`warmBoot` in
-`splash.ts`), and the card refuses to lift until it has landed — so the menu is
-exactly as finished when the card clears as it was when it was eager.
+**AND THE APP ENTERS AT THE STUDIO CARD, NOT AT THE APP.** `pwa/src/Boot.tsx`
+is the whole entry chunk (the card, its pixel font, and the fetch of everything
+else); `App.tsx` and the title menu behind it are a lazy chunk the card pulls
+while it is held up (`warmBoot` in `splash.ts`), and the card refuses to lift
+until it has landed — so the menu is exactly as finished when the card clears
+as it was when it was eager. Everything `splash.ts` reaches, it reaches through
+an `import()`: a static import there puts the thing in FRONT of the card
+instead of behind it. A thing the player cannot use before they have touched
+the screen — the title THEME above all — belongs behind `splashSettled()`.
 
-- **CARD — 40 KB gzipped**, what the entry HTML pulls before anything is on
-  screen (~21 today). Everything `splash.ts` reaches, it reaches through an
-  `import()`, and that is the constraint rather than a style: a static import
-  there puts the thing in FRONT of the card instead of behind it. Two already
-  bit — `assets.ts` (the sprite atlas) and `@game/menu` for one `warn`.
-- **MENU-READY — 170 KB gzipped**, the card plus everything `App.tsx`
-  statically drags in (~142 today). This is the old critical-path budget under
-  a new name, measured from Vite's build manifest rather than from the HTML
-  (the HTML by design says nothing about a chunk fetched at runtime), and it is
-  still the one that catches a startup module reaching back through
-  `@game/core`. 170 is web.dev's figure for a ~5 s time-to-interactive on a
-  slow 3G phone, with no allowance added on top; it stood at 200 while the app
-  rendered with React, because react-dom was ~50 KB gzipped of the path.
-
-When either trips, find what reached back through `@game/core` (or make that
-screen lazy); do NOT raise the number. And a thing the player cannot use before
-they have touched the screen — the title THEME above all — belongs behind
-`splashSettled()`, not in either budget.
+There are no size budgets and no SEO tooling, by owner decision; the site
+carries `noindex`.
 
 **Mobile-first, landscape.** The reference device is a phone held horizontally:
 a ~844×390 CSS viewport, ≈422×260 world units. Design every element — HUD,
@@ -262,7 +248,7 @@ above it, and `docs/architecture.md` has the module-by-module map:
   output module (OSS_GAME_SPEC §19.4); raw `console.*` elsewhere fails lint.
 - **`pwa/` — the app.** A Vite + Preact PWA shell that mounts the engine,
   renders it, and owns everything deploy-shaped (the service worker build,
-  manifest, icons, SEO surfaces, the update toast). **The app depends on the
+  manifest, icons, the page head, the update toast). **The app depends on the
   engine; the engine never imports from the app.**
 - **`native/` — the App Store / Play Store wrapper.** A thin Expo shell whose
   entire content is a full-screen WebView over the bundled site, adding what a
@@ -391,8 +377,7 @@ a `MissionDef` with no floor plan on it at all. The carve travels on the state
 nothing reads the catalog for its own level. → `mapgen-improvement`, `level-design`
 
 **NOTHING OUTSIDE A RUN MAY IMPORT `mapgen/`.** The menus reach levels through
-`defs/levels/summary.ts`; pulling the generator onto the startup path puts the
-whole level catalog and the carve inside the 170 KB budget.
+`defs/levels/summary.ts`; pulling the generator onto the startup path puts the whole level catalog and the carve in every player's first download.
 
 **A READ OF "THE HERO" IS ONE OF TWO KINDS, AND KNOWING WHICH IS THE JOB.** A
 PRIVATE read — the bag, the purse, the build, the talents, the worn kit — is
@@ -515,7 +500,7 @@ is a desync that presents as a replication bug.
 **A NEW VERB THE APP MAY RUN AGAINST A RUN EXISTS TWICE, ON PURPOSE.**
 `engine/game/commands.ts` (arg shapes + the `case`) **and** `COMMANDS` in
 `server/wire/frames.ts` (the literal copy the allow-list reads, because that
-leaf is read from the startup path where the budget forbids `@game/core`); the
+leaf is read from the startup path where nothing may reach `@game/core`); the
 drift test enforces the pair, then bump `PROTOCOL_VERSION`. Arguments are
 SCALARS only. Call it from the app through `pwa/src/game/run-commands.ts`, never
 by importing the engine function. `applyRunCommand` takes the ACTING HERO, from
@@ -628,9 +613,7 @@ sight-limited, so ground behind a wall stays dark until the hero can see it, and
 it deliberately reaches `MAP.fogWallDepth` PAST the blocker — a frontier along
 every wall's inside face would leave a mob pressed against one undrawn and
 unshootable. Both live in `engine/game/fog.ts` and NOT in map.ts, because
-`engine/menu.ts` re-exports map.ts's grid arithmetic — so that module is inside the
-170 KB budget and a run-only read added there is spent from the startup path's
-allowance. → `docs/rendering.md`
+`engine/menu.ts` re-exports map.ts's grid arithmetic — so that module is on the startup path and a run-only read added there loads before the menu. → `docs/rendering.md`
 
 **A WALL, THOUGH — NOT A ROCK. `lineOfSight` IS NO LONGER `blockedByObstacle`,
 AND PICKING THE WRONG ONE IS A SILENT REGRESSION.** They are two questions:
@@ -1021,7 +1004,7 @@ Per §21 of `OSS_GAME_SPEC.md`, this repo ships agent skills for keeping drift-p
 | `maintenance`      | When several artifacts have likely drifted at once — umbrella skill that runs every `update-*` skill in the correct order.        |
 | `update-docs`      | After any change to the public API, configuration keys, or error messages.                                                        |
 | `update-readme`    | After any change that alters user-visible behavior, commands, or install instructions.                                            |
-| `update-website`   | After changes that affect the deployed app's SEO surfaces or source-derived content under `pwa/`.                                 |
+| `update-website`   | After changes that affect the deployed app's head, its `noindex`, or source-derived content under `pwa/`.                         |
 | `update-prompts`   | After any change to an LLM prompt's source of truth (embedded docs, rendering-context keys, JSON-schema enums, validation rules). |
 | `sync-game-spec`   | When the repo may have drifted from `OSS_GAME_SPEC.md` — walks the spec's mandates and fixes violations.                          |
 | `changelog`        | On every PR — to write its changeset fragment, or to settle that `no-changelog` is the right call instead.                        |

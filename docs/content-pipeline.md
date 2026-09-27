@@ -342,8 +342,7 @@ never by editing the fixture.
   `generate-music.mjs` (schemas `scripts/asset-tools/sound-schema.mjs` and
   `music-schema.mjs`, loaders `scripts/sound-data/` and `scripts/music-data/`).
   The sound bank emits SPLIT — `sounds.ts` for the run, `sounds-ui.ts` for the
-  interface — because a menu click must not drag every kill and explosion into
-  the 170 KB critical path; the music emits **one module per track** plus an
+  interface — because a menu click must not drag every kill and explosion into the startup path; the music emits **one module per track** plus an
   index of dynamic imports, for the same reason, so a score is fetched when its
   venue starts and never before. The round-trip guard
   (`tests/content/music_roundtrip_test.ts`) pins the compiled scores to
@@ -535,9 +534,7 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   playtest harness). They are committed, because the manifest names them by
   path. Never hand-draw or compose one: an install prompt is a promise about
   what the player is about to get, and it is the one image surface where
-  marketing art would be a lie. Re-run after an art pass or a HUD change
-  (`check-seo` fails the build if a named file is missing, and warns if either
-  the `wide` or `narrow` form factor is).
+  marketing art would be a lie. Re-run after an art pass or a HUD change.
 - In-game pixel assets (the sprite atlas, tiles, the UI font atlas) are
   generated from the `content/sprites/` YAML tree (one self-describing
   file per base sprite — see the `pixel-assets` skill) + `asset-tools/` only

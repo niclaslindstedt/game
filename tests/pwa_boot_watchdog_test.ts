@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // "BOOTING…" IS NOT A PROGRESS BAR.
 //
-// The prerendered `.prelaunch` console in `pwa/index.html` is the SEO document,
-// the no-JS fallback, and the frame the app mounts over — and it ends in a
+// The prerendered `.prelaunch` console in `pwa/index.html` is the no-JS
+// fallback, and the frame the app mounts over — and it ends in a
 // blinking BOOTING… that is wired to nothing at all. When the module script
 // fails to arrive (a stale shell pointing at a bundle that is no longer there,
 // a dropped connection, a deploy still propagating), the caret goes on blinking
