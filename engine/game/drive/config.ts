@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // THE DRIVE'S NUMBERS — the road between the garage and GOODCO, and everything
 // on it.
 //

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // THE VEHICLES (config CAR / SHIP below) — the hero's car and his garage
 // ship, simulated as small machines rather than drawn as props. See
 // `Vehicle` (types/world.ts) for what they are; this module owns the numbers

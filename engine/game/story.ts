@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The story systems: in-world dialogue (elite ambushes, boss confrontations,
 // unique-mob last words, story-item lore) and the locked doors their keys
 // open. Dialogue freezes

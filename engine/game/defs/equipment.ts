@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The equipment catalog: weapon defs, gear defs, the tier ladder, and the
 // affix pools that magic+ items roll from. The catalogs themselves are
 // AUTHORED IN YAML — one file per item under `content/items/<rarity>/`,

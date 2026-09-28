@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // Public entry point for the game engine core. The engine is framework-free:
 // the browser app under `pwa/` consumes this module via the `@game/core`
 // alias, drives `step()` from its render loop, and reads the returned state

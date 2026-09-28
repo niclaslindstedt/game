@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // THE DRIVE SHELF — one exhibit per thing the road can do to you, each staged so
 // the collision lands on cue.
 //

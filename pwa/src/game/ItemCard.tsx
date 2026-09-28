@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The shared item card — the single source of truth for how an equipment
 // instance READS: its pixel icon (equipmentIcon → sprite) and the WoW-style
 // stat/affix lines. The inventory tooltip (InventoryPanel), the arsenal viewer

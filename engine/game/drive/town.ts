@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // THE TOWN — every building on the road to GOODCO, and the street it makes.
 //
 // WHY THIS IS A CATALOG AND NOT A SPRITE TABLE. The road used to hold ONE idea

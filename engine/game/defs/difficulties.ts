@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The difficulty catalog. A difficulty is pure data layered over every
 // level, and it turns a whole rack of knobs at once: how the hero starts
 // (stat head-start, the weapon off the wall), how the horde compares to him

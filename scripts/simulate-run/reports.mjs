@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // Report renderers for the campaign simulator CLI (scripts/simulate-run.mjs):
 // the shared string formatters, the detailed single-campaign render (summary
 // table, content reach, boss encounters, loot-vs-level, the per-run --full

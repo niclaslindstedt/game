@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The run's mutable state: level info, spawner/pack runtimes, the autopilot
 // scratchpad, and the GameState root that step() advances.
 

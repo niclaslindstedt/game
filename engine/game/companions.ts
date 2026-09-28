@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The COMPANION system: the ONE recruited ally and the SPARE-or-KILL verdict
 // that creates it. A spareable unique (`EnemyDef.spareable`) beaten to 0 hp
 // kneels and pauses the run in the `choice` phase (see hitEnemy in loot.ts);

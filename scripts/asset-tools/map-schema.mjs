@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The MAP BLUEPRINT schema validator — the "v2" level format's gate.
 // `validateMap(bp, refs)` returns `{ errors, warnings }`: hard errors (an
 // unknown enemy or level id, a sprite the atlas does not carry, a region name

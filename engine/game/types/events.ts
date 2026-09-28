@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // Run statistics and the GameEvent stream step() reports each tick so the
 // app layer can drive sound and visuals without the engine knowing either.
 

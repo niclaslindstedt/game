@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// game-spec:allow-large-file: twenty satellites' paint recipes as ONE table
+// guidelines:allow-large-file: twenty satellites' paint recipes as ONE table
 // with one baker over it. Each row is a palette plus a list of named-feature
 // layers; splitting the table would separate a moon's colours from the only
 // code that reads them, and the baker is forty lines.

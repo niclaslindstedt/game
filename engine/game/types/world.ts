@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The static and interactive world: ground items, decor, obstacles,
 // landmarks, tiles, doors/gates, dialogue, map markers, and the merchant.
 

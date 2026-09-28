@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // Engine events → on-screen feedback. Every visual/audio-adjacent reaction to
 // a tick's events lives here: transient canvas effects (slashes, muzzle
 // flashes, gore, corpses, damage numbers, combat text), the lower-corner

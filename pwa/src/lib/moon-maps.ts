@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// game-spec:allow-large-file: a coordinate catalogue — twenty satellites' real
+// guidelines:allow-large-file: a coordinate catalogue — twenty satellites' real
 // named features (basins, volcanoes, lineae, ridges, coated hemispheres) as
 // lat/lon data, with two small primitives at the top. It is DATA, and splitting
 // it would only scatter the same table across files.

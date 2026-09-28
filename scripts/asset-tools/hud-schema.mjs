@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The HUD schema — what `content/hud/**` may say, and the vocabulary a HUD
 // element is built out of.
 //

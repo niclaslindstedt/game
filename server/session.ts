@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // ONE SESSION — the authoritative simulation, and the only thing in this
 // codebase that is allowed to advance it once multiplayer is on.
 //

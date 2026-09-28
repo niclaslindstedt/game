@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The WANDERING MERCHANT and his coin economy (config MERCHANT / ECONOMY).
 // One merchant roams every level — the horde ignores him and nothing hurts
 // him. Until met he drifts between short wander legs on his OWN seeded rng

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // DRAWING THE ROAD — the drive's own frame, painted with the run's own tools.
 //
 // IT REUSES THE PROJECTION RATHER THAN INVENTING ONE. The shipped camera

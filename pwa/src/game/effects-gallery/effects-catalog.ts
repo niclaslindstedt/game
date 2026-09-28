@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The EFFECTS GALLERY's catalog: every visual effect the game ships, one exhibit
 // each. An entry says how to STAGE the effect (a `ScenarioSpec` — the level, the
 // hero's build, the ring of mobs it needs) and how to FIRE it (an engine event

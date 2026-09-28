@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // THE DRIVE, ON SCREEN — the minigame's whole app half: a canvas, a fixed-step
 // loop, one thumb's worth of input, and the four things the hero says.
 //

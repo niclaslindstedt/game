@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // THE ENGRAVER — a `ChiptuneTrack` (content/music/*.yaml, cooked) drawn as a
 // SCORE: real staves, real clefs, real noteheads, beams, ties, rests and bar
 // lines, one staff per voice, stacked into systems and braced at the left.

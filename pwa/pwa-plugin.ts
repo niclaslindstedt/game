@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 import { createHash } from "node:crypto";
 import { statSync, readdirSync, readFileSync } from "node:fs";
 import { join, posix, relative, sep } from "node:path";

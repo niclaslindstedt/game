@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The hero: the paper-doll draw with facing, jump shadow, hurt blink, and
 // knockout pose; the held weapon's swing/recoil/cast animation and the slash
 // streak riding the blade; and the level-up burn wreathing him on a ding.

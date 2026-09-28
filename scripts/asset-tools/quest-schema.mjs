@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The QUEST schema validators — errands and the people who hand them out.
 // Mirrors `story-schema.mjs` / `powerup-schema.mjs`: each `validate*` returns
 // `{ errors, warnings }`, and a hard error FAILS the build, so a quest that

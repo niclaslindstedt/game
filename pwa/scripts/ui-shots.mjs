@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // UI capture harness (see the `ui-review` skill). Drives the real app in
 // headless Chromium to EVERY screen, modal, popup, and toast — the title
 // menu tree, character roster/creation, every in-game overlay (via forced

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The Doom-style splash / main menu: a starfield, the big title, and a
 // keyboard-and-pointer menu — NEW GAME leads to the difficulty ladder, and
 // picking a difficulty starts the run. The screen is the ORCHESTRATOR of the

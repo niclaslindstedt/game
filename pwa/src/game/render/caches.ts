@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // Per-frame render caches, all keyed off the (memoized, singleton) Sprites
 // instance: a fresh instance — e.g. after a hot reload — drops everything
 // (see `ensureCaches`). Everything here trades a one-time bake for cheap

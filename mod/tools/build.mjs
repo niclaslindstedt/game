@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-GoneInSpace-Mod-SDK-1.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // THE MOD COMPILER — a mod folder of YAML in, one validated JSON bundle out.
 //
 // This is the whole of what makes a mod safe to load: the game NEVER interprets

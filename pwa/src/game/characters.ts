@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // Persistent CHARACTERS — the Diablo-style save model that replaces the old
 // device-wide, level-token progression. A character is a NAMED, evolving hero
 // that lives on across every difficulty and level: its build (the engine

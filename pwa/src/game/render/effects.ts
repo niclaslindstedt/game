@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // Transient app-side effects: lightning strikes, nuke rings, gore splashes
 // on hit mobs, corpses, crate breaks, spell blooms, and floating damage
 // numbers. GameScreen accumulates them from engine events and passes what is

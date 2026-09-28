@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // THE MAP GENERATOR — a blueprint (`content/maps/<id>.yaml`) plus a seed becomes
 // a whole `LevelDef`, which the rest of the engine then builds a run from exactly
 // as it builds one from a hand-authored map. Nothing downstream of here knows the

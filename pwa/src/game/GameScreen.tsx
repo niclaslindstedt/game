@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The playable screen: mounts the canvas, runs the fixed-timestep loop over
 // the engine, feeds it pointer input per the player's control settings
 // (touch: a virtual dpad anchored where the finger lands, taps jump —

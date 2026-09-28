@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // Environmental hazards: gravity wells (black holes) and the asteroid rain.
 // Both are pure level data — `LevelDef.wells` places the holes and
 // `LevelDef.asteroids` turns the rocks on — stepped from step() while the
