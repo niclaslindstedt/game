@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Central output module (OSS_GAME_SPEC §19.4). All diagnostic output from the
-// engine and the app routes through the semantic helpers below so formatting
-// and routing can change in one place. Raw `console.*` calls are forbidden
-// outside this module (enforced by the `no-console` ESLint rule).
+// Central output module. All diagnostic output from the engine and the app
+// routes through the semantic helpers below so formatting and routing can
+// change in one place. Raw `console.*` calls are forbidden outside this module
+// (enforced by the `no-console` ESLint rule).
 //
-// Browser adaptation of §19: instead of a log *file*, every message — all
-// levels, including debug — is appended to an in-memory ring buffer that the
-// app can surface in a developer overlay or attach to a bug report
-// (`recentLogs()`). Debug messages only reach the console when debug mode is
-// switched on (§19.3's `--debug` equivalent), either via `setDebugEnabled`
-// or by loading the app with `?debug` in the URL.
+// A browser game keeps no log *file*: every message — all levels, including
+// debug — is appended to an in-memory ring buffer that the app can surface in a
+// developer overlay or attach to a bug report (`recentLogs()`). Debug messages
+// only reach the console once debug mode is switched on with
+// `setDebugEnabled`. The engine reads no URL and no browser global to decide
+// that: the app does, from `?debug` in the page address
+// (`pwa/src/app/debug-flag.ts`), so the engine stays importable headless.
 
 export type LogLevel = "error" | "warn" | "info" | "debug";
 
@@ -22,16 +23,14 @@ export type LogEntry = {
 const MAX_BUFFERED_ENTRIES = 500;
 const buffer: LogEntry[] = [];
 
-let debugEnabled =
-  typeof window !== "undefined" &&
-  new URLSearchParams(window.location.search).has("debug");
+let debugEnabled = false;
 
-/** Toggle debug-level console output at runtime (§19.3). */
+/** Toggle debug-level console output at runtime. */
 export function setDebugEnabled(enabled: boolean): void {
   debugEnabled = enabled;
 }
 
-/** The most recent log entries, oldest first — all levels, always on (§19.2). */
+/** The most recent log entries, oldest first — all levels, always on. */
 export function recentLogs(): readonly LogEntry[] {
   return buffer;
 }

@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@ui/lib/ErrorBoundary.tsx";
 import { startGamepadKeyBridge } from "@ui/lib/gamepad-keys.ts";
 import { usePwaUpdate } from "@ui/lib/pwa-update.ts";
 
+import { applyDebugFlag } from "./app/debug-flag.ts";
 import { initDevicePolicy } from "./app/device-policy.ts";
 import { launchNoticeReasons } from "./app/launch-options.ts";
 import { isNativeApp } from "./app/native.ts";
@@ -39,6 +40,10 @@ import { initCoinStore } from "./game/store.ts";
 import type { CabinetReturn } from "./game/title-screen/menu-model.ts";
 import { TitleScreen } from "./game/TitleScreen.tsx";
 import { UpdateModal } from "./game/UpdateModal.tsx";
+
+// `?debug` prints the engine's debug diagnostics to the console too — read
+// here rather than by the engine, which never looks at the page address.
+applyDebugFlag(window.location.search);
 
 // Lazy to keep the startup path light: the title menu is startup; the
 // playable game (and the engine renderer it pulls in) is only reached once a
@@ -239,7 +244,7 @@ export function App() {
   // whole module is one of the things it covers. By the time anything below
   // runs, the card is already on screen and holding — see `splash.ts`.
 
-  // Register the deploy slot's service worker (§11.4.3) and track its update
+  // Register the deploy slot's service worker and track its update
   // lifecycle. The framework hook performs the actual
   // `navigator.serviceWorker.register(...)` via workbox-window, registering
   // `${base}sw.js` on every page load. In dev (`enabled: false`) it stays
@@ -807,7 +812,7 @@ export function App() {
         }
       />
 
-      {/* The "a new version is ready" prompt (§11.4.4), fed from the service
+      {/* The "a new version is ready" prompt, fed from the service
           worker reaching `waiting`. A sprite-based panel (pixel font, upgrade
           sprite, chunky buttons) in place of the framework's plain toast so
           it fits the game. Applying reloads onto the new build; dismissing

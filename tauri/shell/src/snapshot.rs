@@ -38,7 +38,7 @@ use serde_json::json;
 /// have in common.
 pub const OPEN_PORT_FUNCTION: &str = "__gisShellOpenNetPort";
 
-/// The page's own accessor, which `pwa/src/app/shell-bridge.ts` declares and
+/// The page's own accessor, which `pwa/src/shell-host.ts` declares and
 /// `net-bridge.ts` calls. Optional on the web side precisely because only a
 /// desktop shell has one.
 pub const ON_NET_PORT_MEMBER: &str = "onNetPort";

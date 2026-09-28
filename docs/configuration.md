@@ -607,10 +607,12 @@ rebuilding). The native shell's peer of `GIS_GAME_URL` is
 
 ## URL parameters
 
-**`?debug`** — Enables debug-level console output (`engine/output.ts`,
-OSS_GAME_SPEC §19.3). All levels are always captured in the in-memory buffer
-regardless; the flag only controls console verbosity. Additionally exposes the
-live engine state as `window.__game`, the scenario hook as
+**`?debug`** — Enables debug-level console output (`engine/output.ts`; the app
+reads the flag in `pwa/src/app/debug-flag.ts` and switches the engine's output
+module on, since the engine reads no page address itself). All
+levels are always captured in the in-memory buffer regardless; the flag only
+controls console verbosity. Additionally exposes the live engine state as
+`window.__game`, the scenario hook as
 `window.__scenario(spec)`, and two animation-tuning hooks —
 `window.__swing({kind, weaponClass, t})` pins the field hero's held weapon at a
 fixed fraction `t` (0..1) of its swing arc (`null` clears it; for a melee swing,
@@ -960,16 +962,17 @@ does: whoever operates the machine controls the simulation.
 
 ## Repository pins
 
-| File                          | Pins                                                                                                          |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `.nvmrc`                      | Node 24 — both local (`nvm use`) and the CI workflows (`node-version-file`) resolve this single file (§10.5). |
-| `package.json` `engines.node` | `>=24`, so npm warns on a stale local Node.                                                                   |
+| File                          | Pins                                                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `.nvmrc`                      | Node 24 — both local (`nvm use`) and the CI workflows (`node-version-file`) resolve this single file. |
+| `package.json` `engines.node` | `>=24`, so npm warns on a stale local Node.                                                           |
 
 ## Release configuration
 
 No repository secret is needed to build or install: every dependency comes
 from the public npm registry, so `npm ci` works with no token at all.
 
-No `RELEASE_TOKEN` is needed: `release.yml` is dispatched manually and
-chains into `pages.yml` via `workflow_call` inside the same run, so the
+No `RELEASE_TOKEN` is needed: a release is started by dispatching
+`version-bump.yml`, which calls `release.yml`, which chains into `pages.yml` —
+all via `workflow_call` inside the same run, so the
 default `GITHUB_TOKEN` suffices end to end.

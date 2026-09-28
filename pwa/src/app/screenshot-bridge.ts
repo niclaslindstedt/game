@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // SCREENSHOTS' transport — the WEB half of the store-shell screenshot seam,
-// and the sixth protocol over the one shell channel (./shell-bridge.ts):
+// and the sixth protocol over the one shell channel (../shell-host.ts):
 //
 //   web → shell   `postToShell(JSON { __gisShots })`
 //   shell → web   `window.__gisShotsEvent(...)` (injected from outside)
@@ -25,7 +25,7 @@
 // a phone player presses would simply not be offered.
 //
 // The picture crosses as BASE64 rather than as a blob, because the pipe carries
-// text and nothing else (see shell-bridge.ts; the one exception is
+// text and nothing else (see ../shell-host.ts; the one exception is
 // multiplayer's MessagePort, and it is an exception for throughput, which a
 // once-per-keypress screenshot is not).
 //
@@ -33,7 +33,7 @@
 // does with it is game/screenshots.ts's business, so a third shell is a new
 // provider behind the same four messages.
 
-import { postToShell, shellAvailable, shellPlatform } from "./shell-bridge.ts";
+import { postToShell, shellAvailable, shellPlatform } from "../shell-host.ts";
 
 declare global {
   interface Window {

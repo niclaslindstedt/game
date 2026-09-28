@@ -35,7 +35,7 @@
 // answer the two halves of that below, and they fail in opposite directions on
 // purpose.
 
-import { shellCapability } from "./shell-bridge.ts";
+import { shellCapability } from "../shell-host.ts";
 
 declare global {
   interface Window {

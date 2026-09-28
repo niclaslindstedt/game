@@ -5,7 +5,7 @@
 // is the planned Android drop-in), so this module speaks to it over the
 // WebView's message channel exactly like CLOUD SAVE and the coin store do:
 //
-//   web → shell   `postToShell(JSON { __gisScores })`  (./shell-bridge.ts)
+//   web → shell   `postToShell(JSON { __gisScores })`  (../shell-host.ts)
 //   native → web  `webview.injectJavaScript("window.__gisScoresEvent(...)")`
 //
 // The protocol (mirrored by native/src/leaderboards.ts — keep the two in step):
@@ -24,7 +24,7 @@
 // budget for every player who never opens a board. Opening a board needs a key
 // and a channel; it does not need to know what the number means.
 
-import { postToShell, shellAvailable } from "./shell-bridge.ts";
+import { postToShell, shellAvailable } from "../shell-host.ts";
 
 declare global {
   interface Window {

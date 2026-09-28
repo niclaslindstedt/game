@@ -2,7 +2,7 @@
 // THE NET bridge — the WEB half of the multiplayer seam, and the FIFTH arm of
 // the shape cloud save, achievements, leaderboards and mods already use.
 //
-//   web → shell   `postToShell(JSON { __gisNet })`  (./shell-bridge.ts)
+//   web → shell   `postToShell(JSON { __gisNet })`  (../shell-host.ts)
 //   shell → web   `window.__gisNetEvent(…)` (called from OUTSIDE, via
 //                 `webview.eval`, exactly as the other four bridges are)
 //
@@ -45,7 +45,7 @@ import {
   shellAvailable,
   shellCapability,
   shellPlatform,
-} from "./shell-bridge.ts";
+} from "../shell-host.ts";
 
 declare global {
   interface Window {

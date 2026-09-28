@@ -4,7 +4,7 @@
 // so this module speaks to it over the WebView's message channel exactly like
 // cloud save and the coin store do:
 //
-//   web → shell   `postToShell(JSON { __gisAchievements })`  (./shell-bridge.ts)
+//   web → shell   `postToShell(JSON { __gisAchievements })`  (../shell-host.ts)
 //   native → web  `webview.injectJavaScript("window.__gisAchievementsEvent(...)")`
 //
 // The protocol (mirrored by native/src/achievements.ts — keep the two in step):
@@ -25,7 +25,7 @@
 // earned. game/achievement-sync.ts owns that, so a second platform is a new
 // native provider behind the same four messages.
 
-import { postToShell, shellAvailable } from "./shell-bridge.ts";
+import { postToShell, shellAvailable } from "../shell-host.ts";
 
 declare global {
   interface Window {

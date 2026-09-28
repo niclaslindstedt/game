@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE SHELL CHANNEL — the one transport every native bridge posts over, and
-// the one place that knows HOW a shell is reached.
+// the one place that knows HOW a shell is reached. It is the only module in the
+// app that names a shell's globals; everything else asks it.
 //
 // The game ships inside more than one shell: the Expo WebView (`native/`, iOS
 // and Android) and the Tauri desktop app (`tauri/`, Steam). Both wrap the
@@ -24,7 +25,7 @@
 // bridges' receiving half is already shell-agnostic and is
 // left exactly as it was.
 
-import { isNativeApp } from "./native.ts";
+import { isNativeApp } from "./app/native.ts";
 
 /** Which shell the game is running inside, when it is running inside one.
  * `ios`/`android` are the Expo WebView (`native/`); `steam` is the Tauri

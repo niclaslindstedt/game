@@ -22,10 +22,10 @@
 // The rule for adding to this file: an export belongs here when the title
 // screen, the roster, or the settings tree needs it AND it does not drag the
 // simulation in behind it. When in doubt, add it to `index.ts` only and let the
-// importer be lazy — the budget check will tell you if you got it wrong.
+// importer be lazy.
 
 export { engineVersion } from "./version.ts";
-export { warn } from "./output.ts";
+export { setDebugEnabled, warn } from "./output.ts";
 
 // The catalogs the menus read: which missions and difficulties exist, what a
 // piece of gear is called and what it takes to wear it.

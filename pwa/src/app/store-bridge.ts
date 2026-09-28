@@ -4,7 +4,7 @@
 // (native/), where StoreKit / Play Billing live; this module speaks to it over
 // the WebView's message channel:
 //
-//   web → native  `window.ReactNativeWebView.postMessage(JSON { __gisStore })`
+//   web → native  `postToShell(JSON { __gisStore })`  (../shell-host.ts)
 //   native → web  `webview.injectJavaScript("window.__gisStoreEvent(...)")`
 //
 // The protocol (mirrored by native/src/store-purchases.ts — keep the two in step):
@@ -25,7 +25,7 @@
 // pack can be credited late, but never lost. The credit callback is therefore
 // idempotent on `purchaseKey` (the caller keeps a ledger) and re-runs safely.
 
-import { postToShell, shellAvailable, shellPlatform } from "./shell-bridge.ts";
+import { postToShell, shellAvailable, shellPlatform } from "../shell-host.ts";
 
 declare global {
   interface Window {

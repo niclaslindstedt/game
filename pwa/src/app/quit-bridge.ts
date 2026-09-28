@@ -21,7 +21,7 @@
 // with the same message — see the note on `shellPlatform` for why this asks
 // WHICH shell rather than how to talk to one.
 
-import { postToShell, shellAvailable, shellPlatform } from "./shell-bridge.ts";
+import { postToShell, shellAvailable, shellPlatform } from "../shell-host.ts";
 
 /** Can this build close itself? The desktop shell can; a browser, an
  * installed PWA and the mobile app cannot. */

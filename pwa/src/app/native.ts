@@ -11,7 +11,7 @@
 // store", which is why both shells set it: it is what turns the PWA update
 // lifecycle off, and that reasoning is about how the build is delivered, not
 // about React Native. To ask WHICH shell — a question about platform features,
-// like whether coins are sold here — use `shellPlatform()` (./shell-bridge.ts).
+// like whether coins are sold here — use `shellPlatform()` (../shell-host.ts).
 //
 // The app bundles the game on-device and ships updates through the store, so it
 // disables the whole PWA update lifecycle: with no service worker there is no

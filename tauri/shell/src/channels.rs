@@ -3,7 +3,7 @@
 //!
 //! Both halves of every bridge protocol are named here so a rename is one edit
 //! rather than a hunt. The page's own half of these names lives in
-//! `pwa/src/app/shell-bridge.ts` and in each bridge module beside it, and is
+//! `pwa/src/shell-host.ts` and in each bridge module beside it, and is
 //! IDENTICAL on both shells — the Expo WebView and this one — which is the
 //! whole reason adding a shell has never changed a protocol.
 
@@ -16,7 +16,7 @@
 pub const SHELL_COMMAND: &str = "shell_post";
 
 /// The object the page posts through, exposed by the initialization script.
-/// `pwa/src/app/shell-bridge.ts` looks for exactly this name.
+/// `pwa/src/shell-host.ts` looks for exactly this name.
 pub const SHELL_GLOBAL: &str = "__gisShell";
 
 /// The page is inside a store shell, so the PWA update lifecycle is off
@@ -25,7 +25,7 @@ pub const SHELL_GLOBAL: &str = "__gisShell";
 /// longer be given.
 pub const NATIVE_GLOBAL: &str = "__GIS_NATIVE__";
 
-/// WHICH PLATFORM — read by `pwa/src/app/shell-bridge.ts` to answer
+/// WHICH PLATFORM — read by `pwa/src/shell-host.ts` to answer
 /// platform-feature questions (that this platform does not sell coins, and has
 /// no vibration motor).
 pub const PLATFORM_GLOBAL: &str = "__GIS_PLATFORM__";

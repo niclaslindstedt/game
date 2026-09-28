@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // Player-facing settings (menu: SETTINGS): control scheme and audio
 // volumes. Persisted to localStorage so an installed PWA keeps them across
 // launches; defaults adapt to the device — touch players steer by holding
@@ -23,7 +24,7 @@ import {
 
 import { clamp, clamp01 } from "@game/lib/vec.ts";
 
-import { shellPlatform } from "../app/shell-bridge.ts";
+import { shellPlatform } from "../shell-host.ts";
 import { storageKey } from "../identity.ts";
 
 import { setAudioVolumes } from "./audio.ts";

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The MODS bridge — the WEB half of the Steam Workshop seam. Steam builds only.
 //
-//   web → shell   `postToShell(JSON { __gisMods })`  (./shell-bridge.ts)
+//   web → shell   `postToShell(JSON { __gisMods })`  (../shell-host.ts)
 //   shell → web   `window.__gisModsEvent(…)` (called from OUTSIDE, via
 //                 `webview.eval`, exactly as the other three bridges are)
 //
@@ -29,7 +29,7 @@ import {
   shellAvailable,
   shellCapability,
   shellPlatform,
-} from "./shell-bridge.ts";
+} from "../shell-host.ts";
 
 declare global {
   interface Window {

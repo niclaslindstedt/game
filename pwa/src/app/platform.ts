@@ -14,7 +14,7 @@
 // bridge. Everywhere else the toggle would be a dead switch, so it's hidden.
 
 import { isNativeApp } from "./native.ts";
-import { shellPlatform } from "./shell-bridge.ts";
+import { shellPlatform } from "../shell-host.ts";
 
 /** True on a touch-primary device — a phone or tablet whose main pointer is
  * touch, where a vibration motor lives. Mirrors settings.ts' `touchFirst`

@@ -5,7 +5,7 @@
 // the planned Android drop-in), so this module speaks to it over the WebView's
 // message channel exactly like the coin store's purchase bridge does:
 //
-//   web → shell   `postToShell(JSON { __gisCloud })`  (./shell-bridge.ts)
+//   web → shell   `postToShell(JSON { __gisCloud })`  (../shell-host.ts)
 //   shell → web   the shell calls `window.__gisCloudEvent(...)` from outside
 //                 (`injectJavaScript` on the WebView, `webview.eval` on the
 //                 desktop)
@@ -25,7 +25,7 @@
 // merging. game/cloud-save.ts owns the payload and the merge rules, so a second
 // platform is a new native provider behind the same four messages.
 
-import { postToShell, shellAvailable } from "./shell-bridge.ts";
+import { postToShell, shellAvailable } from "../shell-host.ts";
 
 declare global {
   interface Window {
