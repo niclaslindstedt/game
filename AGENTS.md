@@ -23,7 +23,7 @@ WHERE code goes — the tables below.
 
 ## The rules this repository follows
 
-Fleet guidelines: GAME_GUIDELINES 1.0.1
+Fleet guidelines: GAME_GUIDELINES 1.0.2
 
 This file is enough for day-to-day work on the game: the shape it is built on —
 a headless simulation core, content authored as data, deterministic runs, the

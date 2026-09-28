@@ -27,8 +27,9 @@ import Constants from "expo-constants";
 //
 // Every wrapper in the fleet has its own port — calendar 8231, contacts 8241,
 // time 8251, calc 8261, paint 8271, meds 8281, cycle 8291, baby 8301, notes
-// 8311, checklist 8791, the games 9006 / 9007 / 9033 — so no two contend for
-// a port on a phone that has both. A new wrapper takes the next free ten.
+// 8311, Storage Remote 8321, checklist 8791, the games 9006 / 9007 / 9033 —
+// so no two contend for a port on a phone that has both. A new wrapper takes
+// the next free ten.
 const PORT = 9006;
 
 // Where the unzipped site lives, and the marker that records which app version
