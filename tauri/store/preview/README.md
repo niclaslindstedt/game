@@ -4,7 +4,10 @@ Internal visual QA for the Steam listing. Its desktop proportions, dense
 navigation, media rail, action strip, purchase box, two-column content flow,
 feature cards, mature-content section, and operating-system tabs are calibrated
 against current real Steam product pages. It is not uploaded to Steam and is
-visibly marked as a preview. The reusable source copy lives in `../listing.md`.
+visibly marked as a preview. The Steamworks settings it shows (features, tags,
+requirements) live in `../listing.md`; the page's words are kept out of the
+repository, and the mock's text is a snapshot of them — moving it out too is
+an open row in `docs/conformance.md`.
 
 Serve the repository root so image paths resolve, then open:
 
