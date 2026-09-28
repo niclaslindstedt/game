@@ -98,6 +98,11 @@ tauri/store/preview/output/
 # whoever uploads the listing, never committed. copy.example.mts is the
 # committed skeleton of the same shape.
 native/store/copy.mts
+# The Steam page's words, which the internal page mock (tauri/store/preview/)
+# reads: the brief description, About This Game, the mature-content
+# description. Put here by whoever reviews the page, never committed; without
+# it the mock shows its placeholders.
+tauri/store/steam.md
 
 # fastlane: the metadata tree and staged screenshots are GENERATED from
 # native/store/listing.mts + copy.mts + native/store/screenshots by

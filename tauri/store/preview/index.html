@@ -9,7 +9,12 @@
   </head>
   <body>
     <div class="preview-notice">
-      INTERNAL STOREFRONT PREVIEW · NOT A LIVE STEAM PAGE
+      <span
+        >INTERNAL STOREFRONT PREVIEW · NOT A LIVE STEAM PAGE ·
+        <span id="words-source"
+          >WORDS: PLACEHOLDERS — tauri/store/steam.md IS MISSING</span
+        ></span
+      >
     </div>
 
     <header class="global-nav">
@@ -155,11 +160,10 @@
             src="../capsules/header.png"
             alt="Ada's Trail header capsule"
           />
-          <p class="summary-copy">
-            Ada vanished during a midnight walk. Her trail leads off-world.
-            Steer a persistent hero—or a crew of up to eight—through procedural
-            top-down survival runs where weapons attack automatically and loot
-            rewrites your build.
+          <p class="summary-copy" data-words="brief">
+            BRIEF DESCRIPTION PLACEHOLDER. The Steam page's words are not in
+            this repository: the mock reads them from tauri/store/steam.md,
+            which is gitignored.
           </p>
           <dl>
             <div>
@@ -244,63 +248,40 @@
 
           <section id="about" class="store-section about">
             <h2>About This Game</h2>
-            <p class="lead">
-              Ada went out for a midnight walk and never came home. The trail
-              leaves Earth, crosses the Moon, and keeps going.
-            </p>
-            <p>
-              <strong
-                >Ada's Trail is a top-down survival shooter about positioning,
-                pressure, and the gear you trust your life to.</strong
-              >
-              You steer. Your hero handles the fighting, automatically using the
-              weapons and powers you have equipped. Read the horde, spend your
-              sprint, and decide when holding your ground has become a bad idea.
-            </p>
-            <img
-              class="about-image"
-              src="../capsules/library-header.png"
-              alt="The hero following Ada's ectoplasm trail across the Moon"
-            />
-            <h3>BUILD FROM WHAT SURVIVES THE FIGHT.</h3>
-            <p>
-              Weapons, armor, charms, consumables, and named relics spill from
-              the horde. Ranged weapons run on ammunition; melee and magic
-              weapons wear down. Every item has its own level, quality, and
-              rolled bonuses, so a find can change how the rest of the run
-              plays.
-            </p>
-            <h3>CARRY A HERO THROUGH THE WHOLE SEARCH—OR LOSE ONE FOR GOOD.</h3>
-            <p>
-              Levels, stats, talents, gear, and the coin bank persist between
-              runs. Choose softcore for a recoverable campaign or hardcore for
-              one life across every world.
-            </p>
-            <img
-              class="about-image gameplay-image"
-              src="../screenshots/steam-1080/05-boss.png"
-              alt="A real Ada's Trail boss encounter in The Rift"
-            />
-            <h3>SEARCH ALONE OR BRING SEVEN FRIENDS.</h3>
-            <p>
-              Host an online run through Steam lobbies and invites. Fight,
-              revive, and share the field together. There is no automatic public
-              matchmaking: one player hosts and friends join that run. Solo play
-              works fully offline.
-            </p>
+            <div data-words="about">
+              <p class="lead">
+                ABOUT THIS GAME PLACEHOLDER. The mock reads this section from
+                tauri/store/steam.md, which is gitignored: put the private copy
+                of the Steam page's words there to see them.
+              </p>
+              <p>PLACEHOLDER — the second paragraph of About This Game.</p>
+              <img
+                class="about-image"
+                data-after-paragraph="2"
+                src="../capsules/library-header.png"
+                alt="The hero following Ada's ectoplasm trail across the Moon"
+              />
+              <p>PLACEHOLDER — the third paragraph of About This Game.</p>
+              <p>PLACEHOLDER — the fourth paragraph of About This Game.</p>
+              <img
+                class="about-image gameplay-image"
+                data-after-paragraph="4"
+                src="../screenshots/steam-1080/05-boss.png"
+                alt="A real Ada's Trail boss encounter in The Rift"
+              />
+              <p>PLACEHOLDER — the rest of About This Game.</p>
+            </div>
           </section>
 
           <section class="store-section mature-copy">
             <h2>Mature Content Description</h2>
             <p>The developers describe the content like this:</p>
-            <p class="mature-description">
-              Contains frequent stylized pixel-art violence. Human and creature
-              enemies can bleed; powerful attacks can cut bodies apart or burst
-              them, leaving blood, organs, corpses, and tracks on the ground and
-              on the player character. Ghosts release ectoplasm, machines break
-              into sparks and wreckage, and cosmic enemies leave non-human
-              remains. Gore can be reduced or disabled in the settings.
-            </p>
+            <div data-words="mature">
+              <p class="mature-description">
+                MATURE CONTENT DESCRIPTION PLACEHOLDER. Read from
+                tauri/store/steam.md, which is gitignored.
+              </p>
+            </div>
           </section>
 
           <section id="requirements" class="store-section requirements-wrap">
@@ -503,6 +484,7 @@
       Internal layout proof for Steamworks preparation. Not affiliated with or
       served by Valve.
     </footer>
+    <script src="words.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

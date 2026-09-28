@@ -3,10 +3,14 @@
 // Render the INTERNAL Steam listing mock into one complete-page PNG. This is a
 // visual-QA artifact, never a Steam About image or a substitute for the real
 // gameplay screenshots under tauri/store/screenshots/.
+//
+// The page's words are read from tauri/store/steam.md, which is gitignored
+// (words.js says why), or from `--words <file>`; without one the capture shows
+// the committed placeholders, and says so.
 
 /* global document */
 
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -33,6 +37,10 @@ const out = path.resolve(
   option("out", path.join(here, "output", `steam-page-${width}.png`)),
 );
 mkdirSync(path.dirname(out), { recursive: true });
+const wordsFile = path.resolve(
+  option("words", path.join(here, "..", "steam.md")),
+);
+const words = existsSync(wordsFile) ? readFileSync(wordsFile, "utf8") : null;
 
 const browser = await chromium.launch({
   ...(process.env.PLAYWRIGHT_CHROMIUM
@@ -54,9 +62,20 @@ try {
     ),
   );
 
+  if (words !== null) {
+    // A page opened from disk cannot fetch its neighbour; hand it the text.
+    await page.addInitScript(
+      ([text, source]) => {
+        globalThis.steamPageWordsText = text;
+        globalThis.steamPageWordsSource = source;
+      },
+      [words, path.relative(path.join(here, "..", "..", ".."), wordsFile)],
+    );
+  }
   await page.goto(pathToFileURL(path.join(here, "index.html")).href, {
     waitUntil: "load",
   });
+  await page.waitForFunction(() => document.documentElement.dataset.wordsState);
   await page.waitForFunction(() =>
     [...document.images].every(
       (image) => image.complete && image.naturalWidth > 0,
@@ -71,6 +90,11 @@ try {
     height: document.documentElement.scrollHeight,
   }));
   console.log(`wrote ${out}`);
+  console.log(
+    words === null
+      ? `words: placeholders — ${path.relative(process.cwd(), wordsFile)} is missing`
+      : `words: ${path.relative(process.cwd(), wordsFile)}`,
+  );
   console.log(`full page: ${size.width}x${size.height}`);
 } finally {
   await browser.close();

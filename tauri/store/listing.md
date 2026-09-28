@@ -10,7 +10,9 @@ The words themselves — the brief description, About This Game, the
 mature-content description and the generative-AI disclosure — are kept out of
 the repository, like the App Store listing's (`native/store/copy.mts`, which
 `native/store/listing.mts` explains): they are the page's own prose, and a
-public copy would put it on a crawlable page somewhere else.
+public copy would put it on a crawlable page somewhere else. The internal page
+mock reads them from `tauri/store/steam.md`, which is gitignored
+(`preview/README.md` says how).
 
 ## Features selected in Steamworks
 

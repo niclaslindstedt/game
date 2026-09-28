@@ -61,6 +61,7 @@ native/store/achievements/
 tauri/store/screenshots/
 tauri/store/achievements/
 tauri/store/preview/output/
+tauri/store/steam.md
 native/fastlane/metadata/
 native/fastlane/screenshots/
 native/fastlane/report.xml
