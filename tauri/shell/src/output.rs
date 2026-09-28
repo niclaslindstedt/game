@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! The Tauri shell's central output module — the peer of `engine/output.ts`
-//! for a tree that runs as a native binary rather than in a browser
-//! (OSS_GAME_SPEC §19.4: diagnostics go
-//! through one module so they can be silenced, redirected or timestamped in one
-//! place, and never scattered as raw `println!` calls).
+//! for a tree that runs as a native binary rather than in a browser.
+//! Diagnostics go through one module so they can be silenced, redirected or
+//! timestamped in one place, and are never scattered as raw `println!` calls —
+//! and neither is a windowless mode's own answer, which is [`report`].
 //!
 //! A desktop app has no devtools console a player will ever open, so the
 //! shell's stdout IS its diagnostic surface: it is what a bug report pastes.
@@ -121,4 +121,12 @@ pub fn warn(message: &str) {
 pub fn error(message: &str) {
     eprintln!("{message}");
     record("error", message);
+}
+
+/// A command's own ANSWER on stdout — what a windowless mode such as
+/// `--roster-check` was run to print, and what a script reads. Not a
+/// diagnostic: always printed whatever the verbosity, and kept out of the
+/// launch log, because it can describe the player's own save.
+pub fn report(message: &str) {
+    println!("{message}");
 }

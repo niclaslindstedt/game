@@ -60,7 +60,7 @@ fn read(provider: Option<&dyn CloudProvider>) -> RosterReport {
 
 fn check(provider: Option<&dyn CloudProvider>, out: Option<&Path>, against: Option<&Path>) -> i32 {
     let report = read(provider);
-    println!("{}", report.describe());
+    output::report(&report.describe());
     let document = report.document();
 
     if let Some(path) = out {
@@ -68,10 +68,10 @@ fn check(provider: Option<&dyn CloudProvider>, out: Option<&Path>, against: Opti
             // Said out loud because the file holds the player's own save, and
             // somebody who did not expect that should find out from the command
             // rather than from a directory listing.
-            Ok(()) => println!(
+            Ok(()) => output::report(&format!(
                 "\nwrote {} — it carries the roster itself, so keep it as you would a save file",
                 path.display()
-            ),
+            )),
             Err(err) => {
                 output::error(&format!("could not write {} — {err}", path.display()));
                 return 1;
@@ -96,9 +96,9 @@ fn check(provider: Option<&dyn CloudProvider>, out: Option<&Path>, against: Opti
         }
     };
     let (verdict, lines) = compare(&document, &theirs);
-    println!();
+    output::report("");
     for line in lines {
-        println!("{line}");
+        output::report(&line);
     }
     match verdict {
         Verdict::Same => 0,
@@ -128,13 +128,17 @@ fn restore(provider: Option<&dyn CloudProvider>, file: &Path, overwrite: bool) -
     };
 
     let existing = provider.load(SAVE_KEY);
-    println!("{}", read(Some(provider)).describe());
+    output::report(&read(Some(provider)).describe());
     if let Some(refusal) = refuse_restore(&blob, &existing, overwrite) {
         output::error(&format!("\n{refusal}"));
         return 1;
     }
     if provider.save(SAVE_KEY, &blob) {
-        println!("\n✓ restored {} bytes into {}", blob.len(), provider.id());
+        output::report(&format!(
+            "\n✓ restored {} bytes into {}",
+            blob.len(),
+            provider.id()
+        ));
         0
     } else {
         output::error("\nthe cloud refused the write — see the launch log.");
