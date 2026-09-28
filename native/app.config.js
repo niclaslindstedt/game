@@ -23,13 +23,14 @@ const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID?.trim() ?? "";
 // the permanent identifier is the company's rather than the author's. Kept
 // identical on both stores so the app is one product across platforms — and
 // UNCHANGEABLE once an app record ships under it.
+//
 // A store listing's identifier is a fact about a deployment, not about the
 // code, so it arrives as a build variable and is not committed: APP_BUNDLE_ID,
 // a repository secret and an EAS environment variable, named identically in
 // every app in the fleet so a secret is pasted rather than translated. Unset,
 // a checkout builds under the development id below and runs; a `production`
-// profile without it throws rather than shipping a binary under that id.
-// UNCHANGEABLE once an app record ships under it.
+// profile without it throws rather than shipping a binary under that id — and
+// without EAS_PROJECT_ID, which names the Expo project it is built under.
 const DEV_BUNDLE_ID = "dev.local.adastrail";
 const BUNDLE_ID = process.env.APP_BUNDLE_ID?.trim() || DEV_BUNDLE_ID;
 
@@ -40,7 +41,7 @@ const BUNDLE_ID = process.env.APP_BUNDLE_ID?.trim() || DEV_BUNDLE_ID;
 const DISPLAY_NAME = process.env.APP_DISPLAY_NAME?.trim() || null;
 
 if (process.env.EAS_BUILD_PROFILE === "production") {
-  for (const key of ["APP_BUNDLE_ID"]) {
+  for (const key of ["APP_BUNDLE_ID", "EAS_PROJECT_ID"]) {
     if (!process.env[key]?.trim()) {
       throw new Error(
         `${key} is not set. A production build needs it — set it as an EAS ` +
