@@ -170,7 +170,8 @@ here rather than in a mod folder:
 1. Fork, then branch: `feat/<slug>` or `fix/<slug>`.
 2. Commit with [Conventional Commits](https://www.conventionalcommits.org/) —
    `<type>(<scope>): <summary>`; breaking changes as `<type>!:` or a
-   `BREAKING CHANGE:` footer.
+   `BREAKING CHANGE:` footer. `make hooks` installs the git hooks that check
+   the subject and the formatting before a commit is written.
 3. Add tests. They live in `tests/` as Vitest files named `*_test.ts`, never
    inline in source. Verify with `make test` (not a bare `npx vitest run`), plus
    `make lint` and `make fmt-check`.

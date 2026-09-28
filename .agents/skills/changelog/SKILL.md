@@ -153,7 +153,9 @@ or less than you meant.
 
 ## What the release does with them
 
-`release.yml` is manual dispatch. `bump: auto` (the default) takes the
+A release starts by dispatching `version-bump.yml`, which previews the version
+and calls `release.yml` (itself dispatchable only as the break-glass).
+`bump: auto` (the default) takes the
 derived bump; an explicit `patch`/`minor`/`major` overrides it. It then
 collates the fragments into `CHANGELOG.md`, rewrites every version string via
 `scripts/update-versions.sh`, commits, tags `vX.Y.Z`, publishes the Release

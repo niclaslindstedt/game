@@ -1,0 +1,132 @@
+name: version-bump
+
+# THE WAY A RELEASE STARTS: a maintainer dispatches this, it checks the branch
+# and the tree and prints the version the release will produce, and then it
+# calls release.yml — so the whole release (the commit, the tag, the GitHub
+# Release with the desktop downloads, and the Pages deploy) is ONE run under
+# the default GITHUB_TOKEN. No PAT is stored, no tag is pushed by hand, and a
+# hand-pushed `v*` tag starts nothing.
+#
+# `bump` defaults to `auto` — derived from the .changes/unreleased/ fragments
+# by scripts/release/compute-bump.mjs. Pick patch/minor/major to override. The
+# five `enable_*` switches decide what the attached desktop downloads carry
+# (see the Makefile's desktop packaging notes); they are passed through as is.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump (auto | patch | minor | major). 'auto' reads the changeset fragments."
+        required: false
+        default: auto
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+      enable_multiplayer:
+        description: "Package the desktop downloads with sessions enabled."
+        required: false
+        type: boolean
+        default: false
+      enable_mods:
+        description: "Package the desktop downloads with mod loading enabled."
+        required: false
+        type: boolean
+        default: false
+      enable_upnp:
+        description: "Let the desktop downloads ask the router to forward a port."
+        required: false
+        type: boolean
+        default: false
+      enable_voice:
+        description: "Package the desktop downloads with voice chat enabled (opens a microphone; needs multiplayer)."
+        required: false
+        type: boolean
+        default: false
+      enable_licensed:
+        description: "Package the desktop downloads as licensed to admit players."
+        required: false
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  # The read-only preflight: the branch, the tree, the fragments, and the
+  # version the release will produce — printed, so a maintainer sees what the
+  # dispatch is about to do before release.yml writes anything.
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      bump: ${{ steps.plan.outputs.bump }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      - name: Verify main, clean
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::releases are cut from main only (got $GITHUB_REF)"
+            exit 1
+          fi
+          if ! git diff --quiet || ! git diff --quiet --cached; then
+            echo "::error::working tree is not clean — refusing to release"
+            git status
+            exit 1
+          fi
+
+      - name: Plan the version
+        id: plan
+        env:
+          REQUESTED: ${{ inputs.bump }}
+        run: |
+          if [ "$REQUESTED" = "auto" ] || [ -z "$REQUESTED" ]; then
+            BUMP=$(node scripts/release/compute-bump.mjs)
+          else
+            BUMP="$REQUESTED"
+          fi
+          LATEST_TAG=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+          CURRENT="${LATEST_TAG#v}"
+          CURRENT="${CURRENT:-0.0.0}"
+          IFS=. read -r MAJOR MINOR PATCH <<<"$CURRENT"
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH+1)) ;;
+            *) echo "::error::unknown bump '$BUMP'"; exit 1 ;;
+          esac
+          NEXT="v${MAJOR}.${MINOR}.${PATCH}"
+          if git rev-parse -q --verify "refs/tags/$NEXT" >/dev/null; then
+            echo "::error::$NEXT already exists"
+            exit 1
+          fi
+          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
+          echo "Will release $NEXT (bump: $BUMP, from ${LATEST_TAG:-nothing})"
+
+  release:
+    needs: preflight
+    uses: ./.github/workflows/release.yml
+    with:
+      bump: ${{ needs.preflight.outputs.bump }}
+      enable_multiplayer: ${{ inputs.enable_multiplayer }}
+      enable_mods: ${{ inputs.enable_mods }}
+      enable_upnp: ${{ inputs.enable_upnp }}
+      enable_voice: ${{ inputs.enable_voice }}
+      enable_licensed: ${{ inputs.enable_licensed }}
+    # The grant release.yml's jobs need, and no more: it pushes the release
+    # commit and tag, creates the GitHub Release, and chains the Pages deploy.
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    secrets: inherit

@@ -2,7 +2,7 @@
 
 ## The shape of the project
 
-This is a **webapp-kind** project per OSS_GAME_SPEC §11.4: the deployed website
+This is a **webapp-kind** project: the deployed website
 _is_ the game. There is no marketing site — every build artifact is the
 playable app.
 
@@ -1943,7 +1943,7 @@ Lighthouse audit, and Vite's own chunk warning is raised out of reach in
 `@game/menu` beside `@game/core`) stay because they make the first paint fast,
 not to satisfy a number; do not split code only to shrink one.
 
-`engine/output.ts` remains the central output module (OSS_GAME_SPEC §19.4) through
+`engine/output.ts` remains the central output module through
 which all diagnostic output flows: semantic helpers
 (`status`/`warn`/`info`/`header`/`error`/`debug`), an always-on in-memory
 log buffer (`recentLogs()`), and a debug switch (`?debug` URL param or
@@ -2224,7 +2224,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   depths of `scripts/generate-content.mjs`) runs ahead of every `vite`, `tsc`
   and `vitest`, and they differ ONLY in how much of the preview set is drawn —
   so the pixel grids
-  are the only committed source of truth (§11.2). Wound styles derive from the
+  are the only committed source of truth. Wound styles derive from the
   enemy catalog's `gore` field and role; contrast lints flag sprites that
   dissolve into their family's ground and wound overlays that don't read.
   See the `pixel-assets` skill.
@@ -2263,13 +2263,13 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   REINSTALL. It ships INLINE in the shell (`bootWatchdogScript` pastes
   `watchBoot.toString()`), because a watchdog inside the bundle cannot report
   the bundle not arriving; `markAppMounted()` in `main.tsx` calls it off.
-- **`pwa/scripts/`** — source-data extraction (§11.2) and the post-build
+- **`pwa/scripts/`** — source-data extraction and the post-build
   site files (`generate-site-files.mjs`: `robots.txt` and a `noindex` 404).
   There is no sitemap, no `llms.txt` and no SEO checker: the site is not
   meant to be found through search, and every page carries `noindex`, by
   owner decision.
 - **`pwa/scripts/generate-screenshots.mjs`** — the manifest's install-prompt
-  screenshots (§11.4.1), captured as REAL frames of the running game: it serves
+  screenshots, captured as REAL frames of the running game: it serves
   the build, hands a run to the engine autopilot, and shoots a live fight at the
   two form factors Chrome distinguishes (`narrow`, the reference landscape
   phone; `wide`, a desktop window). Committed output, because the manifest names
@@ -3086,7 +3086,9 @@ surfaces are absent, not merely hidden — and the commit hash is never embedded
 packs, or a set of BALANCE multipliers left by a TestFlight install on the same
 device cannot govern the shipped game after an update.
 
-Releases: a maintainer dispatches `release.yml`, which derives the semver
+Releases: a maintainer dispatches `version-bump.yml`, which checks the branch
+and the tree, prints the version it will produce, and calls `release.yml`. That
+derives the semver
 bump from the changeset fragments in `.changes/unreleased/` (front-matter
 `type` + optional `breaking: true` — see `scripts/release/compute-bump.mjs`;
 an explicit patch/minor/major input overrides it), consumes the fragments

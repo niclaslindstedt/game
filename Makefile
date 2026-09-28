@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench flight-bench town gallery sheet song unsong audition album mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-steam desktop-dist sync sync-merge sync-continue sync-abort sync-cleanup
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint hooks licences sim release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench flight-bench town gallery sheet song unsong audition album mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-steam desktop-dist sync sync-merge sync-continue sync-abort sync-cleanup
 
 build:
 	npm run build
@@ -35,7 +35,20 @@ install:
 	npm install
 
 shellcheck:
-	shellcheck scripts/*.sh
+	shellcheck scripts/*.sh .githooks/*
+
+# Install the repository's git hooks (.githooks/): pre-commit runs the format
+# check and refuses a hand edit to CHANGELOG.md; commit-msg refuses a subject
+# that is not a conventional commit. Once per clone.
+hooks:
+	git config core.hooksPath .githooks
+	@echo "git hooks installed (core.hooksPath = .githooks)"
+
+# Check every dependency's licence, in all three lockfiles (the root workspace,
+# native/ and tauri/), against the allow-list in scripts/check-licences.mjs.
+# Reads the lockfiles only — no install, no network. CI runs it.
+licences:
+	node scripts/check-licences.mjs $(ARGS)
 
 actionlint:
 	actionlint -color
@@ -43,14 +56,14 @@ actionlint:
 docs:
 	@echo "see docs/"
 
-# The website IS the game (OSS_GAME_SPEC §11.4) — these build/serve the deployed app.
+# The website IS the game — these build/serve the deployed app.
 website:
 	npm install && npm run build --workspace pwa
 
 website-dev:
 	npm install && npm run dev --workspace pwa
 
-# Regenerate every raster icon + the OG card from pwa/public/icon.svg (§11.4.2).
+# Regenerate every raster icon + the OG card from pwa/public/icon.svg.
 icons:
 	npm run icons
 
@@ -104,6 +117,17 @@ unique-check:
 # same commit.
 mod-catalog:
 	node mod/tools/catalog.mjs
+
+# THE HEADLESS SIMULATOR — the real engine, played by the autopilot, through one
+# level or a whole campaign, with the seed printed beside every number. See the
+# `simulate-run` skill. It reads the compiled catalogs, so it opens by bringing
+# the content up to date (the same entry point `make test` opens with).
+# `make sim ARGS="--difficulty easy --level goodco_hq --verdict"` is one level
+# and its PASS/WARN/FAIL read against the balance targets; no ARGS is the whole
+# campaign, easy through JESUS. `--json a.json` then `--compare a.json` is an A/B.
+sim:
+	npm run assets:check --workspace pwa
+	node scripts/simulate-run.mjs $(ARGS)
 
 # Benchmark the headless simulator itself — the balance team's inner loop is
 # driven thousands of times a day, so its speed is a tracked number. Replays
@@ -235,9 +259,11 @@ bump:
 store-preflight:
 	@node scripts/store-preflight.mjs $(ARGS)
 
-# Compile the App Store listing (native/store/listing.yaml) into the
-# store.config.json that `eas metadata:push` uploads, validating every one of
-# Apple's length limits on the way. See native/store/README.md.
+# Compile the App Store listing — its rules (native/store/listing.mts) and its
+# words (native/store/copy.mts, gitignored; the committed skeleton when absent)
+# — into the store.config.json that `eas metadata:push` uploads and the fastlane
+# tree, validating every one of Apple's length limits on the way. See
+# native/store/README.md.
 store-metadata:
 	node scripts/generate-store-metadata.mjs
 
@@ -344,6 +370,45 @@ desktop-dist:
 	npm run tauri:package:dist -- $(ARGS)
 
 # ---------------------------------------------------------------------------
+# The phone shell (native/)
+# ---------------------------------------------------------------------------
+#
+# The Expo app that wraps the built site for the App Store (and, later, Google
+# Play). Its own dependency tree, outside the npm workspace; these forward to
+# its scripts, which `native/README.md` describes. The iOS ones run
+# `expo prebuild` first, so a change to native/app.config.js re-syncs instead of
+# shipping a stale native project.
+
+# Install the shell's own dependency tree.
+native-install:
+	npm run native:install
+
+# Build the site for a store build and zip it into native/assets/webroot.zip.
+native-bundle:
+	npm run native:bundle
+
+# The shell's own typecheck — what CI's `native` job runs beside expo-doctor.
+native-typecheck:
+	npm --prefix native run typecheck
+
+# Expo's own health check over native/.
+native-doctor:
+	npm --prefix native run doctor
+
+# Build and run on the iOS Simulator.
+native-ios:
+	npm run native:ios
+
+# Build a Release and put it on a real iPhone over USB — the only way to judge
+# the haptics. `make native-iphone ARGS="--device 'my iPhone'"`
+native-iphone:
+	npm run native:ios:device -- $(ARGS)
+
+# Build and run on an Android emulator or device.
+native-android:
+	npm run native:android
+
+# ---------------------------------------------------------------------------
 # The desktop shell (tauri/)
 # ---------------------------------------------------------------------------
 #
@@ -352,7 +417,7 @@ desktop-dist:
 # it is on the root suite's path: `make test` and `make lint` stop at this
 # tree's edge. These targets are how it is checked.
 
-.PHONY: tauri tauri-test tauri-lint tauri-fmt
+.PHONY: native-install native-bundle native-typecheck native-doctor native-ios native-iphone native-android tauri tauri-test tauri-lint tauri-fmt
 
 # Build the site into tauri/webroot/, compile the shell, and launch it.
 tauri:

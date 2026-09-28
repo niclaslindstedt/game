@@ -90,44 +90,47 @@ make test                                # the full test suite
 
 ## Usage
 
-| Command                               | Purpose                                                                                            |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `make website-dev`                    | Vite dev server for the game app                                                                   |
-| `make website`                        | Production build of the game app                                                                   |
-| `make build`                          | Typecheck the engine + app and build the deployable bundle                                         |
-| `make test`                           | The Vitest suite (`tests/**/*_test.ts`); `ARGS="--shard=1/3"` forwards to vitest                   |
-| `make lint`                           | ESLint + TypeScript over the whole repo, zero warnings                                             |
-| `make fmt` / `make fmt-check`         | Prettier format / verify                                                                           |
-| `make levels`                         | Recompile every content catalog from `content/*.yaml` (fast path when only content changed)        |
-| `make assets`                         | Every catalog AND the pixel assets (sprite atlas, tiles, UI font) + every preview                  |
-| `make unique-check`                   | Audit every named relic — bases, bonuses, ilvl, armor ladder, drop-table homes (CI runs it)        |
-| `make mod-check DIR=<dir>`            | Validate a mod (defaults to `mod/examples/greenhouse`)                                             |
-| `make mod-catalog`                    | Regenerate `mod/catalog.json` — every id a mod may reference                                       |
-| `make map LEVEL=<id>` / `map-layout`  | Render a level's annotated map / its clean layout blueprint                                        |
-| `make sim-bench`                      | Benchmark the headless simulator (best-of-N, digest-checked)                                       |
-| `make drive-bench`                    | Measure the DRIVE minigame — N seeds a rung, played by the auto-driver                             |
-| `make flight-bench`                   | Measure the ROCKET minigame — N seeds a rung, flown by the auto-pilot                              |
-| `make town`                           | Render the DRIVE's town at five stops along the road — and `ARGS="--site home"` what it arrives at |
-| `make gallery`                        | LOOK at any effect — the effects gallery, captured as a filmstrip PNG                              |
-| `make sheet ARGS="<track>"`           | LOOK at a score — a `content/music/` track engraved as sheet music, one staff per voice            |
-| `make song FILE=<x.song>`             | Compile a `.song` into a track's YAML and engrave it — the short way to write a score              |
-| `make unsong ARGS="<track>"`          | …and the way back: a shipped track written out as a `.song`                                        |
-| `make audition ARGS="<track>"`        | HEAR a score — a page that plays it with the game's own synth                                      |
-| `make album`                          | HEAR THE WHOLE SOUNDTRACK — every score on one page, with a picker                                 |
-| `make icons` / `make screenshots`     | Regenerate the PWA icons + OG card / recapture the manifest screenshots                            |
-| `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                 |
-| `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                     |
-| `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                             |
-| `npm run library --workspace pwa`     | Rebuild the `/library/` reference pages (part of `make build`)                                     |
-| `npm run server:start`                | Run the standalone session server for co-op (see `docs/multiplayer.md`)                            |
-| `npm run native:*`                    | The App Store shell — see `native/README.md`                                                       |
-| `make desktop-steam`                  | Package the desktop build as a Steam depot (`desktop-dist` for a plain download)                   |
-| `make tauri` / `make tauri-test`      | Run and check the desktop shell — see `tauri/README.md`                                            |
-| `make desktop-steam`                  | Package that shell as a Steam depot directory (`desktop-dist` for a plain download)                |
-| `npm run parity` / `parity:check`     | Rewrite `docs/desktop-parity.md` from the two desktop trees / fail on drift                        |
-| `npm run shell:bench`                 | Weigh the packaged desktop builds, and read this machine's own cold starts                         |
-| `npm run webview:sweep`               | Check the web-platform features the game needs, engine by engine                                   |
-| `make sync`                           | Catch this branch up with `main`: park at a backup branch, fetch, rebase                           |
+| Command                               | Purpose                                                                                                                           |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `make website-dev`                    | Vite dev server for the game app                                                                                                  |
+| `make website`                        | Production build of the game app                                                                                                  |
+| `make build`                          | Typecheck the engine + app and build the deployable bundle                                                                        |
+| `make test`                           | The Vitest suite (`tests/**/*_test.ts`); `ARGS="--shard=1/3"` forwards to vitest                                                  |
+| `make lint`                           | ESLint + TypeScript over the whole repo, zero warnings                                                                            |
+| `make fmt` / `make fmt-check`         | Prettier format / verify                                                                                                          |
+| `make levels`                         | Recompile every content catalog from `content/*.yaml` (fast path when only content changed)                                       |
+| `make assets`                         | Every catalog AND the pixel assets (sprite atlas, tiles, UI font) + every preview                                                 |
+| `make unique-check`                   | Audit every named relic — bases, bonuses, ilvl, armor ladder, drop-table homes (CI runs it)                                       |
+| `make mod-check DIR=<dir>`            | Validate a mod (defaults to `mod/examples/greenhouse`)                                                                            |
+| `make mod-catalog`                    | Regenerate `mod/catalog.json` — every id a mod may reference                                                                      |
+| `make map LEVEL=<id>` / `map-layout`  | Render a level's annotated map / its clean layout blueprint                                                                       |
+| `make sim ARGS="…"`                   | The headless simulator: a level or the whole campaign, played by the autopilot, with a verdict                                    |
+| `make sim-bench`                      | Benchmark the headless simulator (best-of-N, digest-checked)                                                                      |
+| `make drive-bench`                    | Measure the DRIVE minigame — N seeds a rung, played by the auto-driver                                                            |
+| `make flight-bench`                   | Measure the ROCKET minigame — N seeds a rung, flown by the auto-pilot                                                             |
+| `make town`                           | Render the DRIVE's town at five stops along the road — and `ARGS="--site home"` what it arrives at                                |
+| `make gallery`                        | LOOK at any effect — the effects gallery, captured as a filmstrip PNG                                                             |
+| `make sheet ARGS="<track>"`           | LOOK at a score — a `content/music/` track engraved as sheet music, one staff per voice                                           |
+| `make song FILE=<x.song>`             | Compile a `.song` into a track's YAML and engrave it — the short way to write a score                                             |
+| `make unsong ARGS="<track>"`          | …and the way back: a shipped track written out as a `.song`                                                                       |
+| `make audition ARGS="<track>"`        | HEAR a score — a page that plays it with the game's own synth                                                                     |
+| `make album`                          | HEAR THE WHOLE SOUNDTRACK — every score on one page, with a picker                                                                |
+| `make icons` / `make screenshots`     | Regenerate the PWA icons + OG card / recapture the manifest screenshots                                                           |
+| `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                                                |
+| `make licences`                       | Check every dependency's licence, in all three lockfiles, against the allow-list (CI runs it)                                     |
+| `make hooks`                          | Install the git hooks: conventional commit subjects, formatting, no hand edit to `CHANGELOG.md`                                   |
+| `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                                                    |
+| `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                                                            |
+| `npm run library --workspace pwa`     | Rebuild the `/library/` reference pages (part of `make build`)                                                                    |
+| `npm run server:start`                | Run the standalone session server for co-op (see `docs/multiplayer.md`)                                                           |
+| `make native-*`                       | The App Store shell: `native-install`, `-bundle`, `-typecheck`, `-doctor`, `-ios`, `-iphone`, `-android` — see `native/README.md` |
+| `make desktop-steam`                  | Package the desktop build as a Steam depot (`desktop-dist` for a plain download)                                                  |
+| `make tauri` / `make tauri-test`      | Run and check the desktop shell — see `tauri/README.md`                                                                           |
+| `make desktop-steam`                  | Package that shell as a Steam depot directory (`desktop-dist` for a plain download)                                               |
+| `npm run parity` / `parity:check`     | Rewrite `docs/desktop-parity.md` from the two desktop trees / fail on drift                                                       |
+| `npm run shell:bench`                 | Weigh the packaged desktop builds, and read this machine's own cold starts                                                        |
+| `npm run webview:sweep`               | Check the web-platform features the game needs, engine by engine                                                                  |
+| `make sync`                           | Catch this branch up with `main`: park at a backup branch, fetch, rebase                                                          |
 
 **Verify with `make test`, never with a bare `npx vitest run`.** The `make`
 targets open by rebuilding the generated content and the sprite atlas; a bare
@@ -304,7 +307,7 @@ How a mod is compiled, loaded and resolved — the design behind all of the abov
 - [Multiplayer](docs/multiplayer.md) · [Configuration](docs/configuration.md) · [Troubleshooting](docs/troubleshooting.md)
 - [The desktop builds](docs/desktop-shells.md) — the two wrappers, what is measured, and what decides which one ships
 - [`AGENTS.md`](AGENTS.md) — the conventions this repo is maintained under
-- [`OSS_GAME_SPEC.md`](OSS_GAME_SPEC.md) — the game-project spec it conforms to: the open source baseline, plus the structure a game keeps through a change of engine or language
+- [Conformance](docs/conformance.md) — where the game knowingly falls short of the rules it is built by, and what closing each gap costs
 
 Deployment is three GitHub Pages slots on one origin: `/` serves the highest
 `v*` tag, `/preview/` every `main` push, and `/branch/` a branch parked via the

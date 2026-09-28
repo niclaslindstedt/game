@@ -81,6 +81,27 @@ jobs:
       # whole content tree to run a script that takes a second.
       - name: make unique-check
         run: make unique-check
+      # Every dependency's licence, in all three lockfiles, against the
+      # allow-list in scripts/check-licences.mjs. Reads the lockfiles only.
+      - name: Dependency licence check (make licences)
+        run: make licences
+
+  # The headless simulator on one fixed level and seed, with its PASS/WARN/FAIL
+  # read against the balance targets: the real engine, played by the
+  # autopilot, start to finish. A change that stops a level from being playable
+  # headless fails here rather than in somebody's balance session. The verdict
+  # is printed for the log; the job fails only if the run itself cannot finish.
+  sim:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: make sim
+        run: make sim ARGS="--difficulty easy --level goodco_hq --seed 1 --verdict"
 
   # No content build: every generated tree is in .prettierignore, so formatting
   # has nothing to say about them and this job only needs the checkout.
@@ -134,7 +155,7 @@ jobs:
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
         run: node scripts/release/check-changeset.mjs
 
-  # §7.1 — every tool-specific agent-guidance file must be a symlink to
+  # Every tool-specific agent-guidance file must be a symlink to
   # AGENTS.md, and tool skill aliases must resolve to .agents/skills. A commit that
   # dereferences one into a regular file breaks the single source of truth.
   symlinks:
@@ -165,7 +186,7 @@ jobs:
           exit $fail
 
   # Lint workflow YAML with actionlint and shell scripts with shellcheck
-  # (OSS_GAME_SPEC §16.1). shellcheck is preinstalled on ubuntu-latest; actionlint
+  # shellcheck is preinstalled on ubuntu-latest; actionlint
   # is fetched via its official installer.
   shell-lint:
     runs-on: ubuntu-latest

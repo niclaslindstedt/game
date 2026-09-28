@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# Conventional-commit subject check. Install once with `make hooks`. Merge
+# commits, reverts and fixups pass through untouched.
+set -euo pipefail
+
+msg_file="$1"
+subject=$(head -n1 "$msg_file")
+
+case "$subject" in
+  Merge\ *|Revert\ *|fixup!\ *|squash!\ *) exit 0 ;;
+esac
+
+# Comma-separated scopes are this repo's convention for a change that spans
+# layers (`feat(engine,pwa): …`), so the scope class admits a comma.
+pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9./,-]+\))?!?: .+'
+if ! printf '%s' "$subject" | grep -qE "$pattern"; then
+  echo "commit-msg: subject is not a conventional commit:"
+  echo "  $subject"
+  echo "Expected: <type>[(scope)][!]: <description>"
+  echo "Types: build chore ci docs feat fix perf refactor revert style test"
+  exit 1
+fi

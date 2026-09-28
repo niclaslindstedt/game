@@ -1,6 +1,8 @@
 name: release
 
-# Manual-only. The maintainer dispatches this and the workflow derives
+# Normally CALLED by version-bump.yml — the one entry point a maintainer
+# dispatches — and also dispatchable on its own as the break-glass, with the
+# same inputs. Either way it is one run, and the workflow derives
 # the semver bump from the changeset fragments in .changes/unreleased/
 # (their front-matter carries the Added/Changed/Fixed/... type and an
 # optional `breaking: true` — see scripts/release/compute-bump.mjs),
@@ -57,8 +59,36 @@ on:
         type: boolean
         default: false
 
+  workflow_call:
+    inputs:
+      bump:
+        description: "Semver bump, resolved or 'auto' (see workflow_dispatch above)."
+        required: false
+        type: string
+        default: auto
+      enable_multiplayer:
+        required: false
+        type: boolean
+        default: false
+      enable_mods:
+        required: false
+        type: boolean
+        default: false
+      enable_upnp:
+        required: false
+        type: boolean
+        default: false
+      enable_voice:
+        required: false
+        type: boolean
+        default: false
+      enable_licensed:
+        required: false
+        type: boolean
+        default: false
+
 # Default to no permissions; every job declares its own least-privilege
-# `permissions:` block (see OSS_GAME_SPEC §10.3).
+# `permissions:` block.
 permissions: {}
 
 jobs:
@@ -354,10 +384,10 @@ jobs:
 
   # Chain straight into pages.yml so the new tag is served at `/`
   # immediately — without this, deployment would wait for the next
-  # push to main (§11.5.2).
+  # push to main.
   #
   # Deliberately `needs: release` and not `needs: publish`: the website IS
-  # the game (§11.4), it is built from the tag that already exists, and
+  # the game, it is built from the tag that already exists, and
   # holding the web deploy hostage to a desktop packaging failure would
   # take the free-to-play version down over a download nobody has yet.
   pages:
