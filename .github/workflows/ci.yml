@@ -96,6 +96,27 @@ jobs:
       - name: make fmt-check
         run: make fmt-check
 
+  # The store app (native/) is a separate npm project with its own lockfile,
+  # so no job above installs or checks it. Its own tsc, then expo-doctor:
+  # Expo's check that the tree matches the SDK (the versions it pins, the
+  # config and its plugins, no duplicate native modules) — what an EAS build
+  # would otherwise find out after spending a build credit.
+  native:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: native/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx --yes expo-doctor
+
   changeset:
     # Enforces that every PR touching user-visible code drops a
     # changelog fragment under .changes/unreleased/, or opts out via
