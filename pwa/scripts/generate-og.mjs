@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Renders the 1200×630 Open Graph card (§11.3.8) from the same brand values
+// Renders the 1200×630 Open Graph card from the same brand values
 // the icon and title screen use, so the unfurler image cannot drift from the
 // page content. Part of `npm run icons`; output is committed.
 import { fileURLToPath } from "node:url";

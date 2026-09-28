@@ -5,9 +5,9 @@ description: "Use when README.md may be stale. Discovers commits since the last 
 
 # Updating the README
 
-**Governing spec sections:** §3 (`README.md` — required sections and content), §21.5 (this skill is mandated because `README.md` is a drift-prone artifact).
+**Why this skill exists:** `README.md` is the first thing a player or contributor reads, and it drifts every time a user-visible surface changes without it.
 
-`README.md` is the primary user-facing documentation for game. Per §3 of `OSS_GAME_SPEC.md` it must cover the project description, installation, a quick-start, usage, contribution pointer, license, and a link to `OSS_GAME_SPEC.md`. It goes stale whenever a CLI flag, subcommand, default, or supported surface changes without a matching edit.
+`README.md` is the primary user-facing documentation for game. It must cover what the game is and where to play it, installation, a quick-start, usage, a contribution pointer, and the license. It goes stale whenever a CLI flag, subcommand, default, or supported surface changes without a matching edit.
 
 **Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs update-readme --list`,
 then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
@@ -69,7 +69,7 @@ grow into a player manual or marketing page.
 | License change | **License** section, badges |
 | Mod authoring, loading or Workshop (`mod/**`, `docs/modding.md`, `tauri/shell/src/{mods,workshop}.rs`) | Opening modder callout, **Modding**, platform availability, and **License** |
 | Desktop/Steam release scope (`tauri/**`, `tauri/store/steam.json`) | Opening description, release/platform table, mod testing path, and unpublished/published status |
-| Agent skill discovery (`OSS_GAME_SPEC.md` §21, `.agents/skills/`, tool aliases, `scripts/skill-lessons.mjs`) | Agent callout, **Repository layout**, and skill links under **Documentation** |
+| Agent skill discovery (`.agents/skills/`, tool aliases, `scripts/skill-lessons.mjs`) | Agent callout, **Repository layout**, and skill links under **Documentation** |
 
 Extend this table every time you find a new source-of-truth file that feeds the README.
 

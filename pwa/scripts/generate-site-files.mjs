@@ -40,7 +40,7 @@ function renderRobots() {
   return `User-agent: *\nAllow: /\n`;
 }
 
-// §11.3.1 — a noindex fallback page so unknown URLs neither soft-404 nor
+// A noindex fallback page so unknown URLs neither soft-404 nor
 // leak into an index. GitHub Pages serves 404.html for unmatched paths.
 function render404() {
   return `<!doctype html>

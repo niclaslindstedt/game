@@ -11,7 +11,7 @@
     <meta name="color-scheme" content="dark" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <!-- Must match manifest.webmanifest theme_color so the splash screen and
-         the loaded app agree (§11.4.1). -->
+         the loaded app agree. -->
     <meta name="theme-color" content="#0b0d10" />
 
     <!-- Brand-shaped strings below are `{{TOKENS}}` filled at build time from
@@ -61,7 +61,7 @@
   </head>
   <body>
     <div id="root">
-      <!-- Prerendered shell (§11.3.1): real content without running
+      <!-- Prerendered shell: real content without running
            JavaScript — the no-JS fallback, and what paints first. React
            replaces it with the live title screen. It's dressed as the game
            BOOTING — a starfield boot console rather than a document — so the

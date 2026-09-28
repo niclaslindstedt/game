@@ -30,7 +30,7 @@ const INDEX = `<!doctype html>
   </head>
   <body>
     <div id="root">
-      <!-- Prerendered shell (§11.3.1): real content crawlers can index
+      <!-- Prerendered shell: real content crawlers can index
            without running JavaScript, and it doubles as the no-JS fallback. -->
       <main class="prelaunch">
         <div class="prelaunch-sky" aria-hidden="true"></div>

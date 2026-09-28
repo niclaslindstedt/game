@@ -21,27 +21,23 @@ found it, the sub-second edit loop, the 1000-line file cap, the test
 conventions, and the generic pools and import aliases. This file still owns
 WHERE code goes — the tables below.
 
-## Game spec conformance
+## The rules this repository follows
 
-This repository adheres to [`OSS_GAME_SPEC.md`](OSS_GAME_SPEC.md), a prescriptive
-specification for building a GAME as an open source project: the OSS baseline
-(layout, documentation, automation, release, governance — §1–§22) plus the game
-chapters (§23–§37) that mandate the shape this repo is built on — a headless
-simulation core, content authored as data, deterministic runs, the scripting
-and mod seams, interface as content, generated assets, the story tiers,
-measured balance, the platform shells, and the player-facing quality gates.
+Fleet guidelines: GAME_GUIDELINES 1.0.1
 
-**The spec at the repository root IS the spec.** There is no upstream copy to
-fetch and nothing overwrites it: it is amended deliberately, in a reviewed PR,
-and §21.5 requires the same PR to propagate the new mandate into the tree. Its
-version is recorded in the YAML front matter at the top of the file.
+This file is enough for day-to-day work on the game: the shape it is built on —
+a headless simulation core, content authored as data, deterministic runs, the
+scripting and mod seams, interface as content, generated assets, the story
+tiers, measured balance, the platform shells and the player-facing quality
+gates — is described below, each part with the file or skill that owns it. Every
+rule here names a ROLE rather than a technology, which is what lets the
+structure survive a change of renderer, UI framework or language.
 
-Every mandate in it names a ROLE, never a technology — which is what makes the
-structure survive a change of renderer, UI framework or language. Load the
-`sync-game-spec` skill to walk the mandates against the tree and fix drift. When
-in doubt about a layout, naming, or workflow decision, consult the relevant
-section of `OSS_GAME_SPEC.md` — it is the source of truth for the conventions
-this repo follows.
+Where the game knowingly falls short of a rule, the gap is written down in
+**`docs/conformance.md`** — one dated row with its evidence and what closing it
+costs — rather than as a comment scattered through the tree. Close a row by
+fixing the gap and deleting it; open one when a change has to leave a gap
+behind.
 
 ## Build and test commands
 
@@ -55,6 +51,7 @@ make assets        # regenerate in-game pixel assets + previews (runs make level
 make levels        # recompile every content catalog from content/*.yaml
 make lua-vm        # compile engine/lib/lua/ for the SHIPPED mod compiler
 make unique-check  # audit every named relic — bases, ilvl, armor ladder, drop homes (CI gate)
+make sim ARGS="--difficulty easy --level goodco_hq --verdict"  # the headless simulator, with its verdict
 make sim-bench     # benchmark the headless simulator (best-of-N, digest-checked)
 make drive-bench   # measure the DRIVE — N seeds a rung, played by the auto-driver
 make flight-bench  # measure the ROCKET — N seeds a rung, flown by the auto-pilot
@@ -66,6 +63,9 @@ make song FILE=x.song          # write a SCORE the short way, and engrave it
 make audition ARGS="overdue"   # HEAR a score — the page that plays it, for an artifact
 make album                     # HEAR THE WHOLE SOUNDTRACK — every score, one page
 make bump          # print the release bump derived from .changes/unreleased/
+make licences      # every dependency's licence against the allow-list (CI gate)
+make hooks         # install the git hooks (commit subject, formatting, CHANGELOG guard)
+make native-typecheck / native-doctor   # the phone shell's own checks (CI's native job)
 npm run shell:bench    # weigh the packaged desktop build; read this machine's cold starts
 npm run webview:sweep  # the web-platform features the game needs, engine by engine
 make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
@@ -192,7 +192,7 @@ breaks.
 
 ## Architecture summary
 
-This is a **webapp-kind project (OSS_GAME_SPEC §11.4/§11.5): the deployed website
+This is a **webapp-kind project: the deployed website
 IS the game** — an offline top-down survival scroller shooter, steered by
 holding pointer/touch, where the character acts autonomously according to
 picked-up weapons and items. `docs/architecture.md` is the full map; this is
@@ -245,7 +245,7 @@ above it, and `docs/architecture.md` has the module-by-module map:
   `engine/game/defs/` (content is data, referenced by id).
   It must stay importable from any renderer — no UI framework, no DOM
   assumptions beyond what a browser provides. `engine/output.ts` is the central
-  output module (OSS_GAME_SPEC §19.4); raw `console.*` elsewhere fails lint.
+  output module; raw `console.*` elsewhere fails lint.
 - **`pwa/` — the app.** A Vite + Preact PWA shell that mounts the engine,
   renders it, and owns everything deploy-shaped (the service worker build,
   manifest, icons, the page head, the update toast). **The app depends on the
@@ -278,7 +278,7 @@ and never leak app code into the engine.
 **THE SHELLS DIFFER ONLY IN THEIR PIPE.** Both wrap the same built site and
 answer the same bridge protocols; they differ in how the JSON travels
 (`ReactNativeWebView.postMessage` vs one Tauri command), so that — and only that —
-lives behind `pwa/src/app/shell-bridge.ts`. The RETURN path needed no
+lives behind `pwa/src/shell-host.ts`. The RETURN path needed no
 abstraction at all: both shells call the page's `window.__gis*Event(...)` from
 OUTSIDE, which is why adding a second shell changed no bridge's protocol.
 `shellPlatform()` answers WHICH shell and is read only for platform-feature
@@ -693,7 +693,7 @@ edit or commit anything under `engine/generated/` or `pwa/src/generated/`.
 | A RULE the engine hands to a script                           | `content/scripts/<id>.lua` + a hook in `engine/game/script/hooks.ts` + a binding in `script/bindings.ts` — never a formula only TypeScript knows                     |
 | Generators, analyzers, previews, maintenance commands         | `scripts/…` — executable tooling only; authored data belongs under `content/`                                                                                        |
 | Tests                                                         | `tests/…`, named `*_test.ts`                                                                                                                                         |
-| Docs / examples / LLM prompts                                 | `docs/…` / `examples/…` / `prompts/<name>/<major>_<minor>_<patch>.md`                                                                                                |
+| Docs / examples                                               | `docs/…` / `examples/…`                                                                                                                                              |
 | Mature, playtested generic code                               | keep in the local `engine/lib/` or `pwa/src/lib/` pool                                                                                                               |
 
 **Content is data.** Every catalog below is authored YAML under `content/`,
@@ -807,13 +807,49 @@ loads: the **generic pools** and the six copies of the import-alias map (`@game/
 that the app renders with Preact while still spelling it `react`); the **test
 conventions** (own files, `_test.ts`, `tests/engine/` on synthetic fixtures vs
 `tests/content/` on the shipped catalogs); and the **1000-line file cap** with
-its `game-spec:allow-large-file:` escape hatch (§20.5 of `OSS_GAME_SPEC.md`).
+its `guidelines:allow-large-file: <reason>` escape hatch in a file's first 20
+lines. The files already over the cap carry the reason `split when next touched;
+known deviation by owner decision`: touching one means splitting it by concern
+and dropping the marker. `tests/file_size_test.ts` holds the cap.
 
 One that stays here because it is a supply-chain fact rather than a craft rule:
 **every dependency comes from the public npm registry.** `npm ci` needs no
 token, no `.npmrc` and no private registry — a private dependency breaks not
 just a fresh clone but the pages workflow, which rebuilds the released TAG from
 that tag's own lockfile.
+
+## Test conventions
+
+- **One topic per file, under `tests/`, named `<topic>_test.ts`** — never a test
+  body inline in source. Anything else under `tests/` (`helpers.ts`,
+  `tests/engine/fixtures.ts`, the `*.d.ts` shims) is a helper and holds no test.
+- **`tests/engine/` runs on synthetic fixtures and never names a shipped content
+  id**: delete every shipped catalog and it stays green. The shipped catalogs
+  are tested in `tests/content/`, a separate suite.
+- **The desktop shell's decisions are tested in Rust**, one
+  `tauri/shell/tests/<topic>_test.rs` per module (`make tauri-test`).
+- **Green is `make test`**, never a bare `npx vitest run` (see _Build and test
+  commands_), and a committed drift-tested artifact is regenerated by its own
+  command in the same commit — never by editing the snapshot.
+- A rule change that moves a seeded run moves its digest in the same commit;
+  the determinism test runs a scenario twice from one seed and demands equal
+  states.
+
+## Parity rules
+
+Some facts exist twice on purpose, because the two copies live where one cannot
+import the other. Each pair is held by a test, and a change to one side changes
+the other in the same commit:
+
+| The pair                                                                                      | Held by                                                            |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| A run command: `engine/game/commands.ts` and `COMMANDS` in `server/wire/frames.ts`            | `tests/engine/run_commands_test.ts` — then bump `PROTOCOL_VERSION` |
+| A sound's route key, in four places (see _The rules that bite_)                               | `tests/catalog_routing_test.ts`                                    |
+| A Lua rule and the engine's compiled fallback for it                                          | `tests/content/script_parity_test.ts`                              |
+| The identity in `game.config.json` and every restatement that cannot read it                  | `tests/identity_test.ts`                                           |
+| The page's side of a shell protocol (`pwa/src/app/*-bridge.ts`) and the shell's side          | `tests/native_scheme_test.ts`, `tests/shell_navigation_test.ts`    |
+| The store listing's claims and the build they describe                                        | `tests/store_listing_test.ts`                                      |
+| A catalog schema and the mod compiler, which runs the same `scripts/asset-tools/*-schema.mjs` | `tests/content/mod_build_test.ts`                                  |
 
 ## Documentation sync points
 
@@ -842,9 +878,12 @@ that tag's own lockfile.
 | PWA surface (manifest, icons, SW)                                      | `docs/architecture.md`; `make icons`, `make screenshots`                  |
 | the shared art look (`STYLE_PREAMBLE`, a family anchor)                | `docs/art-style.md` — keep it and `STYLE_PREAMBLE` in step                |
 | version anywhere                                                       | never by hand — `scripts/update-versions.sh` owns it                      |
+| the store listing's rules (categories, age rating, storefronts)        | `native/store/listing.mts`; its WORDS are never committed (`copy.mts`)    |
+| a shipped asset family, or how one is made                             | `provenance.json`, in the same commit                                     |
+| a gap against the rules this repo follows, opened or closed            | `docs/conformance.md`, one dated row                                      |
 
-The website must be regenerated whenever source-derived content changes
-(OSS_GAME_SPEC §11.2): `pwa/scripts/extract-source-data.mjs` runs on every build and
+The website must be regenerated whenever source-derived content changes:
+`pwa/scripts/extract-source-data.mjs` runs on every build and
 fails if `engine/version.ts` and `package.json` disagree.
 
 ## Story & dialogue — a three-tier chain
@@ -997,16 +1036,15 @@ carries the workflow, the quality bar and the traps for its subject.
 
 ## Maintenance skills
 
-Per §21 of `OSS_GAME_SPEC.md`, this repo ships agent skills for keeping drift-prone artifacts in sync with their sources of truth. Skills live under `.agents/skills/<name>/` and are also accessible through the `.claude/skills` and `.gemini/skills` symlinks.
+This repo ships agent skills for keeping drift-prone artifacts in sync with their sources of truth. Skills live under `.agents/skills/<name>/` and are also accessible through the `.claude/skills` and `.gemini/skills` symlinks.
 
 | Skill              | When to run                                                                                                                       |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
 | `maintenance`      | When several artifacts have likely drifted at once — umbrella skill that runs every `update-*` skill in the correct order.        |
 | `update-docs`      | After any change to the public API, configuration keys, or error messages.                                                        |
 | `update-readme`    | After any change that alters user-visible behavior, commands, or install instructions.                                            |
+| `update-story`     | After a story change lands in one tier — reconciles `docs/story.md`, `docs/manuscript.md` and the story data.                     |
 | `update-website`   | After changes that affect the deployed app's head, its `noindex`, or source-derived content under `pwa/`.                         |
-| `update-prompts`   | After any change to an LLM prompt's source of truth (embedded docs, rendering-context keys, JSON-schema enums, validation rules). |
-| `sync-game-spec`   | When the repo may have drifted from `OSS_GAME_SPEC.md` — walks the spec's mandates and fixes violations.                          |
 | `changelog`        | On every PR — to write its changeset fragment, or to settle that `no-changelog` is the right call instead.                        |
 | `commit`           | To commit, push, and open/update a PR with a conventional-commit title — and the owner of the commit/PR conventions.              |
 | `conflict`         | On a merge conflict, an un-mergeable PR, or any "rebase / sync / catch up with main" — the backup branch, the fetch, the resolve. |

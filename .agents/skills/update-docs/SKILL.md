@@ -5,7 +5,7 @@ description: "Use when files under docs/ may be stale. Discovers commits since t
 
 # Updating the Docs
 
-**Governing spec sections:** §11.1 (`docs/` directory — the required conceptual docs tree), §21.5 (this skill is mandated because `docs/` is a drift-prone artifact in every project).
+**Why this skill exists:** `docs/` is the conceptual documentation tree, and it drifts every time the code moves without it.
 
 The `docs/` directory contains conceptual documentation for game. Unlike the README (overview) or man pages (command reference), `docs/` explains *why* and *how* in depth. It goes stale whenever a user-visible behavior, configuration key, or supported surface changes without a matching edit.
 
@@ -45,7 +45,7 @@ The `docs/` directory contains conceptual documentation for game. Unlike the REA
 | Story / dialogue / plot — any spoken line, caption, lore page, or plot beat | **Not this skill.** Use `update-story` (`.agents/skills/update-story/`), which owns the `story.md` → `manuscript.md` → data chain — **only with user confirmation** (see CLAUDE.md "Story & dialogue"; never silently rewrite it) |
 | Deploy slots / pages workflow (`.github/workflows/pages.yml`, `pwa/pwa-plugin.ts`) | `docs/architecture.md` |
 | PWA surface (manifest, icons, service worker) | `docs/architecture.md` |
-| Agent skill discovery (`OSS_GAME_SPEC.md` §21, `.agents/skills/`, tool aliases, `scripts/skill-lessons.mjs`) | `docs/getting-started.md` and every `docs/` link into the skill tree; hand off README/CONTRIBUTING changes to `update-readme` when the surrounding prose also needs revision |
+| Agent skill discovery (`.agents/skills/`, tool aliases, `scripts/skill-lessons.mjs`) | `docs/getting-started.md` and every `docs/` link into the skill tree; hand off README/CONTRIBUTING changes to `update-readme` when the surrounding prose also needs revision |
 | Error messages and troubleshooting-relevant behavior | `docs/troubleshooting.md` |
 | Install / first-run mechanics (Makefile, `.npmrc`, `GITHUB_PAT`) | `docs/getting-started.md` |
 

@@ -191,14 +191,17 @@ rebuild and lets a stale artifact agree with an equally stale build), and run
 
 ## File size
 
-- Non-test source files stay under **1000 physical lines** (§20.5 of
-  `OSS_GAME_SPEC.md`). Past the cap, split by concern — sibling modules,
-  extracted helpers — rather than relaxing it. A file that big is nearly always
-  doing more than one thing.
-- The escape hatch is `game-spec:allow-large-file: <reason>` in a comment within
-  the file's first 20 lines, and the reason must genuinely motivate the size
-  (generated code, one cohesive state machine, a third-party snapshot, an
+- Non-test source files stay under **1000 physical lines**. Past the cap,
+  split by concern — sibling modules, extracted helpers — rather than relaxing
+  it. A file that big is nearly always doing more than one thing.
+- The escape hatch is `guidelines:allow-large-file: <reason>` in a comment
+  within the file's first 20 lines, and the reason must genuinely motivate the
+  size (generated code, one cohesive state machine, a third-party snapshot, an
   inherently dense rule catalogue). "It is long" is not a reason.
+- The files already over the cap carry the standing reason `split when next
+  touched; known deviation by owner decision`. That marker is a debt, not a
+  licence: a change that touches one of those files splits it by concern in the
+  same PR and drops the marker.
 - Splitting a file is also the moment to prune it: a 1100-line module usually
   has 100 lines of history in it.
 
@@ -210,7 +213,7 @@ rebuild and lets a stale artifact agree with an equally stale build), and run
   `#[cfg(test)]` blocks, no `if __name__ == "__main__"` harnesses. Source files
   stay free of test scaffolding.
 - Named with a `_test`/`_tests` suffix (`output_test.ts`); the stem matches
-  `_?[Tt]ests?$` per §20. They live in `tests/` and run under **Vitest**. The
+  `_?[Tt]ests?$`. They live in `tests/` and run under **Vitest**. The
   include pattern (`tests/**/*_test.ts`) is in `vitest.config.ts` — keep it in
   lockstep with the naming rule.
 - **`tests/engine/` vs `tests/content/`.** Engine-rule suites go in
@@ -233,7 +236,7 @@ rebuild and lets a stale artifact agree with an equally stale build), and run
   a fixture spot enclosed the hero standing beside it too, so "the walker is
   reachable" was true because nothing was ever sealed.)
 - **The Tauri shell is Rust and obeys the same two rules through its own
-  toolchain** (§20.3): integration tests in `tauri/<crate>/tests/*_test.rs`,
+  toolchain**: integration tests in `tauri/<crate>/tests/*_test.rs`,
   never a `#[cfg(test)]` module — which is also why every decision worth testing
   lives in the `adastrail-shell` library crate. Run them with `make tauri-test`;
   the root suite does not reach them.

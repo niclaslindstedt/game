@@ -540,7 +540,7 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   file per base sprite — see the `pixel-assets` skill) + `asset-tools/` only
   (`make assets`) — never edit the files under
   `pwa/src/game/assets/`. Those files are **gitignored and regenerated
-  on every build** (like `engine/generated/`, §11.2): `npm run assets` runs
+  on every build** (like `engine/generated/`): `npm run assets` runs
   ahead of `vite`, `tsc`, and `vitest`, so the pixel grids are the sole
   committed source of truth. Never commit `pwa/src/game/assets/` — the
   binary atlas is a build output, not a reviewable artifact.

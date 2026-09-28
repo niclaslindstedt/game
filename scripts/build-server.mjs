@@ -82,7 +82,7 @@ const ALIAS_FILES = [
 const SOURCES = ["engine", "server"];
 
 /** Where the compiled content catalogs land. Gitignored; `npm run levels`
- * regenerates them (§11.2). */
+ * regenerates them. */
 const generatedDir = path.join(root, "engine", "generated");
 
 /** Every `from "…"` / `import("…")` specifier in a source file. Shared with
@@ -127,7 +127,7 @@ function main() {
  * REFUSE A BUILD WHOSE CONTENT CATALOGS HAVE NOT BEEN COMPILED YET, and name
  * the command that compiles them.
  *
- * `engine/generated/` is build output like every other generated artifact (§11.2)
+ * `engine/generated/` is build output like every other generated artifact
  * — gitignored, rebuilt by `npm run levels`, which the root's own `pre*` hooks
  * run ahead of every test, typecheck and lint. This script had no such hook and
  * no way to grow one that helps everybody, because the desktop packager reaches

@@ -31,7 +31,7 @@
 //      against the catalog, so an added or retired badge flows into the
 //      artwork on the next run with no second list to maintain.
 //
-// Output is gitignored (§11.2): it is reproducible build output, regenerated
+// Output is gitignored: it is reproducible build output, regenerated
 // on demand like the store screenshots. The target directory is emptied first,
 // so a retired badge's art never lingers to be uploaded.
 

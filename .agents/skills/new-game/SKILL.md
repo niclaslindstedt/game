@@ -133,9 +133,6 @@ Author the new game on the untouched engine, one catalog at a time:
       workflow token.
 - [ ] Confirm the per-slot precache ids changed with `cacheIdPrefix` (they
       derive from it in `pwa/src/app/pwa.ts`).
-- [ ] Keep `OSS_GAME_SPEC.md` at the new repo's root — it is the sequel's
-      spec too, and `sync-game-spec` reads the local copy (there is nothing
-      to repoint and nothing to fetch).
 
 ## 5. Verify
 

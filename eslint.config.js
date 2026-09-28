@@ -80,7 +80,7 @@ export default [
     rules: {
       ...tsPlugin.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      // §19.4 — user-facing output routes through engine/output.ts; raw console
+      // User-facing output routes through engine/output.ts; raw console
       // calls are forbidden outside the central output module.
       "no-console": "error",
     },

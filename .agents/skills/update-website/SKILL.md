@@ -5,11 +5,11 @@ description: "Use when the deployed app's source-derived content under pwa/ may 
 
 # Updating the Website
 
-**Governing spec sections:** §11.2 (source-derived content, no double-authoring, staleness CI check), §11.3 (discoverability — **deliberately not met**, see below), §21.5 (this skill is mandated when the project publishes a website).
+**Why this skill exists:** the deployed site is derived from the source — no double-authoring, and a build that fails when the two disagree — so it drifts whenever a source of truth moves without a rebuild. Discoverability is **deliberately not** a goal, see below.
 
 > **THE SITE IS NOT MEANT TO BE FOUND.** There are no size budgets and no SEO tooling, by owner decision: every HTML page the build emits (the game, `/privacy/`, `/contact/`, `404.html`, every library page) carries `<meta name="robots" content="noindex">`, `robots.txt` allows crawling (a crawler has to fetch a page to read its `noindex`) and names no sitemap, and there is no `sitemap.xml`, `llms.txt`, canonical link or JSON-LD. The title, the meta description and the Open Graph / Twitter tags stay — they make a shared link look right. **Do not add a discovery surface back.**
 
-This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the game** — there is no separate marketing site. What this skill keeps in sync is the site's *derived* shell, not hand-authored pages:
+This is a **webapp-kind project: the deployed website IS the game** — there is no separate marketing site. What this skill keeps in sync is the site's *derived* shell, not hand-authored pages:
 
 | Surface | Derived from | By |
 |---|---|---|
@@ -35,9 +35,9 @@ This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the gam
 
    ```sh
    git log --oneline "$BASELINE"..HEAD -- game.config.json README.md docs/ \
-     engine/version.ts package.json pwa/public/icon.svg OSS_GAME_SPEC.md
+     engine/version.ts package.json pwa/public/icon.svg
    git diff --name-only "$BASELINE"..HEAD -- game.config.json README.md docs/ \
-     engine/version.ts package.json pwa/public/icon.svg OSS_GAME_SPEC.md
+     engine/version.ts package.json pwa/public/icon.svg
    ```
 
 3. If anything changed, rebuild and check the derived surfaces.

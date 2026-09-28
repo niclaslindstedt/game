@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Captures the manifest SCREENSHOTS (§11.4.1) — the images Chrome shows in the
+// Captures the manifest SCREENSHOTS — the images Chrome shows in the
 // richer install prompt on Android and desktop, and which app-listing surfaces
 // increasingly pull straight from the manifest.
 //

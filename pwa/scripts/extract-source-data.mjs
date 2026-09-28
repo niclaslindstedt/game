@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Extract project metadata from source so the app never goes stale (§11.2).
+// Extract project metadata from source so the app never goes stale.
 // Reads the authoritative manifests at the repository root and emits
 // pwa/src/generated/sourceData.json for the app to import. Fails loudly
 // if an expected marker is missing rather than silently emitting stale data.

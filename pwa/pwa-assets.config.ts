@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Icon pipeline (§11.4.2): every raster icon is generated from the single
+// Icon pipeline: every raster icon is generated from the single
 // vector source `public/icon.svg` by `npm run icons` (which runs
 // `pwa-assets-generator` with this config, then scripts/generate-og.mjs for
 // the 1200×630 Open Graph card). Never edit the emitted PNGs by hand.

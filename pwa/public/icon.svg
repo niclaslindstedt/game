@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Single vector source for every raster icon (§11.4.2). Regenerate the
+  <!-- Single vector source for every raster icon. Regenerate the
        PNGs with `npm run icons` after editing — never edit the PNGs by hand.
        Artwork stays inside the 80%-diameter safe zone so Android's adaptive
        mask cannot eat it. -->

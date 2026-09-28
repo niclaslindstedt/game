@@ -5,7 +5,7 @@ description: "Use when you want to bring every drift-prone artifact in the repo 
 
 # Maintenance
 
-This is the umbrella skill for game, mandated by §21.6 of `OSS_GAME_SPEC.md`. It does no rewriting itself — it decides which sync skills are stale, runs each one, and reports a combined summary. Use it when you do not know which specific artifact is out of date, or when several have likely drifted at once (for example, after a large merge).
+This is the umbrella skill for game. It does no rewriting itself — it decides which sync skills are stale, runs each one, and reports a combined summary. Use it when you do not know which specific artifact is out of date, or when several have likely drifted at once (for example, after a large merge).
 
 ## When to run
 
@@ -19,20 +19,17 @@ Do **not** use this skill for a targeted fix — if you know exactly which artif
 
 The registry is the single source of truth for which sync skills exist in this repo. Every `update-*` directory under `.agents/skills/` must appear here exactly once. New projects start with the entries below; add rows whenever you create a new sync skill.
 
-| Skill | Fixes | Spec sections | Run order |
-|---|---|---|---|
-| `sync-game-spec`  | Repo contents vs. the repository's own `OSS_GAME_SPEC.md` (offline and standalone — no fetch, no validator binary) | all structural §§ + the game chapters §23–§37 | 1 — run first so every downstream skill works on a conformant tree |
-| `update-story`    | Story tiers vs. each other: `docs/manuscript.md` and `engine/game/defs/**` story data vs. `docs/story.md` (the gist, ground truth) | §11.1                     | 2 — reconcile the story chain before `update-docs` reads the manuscript |
-| `update-docs`     | `docs/*.md` vs. source of truth                                                                             | §11.1                     | 3 |
-| `update-readme`   | `README.md` vs. current public surface                                                                      | §3                        | 4 |
-| `update-prompts`  | `prompts/**` vs. code and embedded sources                                                                  | §13.2                     | 5 |
-| `update-website`  | Source-derived content under `pwa/` (the head, the noindex, extracted metadata) vs. README/docs/config           | §11.2                     | 6 — last: it reads files the docs/readme skills may rewrite |
+| Skill | Fixes | Run order |
+|---|---|---|
+| `update-story`    | Story tiers vs. each other: `docs/manuscript.md` and `engine/game/defs/**` story data vs. `docs/story.md` (the gist, ground truth) | 1 — reconcile the story chain before `update-docs` reads the manuscript |
+| `update-docs`     | `docs/*.md` vs. source of truth | 2 |
+| `update-readme`   | `README.md` vs. current public surface | 3 |
+| `update-website`  | Source-derived content under `pwa/` (the head, the noindex, extracted metadata) vs. README/docs/config | 4 — last: it reads files the docs/readme skills may rewrite |
 
 Run order matters:
 
-- `sync-game-spec` runs **first** so every downstream skill works on a tree that already satisfies the structural mandates. It reads the repository's own `OSS_GAME_SPEC.md` and never rewrites it: the spec is amended by a deliberate PR, not by a sweep.
-- `update-story` runs **second**: it owns the story chain (`story.md` → `manuscript.md` → `defs/**`), and `update-docs` reads the manuscript, so the story tiers must agree before the docs skill runs. In a sweep it only reconciles LOWER tiers up to `story.md` — a story *change* needs the user's confirmation (see its `SKILL.md`), so if the sweep finds the data holds a beat the gist lacks, it surfaces that instead of promoting it silently.
-- The per-artifact skills (`update-docs`, `update-readme`, `update-prompts`, `update-website`, and any other `update-*` skill this project adds) run afterwards in dependency order: a skill that reads files another skill rewrites must run *after* that other skill — `update-website` runs last because the website extracts content from README/docs.
+- `update-story` runs **first**: it owns the story chain (`story.md` → `manuscript.md` → `defs/**`), and `update-docs` reads the manuscript, so the story tiers must agree before the docs skill runs. In a sweep it only reconciles LOWER tiers up to `story.md` — a story *change* needs the user's confirmation (see its `SKILL.md`), so if the sweep finds the data holds a beat the gist lacks, it surfaces that instead of promoting it silently.
+- The per-artifact skills (`update-docs`, `update-readme`, `update-website`, and any other `update-*` skill this project adds) run afterwards in dependency order: a skill that reads files another skill rewrites must run *after* that other skill — `update-website` runs last because the website extracts content from README/docs.
 
 ## Discovery process
 

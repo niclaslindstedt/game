@@ -14,7 +14,7 @@ mobile `userAgent`; the same page at 1280×800 looked perfect in the same run.
 
 Two practical notes for the loop. A Playwright script in the scratchpad cannot
 `import "playwright"` (node resolves from the SCRIPT's directory, not the cwd) —
-import `/home/user/game/node_modules/playwright/index.js` as a default and
+import `<checkout>/node_modules/playwright/index.js` as a default and
 destructure it, and launch with
 `executablePath: "/opt/pw-browsers/chromium"`. And a row's selector is
 `[aria-label="<screen>-<row-id>"]` (`rowAria`), so the DEVELOPER index is

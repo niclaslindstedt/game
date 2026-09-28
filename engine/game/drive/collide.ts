@@ -3,7 +3,7 @@
 // what each of the four populations on it does about being hit.
 //
 // WHY IT IS ITS OWN FILE. It came out of `drive/index.ts`, which had grown past
-// the thousand-line cap (§20.5) with this pass as much the largest thing in it —
+// the thousand-line cap with this pass as much the largest thing in it —
 // and the split is by CONCERN rather than by line count, because the two halves
 // are genuinely different jobs. `index.ts` is the TICK: pedals, wheel, spawners,
 // the beats, the verdict. This is the CONTACT, and it is the only place in the
