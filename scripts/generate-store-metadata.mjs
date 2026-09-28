@@ -55,13 +55,13 @@ const identity = JSON.parse(readFileSync(here("../game.config.json"), "utf8"));
 // THE GAME'S PAGES ON THE COMPANY'S APPS SITE — the only place a store listing
 // sends anyone. apps.agilator.se carries a page, a privacy policy and a support
 // page for every app it lists, generated from one row per app; the listing
-// points there and NOT at the web edition's domain (owner decisions D14, D17):
+// points there and NOT at the web edition's domain (by owner decision):
 // the web edition is the free game a buyer was about to pay for, and a store
 // listing links to no source, repository or personal domain at all.
 // `supportUrl` in listing.mts is the third of the three.
 const APPS_PAGE = "https://apps.agilator.se/adas-trail";
 
-// What no listing field may contain, anywhere (D17): the source repository's
+// What no listing field may contain, anywhere (by owner decision): the source repository's
 // forge, and the name of the domain the web edition is served from.
 const FORBIDDEN_IN_LISTING = ["github.com", "niclaslindstedt"];
 const pkg = JSON.parse(readFileSync(here("../package.json"), "utf8"));
@@ -309,7 +309,7 @@ for (const edge of [skus[0], skus[skus.length - 1]]) {
 }
 
 // ---------------------------------------------------------------------------
-// No source, no personal domain (D17). Every string the listing will upload —
+// No source, no personal domain (by owner decision). Every string the listing will upload —
 // authored or composed, any locale, the review block included — is walked, so
 // a URL pasted into a description is caught as surely as a composed one.
 // ---------------------------------------------------------------------------
@@ -330,7 +330,7 @@ walkStrings(
         fail(
           `${at}: contains "${bad}" — a store listing links to the game's ` +
             `pages on apps.agilator.se, never to the source or the web ` +
-            `edition's domain (D17)`,
+            `edition's domain (by owner decision)`,
         );
       }
     }

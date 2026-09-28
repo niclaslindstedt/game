@@ -89,7 +89,7 @@ const devTools = process.env.VITE_DEV_TOOLS !== "off";
 // between the platform splash and the game's own studio card. See
 // `stripBootShell` in pwa-plugin.ts for what it takes out and what survives.
 //
-// It is ALSO what keeps the source out of a store build (owner decision D17):
+// It is ALSO what keeps the source out of a store build (by owner decision):
 // the client bundle is served `shellIdentity(game.config.json)`, with the
 // web-edition, repository and author addresses cleared, and the prerendered
 // pages drop the share tags that carry them. The bundle scripts then refuse a

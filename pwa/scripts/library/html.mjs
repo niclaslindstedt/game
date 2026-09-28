@@ -22,7 +22,7 @@ export const TITLE = identity.title;
  * than onto the web? `VITE_SHELL_BUILD=on` is set by each shell's
  * `bundle-web.mjs` and reaches this script through `npm run build`.
  *
- * A store build carries no address of the web edition (owner decision D17 —
+ * A store build carries no address of the web edition (by owner decision —
  * see `shellIdentity` in pwa-plugin.ts), so its pages drop the share tags that
  * are nothing BUT such an address: `og:url`, `og:image`, `twitter:image`.
  * Nothing unfurls a page served off the device anyway.

@@ -23,8 +23,8 @@ const DIST = resolve(__dirname, "../dist");
 const SITE_URL = identity.siteUrl;
 
 // A STORE BUILD (the phone or desktop app; `VITE_SHELL_BUILD=on`, set by each
-// shell's `bundle-web.mjs`) carries no address of the web edition — owner
-// decision D17, see `shellIdentity` in pwa/pwa-plugin.ts. Its 404 page drops
+// shell's `bundle-web.mjs`) carries no address of the web edition — by
+// owner decision, see `shellIdentity` in pwa/pwa-plugin.ts. Its 404 page drops
 // the share tags and sends "back to the game" to the root it is served from.
 const SHELL_BUILD = process.env.VITE_SHELL_BUILD === "on";
 const HOME = SHELL_BUILD ? "/" : `${SITE_URL}/`;

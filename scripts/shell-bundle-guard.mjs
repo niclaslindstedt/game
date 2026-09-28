@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE LAST CHECK BEFORE A WEBROOT GOES INTO A STORE APP: it names nobody.
 //
-// Owner decision D17, and strictly so: the phone app (native/, the zipped
+// By owner decision, and strictly so: the phone app (native/, the zipped
 // webroot it embeds) and the desktop app (tauri/, its copied webroot) carry no
 // link back to the source — no repository, issues, releases, sponsor or
 // author page, no web-edition domain — and the domain owner's name appears in
@@ -78,7 +78,7 @@ export function refuseIfNamed(offending, what) {
     [
       `✗ refusing ${what}: ${offending.length} file(s) contain "${FORBIDDEN}".`,
       "  A store build links to no source, repository, author page or web-edition",
-      "  domain (D17). Build it with VITE_SHELL_BUILD=on — this script does, so a",
+      "  domain (by owner decision). Build it with VITE_SHELL_BUILD=on — this script does, so a",
       "  --skip-build over a plain website build is the usual cause — and clear the",
       "  source of any new occurrence at build time (see shellIdentity in",
       "  pwa/pwa-plugin.ts):",

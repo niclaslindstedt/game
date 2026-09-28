@@ -24,7 +24,7 @@
 // `pwa/dist/` — a webroot re-copied from a plain website build carries the boot
 // shell and the developer tooling. Every release path builds.
 //
-// It also takes the SOURCE out (owner decision D17): a shell build carries no
+// It also takes the SOURCE out (by owner decision): a shell build carries no
 // repository, author or web-edition address (`shellIdentity` in
 // pwa/pwa-plugin.ts), and this script REFUSES a webroot in which any file still
 // names the domain's owner (scripts/shell-bundle-guard.mjs) — so a
@@ -98,7 +98,7 @@ if (!existsSync(join(DIST_DIR, "index.html"))) {
   process.exit(1);
 }
 
-// NOTHING IN HERE MAY NAME THE SOURCE (owner decision D17): no repository,
+// NOTHING IN HERE MAY NAME THE SOURCE (by owner decision): no repository,
 // author or web-edition address, in any file. The build clears them
 // (`VITE_SHELL_BUILD`); this refuses the copy if one survived, and removes the
 // previous webroot so a desktop build cannot package a stale one instead.

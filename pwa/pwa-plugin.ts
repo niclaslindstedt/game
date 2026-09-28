@@ -78,7 +78,7 @@ type GamePwaOptions = {
  * THE IDENTITY A STORE BUILD CARRIES: `game.config.json` with every field that
  * points back at the web edition or the source repository CLEARED.
  *
- * Owner decision D17, and strictly so: the phone and desktop apps link to
+ * By owner decision, and strictly so: the phone and desktop apps link to
  * nothing of the kind — no repository, no issues, no author page, no
  * web-edition domain — and the domain's owner name may not appear in their
  * bundles in any form. Emptied rather than special-cased at each reader,

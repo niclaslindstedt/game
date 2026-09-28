@@ -43,7 +43,7 @@ generator, so renaming the game updates the store listing the same way it
 updates the manifest, and the marketing and privacy-policy URLs are the game's
 pages on apps.agilator.se (`APPS_PAGE` in the generator; `supportUrl` in
 `listing.mts` is the third). No listing field may name the source repository or the web
-edition's domain — the generator fails one that does (owner decision D17).
+edition's domain — the generator fails one that does (by owner decision).
 
 The generator (`scripts/generate-store-metadata.mjs`) enforces every Apple
 limit and **fails rather than truncates**:

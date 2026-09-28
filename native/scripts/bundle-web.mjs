@@ -26,7 +26,7 @@
 // in `pwa/dist/` — a webroot re-zipped from a plain website build carries the
 // boot shell and the developer tooling. Every release path builds.
 //
-// It also takes the SOURCE out (owner decision D17): a shell build carries no
+// It also takes the SOURCE out (by owner decision): a shell build carries no
 // repository, author or web-edition address (`shellIdentity` in
 // pwa/pwa-plugin.ts), and this script REFUSES a webroot in which any file still
 // names the domain's owner (scripts/shell-bundle-guard.mjs) — so a
@@ -140,7 +140,7 @@ if (count === 0 || !files["index.html"]) {
   );
 }
 
-// NOTHING IN HERE MAY NAME THE SOURCE (owner decision D17): no repository,
+// NOTHING IN HERE MAY NAME THE SOURCE (by owner decision): no repository,
 // author or web-edition address, in any file. The build clears them
 // (`VITE_SHELL_BUILD`); this refuses the zip if one survived, and removes a
 // previous zip so an EAS build cannot pick up a stale one instead.

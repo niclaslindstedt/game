@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// A STORE BUILD NAMES NO SOURCE — owner decision D17, strictly.
+// A STORE BUILD NAMES NO SOURCE — by owner decision, strictly.
 //
 // The phone and desktop apps carry no repository, author or web-edition
 // address, in any file. Three pieces make that true and each is pinned here:
