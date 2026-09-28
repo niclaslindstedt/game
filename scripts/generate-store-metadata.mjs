@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Compile the hand-authored App Store listing (native/store/listing.yaml) into
-// native/store/store.config.json — the file `eas metadata:push` uploads to App
-// Store Connect. Same shape as every other catalog in this repo: committed
-// YAML is the source of truth, the JSON is a gitignored build output, and the
-// generator is where the rules live.
+// Compile the App Store listing into native/store/store.config.json — the file
+// `eas metadata:push` uploads to App Store Connect — and the fastlane metadata
+// tree. The listing comes in two halves: its RULES (native/store/listing.mts —
+// categories, the age rating, the review contact, the release policy, which
+// storefronts are written) are committed, and its WORDS (native/store/copy.mts
+// — description, subtitle, promo text, keywords, review notes) are gitignored,
+// with a committed skeleton beside them (copy.example.mts). listing.mts's
+// header has the reasoning. The outputs are gitignored build output, and the
+// generator is where the checks live.
 //
 // It does three jobs the YAML alone can't:
 //
@@ -28,18 +32,22 @@
 //   make store-metadata          # write native/store/store.config.json
 //   node scripts/generate-store-metadata.mjs --check   # validate only
 
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-
-import { parse } from "yaml";
 
 import { reviewPhone } from "./asset-tools/app-store-connect.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 
-const LISTING = here("../native/store/listing.yaml");
+const RULES_FILE = here("../native/store/listing.mts");
 const OUT = here("../native/store/store.config.json");
 
 const identity = JSON.parse(readFileSync(here("../game.config.json"), "utf8"));
@@ -50,7 +58,7 @@ const identity = JSON.parse(readFileSync(here("../game.config.json"), "utf8"));
 // points there and NOT at the web edition's domain (owner decisions D14, D17):
 // the web edition is the free game a buyer was about to pay for, and a store
 // listing links to no source, repository or personal domain at all.
-// `supportUrl` in listing.yaml is the third of the three.
+// `supportUrl` in listing.mts is the third of the three.
 const APPS_PAGE = "https://apps.agilator.se/adas-trail";
 
 // What no listing field may contain, anywhere (D17): the source repository's
@@ -92,19 +100,81 @@ function checkLength(field, value, limit) {
 }
 
 // ---------------------------------------------------------------------------
-// Load the authored listing.
+// Load the listing: the committed rules, and whichever copy module is present.
+//
+// THE COPY IS NOT IN THE REPOSITORY. `copy.mts` holds every word a buyer reads
+// and is gitignored; `copy.example.mts` is the committed skeleton. So this
+// resolves whichever is present and SAYS WHICH: a listing compiled silently
+// from the skeleton would ship placeholder prose, and the only clue would be a
+// subtitle reading "SUBTITLE — the hook, 30".
 // ---------------------------------------------------------------------------
-const listing = parse(readFileSync(LISTING, "utf8"));
-if (!listing || typeof listing !== "object") {
-  console.error("generate-store-metadata: listing.yaml is not a YAML mapping");
-  process.exit(1);
-}
-if (!listing.apple?.info?.["en-US"]) {
+const { LISTING: RULES } = await import(RULES_FILE);
+
+const COPY_FILES = ["copy.mts", "copy.example.mts"];
+const copyFile = COPY_FILES.find((name) =>
+  existsSync(here(`../native/store/${name}`)),
+);
+if (!copyFile) {
   console.error(
-    "generate-store-metadata: listing.yaml has no apple.info['en-US']",
+    "generate-store-metadata: no store copy. Start from the skeleton:\n" +
+      "  cp native/store/copy.example.mts native/store/copy.mts",
   );
   process.exit(1);
 }
+const copy = await import(here(`../native/store/${copyFile}`));
+if (copyFile === "copy.example.mts") {
+  console.warn(
+    "generate-store-metadata: compiled from native/store/copy.example.mts — " +
+      "the SKELETON, not a listing. Put the real words in native/store/copy.mts.",
+  );
+}
+
+// The storefronts the rules declare. This generator writes the App Store's
+// listing; a Mac App Store or Steam page declared there would be a page
+// nothing writes, so it is refused rather than silently skipped.
+const storefronts = RULES.storefronts ?? { appStore: true };
+for (const [store, on] of Object.entries(storefronts)) {
+  if (on && store !== "appStore") {
+    console.error(
+      `generate-store-metadata: listing.mts declares the ${store} storefront, ` +
+        "and this generator writes no listing for it",
+    );
+    process.exit(1);
+  }
+}
+if (!storefronts.appStore) {
+  console.log(
+    "generate-store-metadata: no storefront declared — nothing to write",
+  );
+  process.exit(0);
+}
+
+const primaryLocale = RULES.apple.primaryLocale;
+if (!copy.APPLE_INFO?.[primaryLocale]) {
+  console.error(
+    `generate-store-metadata: ${copyFile} has no APPLE_INFO["${primaryLocale}"]`,
+  );
+  process.exit(1);
+}
+
+// The two halves, joined into the one listing document the rest of this file
+// reads: the words per locale beside the support URL, and the review notes
+// inside the review block.
+const listing = {
+  configVersion: RULES.configVersion,
+  apple: {
+    info: Object.fromEntries(
+      Object.entries(copy.APPLE_INFO).map(([locale, words]) => [
+        locale,
+        { ...words, supportUrl: RULES.apple.supportUrl },
+      ]),
+    ),
+    categories: RULES.apple.categories,
+    advisory: RULES.apple.advisory,
+    review: { ...RULES.apple.review, notes: copy.APPLE_REVIEW_NOTES },
+    release: RULES.apple.release,
+  },
+};
 
 // The review number comes from the environment, not from the committed YAML —
 // see `reviewPhone`. Resolving it HERE, onto the parsed document, is what keeps
@@ -120,7 +190,7 @@ if (listing.apple.review) {
     delete listing.apple.review.phone;
     console.warn(
       "generate-store-metadata: warning — no review phone. Set " +
-        "ASC_REVIEW_PHONE in native/.env (never in listing.yaml: this " +
+        "ASC_REVIEW_PHONE in native/.env (never in listing.mts: this " +
         "repository is public). `make store-preflight` fails until you do.",
     );
   }
@@ -142,7 +212,7 @@ for (const [locale, authored] of Object.entries(listing.apple.info)) {
     // web edition. The web edition IS the free game, and linking it from a
     // paid listing sends a buyer to the thing they were about to pay for.
     // Composed here rather than authored, like every other brand-shaped value.
-    // See `APPS_PAGE` and the note in listing.yaml.
+    // See `APPS_PAGE` and the note in listing.mts.
     marketingUrl: `${APPS_PAGE}/`,
     // Apple treats this field as required; the URL must actually resolve at
     // review time.
@@ -207,10 +277,17 @@ if (review.phone && !review.phone.startsWith("+")) {
 // names a product id the build doesn't sell sends a reviewer looking for
 // something that isn't there.
 // ---------------------------------------------------------------------------
+// The bundle id is a build variable (APP_BUNDLE_ID), never committed; a checkout
+// without it builds under the development id app.config.js falls back to, and
+// so does this report.
 const appConfig = readFileSync(here("../native/app.config.js"), "utf8");
-const bundleId = appConfig.match(/const BUNDLE_ID = "([^"]+)"/)?.[1];
+const bundleId =
+  process.env.APP_BUNDLE_ID?.trim() ||
+  appConfig.match(/const DEV_BUNDLE_ID = "([^"]+)"/)?.[1];
 if (!bundleId) {
-  fail("could not read BUNDLE_ID from native/app.config.js");
+  fail(
+    "no bundle id: APP_BUNDLE_ID is unset and native/app.config.js has no DEV_BUNDLE_ID",
+  );
 }
 
 const storeTs = readFileSync(here("../pwa/src/game/store.ts"), "utf8");
@@ -389,7 +466,7 @@ function writeFastlaneTree() {
 
 if (process.argv.includes("--check")) {
   console.log(
-    `generate-store-metadata: listing is valid ` +
+    `generate-store-metadata: listing is valid, words from ${copyFile} ` +
       `(${Object.keys(info).length} locale(s), bundle ${bundleId}, ` +
       `${skus.length} coin packs)`,
   );
@@ -398,7 +475,7 @@ if (process.argv.includes("--check")) {
   const fastlaneRoot = writeFastlaneTree();
   const en = info["en-US"];
   console.log(
-    `generate-store-metadata: wrote native/store/store.config.json\n` +
+    `generate-store-metadata: wrote native/store/store.config.json (words from ${copyFile})\n` +
       `  title      ${en.title} (${en.title.length}/30)\n` +
       `  subtitle   ${en.subtitle} (${en.subtitle.length}/30)\n` +
       `  keywords   ${en.keywords.join(",")} (${en.keywords.join(",").length}/100)\n` +

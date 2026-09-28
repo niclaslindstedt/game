@@ -3,7 +3,8 @@
 Step-by-step for shipping the Expo app in this directory. The binary is built
 by [EAS Build](https://docs.expo.dev/build/introduction/) and uploaded by
 [EAS Submit](https://docs.expo.dev/submit/introduction/); the store listing is
-generated from [`store/listing.yaml`](store/listing.yaml) (see
+generated from its rules, [`store/listing.mts`](store/listing.mts), and its
+words, `store/copy.mts` — gitignored, so put them there before an upload (see
 [`store/README.md`](store/README.md)).
 
 The app **embeds the whole game** (`assets/webroot.zip`) and serves it from a
@@ -234,9 +235,12 @@ numbers auto-increment (`appVersionSource: "remote"` + `autoIncrement` in
 
 ## 3. Listing metadata and screenshots
 
-One field in [`store/listing.yaml`](store/listing.yaml) ships as a placeholder
+One field in [`store/listing.mts`](store/listing.mts) ships as a placeholder
 and cannot: `review.phone` is `+46000000000`, and App Store review calls the
-number. Put a reachable one there — preflight fails until you do.
+number. Set a reachable one as `ASC_REVIEW_PHONE` in `native/.env` — never in
+the committed listing — and preflight passes. The listing's words go in
+`store/copy.mts` (gitignored; `store/copy.example.mts` is the shape): a listing
+compiled without it is the placeholder skeleton, and preflight says so.
 
 ```sh
 npm install --no-save playwright && npx playwright install chromium
@@ -322,8 +326,8 @@ Then in App Store Connect, by hand:
 - **App Privacy** questionnaire → _no data collected_. The game has no backend;
   iCloud and Game Center are Apple's own services acting for the user, and
   purchases are processed by the App Store. Privacy policy URL:
-  `https://game.niclaslindstedt.se/privacy/`.
-- **Age rating** — the answers are already in `store/listing.yaml`'s `advisory`
+  `https://apps.agilator.se/adas-trail/privacy/`.
+- **Age rating** — the answers are already in `store/listing.mts`'s `advisory`
   block and pushed by `eas metadata:push`; confirm the resulting badge.
 - **Export compliance** is pre-answered (`ITSAppUsesNonExemptEncryption: false`).
 - **Game Center** — confirm the achievements and leaderboards from step 1.3 are

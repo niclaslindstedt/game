@@ -39,9 +39,7 @@ import {
 } from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
-
-import { parse } from "yaml";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { nativeEnv, reviewPhone } from "./asset-tools/app-store-connect.mjs";
 
@@ -361,15 +359,29 @@ const crashHint = (result) => {
   if (/ERR_MODULE_NOT_FOUND|src\/generated/.test(detail)) {
     return (
       "engine/generated/ is missing — the compiled catalogs are build output " +
-      "(§11.2), and the manifests are derived from them. Run `make levels`."
+      "and the manifests are derived from them. Run `make levels`."
     );
   }
   return detail || "run it directly for the detail";
 };
 
+// The listing's WORDS are not committed (native/store/listing.mts has the
+// reasoning): a checkout compiles the skeleton unless the real copy has been
+// put beside it, and a listing built from the skeleton would ship placeholder
+// prose.
+if (existsSync(path.join(native, "store", "copy.mts"))) {
+  ok("native/store/copy.mts is present (the listing's own words, gitignored)");
+} else {
+  warn(
+    "no native/store/copy.mts — the listing would be built from the SKELETON",
+    "put the listing's real words in native/store/copy.mts (gitignored; the " +
+      "shape is copy.example.mts) before `make store-metadata` uploads anything.",
+  );
+}
+
 const listing = run("generate-store-metadata.mjs", ["--check"]);
 if (listing.status === 0) {
-  ok("native/store/listing.yaml passes every App Store limit");
+  ok("the listing compiles and passes every App Store limit");
 } else {
   fail(
     "the listing does not compile",
@@ -380,15 +392,15 @@ if (listing.status === 0) {
 
 // Apple calls the review contact number, and this repository is public — so
 // the number lives in the environment rather than in the committed listing.
-const listingDoc = parse(
-  readFileSync(path.join(native, "store", "listing.yaml"), "utf8"),
+const { LISTING: listingDoc } = await import(
+  pathToFileURL(path.join(native, "store", "listing.mts")).href
 );
 const phone = reviewPhone(root, listingDoc);
 if (!phone) {
   fail(
     "no App Store review phone (ASC_REVIEW_PHONE)",
     "Apple rings this one, so it has to be reachable and carry a country " +
-      "code. Set ASC_REVIEW_PHONE in native/.env — NOT in listing.yaml, " +
+      "code. Set ASC_REVIEW_PHONE in native/.env — NOT in listing.mts, " +
       "which is committed to a public repository.",
   );
 } else if (!phone.startsWith("+")) {

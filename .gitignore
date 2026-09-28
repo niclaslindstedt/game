@@ -19,7 +19,7 @@ pwa/node_modules/
 pwa/dist/
 pwa/src/generated/
 # Generated engine level catalog — source of truth is
-# scripts/levels/*.yaml; regenerated via `npm run levels` (§11.2).
+# scripts/levels/*.yaml; regenerated via `npm run levels`.
 engine/generated/
 # THE SAME OUTPUT, AT THE PATH IT WAS WRITTEN TO BEFORE THE ROOT SOURCE TREE WAS
 # RENAMED src/ -> engine/ (#1046). A checkout cannot delete an IGNORED directory,
@@ -32,7 +32,7 @@ engine/generated/
 # once no working copy predates #1046.
 /src/generated/
 # Generated pixel-asset atlases (sprite + font) — source of truth is
-# scripts/sprites/; regenerated on every build via `npm run assets` (§11.2).
+# scripts/sprites/; regenerated on every build via `npm run assets`.
 pwa/src/game/assets/
 # Sprite previews for the pixel-assets iteration loop (regenerate on demand)
 pwa/assets-preview/
@@ -83,8 +83,8 @@ progression.json
 # graph, regenerated on every balance probe like its progression-sim sibling.
 mob-hp-curve.html
 
-# Store submission build outputs (§11.2 — the YAML/recipes are the source of
-# truth, these are regenerated). `make store-metadata` compiles the listing;
+# Store submission build outputs — the listing and the shot recipes are the
+# source of truth, and these are regenerated. `make store-metadata` compiles the listing;
 # `make store-shots` captures the screenshot set; `make store-achievement-art`
 # cuts the portals' badge artwork out of the game's own sprite atlas.
 native/store/store.config.json
@@ -94,10 +94,16 @@ tauri/store/screenshots/
 tauri/store/achievements/
 tauri/store/preview/output/
 
+# The listing's WORDS (native/store/listing.mts has the reasoning): put here by
+# whoever uploads the listing, never committed. copy.example.mts is the
+# committed skeleton of the same shape.
+native/store/copy.mts
+
 # fastlane: the metadata tree and staged screenshots are GENERATED from
-# native/store/listing.yaml + native/store/screenshots by `npm run store:stage`
-# — listing.yaml is the source of truth, never these. The rest is fastlane's own
-# run output and local credentials, which must never be committed.
+# native/store/listing.mts + copy.mts + native/store/screenshots by
+# `npm run store:stage` — those are the source of truth, never these. The rest
+# is fastlane's own run output and local credentials, which must never be
+# committed.
 native/fastlane/metadata/
 native/fastlane/screenshots/
 native/fastlane/report.xml

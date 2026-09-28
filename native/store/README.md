@@ -1,36 +1,48 @@
 # Store listing assets
 
 Everything App Store Connect and the Play Console need, generated from sources
-committed in this repo. Four commands produce the whole submission package:
+in this repo — all committed except the listing's words (below). Four commands
+produce the whole submission package:
 
 ```sh
-make store-metadata          # listing.yaml  → store.config.json  (text metadata)
+make store-metadata          # listing.mts + copy.mts → store.config.json  (text metadata)
 make store-shots             # the real game → screenshots/       (captioned PNGs)
 make store-achievement-art   # the sprite atlas → achievements/   (badge images)
 make store-game-center       # the two manifests → App Store Connect (92 entries)
 ```
 
-| Path                            | What it is                                                                     | Committed? |
-| ------------------------------- | ------------------------------------------------------------------------------ | ---------- |
-| `listing.yaml`                  | **Source of truth** — subtitle, description, keywords, age rating, review info | yes        |
-| `store.config.json`             | Compiled listing for `eas metadata:push`                                       | no (built) |
-| `screenshots/<device>/`         | Upload-ready captioned PNGs at Apple's exact rasters                           | no (built) |
-| `achievements/<id>.png`         | The 1024×1024 image for each Game Center achievement                           | no (built) |
-| `game-center-achievements.json` | The Game Center achievement list, pushed by `make store-game-center`           | yes        |
-| `game-center-leaderboards.json` | The Game Center leaderboard list, pushed by `make store-game-center`           | yes        |
+| Path                            | What it is                                                                                         | Committed?          |
+| ------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------- |
+| `listing.mts`                   | The listing's **rules** — categories, age rating, review contact, release policy, storefronts      | yes                 |
+| `copy.mts`                      | The listing's **words** — subtitle, promo text, description, keywords, release notes, review notes | **no** (gitignored) |
+| `copy.example.mts`              | The committed skeleton of `copy.mts`: its shape, with placeholder text                             | yes                 |
+| `store.config.json`             | Compiled listing for `eas metadata:push`                                                           | no (built)          |
+| `screenshots/<device>/`         | Upload-ready captioned PNGs at Apple's exact rasters                                               | no (built)          |
+| `achievements/<id>.png`         | The 1024×1024 image for each Game Center achievement                                               | no (built)          |
+| `game-center-achievements.json` | The Game Center achievement list, pushed by `make store-game-center`                               | yes                 |
+| `game-center-leaderboards.json` | The Game Center leaderboard list, pushed by `make store-game-center`                               | yes                 |
 
-The generated three are gitignored for the same reason the sprite atlas is
-(§11.2): they are reproducible outputs, and reviewing a 2868×1320 PNG diff in a
+The generated three are gitignored for the same reason the sprite atlas is:
+they are reproducible outputs, and reviewing a 2868×1320 PNG diff in a
 pull request helps nobody. Regenerate them whenever you submit.
 
 ## The metadata
 
-`listing.yaml` is the only file to edit. Brand-shaped fields are **not** in it —
+The listing is two files. **`listing.mts`** holds its rules and is committed.
+**`copy.mts`** holds every word a reader of the listing sees and is
+**gitignored**: the words are what the store indexes and what a competitor
+reads, and a public repository would publish them on a crawlable page somewhere
+else. Whoever uploads the listing puts the real `copy.mts` in place first; a
+checkout without one compiles `copy.example.mts`, the committed skeleton, and
+says so — `make store-preflight` lists it as outstanding. Never improve the
+skeleton's prose.
+
+Brand-shaped fields are in **neither** file —
 the listing title and copyright line are composed from `game.config.json` by the
 generator, so renaming the game updates the store listing the same way it
 updates the manifest, and the marketing and privacy-policy URLs are the game's
-pages on apps.agilator.se (`APPS_PAGE` in the generator; `supportUrl` in the
-YAML is the third). No listing field may name the source repository or the web
+pages on apps.agilator.se (`APPS_PAGE` in the generator; `supportUrl` in
+`listing.mts` is the third). No listing field may name the source repository or the web
 edition's domain — the generator fails one that does (owner decision D17).
 
 The generator (`scripts/generate-store-metadata.mjs`) enforces every Apple
@@ -53,7 +65,7 @@ reviewer is never sent looking for a product that doesn't exist.
 ### Uploading
 
 There are two paths, and the generator feeds **both** from the same
-`listing.yaml`, so they can never disagree:
+`listing.mts` and `copy.mts`, so they can never disagree:
 
 | Path                | Uploads                | Notes                              |
 | ------------------- | ---------------------- | ---------------------------------- |

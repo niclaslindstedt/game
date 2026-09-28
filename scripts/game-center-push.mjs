@@ -53,8 +53,6 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { parse as parseYaml } from "yaml";
-
 import {
   AppStoreConnect,
   AscError,
@@ -143,12 +141,12 @@ function readManifest(file, generator) {
 
 /** The locale the listing is primarily authored in — one source of truth, so a
  * game whose store page is not English does not need a second place to say so. */
-function primaryLocale() {
+async function primaryLocale() {
   try {
-    const listing = parseYaml(
-      readFileSync(path.join(root, "native/store/listing.yaml"), "utf8"),
+    const { LISTING } = await import(
+      pathToFileURL(path.join(root, "native/store/listing.mts")).href
     );
-    return Object.keys(listing?.apple?.info ?? {})[0] ?? DEFAULT_LOCALE;
+    return LISTING?.apple?.primaryLocale ?? DEFAULT_LOCALE;
   } catch {
     return DEFAULT_LOCALE;
   }
@@ -525,7 +523,7 @@ async function main(opts) {
     );
   }
 
-  const locale = opts.locale ?? primaryLocale();
+  const locale = opts.locale ?? (await primaryLocale());
   // GIS_ASC_HOST points the client at a stand-in for Apple. It exists so the
   // read → plan → write path is exercisable end to end
   // (tests/game_center_push_apply_test.ts) instead of only up to the first

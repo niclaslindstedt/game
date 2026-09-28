@@ -7,7 +7,7 @@
 #   bundle exec fastlane metadata # dry run: what would be uploaded
 #   bundle exec fastlane metadata submit:true
 #
-# Everything uploaded is GENERATED from native/store/listing.yaml by
+# Everything uploaded is GENERATED from native/store/listing.mts and copy.mts by
 # scripts/generate-store-metadata.mjs. Never hand-edit fastlane/metadata/ — it
 # is wiped and rewritten on every run.
 
@@ -38,7 +38,7 @@ platform :ios do
     unless File.directory?(metadata_path)
       UI.user_error!(
         "fastlane/metadata is missing — run `npm run store:stage` from the " \
-        "repo root first. The tree is generated from native/store/listing.yaml."
+        "repo root first. The tree is generated from native/store/listing.mts and copy.mts."
       )
     end
 
@@ -83,6 +83,7 @@ platform :ios do
   #
   #   bundle exec fastlane deliver download_metadata
   #
-  # Then port anything worth keeping back into native/store/listing.yaml; the
+  # Then port anything worth keeping back into native/store/listing.mts (rules)
+  # or the listing's words, which are kept outside this repository; the
   # tree here is generated and gets wiped on the next run.
 end

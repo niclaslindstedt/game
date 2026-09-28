@@ -30,6 +30,10 @@
   },
   "exclude": [
     "node_modules",
+    // The store listing is tooling for the root's generator, typechecked by the
+    // root tsconfig (it imports with a `.mts` extension, which the app's
+    // bundler settings do not allow).
+    "store",
     "babel.config.js",
     "metro.config.js",
     "jest.config.js",

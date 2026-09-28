@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
 import { IDENTITY } from "./identity.ts";
 
 /** Where a reader reaches a human — printed by both document pages and named
- * as the App Store listing's support contact (native/store/listing.yaml).
+ * as the App Store listing's support contact (native/store/listing.mts).
  *
  * Injected at build time from the `SUPPORT_EMAIL` repo secret (see
  * `vite.config.ts` and the Pages workflow), NOT hardcoded: the address can then

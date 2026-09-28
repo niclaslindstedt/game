@@ -32,6 +32,8 @@
     "server",
     "tests",
     "vitest.config.ts",
+    "native/store/listing.mts",
+    "native/store/copy.example.mts",
     "pwa/src/build-globals.d.ts",
     "pwa/src/vite-env.d.ts"
   ]

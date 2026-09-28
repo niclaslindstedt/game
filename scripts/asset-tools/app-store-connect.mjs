@@ -91,8 +91,8 @@ const placeholderPhone = (phone) => /0{6,}/.test(phone.replace(/[\s-]/g, ""));
  * It is the one listing field that behaves like a credential rather than like
  * copy: Apple rings it, so it has to be a reachable personal or business line,
  * and THIS REPOSITORY IS PUBLIC — committing one publishes it to everybody who
- * ever clones the tree, permanently and in the history. So the authored YAML
- * carries a placeholder on purpose and the real value arrives out of band,
+ * ever clones the tree, permanently and in the history. So the committed listing
+ * (native/store/listing.mts) carries a placeholder on purpose and the real value arrives out of band,
  * through `ASC_REVIEW_PHONE` in native/.env (gitignored) or the process
  * environment, which is how CI hands one over from a repository secret.
  *
