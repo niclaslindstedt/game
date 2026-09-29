@@ -106,11 +106,10 @@ export const LISTING = {
       // A haunted moon, ghosts, and a missing-person plot — atmosphere rather
       // than shocks.
       horrorOrFearThemes: "INFREQUENT_OR_MILD",
-      // The answer the listing was first filed with. The shipped lines carry
-      // no profanity; the satire's humour (the corporate horde, the knockoff
-      // western) is the only candidate for "crude", and that is mild and
-      // occasional. Lower it to NONE if a read of the manuscript agrees.
-      profanityOrCrudeHumor: "INFREQUENT_OR_MILD",
+      // The shipped lines carry no profanity, and the satire's humour (the
+      // corporate horde, the knockoff western) is not crude — the owner's read
+      // of the manuscript agrees.
+      profanityOrCrudeHumor: "NONE",
       matureOrSuggestiveThemes: "NONE",
       sexualContentOrNudity: "NONE",
       sexualContentGraphicAndNudity: "NONE",
