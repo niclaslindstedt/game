@@ -81,7 +81,7 @@ jobs:
       # whole content tree to run a script that takes a second.
       - name: make unique-check
         run: make unique-check
-      # Every dependency's licence, in all three lockfiles, against the
+      # Every dependency's licence, in all three lockfiles, against the fleet's
       # allow-list in scripts/check-licences.mjs. Reads the lockfiles only.
       - name: Dependency licence check (make licences)
         run: make licences

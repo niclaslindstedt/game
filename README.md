@@ -117,7 +117,7 @@ make test                                # the full test suite
 | `make album`                          | HEAR THE WHOLE SOUNDTRACK — every score on one page, with a picker                                                                |
 | `make icons` / `make screenshots`     | Regenerate the PWA icons + OG card / recapture the manifest screenshots                                                           |
 | `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                                                |
-| `make licences`                       | Check every dependency's licence, in all three lockfiles, against the allow-list (CI runs it)                                     |
+| `make licences`                       | Check every dependency's licence, in all three lockfiles, against the fleet's allow-list (CI runs it)                             |
 | `make hooks`                          | Install the git hooks: conventional commit subjects, formatting, no hand edit to `CHANGELOG.md`                                   |
 | `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                                                    |
 | `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                                                            |

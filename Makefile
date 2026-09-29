@@ -45,8 +45,9 @@ hooks:
 	@echo "git hooks installed (core.hooksPath = .githooks)"
 
 # Check every dependency's licence, in all three lockfiles (the root workspace,
-# native/ and tauri/), against the allow-list in scripts/check-licences.mjs.
-# Reads the lockfiles only — no install, no network. CI runs it.
+# native/ and tauri/), against the fleet's allow-list in
+# scripts/check-licences.mjs (LGPL only for dev packages). Reads the lockfiles
+# only — no install, no network. CI runs it.
 licences:
 	node scripts/check-licences.mjs $(ARGS)
 

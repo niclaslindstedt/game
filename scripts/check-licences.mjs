@@ -9,14 +9,16 @@
 // no install, no network, nothing a fresh clone lacks — and fails on any
 // package whose licence is not on the list below, or that declares none.
 //
-// The list has two tiers, because what a licence asks depends on whether the
-// package reaches a player:
+// The list is the fleet's, the same in every game, and has two tiers,
+// because what a licence asks depends on whether the package reaches a
+// player:
 //
 //   ALLOWED     permissive licences, and the ones whose conditions shipping an
 //               unmodified package already meets (MPL-2.0 is file-level; the
-//               CC-BY data sets ask for attribution the package carries)
-//   BUILD_ONLY  allowed only for a package the lockfile marks `dev` — a build
-//               tool that never ships in the game (sharp's libvips, LGPL)
+//               CC-BY data sets ask for attribution the package carries;
+//               Python-2.0 is permissive)
+//   DEV_ONLY    LGPL, allowed only for a package the lockfile marks `dev` — a
+//               build tool that never ships in the game (sharp's libvips)
 //
 // An SPDX expression is read the way it is meant: `A OR B` passes when either
 // does, `A AND B` only when both do. A new licence is a decision to add here
@@ -39,22 +41,29 @@ const LOCKFILES = [
 ];
 
 const ALLOWED = new Set([
-  "MIT",
-  "ISC",
+  "0BSD",
+  "Apache-2.0",
+  "BlueOak-1.0.0",
   "BSD-2-Clause",
   "BSD-3-Clause",
-  "Apache-2.0",
-  "0BSD",
-  "BlueOak-1.0.0",
-  "Unlicense",
-  "CC0-1.0",
-  "Python-2.0",
   // caniuse-lite: browser-support data, attribution carried in the package.
   "CC-BY-4.0",
+  "CC0-1.0",
+  "ISC",
+  "MIT",
   // lightningcss and friends: file-level copyleft, met by shipping unmodified.
   "MPL-2.0",
+  // argparse: the PSF licence, permissive.
+  "Python-2.0",
+  "Unlicense",
+  "Zlib",
 ]);
-const BUILD_ONLY = new Set(["LGPL-3.0-or-later"]);
+const DEV_ONLY = new Set([
+  "LGPL-2.1-only",
+  "LGPL-2.1-or-later",
+  "LGPL-3.0-only",
+  "LGPL-3.0-or-later",
+]);
 
 const USAGE = `usage: node scripts/check-licences.mjs [--verbose]
 
@@ -79,8 +88,8 @@ if (unknown.length) {
 }
 const verbose = args.includes("--verbose");
 
-/** Whether one SPDX id is acceptable for a package (`dev` = build-only). */
-const allowedId = (id, dev) => ALLOWED.has(id) || (dev && BUILD_ONLY.has(id));
+/** Whether one SPDX id is acceptable for a package (`dev`: development-only). */
+const allowedId = (id, dev) => ALLOWED.has(id) || (dev && DEV_ONLY.has(id));
 
 /** Whether an SPDX expression is acceptable: OR needs one side, AND both. */
 function allowedExpression(expression, dev) {

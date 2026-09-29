@@ -63,7 +63,7 @@ make song FILE=x.song          # write a SCORE the short way, and engrave it
 make audition ARGS="overdue"   # HEAR a score — the page that plays it, for an artifact
 make album                     # HEAR THE WHOLE SOUNDTRACK — every score, one page
 make bump          # print the release bump derived from .changes/unreleased/
-make licences      # every dependency's licence against the allow-list (CI gate)
+make licences      # every dependency's licence against the fleet's allow-list (CI gate)
 make hooks         # install the git hooks (commit subject, formatting, CHANGELOG guard)
 make native-typecheck / native-doctor   # the phone shell's own checks (CI's native job)
 npm run shell:bench    # weigh the packaged desktop build; read this machine's cold starts
