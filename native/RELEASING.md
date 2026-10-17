@@ -314,6 +314,12 @@ eas build --platform android --profile production
 A plain `npm run bundle` builds with the developer tooling on — fine for
 `preview`/`testflight`, wrong for the store.
 
+EAS installs with the Node that `eas.json` pins — `"node"` in every build
+profile, the same major as `.nvmrc`. Without it EAS falls back to its image's
+default Node, whose npm 10 reads the lockfile npm 11 wrote as out of sync and
+stops the build at `npm ci` ("Missing: typescript@5.9.3 from lock file"). Move
+the pin when `.nvmrc` moves.
+
 ## 5. Submit
 
 ```sh
